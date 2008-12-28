@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+	<title>CrossProcessing</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="language" content="en" />
+	<meta name="description" content="" />
+	<meta name="keywords" content="" />
+</head>
+<body>
+	<pre id="haxe:trace"></pre>
+	<script src="Processing-parser.js"></script>
+	<script src="Processing-api.js"></script>
+    <script>
+	    
+function parse() {
+	// parse code
+	var script = document.getElementById('input').value;
+	var parser = new processing.parser.Parser();
+	var compiler = new processing.compiler.JavaScriptCompiler();
+	document.getElementById('output').value = compiler.compile(parser.parse(script));
+}
+
+function runOutput() {
+	// create processing object
+	var p = Processing(document.getElementById('processing'));
+
+	// parse code
+	var script = document.getElementById('input').value;
+	var evaluator = new processing.evaluator.Evaluator([p]);
+	evaluator.evaluate(script);
+	
+	// start processing
+	p.init();
+}
+    
+    </script>
+	
+    <textarea id="input" rows="20" cols="100">// All Examples Written by Casey Reas and Ben Fry
+// unless otherwise stated.
+size(200, 200);
+smooth();
+background(0);
+strokeWeight(10);
+
+for(int i = 0; i < width; i++) {
+  float r = random(255);
+  float x = random(0, width);
+  stroke(r, 100);
+  line(i, 0, x, height);
+}</textarea><br>
+	    <textarea id="output" rows="20" cols="100"></textarea><br/>
+	<input type="submit" value="Parse" onclick="parse()">
+    <input type="submit" value="Parse and Run" onclick="parse(); runOutput()"><br>
+    
+    <canvas id="processing" width="200" height="200" style="border: 2px solid black"></canvas>
+</body>
+</html>
