@@ -690,6 +690,21 @@ class Parser {
 		// extract operator and operands
 		var operator:TokenType = operatorList.pop();
 		var operands:Array<Dynamic> = operandList.splice(operandList.length - operator.arity, operator.arity);
+		
+//[TODO] is there a better spot for this?
+		// convert references to implicit reference value
+		switch (operator) {
+		    // these operators use implicit references
+		    case TokenType.INCREMENT, TokenType.DECREMENT, TokenType.ASSIGN,
+		    TokenType.INDEX, TokenType.DOT:
+		    // otherwise, get reference value
+		    default:
+			for (i in 0...operands.length)
+//[TODO] does this work right for the call() operator?
+				if (Std.is(operands[i], Reference))
+					operands[i] = SReferenceValue(operands[i]);
+		}
+		
 		// convert expression to statements
 		switch (operator) {
 		    // object instantiation
@@ -716,7 +731,7 @@ class Parser {
 			
 		    // property operator
 		    case TokenType.INDEX, TokenType.DOT:
-			operandList.push(Reference(operands[1], operands[0]));
+			operandList.push({identifier: operands[1], base: operands[0]});
 
 		    // unary operators
 		    case TokenType.NOT, TokenType.BITWISE_NOT, TokenType.UNARY_PLUS, TokenType.UNARY_MINUS:
@@ -729,10 +744,16 @@ class Parser {
 			TokenType.GT, TokenType.INSTANCEOF, TokenType.LSH, TokenType.RSH,
 			TokenType.URSH, TokenType.PLUS, TokenType.MINUS, TokenType.MUL,
 			TokenType.DIV, TokenType.MOD:
+			// add operation
 			operandList.push(Operation(operator, operands[0], operands[1]));
 		
 		    default:
 			throw 'Unknown operator "' + operator + '"';
 		}
+		
+//[TODO] is this necessary/the right location for this?
+		// convert references to implicit reference value
+		if (Std.is(operandList[operandList.length], Reference))
+			operandList[operandList.length] = SReferenceValue(operands[operandList.length]);
 	}
 }
