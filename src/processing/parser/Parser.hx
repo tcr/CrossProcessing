@@ -29,7 +29,7 @@ class Parser {
 //[TODO] right_curly should be a stopAt
 		while (!tokenizer.done && (stopAt == null || !tokenizer.peek().match(stopAt)))
 			block.push(parseStatement());
-		return Block(block);
+		return SBlock(block);
 	}
 
 //[TODO] could parseStatement be made to only match certain "types"?
@@ -69,8 +69,8 @@ class Parser {
 			}
 			
 			// push conditional
-			block.push(Conditional(condition, thenBlock, elseBlock));
-			return Block(block);
+			block.push(SConditional(condition, thenBlock, elseBlock));
+			return SBlock(block);
 			
 		    // while statement
 		    case TokenType.WHILE:
@@ -91,8 +91,8 @@ class Parser {
 			}
 
 			// push for loop
-			block.push(Loop(condition, body));
-			return Block(block);
+			block.push(SLoop(condition, body));
+			return SBlock(block);
 
 		    // for statement
 		    case TokenType.FOR:
@@ -134,27 +134,27 @@ class Parser {
 			if (update != null)
 				body.push(update);
 			// push for loop
-			block.push(Loop(condition, Block(body)));
-			return Block(block);
+			block.push(SLoop(condition, SBlock(body)));
+			return SBlock(block);
 		
 		    // returns
 		    case TokenType.RETURN:
 			tokenizer.get();
 			// push return statement
-			block.push(Return(parseExpression()));
+			block.push(SReturn(parseExpression()));
 		
 		    // break
 		    case TokenType.BREAK:
 			tokenizer.get();			
 			// match break and optional level
-			block.push(Break(tokenizer.match(TokenType.NUMBER) ?
+			block.push(SBreak(tokenizer.match(TokenType.NUMBER) ?
 			    tokenizer.currentToken.value : 1));
 			
 		    // continue
 		    case TokenType.CONTINUE:
 			tokenizer.get();			
 			// match continue and optional level
-			block.push(Continue(tokenizer.match(TokenType.NUMBER) ?
+			block.push(SContinue(tokenizer.match(TokenType.NUMBER) ?
 			    tokenizer.currentToken.value : 1));
 			
 		    // definition visibility
@@ -163,12 +163,12 @@ class Parser {
 			// get definition
 			tokenizer.get();
 			block.push(tokenizer.peek().match(TokenType.CLASS) ? parseClass() : parseFunction());
-			return Block(block);
+			return SBlock(block);
 			
 		    case TokenType.CLASS:
 			// get class definition
 			block.push(parseClass());
-			return Block(block);
+			return SBlock(block);
 		
 		    // definitions
 		    case TokenType.TYPE, TokenType.IDENTIFIER:
@@ -180,7 +180,7 @@ class Parser {
 				{
 					var block:Array<Statement> = new Array();
 					block.push(parseFunction());
-					return Block(block);
+					return SBlock(block);
 				}
 					
 				// else, get variable list
@@ -201,7 +201,7 @@ class Parser {
 		if (!tokenizer.match(TokenType.SEMICOLON))
 			throw new TokenizerSyntaxError('Missing ; after statement', tokenizer);
 		// return parsed statement
-		return Block(block);
+		return SBlock(block);
 	}
 	
 	private function parseType():Type {
@@ -253,7 +253,7 @@ class Parser {
 		tokenizer.match(TokenType.RIGHT_CURLY, true);
 		
 		// return function declaration statement
-		return FunctionDefinition(funcName, funcType, params, body);
+		return SFunctionDefinition(funcName, funcType, params, body);
 	}
 	
 	private function parseClass():Statement
@@ -309,7 +309,7 @@ class Parser {
 		tokenizer.match(TokenType.RIGHT_CURLY, true);
 		
 		// return function declaration statement
-		return ClassDefinition(className, Block(constructor), Block(publicBody), Block(privateBody));
+		return SClassDefinition(className, SBlock(constructor), SBlock(publicBody), SBlock(privateBody));
 	}
 	
 	private function parseVariables():Statement
@@ -326,7 +326,7 @@ class Parser {
 			var varDimensions:Int = tokenizer.match(TokenType.ARRAY_DIMENSION) ?
 			    tokenizer.currentToken.value : declarationType.dimensions;
 			// add definition
-			block.push(VariableDefinition(varName, new Type(declarationType.type, varDimensions)));
+			block.push(SVariableDefinition(varName, new Type(declarationType.type, varDimensions)));
 			
 			// check for assignment operation
 			if (tokenizer.match(TokenType.ASSIGN))
@@ -336,13 +336,13 @@ class Parser {
 					throw new TokenizerSyntaxError('Invalid variable initialization', tokenizer);
 
 				// get initializer statement
-				block.push(Assignment(Reference(Literal(varName)),
+				block.push(SAssignment(SReference(SLiteral(varName)),
 				    parseExpression(TokenType.COMMA)));
 			}
 		} while (tokenizer.match(TokenType.COMMA));
 		
 		// return variable definition
-		return Block(block);
+		return SBlock(block);
 	}
 	
 //[TODO] remove stopAt token altogether
@@ -439,7 +439,7 @@ class Parser {
 
 					// create array initializer
 					operators.pop();
-					operands.push(ArrayInstantiation(type, sizes[0], sizes[1], sizes[2]));
+					operands.push(SArrayInstantiation(type, sizes[0], sizes[1], sizes[2]));
 				} else if (!token.match(TokenType.IDENTIFIER)) {
 					// invalid use of type keyword
 					throw new TokenizerSyntaxError('Invalid type declaration', tokenizer);
@@ -448,27 +448,27 @@ class Parser {
 				{
 					// push reference
 					tokenizer.get();
-					operands.push(Reference(Literal(token.value)));
+					operands.push(SReference(SLiteral(token.value)));
 				}
 			}
 			
 		    case TokenType.THIS:
 			// push reference
 			tokenizer.get();
-			operands.push(ThisReference);
+			operands.push(SThisReference);
 
 		    // operands
 		    case TokenType.NULL, TokenType.TRUE, TokenType.FALSE, TokenType.NUMBER,
 		    TokenType.STRING, TokenType.CHAR:
 			// push literal
 			tokenizer.get();
-			operands.push(Literal(token.value));
+			operands.push(SLiteral(token.value));
 			
 		    // array literal
 		    case TokenType.LEFT_CURLY:
 			// push array literal
 			tokenizer.get();
-			operands.push(ArrayLiteral(parseList(TokenType.RIGHT_CURLY)));
+			operands.push(SArrayLiteral(parseList(TokenType.RIGHT_CURLY)));
 			tokenizer.match(TokenType.RIGHT_CURLY, true);
 		
 		    // cast/group
@@ -511,7 +511,7 @@ class Parser {
 				else
 				{
 					// not a cast; add operand
-					operands.push(Reference(Literal(identifier)));
+					operands.push(SReference(SLiteral(identifier)));
 				}
 			}
 			else
@@ -576,7 +576,7 @@ class Parser {
 			operators.push(tokenizer.get().type);
 			// match and push required identifier as string
 			tokenizer.match(TokenType.IDENTIFIER, true);
-			operands.push(Literal(tokenizer.currentToken.value));
+			operands.push(SLiteral(tokenizer.currentToken.value));
 
 			// operand already found; find next operator
 			return scanOperator(operators, operands, stopAt);
@@ -643,7 +643,7 @@ class Parser {
 			var elseBlock:Statement = parseExpression();
 			
 			// add conditional
-			operands.push(Conditional(conditional, thenBlock, elseBlock));
+			operands.push(SConditional(conditional, thenBlock, elseBlock));
 			// already matched expression
 			return false;
 		
@@ -697,11 +697,12 @@ class Parser {
 		    // these operators use implicit references
 		    case TokenType.INCREMENT, TokenType.DECREMENT, TokenType.ASSIGN,
 		    TokenType.INDEX, TokenType.DOT:
+		    
 		    // otherwise, get reference value
 		    default:
 			for (i in 0...operands.length)
 //[TODO] does this work right for the call() operator?
-				if (Std.is(operands[i], Reference))
+				if (Std.is(operands[i], SReference))
 					operands[i] = SReferenceValue(operands[i]);
 		}
 		
@@ -709,33 +710,33 @@ class Parser {
 		switch (operator) {
 		    // object instantiation
 		    case TokenType.NEW, TokenType.NEW_WITH_ARGS:
-			operandList.push(ObjectInstantiation(operands[0], operands[1]));
+			operandList.push(SObjectInstantiation(operands[0], operands[1]));
 		    
 		    // function call
 		    case TokenType.CALL:
-			operandList.push(Call(operands[0], operands[1]));
+			operandList.push(SCall(operands[0], operands[1]));
 		
 		    // casting
 		    case TokenType.CAST:
-			operandList.push(Cast(operands[0], operands[1]));
+			operandList.push(SCast(operands[0], operands[1]));
 			
 		    // increment/decrement
 		    case TokenType.INCREMENT:
-			operandList.push(Increment(operands[0]));
+			operandList.push(SIncrement(operands[0]));
 		    case TokenType.DECREMENT:
-			operandList.push(Decrement(operands[0]));
+			operandList.push(SDecrement(operands[0]));
 			
 		    // assignment
 		    case TokenType.ASSIGN:
-			operandList.push(Assignment(operands[0], operands[1]));
+			operandList.push(SAssignment(operands[0], operands[1]));
 			
 		    // property operator
 		    case TokenType.INDEX, TokenType.DOT:
-			operandList.push({identifier: operands[1], base: operands[0]});
+			operandList.push(SReference(operands[1], operands[0]));
 
 		    // unary operators
 		    case TokenType.NOT, TokenType.BITWISE_NOT, TokenType.UNARY_PLUS, TokenType.UNARY_MINUS:
-			operandList.push(Operation(operator, operands[0]));
+			operandList.push(SOperation(operator, operands[0]));
 	
 		    // operators
 		    case TokenType.OR, TokenType.AND, TokenType.BITWISE_OR, TokenType.BITWISE_XOR,
@@ -745,7 +746,7 @@ class Parser {
 			TokenType.URSH, TokenType.PLUS, TokenType.MINUS, TokenType.MUL,
 			TokenType.DIV, TokenType.MOD:
 			// add operation
-			operandList.push(Operation(operator, operands[0], operands[1]));
+			operandList.push(SOperation(operator, operands[0], operands[1]));
 		
 		    default:
 			throw 'Unknown operator "' + operator + '"';
@@ -753,7 +754,7 @@ class Parser {
 		
 //[TODO] is this necessary/the right location for this?
 		// convert references to implicit reference value
-		if (Std.is(operandList[operandList.length], Reference))
+		if (Std.is(operandList[operandList.length], SReference))
 			operandList[operandList.length] = SReferenceValue(operands[operandList.length]);
 	}
 }

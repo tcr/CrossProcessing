@@ -5,49 +5,50 @@
 
 package processing.interpreter;
 
+import processing.api.ArrayList;
+import processing.parser.TokenType;
 import processing.parser.Statement;
 
 class Interpreter 
 {
-
 	public function new() 
 	{
 		
 	}
 
-	public function interpret(statement:Statement, context:Scope, ?parent:Statement):Dynamic
+	public function interpret(statement:Statement, context:Scope):Dynamic
 	{
 		switch (statement)
 		{
-		case ArrayInstantiation(type, size1, size2, size3):
+		case SArrayInstantiation(type, size1, size2, size3):
 			// return new ArrayList object
-			return new ArrayList(size1.execute(context), size2 ? size2.execute(context) : 0, size3 ? size3.execute(context) : 0, type);
+			return new ArrayList(interpret(size1, context), size2 != null ? interpret(size2, context) : 0, size3 != null ? interpret(size3, context) : 0, type);
 
-		case ArrayLiteral(values):
+		case SArrayLiteral(values):
 			// parse array
 			var array:Array<Dynamic> = new Array();
 			for (i in 0...values.length)
 				array[i] = interpret(values[i], context);
 			return array;
 			
-		case Assignment(reference, value):
+		case SAssignment(reference, value):
 			// get simplified reference
-			var ref:ReferenceProperty = interpret(reference, context, statement);
+			var ref:Reference = interpret(reference, context);
 			// increment and return
 			return Reflect.setField(ref.base, ref.identifier, interpret(value, context));
 			
-		case Block(statements):
+		case SBlock(statements):
 			// iterate block
-			var retValue:Dynamic;
+			var retValue:Dynamic = null;
 			for (i in statements)
 				retValue = interpret(i, context);
 			return retValue;
 		
-		case Break(level):
+		case SBreak(level):
 //[TODO] BreakException
 			throw this;
 			
-		case Call(method, args):
+		case SCall(method, args):
 			// iterate args statements
 			var parsedArgs:Array<Dynamic> = new Array();
 			for (arg in args)
@@ -55,18 +56,19 @@ class Interpreter
 			// apply function			
 			return Reflect.callMethod(context.scope, interpret(method, context), parsedArgs);
 			
-		case Cast(type, expression):
+		case SCast(type, expression):
 			// parse value
 			var value:Dynamic = interpret(expression, context);
 			
 			// cast non-arrays
-			if (!type.dimensions)
+			if (type.dimensions == 0)
 			{
 				switch (type.type) {
-				    case TokenType.VOID:	return void(value);
-				    case TokenType.INT:	return int(value);
-				    case TokenType.FLOAT:	return Number(value);
-				    case TokenType.BOOLEAN:	return Boolean(value);
+//[TODO] this right? cast isn't really casting in haXe...
+				    case TokenType.VOID:	return cast(value, Void);
+				    case TokenType.INT:		return cast(value, Int);
+				    case TokenType.FLOAT:	return cast(value, Float);
+				    case TokenType.BOOLEAN:	return cast(value, Bool);
 				    case TokenType.CHAR:	return Std.is(value, String) ? value.charCodeAt(0) : value;
 //[TODO] cast objects?
 				}
@@ -75,8 +77,10 @@ class Interpreter
 			// could not cast
 //[TODO] throw error
 			return value;
-			
-		case ClassDefinition(identifier, constructorBody, publicBody, privateBody):
+
+		case SClassDefinition(identifier, constructorBody, publicBody, privateBody):
+//[TODO] figure out how to do this in haXe
+/*
 			// create class constructor
 			Reflect.setField(context.scope, identifier, Reflect.makeVarArgs(function (args)
 			{
@@ -85,8 +89,8 @@ class Interpreter
 			
 				// create new evaluator contexts
 //[TODO] really this should modify .prototype...
-				var objContext:ExecutionContext = new ExecutionContext(this, context, this);
-				var classContext:ExecutionContext = new ExecutionContext({}, objContext);
+				var objContext:Scope = new Scope(this, context, this);
+				var classContext:Scope = new Scope({}, objContext);
 				
 				// define variables
 				publicBody.execute(objContext);
@@ -99,25 +103,30 @@ class Interpreter
 					classContext.scope[identifier].apply(classContext.scope, args);
 				}
 			}));
+*/
+			return;
 			
-		case Conditional(condition, thenBlock, elseBlock):
-			if (condition.execute(context))
-				return thenBlock.execute(context);
-			else if (elseBlock)
-				return elseBlock.execute(context);
+		case SConditional(condition, thenBlock, elseBlock):
+			if (interpret(condition, context))
+				return interpret(thenBlock, context);
+			else if (elseBlock != null)
+				return interpret(elseBlock, context);
+			return;
 				
-		case Continue(level):
+		case SContinue(level):
 //[TODO] ContinueException
 			// throw exception
 			throw statement;
 		
-		case Decrement(reference):
+		case SDecrement(reference):
 			// get simplified reference
-			var ref:ReferenceProperty = interpret(reference, context, statement);
+			var ref:Reference = interpret(reference, context);
 			// increment and return
-			return Reflect.setField(ref.base, ref.identifier, Reflect.getField(ref.base, ref.identifier) - 1);
+			return Reflect.setField(ref.base, ref.identifier, Reflect.field(ref.base, ref.identifier) - 1);
 			
-		case FunctionDefinition(identifier, type, params, body):
+		case SFunctionDefinition(identifier, type, params, body):
+//[TODO] make this work
+/*
 			// check that a variable is not already defined
 //[TODO] this shouldn't have " || !context.scope[identifier]"; must remove predefined .setup from Processing API context!
 			if (!context.scope.hasOwnProperty(identifier) || !context.scope[identifier])
@@ -176,39 +185,43 @@ class Interpreter
 					return ret.value.execute(funcContext);
 				}
 			});
+*/
+			return;
 		
-		case Increment(reference):
+		case SIncrement(reference):
 			// get simplified reference
-			var ref:ReferenceProperty = interpret(reference, context, statement);
+			var ref:Reference = interpret(reference, context);
 			// increment and return
-			return Reflect.setField(ref.base, ref.identifier, Reflect.getField(ref.base, ref.identifier) + 1);
+			return Reflect.setField(ref.base, ref.identifier, Reflect.field(ref.base, ref.identifier) + 1);
 			
-		case Literal(value):
+		case SLiteral(value):
 			// return literal
 			return value;
 			
-		case Loop(condition, body):
+		case SLoop(condition, body):
 			// loop condition
-			while (condition.execute(context)) {
+			return while (interpret(condition, context)) {
 				try {
 					// execute body
-					body.execute(context);
-				} catch (b:Break) {
+					interpret(body, context);
+				} catch (b:BreakException) {
 					// decrease level and rethrow if necessary
-					if (--b.level)
+					if (--b.level <= 0)
 						throw b;
 					// else break loop
 					break;
-				} catch (c:Continue) {
+				} catch (c:ContinueException) {
 					// decrease level and rethrow if necessary
-					if (--c.level)
+					if (--c.level <= 0)
 						throw c;
 					// else continue loop
 					continue;
 				}
-			}
-		
-		case ObjectInstantiation(method, args):
+			};
+			
+		case SObjectInstantiation(method, args):
+//[TODO] make work in haXe
+/*
 			// parse class
 			var objClass:Class = method.execute(context);
 			// iterate args statements
@@ -216,11 +229,13 @@ class Interpreter
 			for (arg in args)
 				parsedArgs.push(interpret(arg, context));
 			return Type.createInstance(objClass, parsedArgs);
+*/
+			return;
 			
-		case Operation(type, leftOperand, rightOperand):
+		case SOperation(type, leftOperand, rightOperand):
 			// evaluate operands
-			var a:Dynamic = interpret(leftOperand, context), b:Dynamic;
-			if (rightOperand)
+			var a:Dynamic = interpret(leftOperand, context), b:Dynamic = null;
+			if (rightOperand != null)
 				b = interpret(rightOperand, context);
 
 			// evaluate operation
@@ -257,67 +272,72 @@ class Interpreter
 			    case TokenType.DIV:		return a / b;
 			    case TokenType.MOD:		return a % b;
 			    case TokenType.DOT:		return a[b];
-			    default: throw new Error('Unrecognized expression operator.');
-			}
-			
-		case Reference(identifier, base):
-			// get simplified reference
-//[TODO] i'm not sure i like this...
-			var ref:ReferenceProperty = reduceReference(context);
-			// switch based on parent type
-			switch (parent)
-			{
-				case Increment, Decrement, Assignment: return ref;
-				default: return ref != null ? Reflect.getField(ref.base, ref.identifier) : null;
+			    default: throw 'Unrecognized expression operator.';
 			}
 		
-		case Return(value):
+		case SReference(sIdentifier, sBase):
+			// evaluate identifier
+			var identifier:String = interpret(sIdentifier, context), base:Dynamic;
+			// evaluate base reference in current context
+			if (sBase != null)
+			{
+				// base object exists
+				base = interpret(sBase, context);
+			}
+			else
+			{
+				// climb context inheritance to find declared identifier
+				var c:Scope = context;
+				while (c != null && !Reflect.hasField(c.scope, identifier))
+				    c = c.parent;
+				if (c == null)
+					return null;
+				base = c.scope;
+			}
+
+			// return reduced reference
+			return {identifier: identifier, base: base};
+			
+		case SReferenceValue(reference):
+			// get simplified reference
+			var ref:Reference = interpret(reference, context);
+			return ref != null ? Reflect.field(ref.base, ref.identifier) : null;
+		
+		case SReturn(value):
 //[TODO] ReturnException
 			// throw this return
 			throw statement;
 			
-		case ThisReference:
+		case SThisReference:
 			// climb context inheritance to find defined thisObject
 			var c:Scope = context;
 			while (c != null && c.thisObject == null)
 			    c = c.parent;
 			return c == null ? c.thisObject : null;
 			
-		case VariableDefinition(identifier, type):
+		case SVariableDefinition(identifier, type):
 //[TODO] do something with type
 			// define variable (by default, 0)
-			context.scope[identifier] = 0;
+			Reflect.setField(context.scope, identifier, 0);
+			return;
 		}
-	}
-	
-	// reduce to [identifier, base] array pair for assignments
-	private function reduceReference(context:Scope, sIdentifier:Statement, ?sBase:Statement):ReferenceProperty {
-		// evaluate identifier
-		var identifier:String = interpret(sIdentifier, context), base:Dynamic;
-		// evaluate base reference in current context
-		if (sBase != null)
-		{
-			// base object exists
-			base = interpret(sBase, context);
-		}
-		else
-		{
-			// climb context inheritance to find declared identifier
-			var c:Scope = context;
-			while (c != null && !c.scope.hasOwnProperty(identifier))
-			    c = c.parent;
-			if (c == null)
-				return null;
-			base = c.scope;
-		}
-
-		// return reduced reference
-		return {identifier: identifier, base: base};
 	}
 }
 
-//[TODO] rename Reference, rename statement SReference
-typedef ReferenceProperty = {
-	identifier:String,
-	base:Dynamic
+//[TODO] name this better?
+typedef Reference = {
+	var identifier:String;
+	var base:Dynamic;
+}
+
+class BreakException {
+	public var level:Int;
+}
+
+class ContinueException {
+	public var level:Int;
+}
+
+class ReturnException {
+	public var value:Dynamic;
 }
