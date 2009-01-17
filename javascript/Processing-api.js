@@ -1055,7 +1055,7 @@ function buildProcessing( curElement ){
   p.line = function line( x1, y1, x2, y2 ) {
     curContext.lineCap = "round";
     curContext.beginPath();
-  
+    
     curContext.moveTo( x1 || 0, y1 || 0 );
     curContext.lineTo( x2 || 0, y2 || 0 );
     

@@ -473,6 +473,388 @@ Std.random = function(x) {
 	return Math.floor(Math.random() * x);
 }
 Std.prototype.__class__ = Std;
+processing.interpreter = {}
+processing.interpreter.Interpreter = function(p) { if( p === $_ ) return; {
+	null;
+}}
+processing.interpreter.Interpreter.__name__ = ["processing","interpreter","Interpreter"];
+processing.interpreter.Interpreter.prototype.interpret = function(statement,context) {
+	var $e = (statement);
+	switch( $e[1] ) {
+	case 0:
+	var sizes = $e[3], type = $e[2];
+	{
+		var array = [], current = 0;
+		sizes.reverse();
+		{
+			var _g = 0;
+			while(_g < sizes.length) {
+				var size = sizes[_g];
+				++_g;
+				{
+					var _g2 = 0, _g1 = this.interpret(size,context);
+					while(_g2 < _g1) {
+						var i = _g2++;
+						array.push((Std["is"](current,array)?current.copy():current));
+					}
+				}
+				current = array;
+				array = [];
+			}
+		}
+		return current;
+	}break;
+	case 1:
+	var values = $e[2];
+	{
+		var array = new Array();
+		{
+			var _g1 = 0, _g = values.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				array[i] = this.interpret(values[i],context);
+			}
+		}
+		return array;
+	}break;
+	case 2:
+	var value = $e[3], reference = $e[2];
+	{
+		var ref = this.interpret(reference,context);
+		return ref.base[ref.identifier] = this.interpret(value,context);
+	}break;
+	case 3:
+	var statements = $e[2];
+	{
+		var retValue = null;
+		{
+			var _g = 0;
+			while(_g < statements.length) {
+				var i = statements[_g];
+				++_g;
+				retValue = this.interpret(i,context);
+			}
+		}
+		return retValue;
+	}break;
+	case 4:
+	var level = $e[2];
+	{
+		throw new processing.interpreter.BreakException(level);
+	}break;
+	case 5:
+	var args = $e[3], method = $e[2];
+	{
+		var parsedArgs = [];
+		{
+			var _g = 0;
+			while(_g < args.length) {
+				var arg = args[_g];
+				++_g;
+				parsedArgs.push(this.interpret(arg,context));
+			}
+		}
+		return this.interpret(method,context).apply(context.scope,parsedArgs);
+	}break;
+	case 6:
+	var expression = $e[3], type = $e[2];
+	{
+		var value = this.interpret(expression,context);
+		if(type.dimensions == 0) {
+			switch(type.type) {
+			case processing.parser.TokenType.VOID:{
+				return function($this) {
+					var $r;
+					var tmp = value;
+					$r = (Std["is"](tmp,Void)?tmp:function($this) {
+						var $r;
+						throw "Class cast error";
+						return $r;
+					}($this));
+					return $r;
+				}(this);
+			}break;
+			case processing.parser.TokenType.INT:{
+				return function($this) {
+					var $r;
+					var tmp = value;
+					$r = (Std["is"](tmp,Int)?tmp:function($this) {
+						var $r;
+						throw "Class cast error";
+						return $r;
+					}($this));
+					return $r;
+				}(this);
+			}break;
+			case processing.parser.TokenType.FLOAT:{
+				return function($this) {
+					var $r;
+					var tmp = value;
+					$r = (Std["is"](tmp,Float)?tmp:function($this) {
+						var $r;
+						throw "Class cast error";
+						return $r;
+					}($this));
+					return $r;
+				}(this);
+			}break;
+			case processing.parser.TokenType.BOOLEAN:{
+				return function($this) {
+					var $r;
+					var tmp = value;
+					$r = (Std["is"](tmp,Bool)?tmp:function($this) {
+						var $r;
+						throw "Class cast error";
+						return $r;
+					}($this));
+					return $r;
+				}(this);
+			}break;
+			case processing.parser.TokenType.CHAR:{
+				return (Std["is"](value,String)?value.charCodeAt(0):value);
+			}break;
+			}
+		}
+		return value;
+	}break;
+	case 7:
+	var privateBody = $e[5], publicBody = $e[4], constructorBody = $e[3], identifier = $e[2];
+	{
+		return;
+	}break;
+	case 8:
+	var elseBlock = $e[4], thenBlock = $e[3], condition = $e[2];
+	{
+		if(this.interpret(condition,context)) return this.interpret(thenBlock,context);
+		else if(elseBlock != null) return this.interpret(elseBlock,context);
+		return;
+	}break;
+	case 9:
+	var level = $e[2];
+	{
+		throw new processing.interpreter.ContinueException(level);
+	}break;
+	case 10:
+	var reference = $e[2];
+	{
+		var ref = this.interpret(reference,context);
+		return ref.setValue(ref.getValue() - 1);
+	}break;
+	case 11:
+	var body = $e[5], params = $e[4], type = $e[3], identifier = $e[2];
+	{
+		return;
+	}break;
+	case 12:
+	var reference = $e[2];
+	{
+		var ref = this.interpret(reference,context);
+		return ref.setValue(ref.getValue() + 1);
+	}break;
+	case 13:
+	var value = $e[2];
+	{
+		return value;
+	}break;
+	case 14:
+	var body = $e[3], condition = $e[2];
+	{
+		return function($this) {
+			var $r;
+			while($this.interpret(condition,context)) {
+				try {
+					$this.interpret(body,context);
+				}
+				catch( $e4 ) {
+					if( js.Boot.__instanceof($e4,processing.interpreter.BreakException) ) {
+						var b = $e4;
+						{
+							if(--b.level <= 0) throw b;
+							break;
+						}
+					} else if( js.Boot.__instanceof($e4,processing.interpreter.ContinueException) ) {
+						var c = $e4;
+						{
+							if(--c.level <= 0) throw c;
+							continue;
+						}
+					} else throw($e4);
+				}
+			}
+			return $r;
+		}(this);
+	}break;
+	case 15:
+	var args = $e[3], method = $e[2];
+	{
+		return;
+	}break;
+	case 16:
+	var rightOperand = $e[4], leftOperand = $e[3], type = $e[2];
+	{
+		var a = this.interpret(leftOperand,context), b = null;
+		if(rightOperand != null) b = this.interpret(rightOperand,context);
+		switch(type) {
+		case processing.parser.TokenType.NOT:{
+			return !a;
+		}break;
+		case processing.parser.TokenType.BITWISE_NOT:{
+			return ~a;
+		}break;
+		case processing.parser.TokenType.UNARY_PLUS:{
+			return a;
+		}break;
+		case processing.parser.TokenType.UNARY_MINUS:{
+			return -a;
+		}break;
+		case processing.parser.TokenType.OR:{
+			return a || b;
+		}break;
+		case processing.parser.TokenType.AND:{
+			return a && b;
+		}break;
+		case processing.parser.TokenType.BITWISE_OR:{
+			return a | b;
+		}break;
+		case processing.parser.TokenType.BITWISE_XOR:{
+			return a ^ b;
+		}break;
+		case processing.parser.TokenType.BITWISE_AND:{
+			return a & b;
+		}break;
+		case processing.parser.TokenType.EQ:{
+			return a == b;
+		}break;
+		case processing.parser.TokenType.NE:{
+			return a != b;
+		}break;
+		case processing.parser.TokenType.LT:{
+			return a < b;
+		}break;
+		case processing.parser.TokenType.LE:{
+			return a <= b;
+		}break;
+		case processing.parser.TokenType.GT:{
+			return a > b;
+		}break;
+		case processing.parser.TokenType.GE:{
+			return a >= b;
+		}break;
+		case processing.parser.TokenType.IN:{
+			return Reflect.hasField(b,a);
+		}break;
+		case processing.parser.TokenType.INSTANCEOF:{
+			return Std["is"](a,b);
+		}break;
+		case processing.parser.TokenType.LSH:{
+			return a << b;
+		}break;
+		case processing.parser.TokenType.RSH:{
+			return a >> b;
+		}break;
+		case processing.parser.TokenType.URSH:{
+			return a >>> b;
+		}break;
+		case processing.parser.TokenType.PLUS:{
+			return a + b;
+		}break;
+		case processing.parser.TokenType.MINUS:{
+			return a - b;
+		}break;
+		case processing.parser.TokenType.MUL:{
+			return a * b;
+		}break;
+		case processing.parser.TokenType.DIV:{
+			return a / b;
+		}break;
+		case processing.parser.TokenType.MOD:{
+			return a % b;
+		}break;
+		default:{
+			throw "Unrecognized expression operator.";
+		}break;
+		}
+	}break;
+	case 17:
+	var sBase = $e[3], sIdentifier = $e[2];
+	{
+		var identifier = this.interpret(sIdentifier,context), base;
+		if(sBase != null) {
+			base = this.interpret(sBase,context);
+		}
+		else {
+			var c = context;
+			while(c != null && !Reflect.hasField(c.scope,identifier)) c = c.parent;
+			if(c == null) return null;
+			base = c.scope;
+		}
+		return new processing.interpreter.Reference(identifier,base);
+	}break;
+	case 18:
+	var reference = $e[2];
+	{
+		var reference1 = this.interpret(reference,context);
+		return (reference1 != null?reference1.getValue():null);
+	}break;
+	case 19:
+	var value = $e[2];
+	{
+		throw new processing.interpreter.ReturnException(this.interpret(value,context));
+	}break;
+	case 20:
+	{
+		var c = context;
+		while(c != null && c.thisObject == null) c = c.parent;
+		return (c == null?c.thisObject:null);
+	}break;
+	case 21:
+	var type = $e[3], identifier = $e[2];
+	{
+		context.scope[identifier] = 0;
+		return;
+	}break;
+	case 22:
+	var statement1 = $e[2];
+	{
+		var value = this.interpret(statement1,context);
+		if(Std["is"](value,processing.interpreter.Reference)) value = value.getValue();
+		return value;
+	}break;
+	}
+}
+processing.interpreter.Interpreter.prototype.__class__ = processing.interpreter.Interpreter;
+processing.interpreter.Reference = function(identifier,base) { if( identifier === $_ ) return; {
+	this.identifier = identifier;
+	this.base = base;
+}}
+processing.interpreter.Reference.__name__ = ["processing","interpreter","Reference"];
+processing.interpreter.Reference.prototype.base = null;
+processing.interpreter.Reference.prototype.getValue = function() {
+	return Reflect.field(this.base,this.identifier);
+}
+processing.interpreter.Reference.prototype.identifier = null;
+processing.interpreter.Reference.prototype.setValue = function(value) {
+	return this.base[this.identifier] = value;
+}
+processing.interpreter.Reference.prototype.__class__ = processing.interpreter.Reference;
+processing.interpreter.BreakException = function(level) { if( level === $_ ) return; {
+	this.level = level;
+}}
+processing.interpreter.BreakException.__name__ = ["processing","interpreter","BreakException"];
+processing.interpreter.BreakException.prototype.level = null;
+processing.interpreter.BreakException.prototype.__class__ = processing.interpreter.BreakException;
+processing.interpreter.ContinueException = function(level) { if( level === $_ ) return; {
+	this.level = level;
+}}
+processing.interpreter.ContinueException.__name__ = ["processing","interpreter","ContinueException"];
+processing.interpreter.ContinueException.prototype.level = null;
+processing.interpreter.ContinueException.prototype.__class__ = processing.interpreter.ContinueException;
+processing.interpreter.ReturnException = function(value) { if( value === $_ ) return; {
+	this.value = value;
+}}
+processing.interpreter.ReturnException.__name__ = ["processing","interpreter","ReturnException"];
+processing.interpreter.ReturnException.prototype.value = null;
+processing.interpreter.ReturnException.prototype.__class__ = processing.interpreter.ReturnException;
 EReg = function(r,opt) { if( r === $_ ) return; {
 	opt = opt.split("u").join("");
 	this.r = new RegExp(r,opt);
@@ -654,348 +1036,8 @@ processing.parser.Tokenizer.prototype.peek = function(lookAhead,onSameLine) {
 processing.parser.Tokenizer.prototype.scanOperand = null;
 processing.parser.Tokenizer.prototype.source = null;
 processing.parser.Tokenizer.prototype.__class__ = processing.parser.Tokenizer;
-processing.interpreter = {}
-processing.interpreter.Interpreter = function(p) { if( p === $_ ) return; {
-	null;
-}}
-processing.interpreter.Interpreter.__name__ = ["processing","interpreter","Interpreter"];
-processing.interpreter.Interpreter.prototype.interpret = function(statement,context) {
-	var $e = (statement);
-	switch( $e[1] ) {
-	case 0:
-	var size3 = $e[5], size2 = $e[4], size1 = $e[3], type = $e[2];
-	{
-		return new processing.api.ArrayList(this.interpret(size1,context),(size2 != null?this.interpret(size2,context):0),(size3 != null?this.interpret(size3,context):0),type);
-	}break;
-	case 1:
-	var values = $e[2];
-	{
-		var array = new Array();
-		{
-			var _g1 = 0, _g = values.length;
-			while(_g1 < _g) {
-				var i = _g1++;
-				array[i] = this.interpret(values[i],context);
-			}
-		}
-		return array;
-	}break;
-	case 2:
-	var value = $e[3], reference = $e[2];
-	{
-		var ref = this.interpret(reference,context);
-		return ref.base[ref.identifier] = this.interpret(value,context);
-	}break;
-	case 3:
-	var statements = $e[2];
-	{
-		var retValue = null;
-		{
-			var _g = 0;
-			while(_g < statements.length) {
-				var i = statements[_g];
-				++_g;
-				retValue = this.interpret(i,context);
-			}
-		}
-		return retValue;
-	}break;
-	case 4:
-	var level = $e[2];
-	{
-		throw this;
-	}break;
-	case 5:
-	var args = $e[3], method = $e[2];
-	{
-		var parsedArgs = new Array();
-		{
-			var _g = 0;
-			while(_g < args.length) {
-				var arg = args[_g];
-				++_g;
-				parsedArgs.push(this.interpret(arg,context));
-			}
-		}
-		return this.interpret(method,context).apply(context.scope,parsedArgs);
-	}break;
-	case 6:
-	var expression = $e[3], type = $e[2];
-	{
-		var value = this.interpret(expression,context);
-		if(type.dimensions == 0) {
-			switch(type.type) {
-			case processing.parser.TokenType.VOID:{
-				return function($this) {
-					var $r;
-					var tmp = value;
-					$r = (Std["is"](tmp,Void)?tmp:function($this) {
-						var $r;
-						throw "Class cast error";
-						return $r;
-					}($this));
-					return $r;
-				}(this);
-			}break;
-			case processing.parser.TokenType.INT:{
-				return function($this) {
-					var $r;
-					var tmp = value;
-					$r = (Std["is"](tmp,Int)?tmp:function($this) {
-						var $r;
-						throw "Class cast error";
-						return $r;
-					}($this));
-					return $r;
-				}(this);
-			}break;
-			case processing.parser.TokenType.FLOAT:{
-				return function($this) {
-					var $r;
-					var tmp = value;
-					$r = (Std["is"](tmp,Float)?tmp:function($this) {
-						var $r;
-						throw "Class cast error";
-						return $r;
-					}($this));
-					return $r;
-				}(this);
-			}break;
-			case processing.parser.TokenType.BOOLEAN:{
-				return function($this) {
-					var $r;
-					var tmp = value;
-					$r = (Std["is"](tmp,Bool)?tmp:function($this) {
-						var $r;
-						throw "Class cast error";
-						return $r;
-					}($this));
-					return $r;
-				}(this);
-			}break;
-			case processing.parser.TokenType.CHAR:{
-				return (Std["is"](value,String)?value.charCodeAt(0):value);
-			}break;
-			}
-		}
-		return value;
-	}break;
-	case 7:
-	var privateBody = $e[5], publicBody = $e[4], constructorBody = $e[3], identifier = $e[2];
-	{
-		return;
-	}break;
-	case 8:
-	var elseBlock = $e[4], thenBlock = $e[3], condition = $e[2];
-	{
-		if(this.interpret(condition,context)) return this.interpret(thenBlock,context);
-		else if(elseBlock != null) return this.interpret(elseBlock,context);
-		return;
-	}break;
-	case 9:
-	var level = $e[2];
-	{
-		throw statement;
-	}break;
-	case 10:
-	var reference = $e[2];
-	{
-		var ref = this.interpret(reference,context);
-		return ref.base[ref.identifier] = Reflect.field(ref.base,ref.identifier) - 1;
-	}break;
-	case 11:
-	var body = $e[5], params = $e[4], type = $e[3], identifier = $e[2];
-	{
-		return;
-	}break;
-	case 12:
-	var reference = $e[2];
-	{
-		var ref = this.interpret(reference,context);
-		return ref.base[ref.identifier] = Reflect.field(ref.base,ref.identifier) + 1;
-	}break;
-	case 13:
-	var value = $e[2];
-	{
-		return value;
-	}break;
-	case 14:
-	var body = $e[3], condition = $e[2];
-	{
-		return function($this) {
-			var $r;
-			while($this.interpret(condition,context)) {
-				try {
-					$this.interpret(body,context);
-				}
-				catch( $e4 ) {
-					if( js.Boot.__instanceof($e4,processing.interpreter.BreakException) ) {
-						var b = $e4;
-						{
-							if(--b.level <= 0) throw b;
-							break;
-						}
-					} else if( js.Boot.__instanceof($e4,processing.interpreter.ContinueException) ) {
-						var c = $e4;
-						{
-							if(--c.level <= 0) throw c;
-							continue;
-						}
-					} else throw($e4);
-				}
-			}
-			return $r;
-		}(this);
-	}break;
-	case 15:
-	var args = $e[3], method = $e[2];
-	{
-		return;
-	}break;
-	case 16:
-	var rightOperand = $e[4], leftOperand = $e[3], type = $e[2];
-	{
-		var a = this.interpret(leftOperand,context), b = null;
-		if(rightOperand != null) b = this.interpret(rightOperand,context);
-		switch(type) {
-		case processing.parser.TokenType.NOT:{
-			return !a;
-		}break;
-		case processing.parser.TokenType.BITWISE_NOT:{
-			return ~a;
-		}break;
-		case processing.parser.TokenType.UNARY_PLUS:{
-			return a;
-		}break;
-		case processing.parser.TokenType.UNARY_MINUS:{
-			return -a;
-		}break;
-		case processing.parser.TokenType.OR:{
-			return a || b;
-		}break;
-		case processing.parser.TokenType.AND:{
-			return a && b;
-		}break;
-		case processing.parser.TokenType.BITWISE_OR:{
-			return a | b;
-		}break;
-		case processing.parser.TokenType.BITWISE_XOR:{
-			return a ^ b;
-		}break;
-		case processing.parser.TokenType.BITWISE_AND:{
-			return a & b;
-		}break;
-		case processing.parser.TokenType.EQ:{
-			return a == b;
-		}break;
-		case processing.parser.TokenType.NE:{
-			return a != b;
-		}break;
-		case processing.parser.TokenType.LT:{
-			return a < b;
-		}break;
-		case processing.parser.TokenType.LE:{
-			return a <= b;
-		}break;
-		case processing.parser.TokenType.GT:{
-			return a > b;
-		}break;
-		case processing.parser.TokenType.GE:{
-			return a >= b;
-		}break;
-		case processing.parser.TokenType.IN:{
-			return Reflect.hasField(b,a);
-		}break;
-		case processing.parser.TokenType.INSTANCEOF:{
-			return Std["is"](a,b);
-		}break;
-		case processing.parser.TokenType.LSH:{
-			return a << b;
-		}break;
-		case processing.parser.TokenType.RSH:{
-			return a >> b;
-		}break;
-		case processing.parser.TokenType.URSH:{
-			return a >>> b;
-		}break;
-		case processing.parser.TokenType.PLUS:{
-			return a + b;
-		}break;
-		case processing.parser.TokenType.MINUS:{
-			return a - b;
-		}break;
-		case processing.parser.TokenType.MUL:{
-			return a * b;
-		}break;
-		case processing.parser.TokenType.DIV:{
-			return a / b;
-		}break;
-		case processing.parser.TokenType.MOD:{
-			return a % b;
-		}break;
-		case processing.parser.TokenType.DOT:{
-			return a[b];
-		}break;
-		default:{
-			throw "Unrecognized expression operator.";
-		}break;
-		}
-	}break;
-	case 17:
-	var sBase = $e[3], sIdentifier = $e[2];
-	{
-		var identifier = this.interpret(sIdentifier,context), base;
-		if(sBase != null) {
-			base = this.interpret(sBase,context);
-		}
-		else {
-			var c = context;
-			while(c != null && !Reflect.hasField(c.scope,identifier)) c = c.parent;
-			if(c == null) return null;
-			base = c.scope;
-		}
-		return { identifier : identifier, base : base}
-	}break;
-	case 18:
-	var reference = $e[2];
-	{
-		var ref = this.interpret(reference,context);
-		return (ref != null?Reflect.field(ref.base,ref.identifier):null);
-	}break;
-	case 19:
-	var value = $e[2];
-	{
-		throw statement;
-	}break;
-	case 20:
-	{
-		var c = context;
-		while(c != null && c.thisObject == null) c = c.parent;
-		return (c == null?c.thisObject:null);
-	}break;
-	case 21:
-	var type = $e[3], identifier = $e[2];
-	{
-		context.scope[identifier] = 0;
-		return;
-	}break;
-	}
-}
-processing.interpreter.Interpreter.prototype.__class__ = processing.interpreter.Interpreter;
-processing.interpreter.BreakException = function() { }
-processing.interpreter.BreakException.__name__ = ["processing","interpreter","BreakException"];
-processing.interpreter.BreakException.prototype.level = null;
-processing.interpreter.BreakException.prototype.__class__ = processing.interpreter.BreakException;
-processing.interpreter.ContinueException = function() { }
-processing.interpreter.ContinueException.__name__ = ["processing","interpreter","ContinueException"];
-processing.interpreter.ContinueException.prototype.level = null;
-processing.interpreter.ContinueException.prototype.__class__ = processing.interpreter.ContinueException;
-processing.interpreter.ReturnException = function() { }
-processing.interpreter.ReturnException.__name__ = ["processing","interpreter","ReturnException"];
-processing.interpreter.ReturnException.prototype.value = null;
-processing.interpreter.ReturnException.prototype.__class__ = processing.interpreter.ReturnException;
-processing.parser.Statement = { __ename__ : ["processing","parser","Statement"], __constructs__ : ["SArrayInstantiation","SArrayLiteral","SAssignment","SBlock","SBreak","SCall","SCast","SClassDefinition","SConditional","SContinue","SDecrement","SFunctionDefinition","SIncrement","SLiteral","SLoop","SObjectInstantiation","SOperation","SReference","SReferenceValue","SReturn","SThisReference","SVariableDefinition"] }
-processing.parser.Statement.SArrayInstantiation = function(type,size1,size2,size3) { var $x = ["SArrayInstantiation",0,type,size1,size2,size3]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement = { __ename__ : ["processing","parser","Statement"], __constructs__ : ["SArrayInstantiation","SArrayLiteral","SAssignment","SBlock","SBreak","SCall","SCast","SClassDefinition","SConditional","SContinue","SDecrement","SFunctionDefinition","SIncrement","SLiteral","SLoop","SObjectInstantiation","SOperation","SReference","SReferenceValue","SReturn","SThisReference","SVariableDefinition","SValue"] }
+processing.parser.Statement.SArrayInstantiation = function(type,sizes) { var $x = ["SArrayInstantiation",0,type,sizes]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SArrayLiteral = function(values) { var $x = ["SArrayLiteral",1,values]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SAssignment = function(reference,value) { var $x = ["SAssignment",2,reference,value]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SBlock = function(statements) { var $x = ["SBlock",3,statements]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
@@ -1018,6 +1060,7 @@ processing.parser.Statement.SReturn = function(value) { var $x = ["SReturn",19,v
 processing.parser.Statement.SThisReference = ["SThisReference",20];
 processing.parser.Statement.SThisReference.toString = $estr;
 processing.parser.Statement.SThisReference.__enum__ = processing.parser.Statement;
+processing.parser.Statement.SValue = function(value) { var $x = ["SValue",22,value]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SVariableDefinition = function(identifier,type) { var $x = ["SVariableDefinition",21,identifier,type]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.TokenizerSyntaxError = function(_message,tokenizer) { if( _message === $_ ) return; {
 	if(_message == null) _message = "";
@@ -1074,7 +1117,7 @@ processing.evaluator.Evaluator.prototype.evaluate = function(code) {
 		}
 	}
 	var interpreter = new processing.interpreter.Interpreter();
-	interpreter.interpret(script,globalScope);
+	interpreter.interpret(script,currentScope);
 }
 processing.evaluator.Evaluator.prototype.__class__ = processing.evaluator.Evaluator;
 Reflect = function() { }
@@ -1218,71 +1261,6 @@ processing.parser.Token.prototype.start = null;
 processing.parser.Token.prototype.type = null;
 processing.parser.Token.prototype.value = null;
 processing.parser.Token.prototype.__class__ = processing.parser.Token;
-processing.api = {}
-processing.api.ArrayList = function(size1,size2,size3,ty) { if( size1 === $_ ) return; {
-	this.type = ty;
-	this.array = [];
-	{
-		var _g = 0;
-		while(_g < size1) {
-			var i = _g++;
-			this.array[i] = 0;
-			if(size2 > 0) {
-				this.array[i] = [];
-				{
-					var _g1 = 0;
-					while(_g1 < size2) {
-						var j = _g1++;
-						this.array[i] = 0;
-						if(size3 > 0) {
-							this.array[i][j] = [];
-							{
-								var _g2 = 0;
-								while(_g2 < size3) {
-									var k = _g2++;
-									this.array[i][j][k] = 0;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}}
-processing.api.ArrayList.__name__ = ["processing","api","ArrayList"];
-processing.api.ArrayList.prototype.add = function(item) {
-	this.array.push(item);
-}
-processing.api.ArrayList.prototype.array = null;
-processing.api.ArrayList.prototype.clear = function() {
-	this.array.splice(0,this.array.length);
-}
-processing.api.ArrayList.prototype.clone = function() {
-	var a = new processing.api.ArrayList(this.array.length);
-	{
-		var _g1 = 0, _g = this.array.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			a.add(this.array[i]);
-		}
-	}
-	return a;
-}
-processing.api.ArrayList.prototype.get = function(i) {
-	return this.array[i];
-}
-processing.api.ArrayList.prototype.isEmpty = function() {
-	return this.array.length == 0;
-}
-processing.api.ArrayList.prototype.remove = function(i) {
-	return this.array.splice(i,1);
-}
-processing.api.ArrayList.prototype.size = function() {
-	return this.array.length;
-}
-processing.api.ArrayList.prototype.type = null;
-processing.api.ArrayList.prototype.__class__ = processing.api.ArrayList;
 processing.parser.Parser = function(p) { if( p === $_ ) return; {
 	this.tokenizer = new processing.parser.Tokenizer();
 }}
@@ -1368,7 +1346,7 @@ processing.parser.Parser.prototype.parseList = function(stopAt) {
 			list.push(null);
 			continue;
 		}
-		list.push(this.parseExpression(processing.parser.TokenType.COMMA));
+		list.push(processing.parser.Statement.SValue(this.parseExpression(processing.parser.TokenType.COMMA)));
 		if(!this.tokenizer.match(processing.parser.TokenType.COMMA)) break;
 	}
 	return list;
@@ -1509,28 +1487,14 @@ processing.parser.Parser.prototype.reduceExpression = function(operatorList,oper
 	var operator = operatorList.pop();
 	var operands = operandList.splice(operandList.length - operator.arity,operator.arity);
 	switch(operator) {
-	case processing.parser.TokenType.INCREMENT:case processing.parser.TokenType.DECREMENT:case processing.parser.TokenType.ASSIGN:case processing.parser.TokenType.INDEX:case processing.parser.TokenType.DOT:{
-		null;
-	}break;
-	default:{
-		{
-			var _g1 = 0, _g = operands.length;
-			while(_g1 < _g) {
-				var i = _g1++;
-				if(Std["is"](operands[i],processing.parser.Statement.SReference)) operands[i] = processing.parser.Statement.SReferenceValue(operands[i]);
-			}
-		}
-	}break;
-	}
-	switch(operator) {
 	case processing.parser.TokenType.NEW:case processing.parser.TokenType.NEW_WITH_ARGS:{
-		operandList.push(processing.parser.Statement.SObjectInstantiation(operands[0],operands[1]));
+		operandList.push(processing.parser.Statement.SObjectInstantiation(processing.parser.Statement.SValue(operands[0]),operands[1]));
 	}break;
 	case processing.parser.TokenType.CALL:{
-		operandList.push(processing.parser.Statement.SCall(operands[0],operands[1]));
+		operandList.push(processing.parser.Statement.SCall(processing.parser.Statement.SValue(operands[0]),operands[1]));
 	}break;
 	case processing.parser.TokenType.CAST:{
-		operandList.push(processing.parser.Statement.SCast(operands[0],operands[1]));
+		operandList.push(processing.parser.Statement.SCast(operands[0],processing.parser.Statement.SValue(operands[1])));
 	}break;
 	case processing.parser.TokenType.INCREMENT:{
 		operandList.push(processing.parser.Statement.SIncrement(operands[0]));
@@ -1545,16 +1509,15 @@ processing.parser.Parser.prototype.reduceExpression = function(operatorList,oper
 		operandList.push(processing.parser.Statement.SReference(operands[1],operands[0]));
 	}break;
 	case processing.parser.TokenType.NOT:case processing.parser.TokenType.BITWISE_NOT:case processing.parser.TokenType.UNARY_PLUS:case processing.parser.TokenType.UNARY_MINUS:{
-		operandList.push(processing.parser.Statement.SOperation(operator,operands[0]));
+		operandList.push(processing.parser.Statement.SOperation(operator,processing.parser.Statement.SValue(operands[0])));
 	}break;
 	case processing.parser.TokenType.OR:case processing.parser.TokenType.AND:case processing.parser.TokenType.BITWISE_OR:case processing.parser.TokenType.BITWISE_XOR:case processing.parser.TokenType.BITWISE_AND:case processing.parser.TokenType.EQ:case processing.parser.TokenType.NE:case processing.parser.TokenType.STRICT_EQ:case processing.parser.TokenType.STRICT_NE:case processing.parser.TokenType.LT:case processing.parser.TokenType.LE:case processing.parser.TokenType.GE:case processing.parser.TokenType.GT:case processing.parser.TokenType.INSTANCEOF:case processing.parser.TokenType.LSH:case processing.parser.TokenType.RSH:case processing.parser.TokenType.URSH:case processing.parser.TokenType.PLUS:case processing.parser.TokenType.MINUS:case processing.parser.TokenType.MUL:case processing.parser.TokenType.DIV:case processing.parser.TokenType.MOD:{
-		operandList.push(processing.parser.Statement.SOperation(operator,operands[0],operands[1]));
+		operandList.push(processing.parser.Statement.SOperation(operator,processing.parser.Statement.SValue(operands[0]),processing.parser.Statement.SValue(operands[1])));
 	}break;
 	default:{
 		throw "Unknown operator \"" + operator + "\"";
 	}break;
 	}
-	if(Std["is"](operandList[operandList.length],processing.parser.Statement.SReference)) operandList[operandList.length] = processing.parser.Statement.SReferenceValue(operands[operandList.length]);
 }
 processing.parser.Parser.prototype.scanOperand = function(operators,operands,stopAt,required) {
 	this.tokenizer.scanOperand = true;
@@ -1579,17 +1542,12 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,sto
 			if(operators[operators.length - 1] == processing.parser.TokenType.NEW && this.tokenizer.peek(2).match(processing.parser.TokenType.LEFT_BRACKET)) {
 				var type = this.parseType();
 				var sizes = [];
-				{
-					var _g = 0;
-					while(_g < 2) {
-						var dimensions = _g++;
-						if(!this.tokenizer.match(processing.parser.TokenType.LEFT_BRACKET)) break;
-						sizes.push(this.parseExpression(processing.parser.TokenType.RIGHT_BRACKET));
-						this.tokenizer.match(processing.parser.TokenType.RIGHT_BRACKET,true);
-					}
+				while(this.tokenizer.match(processing.parser.TokenType.LEFT_BRACKET)) {
+					sizes.push(this.parseExpression(processing.parser.TokenType.RIGHT_BRACKET));
+					this.tokenizer.match(processing.parser.TokenType.RIGHT_BRACKET,true);
 				}
 				operators.pop();
-				operands.push(processing.parser.Statement.SArrayInstantiation(type,sizes[0],sizes[1],sizes[2]));
+				operands.push(processing.parser.Statement.SArrayInstantiation(type,sizes));
 			}
 			else if(!token.match(processing.parser.TokenType.IDENTIFIER)) {
 				throw new processing.parser.TokenizerSyntaxError("Invalid type declaration",this.tokenizer);

@@ -5,7 +5,7 @@
 
 package processing.interpreter;
 
-import processing.api.ArrayList;
+import js.Lib;
 import processing.parser.TokenType;
 import processing.parser.Statement;
 
@@ -20,9 +20,18 @@ class Interpreter
 	{
 		switch (statement)
 		{
-		case SArrayInstantiation(type, size1, size2, size3):
-			// return new ArrayList object
-			return new ArrayList(interpret(size1, context), size2 != null ? interpret(size2, context) : 0, size3 != null ? interpret(size3, context) : 0, type);
+		case SArrayInstantiation(type, sizes):
+			// return new (multi-)dimensional array
+			var array:Array<Dynamic> = [], current:Dynamic = 0;
+			sizes.reverse();
+			for (size in sizes)
+			{
+				for (i in 0...interpret(size, context))
+					array.push(Std.is(current, array) ? current.copy() : current);
+				current = array;
+				array = [];
+			}
+			return current;
 
 		case SArrayLiteral(values):
 			// parse array
@@ -45,15 +54,14 @@ class Interpreter
 			return retValue;
 		
 		case SBreak(level):
-//[TODO] BreakException
-			throw this;
+			throw new BreakException(level);
 			
 		case SCall(method, args):
 			// iterate args statements
-			var parsedArgs:Array<Dynamic> = new Array();
+			var parsedArgs:Array<Dynamic> = [];
 			for (arg in args)
 				parsedArgs.push(interpret(arg, context));
-			// apply function			
+			// apply function
 			return Reflect.callMethod(context.scope, interpret(method, context), parsedArgs);
 			
 		case SCast(type, expression):
@@ -114,15 +122,13 @@ class Interpreter
 			return;
 				
 		case SContinue(level):
-//[TODO] ContinueException
-			// throw exception
-			throw statement;
+			throw new ContinueException(level);
 		
 		case SDecrement(reference):
 			// get simplified reference
 			var ref:Reference = interpret(reference, context);
 			// increment and return
-			return Reflect.setField(ref.base, ref.identifier, Reflect.field(ref.base, ref.identifier) - 1);
+			return ref.setValue(ref.getValue() - 1);
 			
 		case SFunctionDefinition(identifier, type, params, body):
 //[TODO] make this work
@@ -192,7 +198,7 @@ class Interpreter
 			// get simplified reference
 			var ref:Reference = interpret(reference, context);
 			// increment and return
-			return Reflect.setField(ref.base, ref.identifier, Reflect.field(ref.base, ref.identifier) + 1);
+			return ref.setValue(ref.getValue() + 1);
 			
 		case SLiteral(value):
 			// return literal
@@ -271,7 +277,6 @@ class Interpreter
 			    case TokenType.MUL:		return a * b;
 			    case TokenType.DIV:		return a / b;
 			    case TokenType.MOD:		return a % b;
-			    case TokenType.DOT:		return a[b];
 			    default: throw 'Unrecognized expression operator.';
 			}
 		
@@ -289,24 +294,22 @@ class Interpreter
 				// climb context inheritance to find declared identifier
 				var c:Scope = context;
 				while (c != null && !Reflect.hasField(c.scope, identifier))
-				    c = c.parent;
+					c = c.parent;
 				if (c == null)
 					return null;
 				base = c.scope;
 			}
 
 			// return reduced reference
-			return {identifier: identifier, base: base};
+			return new Reference(identifier, base);
 			
 		case SReferenceValue(reference):
 			// get simplified reference
-			var ref:Reference = interpret(reference, context);
-			return ref != null ? Reflect.field(ref.base, ref.identifier) : null;
+			var reference:Reference = interpret(reference, context);
+			return reference != null ? reference.getValue() : null;
 		
 		case SReturn(value):
-//[TODO] ReturnException
-			// throw this return
-			throw statement;
+			throw new ReturnException(interpret(value, context));
 			
 		case SThisReference:
 			// climb context inheritance to find defined thisObject
@@ -320,24 +323,50 @@ class Interpreter
 			// define variable (by default, 0)
 			Reflect.setField(context.scope, identifier, 0);
 			return;
+		
+		case SValue(statement):
+//[TODO] remove reference decoupling from SValue?
+			// evaluate statements
+			var value:Dynamic = interpret(statement, context);
+			// evaluate references
+			if (Std.is(value, Reference))
+				value = value.getValue();
+			// return value
+			return value;	
 		}
 	}
 }
 
 //[TODO] name this better?
-typedef Reference = {
-	var identifier:String;
-	var base:Dynamic;
+class Reference {
+	public var identifier:String;
+	public var base:Dynamic;
+	
+	public function new(identifier:String, base:Dynamic) {
+		this.identifier = identifier;
+		this.base = base;
+	}
+	
+	public function getValue():Dynamic {
+		return Reflect.field(base, identifier);
+	}
+	
+	public function setValue(value:Dynamic):Dynamic {
+		return Reflect.setField(base, identifier, value);
+	}
 }
 
 class BreakException {
 	public var level:Int;
+	public function new(level:Int) { this.level = level; }
 }
 
 class ContinueException {
 	public var level:Int;
+	public function new(level:Int) { this.level = level; }
 }
 
 class ReturnException {
 	public var value:Dynamic;
+	public function new(value:Dynamic) { this.value = value; }
 }

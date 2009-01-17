@@ -1,5 +1,6 @@
 package processing.parser;
 
+import js.Lib;
 import processing.parser.Statement;
 
 class Parser {
@@ -357,7 +358,7 @@ class Parser {
 				continue;
 			}
 			// parse arguments up to next comma
-			list.push(parseExpression(TokenType.COMMA));
+			list.push(SValue(parseExpression(TokenType.COMMA)));
 			if (!tokenizer.match(TokenType.COMMA))
 				break;
 		}
@@ -426,20 +427,17 @@ class Parser {
 				    tokenizer.peek(2).match(TokenType.LEFT_BRACKET)) {
 					// get type
 					var type:Type = parseType();
-					// get array initialization
+					// match array dimensions
 					var sizes:Array<Statement> = [];
-					for (dimensions in 0...2) {
-						// match an array dimension
-						if (!tokenizer.match(TokenType.LEFT_BRACKET))
-							break;
-
+					while (tokenizer.match(TokenType.LEFT_BRACKET))
+					{
 						sizes.push(parseExpression(TokenType.RIGHT_BRACKET));
 						tokenizer.match(TokenType.RIGHT_BRACKET, true);
 					}
 
 					// create array initializer
 					operators.pop();
-					operands.push(SArrayInstantiation(type, sizes[0], sizes[1], sizes[2]));
+					operands.push(SArrayInstantiation(type, sizes));
 				} else if (!token.match(TokenType.IDENTIFIER)) {
 					// invalid use of type keyword
 					throw new TokenizerSyntaxError('Invalid type declaration', tokenizer);
@@ -691,34 +689,19 @@ class Parser {
 		var operator:TokenType = operatorList.pop();
 		var operands:Array<Dynamic> = operandList.splice(operandList.length - operator.arity, operator.arity);
 		
-//[TODO] is there a better spot for this?
-		// convert references to implicit reference value
-		switch (operator) {
-		    // these operators use implicit references
-		    case TokenType.INCREMENT, TokenType.DECREMENT, TokenType.ASSIGN,
-		    TokenType.INDEX, TokenType.DOT:
-		    
-		    // otherwise, get reference value
-		    default:
-			for (i in 0...operands.length)
-//[TODO] does this work right for the call() operator?
-				if (Std.is(operands[i], SReference))
-					operands[i] = SReferenceValue(operands[i]);
-		}
-		
 		// convert expression to statements
 		switch (operator) {
 		    // object instantiation
 		    case TokenType.NEW, TokenType.NEW_WITH_ARGS:
-			operandList.push(SObjectInstantiation(operands[0], operands[1]));
+			operandList.push(SObjectInstantiation(SValue(operands[0]), operands[1]));
 		    
 		    // function call
 		    case TokenType.CALL:
-			operandList.push(SCall(operands[0], operands[1]));
+			operandList.push(SCall(SValue(operands[0]), operands[1]));
 		
 		    // casting
 		    case TokenType.CAST:
-			operandList.push(SCast(operands[0], operands[1]));
+			operandList.push(SCast(operands[0], SValue(operands[1])));
 			
 		    // increment/decrement
 		    case TokenType.INCREMENT:
@@ -736,7 +719,7 @@ class Parser {
 
 		    // unary operators
 		    case TokenType.NOT, TokenType.BITWISE_NOT, TokenType.UNARY_PLUS, TokenType.UNARY_MINUS:
-			operandList.push(SOperation(operator, operands[0]));
+			operandList.push(SOperation(operator, SValue(operands[0])));
 	
 		    // operators
 		    case TokenType.OR, TokenType.AND, TokenType.BITWISE_OR, TokenType.BITWISE_XOR,
@@ -746,15 +729,12 @@ class Parser {
 			TokenType.URSH, TokenType.PLUS, TokenType.MINUS, TokenType.MUL,
 			TokenType.DIV, TokenType.MOD:
 			// add operation
-			operandList.push(SOperation(operator, operands[0], operands[1]));
+			operandList.push(SOperation(operator, SValue(operands[0]), SValue(operands[1])));
 		
 		    default:
 			throw 'Unknown operator "' + operator + '"';
 		}
-		
-//[TODO] is this necessary/the right location for this?
-		// convert references to implicit reference value
-		if (Std.is(operandList[operandList.length], SReference))
-			operandList[operandList.length] = SReferenceValue(operands[operandList.length]);
+
+//[TODO] should final operand be wrapped in an SLiteral?
 	}
 }

@@ -91,7 +91,7 @@ class Evaluator {
 
 		// interpret code
 		var interpreter:Interpreter = new Interpreter();
-		interpreter.interpret(script, globalScope);
+		interpreter.interpret(script, currentScope);
 #end
 	}
 }

@@ -9,7 +9,7 @@ package processing.parser;
 
 enum Statement 
 {
-	SArrayInstantiation(type:Type, size1:Statement, ?size2:Statement, ?size3:Statement);
+	SArrayInstantiation(type:Type, sizes:Array<Statement>);
 	SArrayLiteral(values:Array<Statement>);
 	SAssignment(reference:Statement, value:Statement); //SReference
 	SBlock(statements:Array<Statement>);
@@ -31,4 +31,5 @@ enum Statement
 	SReturn(?value:Statement);
 	SThisReference();
 	SVariableDefinition(identifier:String, type:Type);
+	SValue(value:Statement);
 }
