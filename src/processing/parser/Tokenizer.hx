@@ -91,22 +91,22 @@ class Tokenizer {
 				// string
 				token = new Token(TokenType.STRING, parseStringLiteral(regex.matched(0).substr(1, regex.matched(0).length - 1)));
 			}
+			else if ((regex = regexes.ASSIGN_OPERATOR).match(input))
+			{
+				// assignment operator
+				var op:String = regex.matched(1);
+				token = new Token(TokenType.ASSIGNMENT_OPS.get(op), op);
+			}
 			else if ((regex = regexes.OPERATOR).match(input))
 			{
 				// operator
 				var op:String = regex.matched(1);
-				if (TokenType.ASSIGNMENT_OPS.exists(op) && regex.matched(2).length > 0) {
-					token = new Token(TokenType.ASSIGN, op);
-					token.assignOp = TokenType.OPS.get(op);
-				} else {
-					token = new Token(TokenType.OPS.get(op), op);
-					if (scanOperand) {
-						if (token.type == TokenType.PLUS)
-							token.type = TokenType.UNARY_PLUS;
-						if (token.type == TokenType.MINUS)
-							token.type = TokenType.UNARY_MINUS;
-					}
-					token.assignOp = null;
+				token = new Token(TokenType.OPS.get(op), op);
+				if (scanOperand) {
+					if (token.type == TokenType.PLUS)
+						token.type = TokenType.UNARY_PLUS;
+					if (token.type == TokenType.MINUS)
+						token.type = TokenType.UNARY_MINUS;
 				}
 			}
 			else
@@ -158,13 +158,13 @@ class Tokenizer {
 		if (doesMatch)
 			get();
 		else if (mustMatch)
-			throw new TokenizerSyntaxError('Tokenizer: Must match ' + TokenType.getConstant(matchType) + ', found ' + TokenType.getConstant(peek().type), this);
+			throw new TokenizerSyntaxError('Tokenizer: Must match ' + matchType.value + ', found ' + peek().type, this);
 		return doesMatch;
 	}
 	
 	private function isDone():Bool
 	{
-		return cast(match(TokenType.END), Bool);
+		return match(TokenType.END);
 	}
 	
 	private function getCurrentLineNumber():Int
@@ -192,10 +192,11 @@ class TokenizerRegexList
 	public static var FLOAT:EReg = ~/^\d+(?:\.\d*)?[fF]|^\d+\.\d*(?:[eE][-+]?\d+)?|^\d+(?:\.\d*)?[eE][-+]?\d+|^\.\d+(?:[eE][-+]?\d+)?/;
 	public static var INTEGER:EReg = ~/^0[xX][\da-fA-F]+|^0[0-7]*|^\d+/;
 	public static var KEYWORD:EReg = ~/^\w+/;
-	public static var ARRAY_DIMENSIONS:EReg = ~/^(?:\[\]){1,3}/;
+	public static var ARRAY_DIMENSIONS:EReg = ~/^(?:\[\]){1,}/;
 	public static var CHAR:EReg = ~/^'(?:[^']|\\.|\\u[0-9A-Fa-f]{4})'/;
 	public static var STRING:EReg = ~/^"(?:\\.|[^"])*"|^'(?:[^']|\\.)*'/;
-	public static var OPERATOR:EReg = ~/^(\n|\|\||&&|===?|!==?|<<|<=|>>>?|>=|\+\+|--|\[\]|[;,?:|^&=<>+\-*\/%!~.[\]{}()])(=?)/;
+	public static var ASSIGN_OPERATOR:EReg = ~/^(\||\^|&|<<|>>>?|\+|\-|\*|\/|%)?=(?!=)|^\+\+|^--/;
+	public static var OPERATOR:EReg = ~/^(\n|\|\||&&|===?|!==?|<<|<=|>>>?|>=|\+\+|--|\[\]|[;,?:|^&<>+\-*\/%!~.[\]{}()])/;
 	
 	// characters
 	public static var CHAR_BACKSPACE:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\b/g;

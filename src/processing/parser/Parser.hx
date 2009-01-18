@@ -1,6 +1,5 @@
 package processing.parser;
 
-import js.Lib;
 import processing.parser.Statement;
 
 class Parser {
@@ -40,7 +39,6 @@ class Parser {
 
 		// peek to see what kind of statement this is
 		var token:Token = tokenizer.peek();
-//trace('Currently parsing in Statement: ' + TokenType.getConstant(token.type));
 		switch (token.type)
 		{				
 		    // if block
@@ -332,12 +330,8 @@ class Parser {
 			// check for assignment operation
 			if (tokenizer.match(TokenType.ASSIGN))
 			{
-				// prevent assignment operators
-				if (tokenizer.currentToken.assignOp != null)
-					throw new TokenizerSyntaxError('Invalid variable initialization', tokenizer);
-
 				// get initializer statement
-				block.push(SAssignment(SReference(SLiteral(varName)),
+				block.push(SAssignment(AssignOp, SReference(SLiteral(varName)),
 				    parseExpression(TokenType.COMMA)));
 			}
 		} while (tokenizer.match(TokenType.COMMA));
@@ -358,7 +352,7 @@ class Parser {
 				continue;
 			}
 			// parse arguments up to next comma
-			list.push(SValue(parseExpression(TokenType.COMMA)));
+			list.push(parseExpression(TokenType.COMMA));
 			if (!tokenizer.match(TokenType.COMMA))
 				break;
 		}
@@ -544,7 +538,10 @@ class Parser {
 		// switch based on type
 		switch (token.type) {				
 		    // assignment
-		    case TokenType.ASSIGN:
+		    case TokenType.ASSIGN, TokenType.ASSIGN_BITWISE_OR, TokenType.ASSIGN_BITWISE_XOR,
+		        TokenType.ASSIGN_BITWISE_AND, TokenType.ASSIGN_LSH, TokenType.ASSIGN_RSH,
+			TokenType.ASSIGN_URSH, TokenType.ASSIGN_PLUS, TokenType.ASSIGN_MINUS,
+			TokenType.ASSIGN_MUL, TokenType.ASSIGN_DIV, TokenType.ASSIGN_MOD:
 			// combine any higher-precedence expressions (using > and not >=, so postfix > prefix)
 			while (operators.length > 0 &&
 			    operators[operators.length - 1].precedence > token.type.precedence)
@@ -552,16 +549,27 @@ class Parser {
 				
 			// push operator
 			operators.push(tokenizer.get().type);
-			// expand assignment operators
-			if (token.assignOp != null) {
-				operators.push(token.assignOp);
-				operands.push(operands[operands.length-1]);
-			}
 			// push assignment value
 			operands.push(parseExpression(stopAt));
 
 			// reached end of expression
 			return false;
+			
+		    // increment/decrement
+		    case TokenType.INCREMENT, TokenType.DECREMENT:
+//[TODO] actually this doesn't actually work! how do we do a postfix in the middle of an expression...
+			// postfix; reduce higher-precedence operators (using > and not >=, so postfix > prefix)
+			while (operators.length > 0 &&
+			    operators[operators.length - 1].precedence > token.type.precedence)
+				reduceExpression(operators, operands);
+				
+			// add operator and reduce immediately
+//[TODO] is reducing immediately necessary? a matter of precedence...
+			operators.push(tokenizer.get().type);
+			reduceExpression(operators, operands);
+			
+			// find next operator
+			return scanOperator(operators, operands, stopAt);
 			
 		    // dot operator
 		    case TokenType.DOT:			
@@ -600,9 +608,9 @@ class Parser {
 		    case TokenType.OR, TokenType.AND, TokenType.BITWISE_OR, TokenType.BITWISE_XOR,
 		        TokenType.BITWISE_AND, TokenType.EQ, TokenType.NE, TokenType.STRICT_EQ,
 			TokenType.STRICT_NE, TokenType.LT, TokenType.LE, TokenType.GE,
-			TokenType.GT, TokenType.INSTANCEOF, TokenType.LSH, TokenType.RSH,
+			TokenType.GT, TokenType.IN, TokenType.INSTANCEOF, TokenType.LSH, TokenType.RSH,
 			TokenType.URSH, TokenType.PLUS, TokenType.MINUS, TokenType.MUL,
-			TokenType.DIV, TokenType.MOD:				
+			TokenType.DIV, TokenType.MOD:
 			// combine any higher-precedence expressions
 			while (operators.length > 0 &&
 			    operators[operators.length - 1].precedence >= token.type.precedence)
@@ -610,22 +618,6 @@ class Parser {
 
 			// push operator and scan for operand
 			operators.push(tokenizer.get().type);
-		
-		    // increment/decrement
-		    case TokenType.INCREMENT, TokenType.DECREMENT:
-//[TODO] actually this doesn't actually work! how do we do a postfix in the middle of an expression...
-			// postfix; reduce higher-precedence operators (using > and not >=, so postfix > prefix)
-			while (operators.length > 0 &&
-			    operators[operators.length - 1].precedence > token.type.precedence)
-				reduceExpression(operators, operands);
-				
-			// add operator and reduce immediately
-//[TODO] is reducing immediately necessary? a matter of precedence...
-			operators.push(tokenizer.get().type);
-			reduceExpression(operators, operands);
-			
-			// find next operator
-			return scanOperator(operators, operands, stopAt);
 			
 		    // hook/colon operator
 		    case TokenType.HOOK:
@@ -693,15 +685,15 @@ class Parser {
 		switch (operator) {
 		    // object instantiation
 		    case TokenType.NEW, TokenType.NEW_WITH_ARGS:
-			operandList.push(SObjectInstantiation(SValue(operands[0]), operands[1]));
+			operandList.push(SObjectInstantiation(operands[0], operands[1]));
 		    
 		    // function call
 		    case TokenType.CALL:
-			operandList.push(SCall(SValue(operands[0]), operands[1]));
+			operandList.push(SCall(operands[0], operands[1]));
 		
 		    // casting
 		    case TokenType.CAST:
-			operandList.push(SCast(operands[0], SValue(operands[1])));
+			operandList.push(SCast(operands[0], operands[1]));
 			
 		    // property operator
 		    case TokenType.INDEX, TokenType.DOT:
@@ -709,18 +701,9 @@ class Parser {
 
 		    // unary operators
 		    case TokenType.NOT, TokenType.BITWISE_NOT, TokenType.UNARY_PLUS, TokenType.UNARY_MINUS:
-			operandList.push(SOperation(operator, SValue(operands[0])));
-	
-//[TODO] roll these into unary operators, eliminate SValue
-		    // increment/decrement
-		    case TokenType.INCREMENT:
-			operandList.push(SIncrement(operands[0]));
-		    case TokenType.DECREMENT:
-			operandList.push(SDecrement(operands[0]));
-			
-		    // assignment
-		    case TokenType.ASSIGN:
-			operandList.push(SAssignment(operands[0], operands[1]));
+			operandList.push(SOperation(operator.value, operands[0]));
+		    case TokenType.INCREMENT, TokenType.DECREMENT:
+			operandList.push(SAssignment(operator.value, operands[0]));
 
 		    // binary operators
 		    case TokenType.OR, TokenType.AND, TokenType.BITWISE_OR, TokenType.BITWISE_XOR,
@@ -729,23 +712,15 @@ class Parser {
 			TokenType.GT, TokenType.INSTANCEOF, TokenType.LSH, TokenType.RSH,
 			TokenType.URSH, TokenType.PLUS, TokenType.MINUS, TokenType.MUL,
 			TokenType.DIV, TokenType.MOD:
-			// add operation
-			operandList.push(SOperation(operator, SValue(operands[0]), SValue(operands[1])));
+			operandList.push(SOperation(operator.value, operands[0], operands[1]));
+		    case TokenType.ASSIGN, TokenType.ASSIGN_BITWISE_OR, TokenType.ASSIGN_BITWISE_XOR,
+		        TokenType.ASSIGN_BITWISE_AND, TokenType.ASSIGN_LSH, TokenType.ASSIGN_RSH,
+			TokenType.ASSIGN_URSH, TokenType.ASSIGN_PLUS, TokenType.ASSIGN_MINUS,
+			TokenType.ASSIGN_MUL, TokenType.ASSIGN_DIV, TokenType.ASSIGN_MOD:
+			operandList.push(SAssignment(operator.value, operands[0], operands[1]));
 		
 		    default:
 			throw 'Unknown operator "' + operator + '"';
 		}
-
-//[TODO] should final operand be wrapped in an SLiteral?
 	}
-}
-
-typedef FunctionParam = {
-	var name:String;
-	var type:VariableType;
-}
-
-typedef VariableType = {
-	var type:Dynamic;
-	var dimensions:Int;
 }

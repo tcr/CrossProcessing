@@ -7,16 +7,13 @@ class Token {
 	public var start:Int;
 	public var content:String;
 	public var line:Int;
-//[TODO] get rid of assignOp?
-	public var assignOp:TokenType;
 	
-	public function new(t:TokenType, v:Dynamic = null, c:String = '', s:Int = 0, l:Int = 0, ?a:TokenType) {
+	public function new(t:TokenType, v:Dynamic = null, c:String = '', s:Int = 0, l:Int = 0) {
 		type = t;
 		value = v;
 		start = s;
 		content = c;
 		line = l;
-		assignOp = a;
 	}
 	
 	public function match(compareType:TokenType):Bool {
@@ -25,7 +22,7 @@ class Token {
 	
 	public function debug() {
 		trace('token {');
-		trace('\ttype: ' + TokenType.getConstant(type));
+		trace('\ttype: ' + type);
 		trace('\tvalue: "' + value + '"');
 		trace('\tstart: ' + start);
 		trace('\tcontent: "' + content + '"');

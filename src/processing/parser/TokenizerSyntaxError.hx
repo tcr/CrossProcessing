@@ -1,5 +1,7 @@
 package processing.parser;
 
+// standardized haXe error class?
+
 class TokenizerSyntaxError {
 	public var source:String;
 	public var line:Int;

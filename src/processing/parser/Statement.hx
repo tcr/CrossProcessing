@@ -9,32 +9,28 @@ package processing.parser;
 
 enum Statement 
 {
-	SArrayInstantiation(type:{type:Dynamic, dimensions:Int}, sizes:Array<Statement>);
+	SArrayInstantiation(type:VariableType, sizes:Array<Statement>);
 	SArrayLiteral(values:Array<Statement>);
-//	SAssignment(reference:Statement, value:Statement); //SReference
+	SAssignment(type:AssignOperator, reference:Statement, ?value:Statement);
 	SBlock(statements:Array<Statement>);
 	SBreak(?level:Int);
 	SCall(method:Statement, ?args:Array<Dynamic>);
-	SCast(type:{type:Dynamic, dimensions:Int}, expression:Statement);
+	SCast(type:VariableType, expression:Statement);
 	SClassDefinition(identifier:String, constructorBody:Statement, publicBody:Statement, privateBody:Statement);
 	SConditional(condition:Statement, thenBlock:Statement, ?elseBlock:Statement);
 	SContinue(?level:Int);
-//	SDecrement(reference:Statement); // SReference
-//[TODO] params should be Param typedef
-	SFunctionDefinition(identifier:String, type:{type:Dynamic, dimensions:Int}, params:Array<{name:String, type:{type:Dynamic, dimensions:Int}}> , body:Statement);
-//	SIncrement(reference:Statement); // SReference
+	SFunctionDefinition(identifier:String, type:VariableType, params:Array<FunctionParam> , body:Statement);
 	SLiteral(value:Dynamic);
 	SLoop(condition:Statement, body:Statement);
 	SObjectInstantiation(method:Statement, ?args:Array<Dynamic>);
-	SOperation(type:TokenType, leftOperand:Statement, ?rightOperand:Statement);
+	SOperation(type:Operator, leftOperand:Statement, ?rightOperand:Statement);
 	SReference(identifier:Statement, ?base:Statement);
 	SReturn(?value:Statement);
 	SThisReference();
-	SVariableDefinition(identifier:String, type:{type:Dynamic, dimensions:Int});
-	SValue(value:Statement);
+	SVariableDefinition(identifier:String, type:VariableType);
 }
 
-enum Operators {
+enum Operator {
 	// unary operators
 	OpNot;			// !a
 	OpBitwiseNot;		// ~a
@@ -59,12 +55,37 @@ enum Operators {
 	OpInstanceOf;		// a instanceof b
 	OpLeftShift;		// a << b
 	OpRightShift;		// a >> b
-	OpZeroFillRightShift;	// a >>> b
+	OpZeroRightShift;	// a >>> b
 	OpPlus;			// a + b
 	OpMinus;		// a - b
 	OpMultiply;		// a * b
 	OpDivide;		// a / b
 	OpModulus;		// a % b
-	
-	//[TODO] increment/decrement?
+}
+
+enum AssignOperator {
+	AssignOp;		// a = b
+	AssignOpBitwiseOr;	// a |= b
+	AssignOpBitwiseXor;	// a ^= b
+	AssignOpBitewiseAnd;	// a &= b
+	AssignOpLeftShift;	// a <<= b
+	AssignOpRightShift;	// a >>= b
+	AssignOpZeroRightShift;	// a >>>= b
+	AssignOpPlus;		// a += b
+	AssignOpMinus;		// a -= b
+	AssignOpMul;		// a *= b
+	AssignOpDiv;		// a /= b
+	AssignOpMod;		// a %= b
+	AssignOpIncrement;	// a++;
+	AssignOpDecrement;	// a--;
+}
+
+typedef FunctionParam = {
+	var name:String;
+	var type:VariableType;
+}
+
+typedef VariableType = {
+	var type:Dynamic;
+	var dimensions:Int;
 }

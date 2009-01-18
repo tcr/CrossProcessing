@@ -1,5 +1,7 @@
 package processing.parser;
 
+import processing.parser.Statement;
+
 class TokenType {
 	public var value(default, null):Dynamic;
 	public var precedence(default, null):Int;
@@ -9,21 +11,6 @@ class TokenType {
 		this.value = value;
 		this.precedence = precedence;
 		this.arity = arity;
-	}
-	
-	//==============================================================
-	// type constants
-	//==============================================================
-	
-	// get token constant (if one exists)
-	public static function getConstant(token:TokenType):String {
-		trace('THIS IS DEPRECATED');
-		return token.value;
-//		 var description:XML = describeType(TokenType);
-//		 for each (var constant:XML in description..constant)
-//			if (TokenType[constant.@name] == token)
-//				return constant.@name;
-//		return null;
 	}
 
 //[TODO] eliminate these as tokens?
@@ -55,38 +42,59 @@ class TokenType {
 	public static var REGEXP:TokenType = new TokenType('REGEXP');
 	public static var ARRAY_DIMENSION:TokenType = new TokenType('[]');
 
-	// operators
+	// unary operators
+	public static var NOT:TokenType = new TokenType(OpNot, 14, 1);
+	public static var BITWISE_NOT:TokenType = new TokenType(OpBitwiseNot, 14, 1);
+	public static var UNARY_PLUS:TokenType = new TokenType(OpUnaryPlus, 14, 1);
+	public static var UNARY_MINUS:TokenType = new TokenType(OpUnaryMinus, 14, 1);
+	
+	// binary operators
+	public static var OR:TokenType = new TokenType(OpOr, 4, 2);
+	public static var AND:TokenType = new TokenType(OpAnd, 5, 2);
+	public static var BITWISE_OR:TokenType = new TokenType(OpBitwiseOr, 6, 2);
+	public static var BITWISE_XOR:TokenType = new TokenType(OpBitwiseXor, 7, 2);
+	public static var BITWISE_AND:TokenType = new TokenType(OpBitwiseAnd, 8, 2);
+	public static var EQ:TokenType = new TokenType(OpEqual, 9, 2);
+	public static var NE:TokenType = new TokenType(OpUnequal, 9, 2);
+	public static var STRICT_EQ:TokenType = new TokenType(OpStrictEqual, 9, 2);
+	public static var STRICT_NE:TokenType = new TokenType(OpStrictUnequal, 9, 2);
+	public static var LT:TokenType = new TokenType(OpLessThan, 10, 2);
+	public static var LE:TokenType = new TokenType(OpLessThanOrEqual, 10, 2);
+	public static var GT:TokenType = new TokenType(OpGreaterThan, 10, 2);
+	public static var GE:TokenType = new TokenType(OpGreaterThanOrEqual, 10, 2);
+	public static var IN:TokenType = new TokenType(OpIn, 10, 2);
+	public static var INSTANCEOF:TokenType = new TokenType(OpInstanceOf, 10, 2);
+	public static var LSH:TokenType = new TokenType(OpLeftShift, 11, 2);
+	public static var RSH:TokenType = new TokenType(OpRightShift, 11, 2);
+	public static var URSH:TokenType = new TokenType(OpZeroRightShift, 11, 2);
+	public static var PLUS:TokenType = new TokenType(OpPlus, 12, 2);
+	public static var MINUS:TokenType = new TokenType(OpMinus, 12, 2);
+	public static var MUL:TokenType = new TokenType(OpMultiply, 13, 2);
+	public static var DIV:TokenType = new TokenType(OpDivide, 13, 2);
+	public static var MOD:TokenType = new TokenType(OpModulus, 13, 2);
+	
+	// assignment operators
+	public static var ASSIGN:TokenType = new TokenType(AssignOp, 2, 2);
+	public static var ASSIGN_BITWISE_OR:TokenType = new TokenType(AssignOpBitwiseOr, 2, 2);
+	public static var ASSIGN_BITWISE_XOR:TokenType = new TokenType(AssignOpBitwiseXor, 2, 2);
+	public static var ASSIGN_BITWISE_AND:TokenType = new TokenType(AssignOpBitewiseAnd, 2, 2);
+	public static var ASSIGN_LSH:TokenType = new TokenType(AssignOpLeftShift, 2, 2);
+	public static var ASSIGN_RSH:TokenType = new TokenType(AssignOpRightShift, 2, 2);
+	public static var ASSIGN_URSH:TokenType = new TokenType(AssignOpZeroRightShift, 2, 2);
+	public static var ASSIGN_PLUS:TokenType = new TokenType(AssignOpPlus, 2, 2);
+	public static var ASSIGN_MINUS:TokenType = new TokenType(AssignOpMinus, 2, 2);
+	public static var ASSIGN_MUL:TokenType = new TokenType(AssignOpMul, 2, 2);
+	public static var ASSIGN_DIV:TokenType = new TokenType(AssignOpDiv, 2, 2);
+	public static var ASSIGN_MOD:TokenType = new TokenType(AssignOpMod, 2, 2);
+	public static var INCREMENT:TokenType = new TokenType(AssignOpIncrement, 15, 1);
+	public static var DECREMENT:TokenType = new TokenType(AssignOpDecrement, 15, 1);
+
+	// miscellanea
 	public static var NEWLINE:TokenType = new TokenType('\n');
 	public static var SEMICOLON:TokenType = new TokenType(';', 0);
 	public static var COMMA:TokenType = new TokenType(',', 1, -2);
 	public static var HOOK:TokenType = new TokenType('?', 2);
 	public static var COLON:TokenType = new TokenType(':', 2);
-	public static var OR:TokenType = new TokenType('||', 4, 2);
-	public static var AND:TokenType = new TokenType('&&', 5, 2);
-	public static var BITWISE_OR:TokenType = new TokenType('|', 6, 2);
-	public static var BITWISE_XOR:TokenType = new TokenType('^', 7, 2);
-	public static var BITWISE_AND:TokenType = new TokenType('&', 8, 2);
-	public static var STRICT_EQ:TokenType = new TokenType('===', 9, 2);
-	public static var EQ:TokenType = new TokenType('==', 9, 2);
-	public static var ASSIGN:TokenType = new TokenType('=', 2, 2);
-	public static var STRICT_NE:TokenType = new TokenType('!==', 9, 2);
-	public static var NE:TokenType = new TokenType('!=', 9, 2);
-	public static var LSH:TokenType = new TokenType('<<', 11, 2);
-	public static var LE:TokenType = new TokenType('<=', 10, 2);
-	public static var LT:TokenType = new TokenType('<', 10, 2);
-	public static var URSH:TokenType = new TokenType('>>>', 11, 2);
-	public static var RSH:TokenType = new TokenType('>>', 11, 2);
-	public static var GE:TokenType = new TokenType('>=', 10, 2);
-	public static var GT:TokenType = new TokenType('>', 10, 2);
-	public static var INCREMENT:TokenType = new TokenType('++', 15, 1);
-	public static var DECREMENT:TokenType = new TokenType('--', 15, 1);
-	public static var PLUS:TokenType = new TokenType('+', 12, 2);
-	public static var MINUS:TokenType = new TokenType('-', 12, 2);
-	public static var MUL:TokenType = new TokenType('*', 13, 2);
-	public static var DIV:TokenType = new TokenType('/', 13, 2);
-	public static var MOD:TokenType = new TokenType('%', 13, 2);
-	public static var NOT:TokenType = new TokenType('!', 14, 1);
-	public static var BITWISE_NOT:TokenType = new TokenType('~', 14, 1);
 	public static var DOT:TokenType = new TokenType('.', 17, 2);
 	public static var LEFT_BRACKET:TokenType = new TokenType('[');
 	public static var RIGHT_BRACKET:TokenType = new TokenType(']');
@@ -95,8 +103,6 @@ class TokenType {
 	public static var LEFT_PAREN:TokenType = new TokenType('(');
 	public static var RIGHT_PAREN:TokenType = new TokenType(')');
 	public static var CONDITIONAL:TokenType = new TokenType('CONDITIONAL', 2, 3);
-	public static var UNARY_PLUS:TokenType = new TokenType('UNARY_PLUS', 14, 1);
-	public static var UNARY_MINUS:TokenType = new TokenType('UNARY_MINUS', 14, 1);
 	public static var CAST:TokenType = new TokenType('CAST', 14, 2);
 	
 	// keywords
@@ -117,8 +123,6 @@ class TokenType {
 	public static var FOR:TokenType = new TokenType();
 	public static var FUNCTION:TokenType = new TokenType();
 	public static var IF:TokenType = new TokenType();
-	public static var IN:TokenType = new TokenType('in', 10, 2);
-	public static var INSTANCEOF:TokenType = new TokenType('instanceof', 10, 2);
 	public static var NEW:TokenType = new TokenType('new', 16, 1);
 	public static var NULL:TokenType = new TokenType(null);
 	public static var PUBLIC:TokenType = new TokenType('public');
@@ -142,7 +146,7 @@ class TokenType {
 	public static var INT:TokenType = new TokenType('int');
 	public static var CHAR:TokenType = new TokenType('char');
 
-		// token lists
+	// token lists
 	public static var TYPES:TypeTokenTypeList = new TypeTokenTypeList();
 	public static var KEYWORDS:KeywordTokenTypeList = new KeywordTokenTypeList();
 	public static var OPS:OperatorTokenTypeList = new OperatorTokenTypeList();
@@ -178,8 +182,6 @@ class OperatorTokenTypeList extends Hash<TokenType>
 		set('>>', TokenType.RSH);
 		set('>=', TokenType.GE);
 		set('>', TokenType.GT);
-		set('++', TokenType.INCREMENT);
-		set('--', TokenType.DECREMENT);
 		set('+', TokenType.PLUS);
 		set('-', TokenType.MINUS);
 		set('*', TokenType.MUL);
@@ -203,17 +205,20 @@ class AssignmentTokenTypeList extends Hash<TokenType>
 	{
 		super();
 		
-		set('|', TokenType.BITWISE_OR);
-		set('^', TokenType.BITWISE_XOR);
-		set('&', TokenType.BITWISE_AND);
-		set('<<', TokenType.LSH);
-		set('>>>', TokenType.URSH);
-		set('>>', TokenType.RSH);
-		set('+', TokenType.PLUS);
-		set('-', TokenType.MINUS);
-		set('*', TokenType.MUL);
-		set('/', TokenType.DIV);
-		set('%', TokenType.MOD);
+		set('=', TokenType.ASSIGN);
+		set('|=', TokenType.ASSIGN_BITWISE_OR);
+		set('^=', TokenType.ASSIGN_BITWISE_XOR);
+		set('&=', TokenType.ASSIGN_BITWISE_AND);
+		set('<<=', TokenType.ASSIGN_LSH);
+		set('>>=', TokenType.ASSIGN_RSH);
+		set('>>>=', TokenType.ASSIGN_URSH);
+		set('+=', TokenType.ASSIGN_PLUS);
+		set('-=', TokenType.ASSIGN_MINUS);
+		set('*=', TokenType.ASSIGN_MUL);
+		set('/=', TokenType.ASSIGN_DIV);
+		set('%=', TokenType.ASSIGN_MOD);
+		set('++', TokenType.INCREMENT);
+		set('--', TokenType.DECREMENT);
 	}
 }
 
@@ -273,3 +278,24 @@ class TypeTokenTypeList extends Hash<TokenType>
 		set('int', TokenType.INT);
 	}
 }
+/*
+enum Token {
+	TEof;
+	TKeyword( s : String );
+	TIdentifier( s : String );
+	TOperator( s : String );
+//	TNumber(value:Dynamic);
+//	TString(value:String);
+	TLiteral(value:Dynamic);
+	TParenOpen;
+	TParenClose;
+	TBracketOpen;
+	TBracketClose;
+	TDot;
+	TComma;
+	TSemicolon;
+	TBraceOpen;
+	TBraceClose;
+	TQuestion;
+	TDoubleDot;
+}*/

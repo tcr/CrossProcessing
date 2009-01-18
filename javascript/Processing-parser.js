@@ -205,166 +205,6 @@ js.Boot.__init = function() {
 	$closure = js.Boot.__closure;
 }
 js.Boot.prototype.__class__ = js.Boot;
-processing = {}
-processing.compiler = {}
-processing.compiler.ICompiler = function() { }
-processing.compiler.ICompiler.__name__ = ["processing","compiler","ICompiler"];
-processing.compiler.ICompiler.prototype.compile = null;
-processing.compiler.ICompiler.prototype.__class__ = processing.compiler.ICompiler;
-processing.compiler.JavaScriptCompiler = function(p) { if( p === $_ ) return; {
-	null;
-}}
-processing.compiler.JavaScriptCompiler.__name__ = ["processing","compiler","JavaScriptCompiler"];
-processing.compiler.JavaScriptCompiler.prototype.compile = function(code) {
-	return this.serialize(code);
-}
-processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,escape,inClass,inBlock) {
-	if(escape == null) escape = true;
-	var $e = (statement);
-	switch( $e[1] ) {
-	case 0:
-	var sizes = $e[3], type = $e[2];
-	{
-		return "";
-	}break;
-	case 1:
-	var values = $e[2];
-	{
-		return "";
-	}break;
-	case 2:
-	var value = $e[3], reference = $e[2];
-	{
-		return this.serialize(reference) + " = " + this.serialize(value);
-	}break;
-	case 3:
-	var statements = $e[2];
-	{
-		var source = new Array();
-		{
-			var _g = 0;
-			while(_g < statements.length) {
-				var statement1 = statements[_g];
-				++_g;
-				source.push(this.serialize(statement1,true,null,true));
-			}
-		}
-		return (inBlock?source.join(";\n"):"{\n" + source.join(";\n") + ";\n}\n");
-	}break;
-	case 4:
-	var level = $e[2];
-	{
-		return "break " + level;
-	}break;
-	case 5:
-	var args = $e[3], method = $e[2];
-	{
-		var source = new Array();
-		{
-			var _g = 0;
-			while(_g < args.length) {
-				var arg = args[_g];
-				++_g;
-				source.push(this.serialize(arg));
-			}
-		}
-		return this.serialize(method) + "(" + source.join(",") + ")";
-	}break;
-	case 6:
-	var expression = $e[3], type = $e[2];
-	{
-		return "";
-	}break;
-	case 7:
-	var privateBody = $e[5], publicBody = $e[4], constructorBody = $e[3], identifier = $e[2];
-	{
-		return "";
-	}break;
-	case 8:
-	var elseBlock = $e[4], thenBlock = $e[3], condition = $e[2];
-	{
-		return "(" + this.serialize(condition) + " ? " + this.serialize(thenBlock) + " : " + this.serialize(elseBlock) + ")";
-	}break;
-	case 9:
-	var level = $e[2];
-	{
-		return "continue " + level;
-	}break;
-	case 10:
-	var reference = $e[2];
-	{
-		return this.serialize(reference) + "--";
-	}break;
-	case 11:
-	var body = $e[5], params = $e[4], type = $e[3], identifier = $e[2];
-	{
-		var paramKeys = new Array();
-		{
-			var _g = 0;
-			while(_g < params.length) {
-				var param = params[_g];
-				++_g;
-				paramKeys.push(paramKeys[0]);
-			}
-		}
-		var func = "function " + identifier + " (" + paramKeys.join(",") + ") {\n" + this.serialize(body) + "\n}";
-		return "Processing." + identifier + " = " + func;
-	}break;
-	case 12:
-	var reference = $e[2];
-	{
-		return this.serialize(reference) + "++";
-	}break;
-	case 13:
-	var value = $e[2];
-	{
-		return (escape && Std["is"](value,String)?"\"" + value + "\"":value);
-	}break;
-	case 14:
-	var body = $e[3], condition = $e[2];
-	{
-		return "while (" + this.serialize(condition) + ")\n" + this.serialize(body) + "";
-	}break;
-	case 15:
-	var args = $e[3], method = $e[2];
-	{
-		return "";
-	}break;
-	case 16:
-	var rightOperand = $e[4], leftOperand = $e[3], type = $e[2];
-	{
-		if(rightOperand != null) return "(" + this.serialize(leftOperand) + type.value + this.serialize(rightOperand) + ")";
-		else return "(" + type.value + this.serialize(leftOperand) + ")";
-	}break;
-	case 17:
-	var base = $e[3], identifier = $e[2];
-	{
-		if(base == null) return this.serialize(identifier,false);
-		else return this.serialize(base) + "[" + this.serialize(identifier) + "]";
-	}break;
-	case 18:
-	var value = $e[2];
-	{
-		return "return " + ((value != null?this.serialize(value):""));
-	}break;
-	case 19:
-	{
-		return "this";
-	}break;
-	case 20:
-	var type = $e[3], identifier = $e[2];
-	{
-		return ((inClass != null?"this.":"var ")) + identifier + " = 0";
-	}break;
-	case 21:
-	var value = $e[2];
-	{
-		return "(" + this.serialize(value) + ")";
-	}break;
-	}
-}
-processing.compiler.JavaScriptCompiler.prototype.__class__ = processing.compiler.JavaScriptCompiler;
-processing.compiler.JavaScriptCompiler.__interfaces__ = [processing.compiler.ICompiler];
 js.Lib = function() { }
 js.Lib.__name__ = ["js","Lib"];
 js.Lib.isIE = null;
@@ -381,6 +221,302 @@ js.Lib.setErrorHandler = function(f) {
 	js.Lib.onerror = f;
 }
 js.Lib.prototype.__class__ = js.Lib;
+ValueType = { __ename__ : ["ValueType"], __constructs__ : ["TNull","TInt","TFloat","TBool","TObject","TFunction","TClass","TEnum","TUnknown"] }
+ValueType.TBool = ["TBool",3];
+ValueType.TBool.toString = $estr;
+ValueType.TBool.__enum__ = ValueType;
+ValueType.TClass = function(c) { var $x = ["TClass",6,c]; $x.__enum__ = ValueType; $x.toString = $estr; return $x; }
+ValueType.TEnum = function(e) { var $x = ["TEnum",7,e]; $x.__enum__ = ValueType; $x.toString = $estr; return $x; }
+ValueType.TFloat = ["TFloat",2];
+ValueType.TFloat.toString = $estr;
+ValueType.TFloat.__enum__ = ValueType;
+ValueType.TFunction = ["TFunction",5];
+ValueType.TFunction.toString = $estr;
+ValueType.TFunction.__enum__ = ValueType;
+ValueType.TInt = ["TInt",1];
+ValueType.TInt.toString = $estr;
+ValueType.TInt.__enum__ = ValueType;
+ValueType.TNull = ["TNull",0];
+ValueType.TNull.toString = $estr;
+ValueType.TNull.__enum__ = ValueType;
+ValueType.TObject = ["TObject",4];
+ValueType.TObject.toString = $estr;
+ValueType.TObject.__enum__ = ValueType;
+ValueType.TUnknown = ["TUnknown",8];
+ValueType.TUnknown.toString = $estr;
+ValueType.TUnknown.__enum__ = ValueType;
+Type = function() { }
+Type.__name__ = ["Type"];
+Type.getClass = function(o) {
+	if(o == null) return null;
+	if(o.__enum__ != null) return null;
+	return o.__class__;
+}
+Type.getEnum = function(o) {
+	if(o == null) return null;
+	return o.__enum__;
+}
+Type.getSuperClass = function(c) {
+	return c.__super__;
+}
+Type.getClassName = function(c) {
+	if(c == null) return null;
+	var a = c.__name__;
+	return a.join(".");
+}
+Type.getEnumName = function(e) {
+	var a = e.__ename__;
+	return a.join(".");
+}
+Type.resolveClass = function(name) {
+	var cl;
+	try {
+		cl = eval(name);
+	}
+	catch( $e2 ) {
+		{
+			var e = $e2;
+			{
+				cl = null;
+			}
+		}
+	}
+	if(cl == null || cl.__name__ == null) return null;
+	return cl;
+}
+Type.resolveEnum = function(name) {
+	var e;
+	try {
+		e = eval(name);
+	}
+	catch( $e3 ) {
+		{
+			var err = $e3;
+			{
+				e = null;
+			}
+		}
+	}
+	if(e == null || e.__ename__ == null) return null;
+	return e;
+}
+Type.createInstance = function(cl,args) {
+	if(args.length <= 3) return new cl(args[0],args[1],args[2]);
+	if(args.length > 8) throw "Too many arguments";
+	return new cl(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7]);
+}
+Type.createEmptyInstance = function(cl) {
+	return new cl($_);
+}
+Type.createEnum = function(e,constr,params) {
+	var f = Reflect.field(e,constr);
+	if(f == null) throw "No such constructor " + constr;
+	if(Reflect.isFunction(f)) {
+		if(params == null) throw "Constructor " + constr + " need parameters";
+		return f.apply(e,params);
+	}
+	if(params != null && params.length != 0) throw "Constructor " + constr + " does not need parameters";
+	return f;
+}
+Type.getInstanceFields = function(c) {
+	var a = Reflect.fields(c.prototype);
+	a.remove("__class__");
+	return a;
+}
+Type.getClassFields = function(c) {
+	var a = Reflect.fields(c);
+	a.remove("__name__");
+	a.remove("__interfaces__");
+	a.remove("__super__");
+	a.remove("prototype");
+	return a;
+}
+Type.getEnumConstructs = function(e) {
+	return e.__constructs__;
+}
+Type["typeof"] = function(v) {
+	switch(typeof(v)) {
+	case "boolean":{
+		return ValueType.TBool;
+	}break;
+	case "string":{
+		return ValueType.TClass(String);
+	}break;
+	case "number":{
+		if(Math.ceil(v) == v % 2147483648.0) return ValueType.TInt;
+		return ValueType.TFloat;
+	}break;
+	case "object":{
+		if(v == null) return ValueType.TNull;
+		var e = v.__enum__;
+		if(e != null) return ValueType.TEnum(e);
+		var c = v.__class__;
+		if(c != null) return ValueType.TClass(c);
+		return ValueType.TObject;
+	}break;
+	case "function":{
+		if(v.__name__ != null) return ValueType.TObject;
+		return ValueType.TFunction;
+	}break;
+	case "undefined":{
+		return ValueType.TNull;
+	}break;
+	default:{
+		return ValueType.TUnknown;
+	}break;
+	}
+}
+Type.enumEq = function(a,b) {
+	if(a == b) return true;
+	if(a[0] != b[0]) return false;
+	{
+		var _g1 = 2, _g = a.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			if(!Type.enumEq(a[i],b[i])) return false;
+		}
+	}
+	var e = a.__enum__;
+	if(e != b.__enum__ || e == null) return false;
+	return true;
+}
+Type.enumConstructor = function(e) {
+	return e[0];
+}
+Type.enumParameters = function(e) {
+	return e.slice(2);
+}
+Type.enumIndex = function(e) {
+	return e[1];
+}
+Type.prototype.__class__ = Type;
+processing = {}
+processing.parser = {}
+processing.parser.Operator = { __ename__ : ["processing","parser","Operator"], __constructs__ : ["OpNot","OpBitwiseNot","OpUnaryPlus","OpUnaryMinus","OpOr","OpAnd","OpBitwiseOr","OpBitwiseXor","OpBitwiseAnd","OpEqual","OpUnequal","OpStrictEqual","OpStrictUnequal","OpLessThan","OpLessThanOrEqual","OpGreaterThan","OpGreaterThanOrEqual","OpIn","OpInstanceOf","OpLeftShift","OpRightShift","OpZeroRightShift","OpPlus","OpMinus","OpMultiply","OpDivide","OpModulus"] }
+processing.parser.Operator.OpAnd = ["OpAnd",5];
+processing.parser.Operator.OpAnd.toString = $estr;
+processing.parser.Operator.OpAnd.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpBitwiseAnd = ["OpBitwiseAnd",8];
+processing.parser.Operator.OpBitwiseAnd.toString = $estr;
+processing.parser.Operator.OpBitwiseAnd.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpBitwiseNot = ["OpBitwiseNot",1];
+processing.parser.Operator.OpBitwiseNot.toString = $estr;
+processing.parser.Operator.OpBitwiseNot.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpBitwiseOr = ["OpBitwiseOr",6];
+processing.parser.Operator.OpBitwiseOr.toString = $estr;
+processing.parser.Operator.OpBitwiseOr.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpBitwiseXor = ["OpBitwiseXor",7];
+processing.parser.Operator.OpBitwiseXor.toString = $estr;
+processing.parser.Operator.OpBitwiseXor.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpDivide = ["OpDivide",25];
+processing.parser.Operator.OpDivide.toString = $estr;
+processing.parser.Operator.OpDivide.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpEqual = ["OpEqual",9];
+processing.parser.Operator.OpEqual.toString = $estr;
+processing.parser.Operator.OpEqual.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpGreaterThan = ["OpGreaterThan",15];
+processing.parser.Operator.OpGreaterThan.toString = $estr;
+processing.parser.Operator.OpGreaterThan.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpGreaterThanOrEqual = ["OpGreaterThanOrEqual",16];
+processing.parser.Operator.OpGreaterThanOrEqual.toString = $estr;
+processing.parser.Operator.OpGreaterThanOrEqual.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpIn = ["OpIn",17];
+processing.parser.Operator.OpIn.toString = $estr;
+processing.parser.Operator.OpIn.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpInstanceOf = ["OpInstanceOf",18];
+processing.parser.Operator.OpInstanceOf.toString = $estr;
+processing.parser.Operator.OpInstanceOf.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpLeftShift = ["OpLeftShift",19];
+processing.parser.Operator.OpLeftShift.toString = $estr;
+processing.parser.Operator.OpLeftShift.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpLessThan = ["OpLessThan",13];
+processing.parser.Operator.OpLessThan.toString = $estr;
+processing.parser.Operator.OpLessThan.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpLessThanOrEqual = ["OpLessThanOrEqual",14];
+processing.parser.Operator.OpLessThanOrEqual.toString = $estr;
+processing.parser.Operator.OpLessThanOrEqual.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpMinus = ["OpMinus",23];
+processing.parser.Operator.OpMinus.toString = $estr;
+processing.parser.Operator.OpMinus.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpModulus = ["OpModulus",26];
+processing.parser.Operator.OpModulus.toString = $estr;
+processing.parser.Operator.OpModulus.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpMultiply = ["OpMultiply",24];
+processing.parser.Operator.OpMultiply.toString = $estr;
+processing.parser.Operator.OpMultiply.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpNot = ["OpNot",0];
+processing.parser.Operator.OpNot.toString = $estr;
+processing.parser.Operator.OpNot.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpOr = ["OpOr",4];
+processing.parser.Operator.OpOr.toString = $estr;
+processing.parser.Operator.OpOr.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpPlus = ["OpPlus",22];
+processing.parser.Operator.OpPlus.toString = $estr;
+processing.parser.Operator.OpPlus.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpRightShift = ["OpRightShift",20];
+processing.parser.Operator.OpRightShift.toString = $estr;
+processing.parser.Operator.OpRightShift.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpStrictEqual = ["OpStrictEqual",11];
+processing.parser.Operator.OpStrictEqual.toString = $estr;
+processing.parser.Operator.OpStrictEqual.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpStrictUnequal = ["OpStrictUnequal",12];
+processing.parser.Operator.OpStrictUnequal.toString = $estr;
+processing.parser.Operator.OpStrictUnequal.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpUnaryMinus = ["OpUnaryMinus",3];
+processing.parser.Operator.OpUnaryMinus.toString = $estr;
+processing.parser.Operator.OpUnaryMinus.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpUnaryPlus = ["OpUnaryPlus",2];
+processing.parser.Operator.OpUnaryPlus.toString = $estr;
+processing.parser.Operator.OpUnaryPlus.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpUnequal = ["OpUnequal",10];
+processing.parser.Operator.OpUnequal.toString = $estr;
+processing.parser.Operator.OpUnequal.__enum__ = processing.parser.Operator;
+processing.parser.Operator.OpZeroRightShift = ["OpZeroRightShift",21];
+processing.parser.Operator.OpZeroRightShift.toString = $estr;
+processing.parser.Operator.OpZeroRightShift.__enum__ = processing.parser.Operator;
+processing.parser.AssignOperator = { __ename__ : ["processing","parser","AssignOperator"], __constructs__ : ["AssignOp","AssignOpBitwiseOr","AssignOpBitwiseXor","AssignOpBitewiseAnd","AssignOpLeftShift","AssignOpRightShift","AssignOpZeroRightShift","AssignOpPlus","AssignOpMinus","AssignOpMul","AssignOpDiv","AssignOpMod","AssignOpIncrement","AssignOpDecrement"] }
+processing.parser.AssignOperator.AssignOp = ["AssignOp",0];
+processing.parser.AssignOperator.AssignOp.toString = $estr;
+processing.parser.AssignOperator.AssignOp.__enum__ = processing.parser.AssignOperator;
+processing.parser.AssignOperator.AssignOpBitewiseAnd = ["AssignOpBitewiseAnd",3];
+processing.parser.AssignOperator.AssignOpBitewiseAnd.toString = $estr;
+processing.parser.AssignOperator.AssignOpBitewiseAnd.__enum__ = processing.parser.AssignOperator;
+processing.parser.AssignOperator.AssignOpBitwiseOr = ["AssignOpBitwiseOr",1];
+processing.parser.AssignOperator.AssignOpBitwiseOr.toString = $estr;
+processing.parser.AssignOperator.AssignOpBitwiseOr.__enum__ = processing.parser.AssignOperator;
+processing.parser.AssignOperator.AssignOpBitwiseXor = ["AssignOpBitwiseXor",2];
+processing.parser.AssignOperator.AssignOpBitwiseXor.toString = $estr;
+processing.parser.AssignOperator.AssignOpBitwiseXor.__enum__ = processing.parser.AssignOperator;
+processing.parser.AssignOperator.AssignOpDecrement = ["AssignOpDecrement",13];
+processing.parser.AssignOperator.AssignOpDecrement.toString = $estr;
+processing.parser.AssignOperator.AssignOpDecrement.__enum__ = processing.parser.AssignOperator;
+processing.parser.AssignOperator.AssignOpDiv = ["AssignOpDiv",10];
+processing.parser.AssignOperator.AssignOpDiv.toString = $estr;
+processing.parser.AssignOperator.AssignOpDiv.__enum__ = processing.parser.AssignOperator;
+processing.parser.AssignOperator.AssignOpIncrement = ["AssignOpIncrement",12];
+processing.parser.AssignOperator.AssignOpIncrement.toString = $estr;
+processing.parser.AssignOperator.AssignOpIncrement.__enum__ = processing.parser.AssignOperator;
+processing.parser.AssignOperator.AssignOpLeftShift = ["AssignOpLeftShift",4];
+processing.parser.AssignOperator.AssignOpLeftShift.toString = $estr;
+processing.parser.AssignOperator.AssignOpLeftShift.__enum__ = processing.parser.AssignOperator;
+processing.parser.AssignOperator.AssignOpMinus = ["AssignOpMinus",8];
+processing.parser.AssignOperator.AssignOpMinus.toString = $estr;
+processing.parser.AssignOperator.AssignOpMinus.__enum__ = processing.parser.AssignOperator;
+processing.parser.AssignOperator.AssignOpMod = ["AssignOpMod",11];
+processing.parser.AssignOperator.AssignOpMod.toString = $estr;
+processing.parser.AssignOperator.AssignOpMod.__enum__ = processing.parser.AssignOperator;
+processing.parser.AssignOperator.AssignOpMul = ["AssignOpMul",9];
+processing.parser.AssignOperator.AssignOpMul.toString = $estr;
+processing.parser.AssignOperator.AssignOpMul.__enum__ = processing.parser.AssignOperator;
+processing.parser.AssignOperator.AssignOpPlus = ["AssignOpPlus",7];
+processing.parser.AssignOperator.AssignOpPlus.toString = $estr;
+processing.parser.AssignOperator.AssignOpPlus.__enum__ = processing.parser.AssignOperator;
+processing.parser.AssignOperator.AssignOpRightShift = ["AssignOpRightShift",5];
+processing.parser.AssignOperator.AssignOpRightShift.toString = $estr;
+processing.parser.AssignOperator.AssignOpRightShift.__enum__ = processing.parser.AssignOperator;
+processing.parser.AssignOperator.AssignOpZeroRightShift = ["AssignOpZeroRightShift",6];
+processing.parser.AssignOperator.AssignOpZeroRightShift.toString = $estr;
+processing.parser.AssignOperator.AssignOpZeroRightShift.__enum__ = processing.parser.AssignOperator;
 Hash = function(p) { if( p === $_ ) return; {
 	this.h = {}
 	if(this.h.__proto__ != null) {
@@ -395,9 +531,9 @@ Hash.prototype.exists = function(key) {
 		key = "$" + key;
 		return this.hasOwnProperty.call(this.h,key);
 	}
-	catch( $e2 ) {
+	catch( $e4 ) {
 		{
-			var e = $e2;
+			var e = $e4;
 			{
 				
 				for(var i in this.h)
@@ -440,8 +576,8 @@ Hash.prototype.toString = function() {
 	var s = new StringBuf();
 	s.b += "{";
 	var it = this.keys();
-	{ var $it3 = it;
-	while( $it3.hasNext() ) { var i = $it3.next();
+	{ var $it5 = it;
+	while( $it5.hasNext() ) { var i = $it5.next();
 	{
 		s.b += i;
 		s.b += " => ";
@@ -453,20 +589,22 @@ Hash.prototype.toString = function() {
 	return s.b;
 }
 Hash.prototype.__class__ = Hash;
-processing.parser = {}
 processing.parser.AssignmentTokenTypeList = function(p) { if( p === $_ ) return; {
 	Hash.apply(this,[]);
-	this.set("|",processing.parser.TokenType.BITWISE_OR);
-	this.set("^",processing.parser.TokenType.BITWISE_XOR);
-	this.set("&",processing.parser.TokenType.BITWISE_AND);
-	this.set("<<",processing.parser.TokenType.LSH);
-	this.set(">>>",processing.parser.TokenType.URSH);
-	this.set(">>",processing.parser.TokenType.RSH);
-	this.set("+",processing.parser.TokenType.PLUS);
-	this.set("-",processing.parser.TokenType.MINUS);
-	this.set("*",processing.parser.TokenType.MUL);
-	this.set("/",processing.parser.TokenType.DIV);
-	this.set("%",processing.parser.TokenType.MOD);
+	this.set("=",processing.parser.TokenType.ASSIGN);
+	this.set("|=",processing.parser.TokenType.ASSIGN_BITWISE_OR);
+	this.set("^=",processing.parser.TokenType.ASSIGN_BITWISE_XOR);
+	this.set("&=",processing.parser.TokenType.ASSIGN_BITWISE_AND);
+	this.set("<<=",processing.parser.TokenType.ASSIGN_LSH);
+	this.set(">>=",processing.parser.TokenType.ASSIGN_RSH);
+	this.set(">>>=",processing.parser.TokenType.ASSIGN_URSH);
+	this.set("+=",processing.parser.TokenType.ASSIGN_PLUS);
+	this.set("-=",processing.parser.TokenType.ASSIGN_MINUS);
+	this.set("*=",processing.parser.TokenType.ASSIGN_MUL);
+	this.set("/=",processing.parser.TokenType.ASSIGN_DIV);
+	this.set("%=",processing.parser.TokenType.ASSIGN_MOD);
+	this.set("++",processing.parser.TokenType.INCREMENT);
+	this.set("--",processing.parser.TokenType.DECREMENT);
 }}
 processing.parser.AssignmentTokenTypeList.__name__ = ["processing","parser","AssignmentTokenTypeList"];
 processing.parser.AssignmentTokenTypeList.__super__ = Hash;
@@ -537,8 +675,6 @@ processing.parser.OperatorTokenTypeList = function(p) { if( p === $_ ) return; {
 	this.set(">>",processing.parser.TokenType.RSH);
 	this.set(">=",processing.parser.TokenType.GE);
 	this.set(">",processing.parser.TokenType.GT);
-	this.set("++",processing.parser.TokenType.INCREMENT);
-	this.set("--",processing.parser.TokenType.DECREMENT);
 	this.set("+",processing.parser.TokenType.PLUS);
 	this.set("-",processing.parser.TokenType.MINUS);
 	this.set("*",processing.parser.TokenType.MUL);
@@ -579,10 +715,6 @@ processing.parser.TokenType = function(value,precedence,arity) { if( value === $
 	this.arity = arity;
 }}
 processing.parser.TokenType.__name__ = ["processing","parser","TokenType"];
-processing.parser.TokenType.getConstant = function(token) {
-	haxe.Log.trace("THIS IS DEPRECATED",{ fileName : "TokenType.hx", lineNumber : 20, className : "processing.parser.TokenType", methodName : "getConstant"});
-	return token.value;
-}
 processing.parser.TokenType.prototype.arity = null;
 processing.parser.TokenType.prototype.precedence = null;
 processing.parser.TokenType.prototype.value = null;
@@ -699,16 +831,7 @@ processing.parser.Tokenizer.prototype.getLineNumber = function(searchCursor) {
 	return processing.parser.Tokenizer.regexes.NEWLINES.split(this.source.substr(0,searchCursor)).length + 1;
 }
 processing.parser.Tokenizer.prototype.isDone = function() {
-	return function($this) {
-		var $r;
-		var tmp = $this.match(processing.parser.TokenType.END);
-		$r = (Std["is"](tmp,Bool)?tmp:function($this) {
-			var $r;
-			throw "Class cast error";
-			return $r;
-		}($this));
-		return $r;
-	}(this);
+	return this.match(processing.parser.TokenType.END);
 }
 processing.parser.Tokenizer.prototype.line = null;
 processing.parser.Tokenizer.prototype.load = function(s) {
@@ -720,7 +843,7 @@ processing.parser.Tokenizer.prototype.match = function(matchType,mustMatch) {
 	if(mustMatch == null) mustMatch = false;
 	var doesMatch = (this.peek().type == matchType);
 	if(doesMatch) this.get();
-	else if(mustMatch) throw new processing.parser.TokenizerSyntaxError("Tokenizer: Must match " + processing.parser.TokenType.getConstant(matchType) + ", found " + processing.parser.TokenType.getConstant(this.peek().type),this);
+	else if(mustMatch) throw new processing.parser.TokenizerSyntaxError("Tokenizer: Must match " + matchType.value + ", found " + this.peek().type,this);
 	return doesMatch;
 }
 processing.parser.Tokenizer.prototype.parseStringLiteral = function(str) {
@@ -774,19 +897,16 @@ processing.parser.Tokenizer.prototype.peek = function(lookAhead,onSameLine) {
 		else if((regex = processing.parser.Tokenizer.regexes.STRING).match(input)) {
 			token = new processing.parser.Token(processing.parser.TokenType.STRING,this.parseStringLiteral(regex.matched(0).substr(1,regex.matched(0).length - 1)));
 		}
+		else if((regex = processing.parser.Tokenizer.regexes.ASSIGN_OPERATOR).match(input)) {
+			var op = regex.matched(1);
+			token = new processing.parser.Token(processing.parser.TokenType.ASSIGNMENT_OPS.get(op),op);
+		}
 		else if((regex = processing.parser.Tokenizer.regexes.OPERATOR).match(input)) {
 			var op = regex.matched(1);
-			if(processing.parser.TokenType.ASSIGNMENT_OPS.exists(op) && regex.matched(2).length > 0) {
-				token = new processing.parser.Token(processing.parser.TokenType.ASSIGN,op);
-				token.assignOp = processing.parser.TokenType.OPS.get(op);
-			}
-			else {
-				token = new processing.parser.Token(processing.parser.TokenType.OPS.get(op),op);
-				if(this.scanOperand) {
-					if(token.type == processing.parser.TokenType.PLUS) token.type = processing.parser.TokenType.UNARY_PLUS;
-					if(token.type == processing.parser.TokenType.MINUS) token.type = processing.parser.TokenType.UNARY_MINUS;
-				}
-				token.assignOp = null;
+			token = new processing.parser.Token(processing.parser.TokenType.OPS.get(op),op);
+			if(this.scanOperand) {
+				if(token.type == processing.parser.TokenType.PLUS) token.type = processing.parser.TokenType.UNARY_PLUS;
+				if(token.type == processing.parser.TokenType.MINUS) token.type = processing.parser.TokenType.UNARY_MINUS;
 			}
 		}
 		else {
@@ -802,10 +922,512 @@ processing.parser.Tokenizer.prototype.peek = function(lookAhead,onSameLine) {
 processing.parser.Tokenizer.prototype.scanOperand = null;
 processing.parser.Tokenizer.prototype.source = null;
 processing.parser.Tokenizer.prototype.__class__ = processing.parser.Tokenizer;
-processing.parser.Statement = { __ename__ : ["processing","parser","Statement"], __constructs__ : ["SArrayInstantiation","SArrayLiteral","SAssignment","SBlock","SBreak","SCall","SCast","SClassDefinition","SConditional","SContinue","SDecrement","SFunctionDefinition","SIncrement","SLiteral","SLoop","SObjectInstantiation","SOperation","SReference","SReturn","SThisReference","SVariableDefinition","SValue"] }
+processing.interpreter = {}
+processing.interpreter.Interpreter = function(p) { if( p === $_ ) return; {
+	null;
+}}
+processing.interpreter.Interpreter.__name__ = ["processing","interpreter","Interpreter"];
+processing.interpreter.Interpreter.prototype.interpret = function(statement,context,byValue) {
+	if(byValue == null) byValue = true;
+	var $e = (statement);
+	switch( $e[1] ) {
+	case 0:
+	var sizes = $e[3], type = $e[2];
+	{
+		var array = [], current = 0;
+		sizes.reverse();
+		{
+			var _g = 0;
+			while(_g < sizes.length) {
+				var size = sizes[_g];
+				++_g;
+				{
+					var _g2 = 0, _g1 = this.interpret(size,context);
+					while(_g2 < _g1) {
+						var i = _g2++;
+						array.push((Std["is"](current,array)?current.copy():current));
+					}
+				}
+				current = array;
+				array = [];
+			}
+		}
+		return current;
+	}break;
+	case 1:
+	var values = $e[2];
+	{
+		var array = new Array();
+		{
+			var _g = 0;
+			while(_g < values.length) {
+				var value = values[_g];
+				++_g;
+				array.push(this.interpret(value,context));
+			}
+		}
+		return array;
+	}break;
+	case 2:
+	var value = $e[4], reference = $e[3], type = $e[2];
+	{
+		var a = this.interpret(reference,context,false), b = null;
+		if(value != null) b = this.interpret(value,context);
+		var $e = (type);
+		switch( $e[1] ) {
+		case 0:
+		{
+			return a.setValue(b);
+		}break;
+		case 1:
+		{
+			return a.setValue(a.getValue() | b);
+		}break;
+		case 2:
+		{
+			return a.setValue(a.getValue() ^ b);
+		}break;
+		case 3:
+		{
+			return a.setValue(a.getValue() & b);
+		}break;
+		case 4:
+		{
+			return a.setValue(a.getValue() << b);
+		}break;
+		case 5:
+		{
+			return a.setValue(a.getValue() >> b);
+		}break;
+		case 6:
+		{
+			return a.setValue(a.getValue() >>> b);
+		}break;
+		case 7:
+		{
+			return a.setValue(a.getValue() + b);
+		}break;
+		case 8:
+		{
+			return a.setValue(a.getValue() - b);
+		}break;
+		case 9:
+		{
+			return a.setValue(a.getValue() * b);
+		}break;
+		case 10:
+		{
+			return a.setValue(a.getValue() / b);
+		}break;
+		case 11:
+		{
+			return a.setValue(a.getValue() % b);
+		}break;
+		case 12:
+		{
+			return a.setValue(a.getValue() + 1);
+		}break;
+		case 13:
+		{
+			return a.setValue(a.getValue() - 1);
+		}break;
+		}
+	}break;
+	case 3:
+	var statements = $e[2];
+	{
+		var retValue = null;
+		{
+			var _g = 0;
+			while(_g < statements.length) {
+				var i = statements[_g];
+				++_g;
+				retValue = this.interpret(i,context);
+			}
+		}
+		return retValue;
+	}break;
+	case 4:
+	var level = $e[2];
+	{
+		throw new processing.interpreter.Break(level);
+	}break;
+	case 5:
+	var args = $e[3], method = $e[2];
+	{
+		var parsedArgs = [];
+		{
+			var _g = 0;
+			while(_g < args.length) {
+				var arg = args[_g];
+				++_g;
+				parsedArgs.push(this.interpret(arg,context));
+			}
+		}
+		return this.interpret(method,context).apply(context.scope,parsedArgs);
+	}break;
+	case 6:
+	var expression = $e[3], type = $e[2];
+	{
+		var value = this.interpret(expression,context);
+		if(type.dimensions == 0) {
+			switch(type.type) {
+			case processing.parser.TokenType.VOID:{
+				return function($this) {
+					var $r;
+					var tmp = value;
+					$r = (Std["is"](tmp,Void)?tmp:function($this) {
+						var $r;
+						throw "Class cast error";
+						return $r;
+					}($this));
+					return $r;
+				}(this);
+			}break;
+			case processing.parser.TokenType.INT:{
+				return function($this) {
+					var $r;
+					var tmp = value;
+					$r = (Std["is"](tmp,Int)?tmp:function($this) {
+						var $r;
+						throw "Class cast error";
+						return $r;
+					}($this));
+					return $r;
+				}(this);
+			}break;
+			case processing.parser.TokenType.FLOAT:{
+				return function($this) {
+					var $r;
+					var tmp = value;
+					$r = (Std["is"](tmp,Float)?tmp:function($this) {
+						var $r;
+						throw "Class cast error";
+						return $r;
+					}($this));
+					return $r;
+				}(this);
+			}break;
+			case processing.parser.TokenType.BOOLEAN:{
+				return function($this) {
+					var $r;
+					var tmp = value;
+					$r = (Std["is"](tmp,Bool)?tmp:function($this) {
+						var $r;
+						throw "Class cast error";
+						return $r;
+					}($this));
+					return $r;
+				}(this);
+			}break;
+			case processing.parser.TokenType.CHAR:{
+				return (Std["is"](value,String)?value.charCodeAt(0):value);
+			}break;
+			}
+		}
+		return value;
+	}break;
+	case 7:
+	var privateBody = $e[5], publicBody = $e[4], constructorBody = $e[3], identifier = $e[2];
+	{
+		return;
+	}break;
+	case 8:
+	var elseBlock = $e[4], thenBlock = $e[3], condition = $e[2];
+	{
+		if(this.interpret(condition,context)) return this.interpret(thenBlock,context);
+		else if(elseBlock != null) return this.interpret(elseBlock,context);
+		return;
+	}break;
+	case 9:
+	var level = $e[2];
+	{
+		throw new processing.interpreter.Continue(level);
+	}break;
+	case 10:
+	var body = $e[5], params = $e[4], type = $e[3], identifier = $e[2];
+	{
+		if(!context.hasField(identifier) || !context.hasField("__" + identifier)) {
+			context.setField(identifier,Reflect.makeVarArgs(function(arguments) {
+				{
+					var _g = 0, _g1 = function($this) {
+						var $r;
+						var tmp = context.getField("__" + identifier);
+						$r = (Std["is"](tmp,Array)?tmp:function($this) {
+							var $r;
+							throw "Class cast error";
+							return $r;
+						}($this));
+						return $r;
+					}(this);
+					while(_g < _g1.length) {
+						var overload = _g1[_g];
+						++_g;
+						if(overload.params.length != arguments.length) continue;
+						return overload.method.apply(context.thisObject,arguments);
+					}
+				}
+				throw "Function called without matching overload.";
+			}));
+			context.setField("__" + identifier,[]);
+		}
+		context.getField("__" + identifier).push({ params : params, type : type, method : Reflect.makeVarArgs(function(arguments) {
+			var funcContext = new processing.interpreter.Scope({ },context);
+			{
+				var _g1 = 0, _g = params.length;
+				while(_g1 < _g) {
+					var i = _g1++;
+					funcContext.setField(params[i].name,arguments[i]);
+				}
+			}
+			var interpreter = new processing.interpreter.Interpreter();
+			try {
+				interpreter.interpret(body,funcContext);
+				return;
+			}
+			catch( $e6 ) {
+				if( js.Boot.__instanceof($e6,processing.interpreter.Return) ) {
+					var ret = $e6;
+					{
+						return interpreter.interpret(ret.value,funcContext);
+					}
+				} else throw($e6);
+			}
+		})});
+		return;
+	}break;
+	case 11:
+	var value = $e[2];
+	{
+		return value;
+	}break;
+	case 12:
+	var body = $e[3], condition = $e[2];
+	{
+		while(this.interpret(condition,context)) {
+			try {
+				this.interpret(body,context);
+			}
+			catch( $e7 ) {
+				if( js.Boot.__instanceof($e7,processing.interpreter.Break) ) {
+					var b = $e7;
+					{
+						if(--b.level <= 0) throw b;
+						break;
+					}
+				} else if( js.Boot.__instanceof($e7,processing.interpreter.Continue) ) {
+					var c = $e7;
+					{
+						if(--c.level <= 0) throw c;
+						continue;
+					}
+				} else throw($e7);
+			}
+		}
+		return;
+	}break;
+	case 13:
+	var args = $e[3], method = $e[2];
+	{
+		var objClass = this.interpret(method,context);
+		var parsedArgs = [];
+		{
+			var _g = 0;
+			while(_g < args.length) {
+				var arg = args[_g];
+				++_g;
+				parsedArgs.push(this.interpret(arg,context));
+			}
+		}
+		return Type.createInstance(objClass,parsedArgs);
+	}break;
+	case 14:
+	var rightOperand = $e[4], leftOperand = $e[3], type = $e[2];
+	{
+		var a = this.interpret(leftOperand,context), b = null;
+		if(rightOperand != null) b = this.interpret(rightOperand,context);
+		var $e = (type);
+		switch( $e[1] ) {
+		case 0:
+		{
+			return !a;
+		}break;
+		case 1:
+		{
+			return ~a;
+		}break;
+		case 2:
+		{
+			return a;
+		}break;
+		case 3:
+		{
+			return -a;
+		}break;
+		case 4:
+		{
+			return a || b;
+		}break;
+		case 5:
+		{
+			return a && b;
+		}break;
+		case 6:
+		{
+			return a | b;
+		}break;
+		case 7:
+		{
+			return a ^ b;
+		}break;
+		case 8:
+		{
+			return a & b;
+		}break;
+		case 9:
+		{
+			return a == b;
+		}break;
+		case 10:
+		{
+			return a != b;
+		}break;
+		case 11:
+		{
+			return a == b;
+		}break;
+		case 12:
+		{
+			return a != b;
+		}break;
+		case 13:
+		{
+			return a < b;
+		}break;
+		case 14:
+		{
+			return a <= b;
+		}break;
+		case 15:
+		{
+			return a > b;
+		}break;
+		case 16:
+		{
+			return a >= b;
+		}break;
+		case 17:
+		{
+			return Reflect.hasField(b,a);
+		}break;
+		case 18:
+		{
+			return Std["is"](a,b);
+		}break;
+		case 19:
+		{
+			return a << b;
+		}break;
+		case 20:
+		{
+			return a >> b;
+		}break;
+		case 21:
+		{
+			return a >>> b;
+		}break;
+		case 22:
+		{
+			return a + b;
+		}break;
+		case 23:
+		{
+			return a - b;
+		}break;
+		case 24:
+		{
+			return a * b;
+		}break;
+		case 25:
+		{
+			return a / b;
+		}break;
+		case 26:
+		{
+			return a % b;
+		}break;
+		}
+	}break;
+	case 15:
+	var sBase = $e[3], sIdentifier = $e[2];
+	{
+		var identifier = this.interpret(sIdentifier,context), ref;
+		if(sBase != null) {
+			ref = new processing.interpreter.Reference(identifier,this.interpret(sBase,context));
+		}
+		else {
+			var definition = context.findDefinition(identifier);
+			if(definition == null) return null;
+			ref = new processing.interpreter.Reference(identifier,definition.scope);
+		}
+		return (byValue?ref.getValue():ref);
+	}break;
+	case 16:
+	var value = $e[2];
+	{
+		throw new processing.interpreter.Return(this.interpret(value,context));
+	}break;
+	case 17:
+	{
+		var c = context;
+		while(c != null && c.thisObject == null) c = c.parent;
+		return (c == null?c.thisObject:null);
+	}break;
+	case 18:
+	var type = $e[3], identifier = $e[2];
+	{
+		context.scope[identifier] = 0;
+		return;
+	}break;
+	}
+}
+processing.interpreter.Interpreter.prototype.__class__ = processing.interpreter.Interpreter;
+processing.interpreter.Reference = function(identifier,base) { if( identifier === $_ ) return; {
+	this.identifier = identifier;
+	this.base = base;
+}}
+processing.interpreter.Reference.__name__ = ["processing","interpreter","Reference"];
+processing.interpreter.Reference.prototype.base = null;
+processing.interpreter.Reference.prototype.getValue = function() {
+	return Reflect.field(this.base,this.identifier);
+}
+processing.interpreter.Reference.prototype.identifier = null;
+processing.interpreter.Reference.prototype.setValue = function(value) {
+	return this.base[this.identifier] = value;
+}
+processing.interpreter.Reference.prototype.__class__ = processing.interpreter.Reference;
+processing.interpreter.Break = function(level) { if( level === $_ ) return; {
+	this.level = level;
+}}
+processing.interpreter.Break.__name__ = ["processing","interpreter","Break"];
+processing.interpreter.Break.prototype.level = null;
+processing.interpreter.Break.prototype.__class__ = processing.interpreter.Break;
+processing.interpreter.Continue = function(level) { if( level === $_ ) return; {
+	this.level = level;
+}}
+processing.interpreter.Continue.__name__ = ["processing","interpreter","Continue"];
+processing.interpreter.Continue.prototype.level = null;
+processing.interpreter.Continue.prototype.__class__ = processing.interpreter.Continue;
+processing.interpreter.Return = function(value) { if( value === $_ ) return; {
+	this.value = value;
+}}
+processing.interpreter.Return.__name__ = ["processing","interpreter","Return"];
+processing.interpreter.Return.prototype.value = null;
+processing.interpreter.Return.prototype.__class__ = processing.interpreter.Return;
+processing.parser.Statement = { __ename__ : ["processing","parser","Statement"], __constructs__ : ["SArrayInstantiation","SArrayLiteral","SAssignment","SBlock","SBreak","SCall","SCast","SClassDefinition","SConditional","SContinue","SFunctionDefinition","SLiteral","SLoop","SObjectInstantiation","SOperation","SReference","SReturn","SThisReference","SVariableDefinition"] }
 processing.parser.Statement.SArrayInstantiation = function(type,sizes) { var $x = ["SArrayInstantiation",0,type,sizes]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SArrayLiteral = function(values) { var $x = ["SArrayLiteral",1,values]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SAssignment = function(reference,value) { var $x = ["SAssignment",2,reference,value]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SAssignment = function(type,reference,value) { var $x = ["SAssignment",2,type,reference,value]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SBlock = function(statements) { var $x = ["SBlock",3,statements]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SBreak = function(level) { var $x = ["SBreak",4,level]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SCall = function(method,args) { var $x = ["SCall",5,method,args]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
@@ -813,102 +1435,17 @@ processing.parser.Statement.SCast = function(type,expression) { var $x = ["SCast
 processing.parser.Statement.SClassDefinition = function(identifier,constructorBody,publicBody,privateBody) { var $x = ["SClassDefinition",7,identifier,constructorBody,publicBody,privateBody]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SConditional = function(condition,thenBlock,elseBlock) { var $x = ["SConditional",8,condition,thenBlock,elseBlock]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SContinue = function(level) { var $x = ["SContinue",9,level]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SDecrement = function(reference) { var $x = ["SDecrement",10,reference]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SFunctionDefinition = function(identifier,type,params,body) { var $x = ["SFunctionDefinition",11,identifier,type,params,body]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SIncrement = function(reference) { var $x = ["SIncrement",12,reference]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SLiteral = function(value) { var $x = ["SLiteral",13,value]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SLoop = function(condition,body) { var $x = ["SLoop",14,condition,body]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SObjectInstantiation = function(method,args) { var $x = ["SObjectInstantiation",15,method,args]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SOperation = function(type,leftOperand,rightOperand) { var $x = ["SOperation",16,type,leftOperand,rightOperand]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SReference = function(identifier,base) { var $x = ["SReference",17,identifier,base]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SReturn = function(value) { var $x = ["SReturn",18,value]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SThisReference = ["SThisReference",19];
+processing.parser.Statement.SFunctionDefinition = function(identifier,type,params,body) { var $x = ["SFunctionDefinition",10,identifier,type,params,body]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SLiteral = function(value) { var $x = ["SLiteral",11,value]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SLoop = function(condition,body) { var $x = ["SLoop",12,condition,body]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SObjectInstantiation = function(method,args) { var $x = ["SObjectInstantiation",13,method,args]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SOperation = function(type,leftOperand,rightOperand) { var $x = ["SOperation",14,type,leftOperand,rightOperand]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SReference = function(identifier,base) { var $x = ["SReference",15,identifier,base]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SReturn = function(value) { var $x = ["SReturn",16,value]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SThisReference = ["SThisReference",17];
 processing.parser.Statement.SThisReference.toString = $estr;
 processing.parser.Statement.SThisReference.__enum__ = processing.parser.Statement;
-processing.parser.Statement.SValue = function(value) { var $x = ["SValue",21,value]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SVariableDefinition = function(identifier,type) { var $x = ["SVariableDefinition",20,identifier,type]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Operators = { __ename__ : ["processing","parser","Operators"], __constructs__ : ["OpNot","OpBitwiseNot","OpUnaryPlus","OpUnaryMinus","OpOr","OpAnd","OpBitwiseOr","OpBitwiseXor","OpBitwiseAnd","OpEqual","OpUnequal","OpStrictEqual","OpStrictUnequal","OpLessThan","OpLessThanOrEqual","OpGreaterThan","OpGreaterThanOrEqual","OpIn","OpInstanceOf","OpLeftShift","OpRightShift","OpZeroFillRightShift","OpPlus","OpMinus","OpMultiply","OpDivide","OpModulus"] }
-processing.parser.Operators.OpAnd = ["OpAnd",5];
-processing.parser.Operators.OpAnd.toString = $estr;
-processing.parser.Operators.OpAnd.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpBitwiseAnd = ["OpBitwiseAnd",8];
-processing.parser.Operators.OpBitwiseAnd.toString = $estr;
-processing.parser.Operators.OpBitwiseAnd.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpBitwiseNot = ["OpBitwiseNot",1];
-processing.parser.Operators.OpBitwiseNot.toString = $estr;
-processing.parser.Operators.OpBitwiseNot.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpBitwiseOr = ["OpBitwiseOr",6];
-processing.parser.Operators.OpBitwiseOr.toString = $estr;
-processing.parser.Operators.OpBitwiseOr.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpBitwiseXor = ["OpBitwiseXor",7];
-processing.parser.Operators.OpBitwiseXor.toString = $estr;
-processing.parser.Operators.OpBitwiseXor.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpDivide = ["OpDivide",25];
-processing.parser.Operators.OpDivide.toString = $estr;
-processing.parser.Operators.OpDivide.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpEqual = ["OpEqual",9];
-processing.parser.Operators.OpEqual.toString = $estr;
-processing.parser.Operators.OpEqual.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpGreaterThan = ["OpGreaterThan",15];
-processing.parser.Operators.OpGreaterThan.toString = $estr;
-processing.parser.Operators.OpGreaterThan.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpGreaterThanOrEqual = ["OpGreaterThanOrEqual",16];
-processing.parser.Operators.OpGreaterThanOrEqual.toString = $estr;
-processing.parser.Operators.OpGreaterThanOrEqual.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpIn = ["OpIn",17];
-processing.parser.Operators.OpIn.toString = $estr;
-processing.parser.Operators.OpIn.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpInstanceOf = ["OpInstanceOf",18];
-processing.parser.Operators.OpInstanceOf.toString = $estr;
-processing.parser.Operators.OpInstanceOf.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpLeftShift = ["OpLeftShift",19];
-processing.parser.Operators.OpLeftShift.toString = $estr;
-processing.parser.Operators.OpLeftShift.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpLessThan = ["OpLessThan",13];
-processing.parser.Operators.OpLessThan.toString = $estr;
-processing.parser.Operators.OpLessThan.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpLessThanOrEqual = ["OpLessThanOrEqual",14];
-processing.parser.Operators.OpLessThanOrEqual.toString = $estr;
-processing.parser.Operators.OpLessThanOrEqual.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpMinus = ["OpMinus",23];
-processing.parser.Operators.OpMinus.toString = $estr;
-processing.parser.Operators.OpMinus.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpModulus = ["OpModulus",26];
-processing.parser.Operators.OpModulus.toString = $estr;
-processing.parser.Operators.OpModulus.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpMultiply = ["OpMultiply",24];
-processing.parser.Operators.OpMultiply.toString = $estr;
-processing.parser.Operators.OpMultiply.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpNot = ["OpNot",0];
-processing.parser.Operators.OpNot.toString = $estr;
-processing.parser.Operators.OpNot.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpOr = ["OpOr",4];
-processing.parser.Operators.OpOr.toString = $estr;
-processing.parser.Operators.OpOr.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpPlus = ["OpPlus",22];
-processing.parser.Operators.OpPlus.toString = $estr;
-processing.parser.Operators.OpPlus.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpRightShift = ["OpRightShift",20];
-processing.parser.Operators.OpRightShift.toString = $estr;
-processing.parser.Operators.OpRightShift.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpStrictEqual = ["OpStrictEqual",11];
-processing.parser.Operators.OpStrictEqual.toString = $estr;
-processing.parser.Operators.OpStrictEqual.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpStrictUnequal = ["OpStrictUnequal",12];
-processing.parser.Operators.OpStrictUnequal.toString = $estr;
-processing.parser.Operators.OpStrictUnequal.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpUnaryMinus = ["OpUnaryMinus",3];
-processing.parser.Operators.OpUnaryMinus.toString = $estr;
-processing.parser.Operators.OpUnaryMinus.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpUnaryPlus = ["OpUnaryPlus",2];
-processing.parser.Operators.OpUnaryPlus.toString = $estr;
-processing.parser.Operators.OpUnaryPlus.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpUnequal = ["OpUnequal",10];
-processing.parser.Operators.OpUnequal.toString = $estr;
-processing.parser.Operators.OpUnequal.__enum__ = processing.parser.Operators;
-processing.parser.Operators.OpZeroFillRightShift = ["OpZeroFillRightShift",21];
-processing.parser.Operators.OpZeroFillRightShift.toString = $estr;
-processing.parser.Operators.OpZeroFillRightShift.__enum__ = processing.parser.Operators;
+processing.parser.Statement.SVariableDefinition = function(identifier,type) { var $x = ["SVariableDefinition",18,identifier,type]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.TokenizerSyntaxError = function(_message,tokenizer) { if( _message === $_ ) return; {
 	if(_message == null) _message = "";
 	this.source = tokenizer.source;
@@ -925,6 +1462,35 @@ processing.parser.TokenizerSyntaxError.prototype.toString = function() {
 	return this.message + "\nParsing error (line " + this.line + ", char " + this.cursor + ")";
 }
 processing.parser.TokenizerSyntaxError.prototype.__class__ = processing.parser.TokenizerSyntaxError;
+processing.interpreter.Scope = function(s,p,t) { if( s === $_ ) return; {
+	this.scope = ((s != null)?s:{ });
+	this.parent = p;
+	this.thisObject = t;
+}}
+processing.interpreter.Scope.__name__ = ["processing","interpreter","Scope"];
+processing.interpreter.Scope.prototype.findDefinition = function(name) {
+	return (this.hasField(name)?this:((this.parent != null?this.parent.findDefinition(name):null)));
+}
+processing.interpreter.Scope.prototype.getField = function(name,deep) {
+	return (this.hasField(name)?Reflect.field(this.scope,name):((deep?this.parent.getField(name,deep):null)));
+}
+processing.interpreter.Scope.prototype.hasField = function(name,deep) {
+	return Reflect.hasField(this.scope,name) || ((deep?this.parent.hasField(name,deep):false));
+}
+processing.interpreter.Scope.prototype.parent = null;
+processing.interpreter.Scope.prototype.scope = null;
+processing.interpreter.Scope.prototype.setField = function(name,value,deep) {
+	if(!this.hasField(name) && deep) {
+		var scope = this.findDefinition(name);
+		if(scope != null) {
+			scope.setField(name,value);
+			return;
+		}
+	}
+	this.scope[name] = value;
+}
+processing.interpreter.Scope.prototype.thisObject = null;
+processing.interpreter.Scope.prototype.__class__ = processing.interpreter.Scope;
 processing.evaluator = {}
 processing.evaluator.Evaluator = function(_contexts) { if( _contexts === $_ ) return; {
 	this.contexts = (_contexts != null?_contexts:[]);
@@ -934,22 +1500,131 @@ processing.evaluator.Evaluator.prototype.contexts = null;
 processing.evaluator.Evaluator.prototype.evaluate = function(code) {
 	var parser = new processing.parser.Parser();
 	var script = parser.parse(code);
-	var compiler = new processing.compiler.JavaScriptCompiler();
-	var compiled = compiler.compile(script);
-	var func = "(function (code, contexts) { ";
+	var globalScope = new processing.interpreter.Scope(), currentScope = globalScope;
+	globalScope.thisObject = globalScope;
 	{
-		var _g1 = 0, _g = this.contexts.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			func += "with (contexts.shift()) ";
+		var _g = 0, _g1 = this.contexts;
+		while(_g < _g1.length) {
+			var context = _g1[_g];
+			++_g;
+			currentScope = new processing.interpreter.Scope(context,currentScope);
 		}
 	}
-	func += "return eval(code); })";
-	var evaluator = js.Lib.eval(func);
-	return evaluator(compiled,this.contexts);
+	var interpreter = new processing.interpreter.Interpreter();
+	interpreter.interpret(script,currentScope);
 }
 processing.evaluator.Evaluator.prototype.__class__ = processing.evaluator.Evaluator;
-processing.parser.Token = function(t,v,c,s,l,a) { if( t === $_ ) return; {
+Reflect = function() { }
+Reflect.__name__ = ["Reflect"];
+Reflect.hasField = function(o,field) {
+	if(o.hasOwnProperty != null) return o.hasOwnProperty(field);
+	var arr = Reflect.fields(o);
+	{ var $it8 = arr.iterator();
+	while( $it8.hasNext() ) { var t = $it8.next();
+	if(t == field) return true;
+	}}
+	return false;
+}
+Reflect.field = function(o,field) {
+	var v = null;
+	try {
+		v = o[field];
+	}
+	catch( $e9 ) {
+		{
+			var e = $e9;
+			null;
+		}
+	}
+	return v;
+}
+Reflect.setField = function(o,field,value) {
+	o[field] = value;
+}
+Reflect.callMethod = function(o,func,args) {
+	return func.apply(o,args);
+}
+Reflect.fields = function(o) {
+	if(o == null) return new Array();
+	var a = new Array();
+	if(o.hasOwnProperty) {
+		
+					for(var i in o)
+						if( o.hasOwnProperty(i) )
+							a.push(i);
+				;
+	}
+	else {
+		var t;
+		try {
+			t = o.__proto__;
+		}
+		catch( $e10 ) {
+			{
+				var e = $e10;
+				{
+					t = null;
+				}
+			}
+		}
+		if(t != null) o.__proto__ = null;
+		
+					for(var i in o)
+						if( i != "__proto__" )
+							a.push(i);
+				;
+		if(t != null) o.__proto__ = t;
+	}
+	return a;
+}
+Reflect.isFunction = function(f) {
+	return typeof(f) == "function" && f.__name__ == null;
+}
+Reflect.compare = function(a,b) {
+	return ((a == b)?0:((((a) > (b))?1:-1)));
+}
+Reflect.compareMethods = function(f1,f2) {
+	if(f1 == f2) return true;
+	if(!Reflect.isFunction(f1) || !Reflect.isFunction(f2)) return false;
+	return f1.scope == f2.scope && f1.method == f2.method && f1.method != null;
+}
+Reflect.isObject = function(v) {
+	if(v == null) return false;
+	var t = typeof(v);
+	return (t == "string" || (t == "object" && !v.__enum__) || (t == "function" && v.__name__ != null));
+}
+Reflect.deleteField = function(o,f) {
+	if(!Reflect.hasField(o,f)) return false;
+	delete(o[f]);
+	return true;
+}
+Reflect.copy = function(o) {
+	var o2 = { }
+	{
+		var _g = 0, _g1 = Reflect.fields(o);
+		while(_g < _g1.length) {
+			var f = _g1[_g];
+			++_g;
+			o2[f] = Reflect.field(o,f);
+		}
+	}
+	return o2;
+}
+Reflect.makeVarArgs = function(f) {
+	return function() {
+		var a = new Array();
+		{
+			var _g1 = 0, _g = arguments.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				a.push(arguments[i]);
+			}
+		}
+		return f(a);
+	}
+}
+Reflect.prototype.__class__ = Reflect;
+processing.parser.Token = function(t,v,c,s,l) { if( t === $_ ) return; {
 	if(l == null) l = 0;
 	if(s == null) s = 0;
 	if(c == null) c = "";
@@ -958,19 +1633,17 @@ processing.parser.Token = function(t,v,c,s,l,a) { if( t === $_ ) return; {
 	this.start = s;
 	this.content = c;
 	this.line = l;
-	this.assignOp = a;
 }}
 processing.parser.Token.__name__ = ["processing","parser","Token"];
-processing.parser.Token.prototype.assignOp = null;
 processing.parser.Token.prototype.content = null;
 processing.parser.Token.prototype.debug = function() {
-	haxe.Log.trace("token {",{ fileName : "Token.hx", lineNumber : 27, className : "processing.parser.Token", methodName : "debug"});
-	haxe.Log.trace("\ttype: " + processing.parser.TokenType.getConstant(this.type),{ fileName : "Token.hx", lineNumber : 28, className : "processing.parser.Token", methodName : "debug"});
-	haxe.Log.trace("\tvalue: \"" + this.value + "\"",{ fileName : "Token.hx", lineNumber : 29, className : "processing.parser.Token", methodName : "debug"});
-	haxe.Log.trace("\tstart: " + this.start,{ fileName : "Token.hx", lineNumber : 30, className : "processing.parser.Token", methodName : "debug"});
-	haxe.Log.trace("\tcontent: \"" + this.content + "\"",{ fileName : "Token.hx", lineNumber : 31, className : "processing.parser.Token", methodName : "debug"});
-	haxe.Log.trace("\tline: " + this.line,{ fileName : "Token.hx", lineNumber : 32, className : "processing.parser.Token", methodName : "debug"});
-	haxe.Log.trace("}",{ fileName : "Token.hx", lineNumber : 33, className : "processing.parser.Token", methodName : "debug"});
+	haxe.Log.trace("token {",{ fileName : "Token.hx", lineNumber : 24, className : "processing.parser.Token", methodName : "debug"});
+	haxe.Log.trace("\ttype: " + this.type,{ fileName : "Token.hx", lineNumber : 25, className : "processing.parser.Token", methodName : "debug"});
+	haxe.Log.trace("\tvalue: \"" + this.value + "\"",{ fileName : "Token.hx", lineNumber : 26, className : "processing.parser.Token", methodName : "debug"});
+	haxe.Log.trace("\tstart: " + this.start,{ fileName : "Token.hx", lineNumber : 27, className : "processing.parser.Token", methodName : "debug"});
+	haxe.Log.trace("\tcontent: \"" + this.content + "\"",{ fileName : "Token.hx", lineNumber : 28, className : "processing.parser.Token", methodName : "debug"});
+	haxe.Log.trace("\tline: " + this.line,{ fileName : "Token.hx", lineNumber : 29, className : "processing.parser.Token", methodName : "debug"});
+	haxe.Log.trace("}",{ fileName : "Token.hx", lineNumber : 30, className : "processing.parser.Token", methodName : "debug"});
 }
 processing.parser.Token.prototype.line = null;
 processing.parser.Token.prototype.match = function(compareType) {
@@ -1065,7 +1738,7 @@ processing.parser.Parser.prototype.parseList = function(stopAt) {
 			list.push(null);
 			continue;
 		}
-		list.push(processing.parser.Statement.SValue(this.parseExpression(processing.parser.TokenType.COMMA)));
+		list.push(this.parseExpression(processing.parser.TokenType.COMMA));
 		if(!this.tokenizer.match(processing.parser.TokenType.COMMA)) break;
 	}
 	return list;
@@ -1196,8 +1869,7 @@ processing.parser.Parser.prototype.parseVariables = function() {
 		var varDimensions = (this.tokenizer.match(processing.parser.TokenType.ARRAY_DIMENSION)?this.tokenizer.currentToken.value:declarationType.dimensions);
 		block.push(processing.parser.Statement.SVariableDefinition(varName,{ type : declarationType.type, dimensions : varDimensions}));
 		if(this.tokenizer.match(processing.parser.TokenType.ASSIGN)) {
-			if(this.tokenizer.currentToken.assignOp != null) throw new processing.parser.TokenizerSyntaxError("Invalid variable initialization",this.tokenizer);
-			block.push(processing.parser.Statement.SAssignment(processing.parser.Statement.SReference(processing.parser.Statement.SLiteral(varName)),this.parseExpression(processing.parser.TokenType.COMMA)));
+			block.push(processing.parser.Statement.SAssignment(processing.parser.AssignOperator.AssignOp,processing.parser.Statement.SReference(processing.parser.Statement.SLiteral(varName)),this.parseExpression(processing.parser.TokenType.COMMA)));
 		}
 	} while(this.tokenizer.match(processing.parser.TokenType.COMMA));
 	return processing.parser.Statement.SBlock(block);
@@ -1207,31 +1879,28 @@ processing.parser.Parser.prototype.reduceExpression = function(operatorList,oper
 	var operands = operandList.splice(operandList.length - operator.arity,operator.arity);
 	switch(operator) {
 	case processing.parser.TokenType.NEW:case processing.parser.TokenType.NEW_WITH_ARGS:{
-		operandList.push(processing.parser.Statement.SObjectInstantiation(processing.parser.Statement.SValue(operands[0]),operands[1]));
+		operandList.push(processing.parser.Statement.SObjectInstantiation(operands[0],operands[1]));
 	}break;
 	case processing.parser.TokenType.CALL:{
-		operandList.push(processing.parser.Statement.SCall(processing.parser.Statement.SValue(operands[0]),operands[1]));
+		operandList.push(processing.parser.Statement.SCall(operands[0],operands[1]));
 	}break;
 	case processing.parser.TokenType.CAST:{
-		operandList.push(processing.parser.Statement.SCast(operands[0],processing.parser.Statement.SValue(operands[1])));
-	}break;
-	case processing.parser.TokenType.INCREMENT:{
-		operandList.push(processing.parser.Statement.SIncrement(operands[0]));
-	}break;
-	case processing.parser.TokenType.DECREMENT:{
-		operandList.push(processing.parser.Statement.SDecrement(operands[0]));
-	}break;
-	case processing.parser.TokenType.ASSIGN:{
-		operandList.push(processing.parser.Statement.SAssignment(operands[0],operands[1]));
+		operandList.push(processing.parser.Statement.SCast(operands[0],operands[1]));
 	}break;
 	case processing.parser.TokenType.INDEX:case processing.parser.TokenType.DOT:{
 		operandList.push(processing.parser.Statement.SReference(operands[1],operands[0]));
 	}break;
 	case processing.parser.TokenType.NOT:case processing.parser.TokenType.BITWISE_NOT:case processing.parser.TokenType.UNARY_PLUS:case processing.parser.TokenType.UNARY_MINUS:{
-		operandList.push(processing.parser.Statement.SOperation(operator,processing.parser.Statement.SValue(operands[0])));
+		operandList.push(processing.parser.Statement.SOperation(operator.value,operands[0]));
+	}break;
+	case processing.parser.TokenType.INCREMENT:case processing.parser.TokenType.DECREMENT:{
+		operandList.push(processing.parser.Statement.SAssignment(operator.value,operands[0]));
 	}break;
 	case processing.parser.TokenType.OR:case processing.parser.TokenType.AND:case processing.parser.TokenType.BITWISE_OR:case processing.parser.TokenType.BITWISE_XOR:case processing.parser.TokenType.BITWISE_AND:case processing.parser.TokenType.EQ:case processing.parser.TokenType.NE:case processing.parser.TokenType.STRICT_EQ:case processing.parser.TokenType.STRICT_NE:case processing.parser.TokenType.LT:case processing.parser.TokenType.LE:case processing.parser.TokenType.GE:case processing.parser.TokenType.GT:case processing.parser.TokenType.INSTANCEOF:case processing.parser.TokenType.LSH:case processing.parser.TokenType.RSH:case processing.parser.TokenType.URSH:case processing.parser.TokenType.PLUS:case processing.parser.TokenType.MINUS:case processing.parser.TokenType.MUL:case processing.parser.TokenType.DIV:case processing.parser.TokenType.MOD:{
-		operandList.push(processing.parser.Statement.SOperation(operator,processing.parser.Statement.SValue(operands[0]),processing.parser.Statement.SValue(operands[1])));
+		operandList.push(processing.parser.Statement.SOperation(operator.value,operands[0],operands[1]));
+	}break;
+	case processing.parser.TokenType.ASSIGN:case processing.parser.TokenType.ASSIGN_BITWISE_OR:case processing.parser.TokenType.ASSIGN_BITWISE_XOR:case processing.parser.TokenType.ASSIGN_BITWISE_AND:case processing.parser.TokenType.ASSIGN_LSH:case processing.parser.TokenType.ASSIGN_RSH:case processing.parser.TokenType.ASSIGN_URSH:case processing.parser.TokenType.ASSIGN_PLUS:case processing.parser.TokenType.ASSIGN_MINUS:case processing.parser.TokenType.ASSIGN_MUL:case processing.parser.TokenType.ASSIGN_DIV:case processing.parser.TokenType.ASSIGN_MOD:{
+		operandList.push(processing.parser.Statement.SAssignment(operator.value,operands[0],operands[1]));
 	}break;
 	default:{
 		throw "Unknown operator \"" + operator + "\"";
@@ -1344,15 +2013,17 @@ processing.parser.Parser.prototype.scanOperator = function(operators,operands,st
 	var token = this.tokenizer.peek();
 	if(stopAt != null && token.match(stopAt)) return false;
 	switch(token.type) {
-	case processing.parser.TokenType.ASSIGN:{
+	case processing.parser.TokenType.ASSIGN:case processing.parser.TokenType.ASSIGN_BITWISE_OR:case processing.parser.TokenType.ASSIGN_BITWISE_XOR:case processing.parser.TokenType.ASSIGN_BITWISE_AND:case processing.parser.TokenType.ASSIGN_LSH:case processing.parser.TokenType.ASSIGN_RSH:case processing.parser.TokenType.ASSIGN_URSH:case processing.parser.TokenType.ASSIGN_PLUS:case processing.parser.TokenType.ASSIGN_MINUS:case processing.parser.TokenType.ASSIGN_MUL:case processing.parser.TokenType.ASSIGN_DIV:case processing.parser.TokenType.ASSIGN_MOD:{
 		while(operators.length > 0 && operators[operators.length - 1].precedence > token.type.precedence) this.reduceExpression(operators,operands);
 		operators.push(this.tokenizer.get().type);
-		if(token.assignOp != null) {
-			operators.push(token.assignOp);
-			operands.push(operands[operands.length - 1]);
-		}
 		operands.push(this.parseExpression(stopAt));
 		return false;
+	}break;
+	case processing.parser.TokenType.INCREMENT:case processing.parser.TokenType.DECREMENT:{
+		while(operators.length > 0 && operators[operators.length - 1].precedence > token.type.precedence) this.reduceExpression(operators,operands);
+		operators.push(this.tokenizer.get().type);
+		this.reduceExpression(operators,operands);
+		return this.scanOperator(operators,operands,stopAt);
 	}break;
 	case processing.parser.TokenType.DOT:{
 		while(operators.length > 0 && operators[operators.length - 1].precedence >= token.type.precedence) this.reduceExpression(operators,operands);
@@ -1369,15 +2040,9 @@ processing.parser.Parser.prototype.scanOperator = function(operators,operands,st
 		if(!this.tokenizer.match(processing.parser.TokenType.RIGHT_BRACKET)) throw new processing.parser.TokenizerSyntaxError("Missing ] in index expression",this.tokenizer);
 		return this.scanOperator(operators,operands,stopAt);
 	}break;
-	case processing.parser.TokenType.OR:case processing.parser.TokenType.AND:case processing.parser.TokenType.BITWISE_OR:case processing.parser.TokenType.BITWISE_XOR:case processing.parser.TokenType.BITWISE_AND:case processing.parser.TokenType.EQ:case processing.parser.TokenType.NE:case processing.parser.TokenType.STRICT_EQ:case processing.parser.TokenType.STRICT_NE:case processing.parser.TokenType.LT:case processing.parser.TokenType.LE:case processing.parser.TokenType.GE:case processing.parser.TokenType.GT:case processing.parser.TokenType.INSTANCEOF:case processing.parser.TokenType.LSH:case processing.parser.TokenType.RSH:case processing.parser.TokenType.URSH:case processing.parser.TokenType.PLUS:case processing.parser.TokenType.MINUS:case processing.parser.TokenType.MUL:case processing.parser.TokenType.DIV:case processing.parser.TokenType.MOD:{
+	case processing.parser.TokenType.OR:case processing.parser.TokenType.AND:case processing.parser.TokenType.BITWISE_OR:case processing.parser.TokenType.BITWISE_XOR:case processing.parser.TokenType.BITWISE_AND:case processing.parser.TokenType.EQ:case processing.parser.TokenType.NE:case processing.parser.TokenType.STRICT_EQ:case processing.parser.TokenType.STRICT_NE:case processing.parser.TokenType.LT:case processing.parser.TokenType.LE:case processing.parser.TokenType.GE:case processing.parser.TokenType.GT:case processing.parser.TokenType.IN:case processing.parser.TokenType.INSTANCEOF:case processing.parser.TokenType.LSH:case processing.parser.TokenType.RSH:case processing.parser.TokenType.URSH:case processing.parser.TokenType.PLUS:case processing.parser.TokenType.MINUS:case processing.parser.TokenType.MUL:case processing.parser.TokenType.DIV:case processing.parser.TokenType.MOD:{
 		while(operators.length > 0 && operators[operators.length - 1].precedence >= token.type.precedence) this.reduceExpression(operators,operands);
 		operators.push(this.tokenizer.get().type);
-	}break;
-	case processing.parser.TokenType.INCREMENT:case processing.parser.TokenType.DECREMENT:{
-		while(operators.length > 0 && operators[operators.length - 1].precedence > token.type.precedence) this.reduceExpression(operators,operands);
-		operators.push(this.tokenizer.get().type);
-		this.reduceExpression(operators,operands);
-		return this.scanOperator(operators,operands,stopAt);
 	}break;
 	case processing.parser.TokenType.HOOK:{
 		this.tokenizer.get();
@@ -1504,37 +2169,52 @@ processing.parser.TokenType.NUMBER = new processing.parser.TokenType("NUMBER");
 processing.parser.TokenType.STRING = new processing.parser.TokenType("STRING");
 processing.parser.TokenType.REGEXP = new processing.parser.TokenType("REGEXP");
 processing.parser.TokenType.ARRAY_DIMENSION = new processing.parser.TokenType("[]");
+processing.parser.TokenType.NOT = new processing.parser.TokenType(processing.parser.Operator.OpNot,14,1);
+processing.parser.TokenType.BITWISE_NOT = new processing.parser.TokenType(processing.parser.Operator.OpBitwiseNot,14,1);
+processing.parser.TokenType.UNARY_PLUS = new processing.parser.TokenType(processing.parser.Operator.OpUnaryPlus,14,1);
+processing.parser.TokenType.UNARY_MINUS = new processing.parser.TokenType(processing.parser.Operator.OpUnaryMinus,14,1);
+processing.parser.TokenType.OR = new processing.parser.TokenType(processing.parser.Operator.OpOr,4,2);
+processing.parser.TokenType.AND = new processing.parser.TokenType(processing.parser.Operator.OpAnd,5,2);
+processing.parser.TokenType.BITWISE_OR = new processing.parser.TokenType(processing.parser.Operator.OpBitwiseOr,6,2);
+processing.parser.TokenType.BITWISE_XOR = new processing.parser.TokenType(processing.parser.Operator.OpBitwiseXor,7,2);
+processing.parser.TokenType.BITWISE_AND = new processing.parser.TokenType(processing.parser.Operator.OpBitwiseAnd,8,2);
+processing.parser.TokenType.EQ = new processing.parser.TokenType(processing.parser.Operator.OpEqual,9,2);
+processing.parser.TokenType.NE = new processing.parser.TokenType(processing.parser.Operator.OpUnequal,9,2);
+processing.parser.TokenType.STRICT_EQ = new processing.parser.TokenType(processing.parser.Operator.OpStrictEqual,9,2);
+processing.parser.TokenType.STRICT_NE = new processing.parser.TokenType(processing.parser.Operator.OpStrictUnequal,9,2);
+processing.parser.TokenType.LT = new processing.parser.TokenType(processing.parser.Operator.OpLessThan,10,2);
+processing.parser.TokenType.LE = new processing.parser.TokenType(processing.parser.Operator.OpLessThanOrEqual,10,2);
+processing.parser.TokenType.GT = new processing.parser.TokenType(processing.parser.Operator.OpGreaterThan,10,2);
+processing.parser.TokenType.GE = new processing.parser.TokenType(processing.parser.Operator.OpGreaterThanOrEqual,10,2);
+processing.parser.TokenType.IN = new processing.parser.TokenType(processing.parser.Operator.OpIn,10,2);
+processing.parser.TokenType.INSTANCEOF = new processing.parser.TokenType(processing.parser.Operator.OpInstanceOf,10,2);
+processing.parser.TokenType.LSH = new processing.parser.TokenType(processing.parser.Operator.OpLeftShift,11,2);
+processing.parser.TokenType.RSH = new processing.parser.TokenType(processing.parser.Operator.OpRightShift,11,2);
+processing.parser.TokenType.URSH = new processing.parser.TokenType(processing.parser.Operator.OpZeroRightShift,11,2);
+processing.parser.TokenType.PLUS = new processing.parser.TokenType(processing.parser.Operator.OpPlus,12,2);
+processing.parser.TokenType.MINUS = new processing.parser.TokenType(processing.parser.Operator.OpMinus,12,2);
+processing.parser.TokenType.MUL = new processing.parser.TokenType(processing.parser.Operator.OpMultiply,13,2);
+processing.parser.TokenType.DIV = new processing.parser.TokenType(processing.parser.Operator.OpDivide,13,2);
+processing.parser.TokenType.MOD = new processing.parser.TokenType(processing.parser.Operator.OpModulus,13,2);
+processing.parser.TokenType.ASSIGN = new processing.parser.TokenType(processing.parser.AssignOperator.AssignOp,2,2);
+processing.parser.TokenType.ASSIGN_BITWISE_OR = new processing.parser.TokenType(processing.parser.AssignOperator.AssignOpBitwiseOr,2,2);
+processing.parser.TokenType.ASSIGN_BITWISE_XOR = new processing.parser.TokenType(processing.parser.AssignOperator.AssignOpBitwiseXor,2,2);
+processing.parser.TokenType.ASSIGN_BITWISE_AND = new processing.parser.TokenType(processing.parser.AssignOperator.AssignOpBitewiseAnd,2,2);
+processing.parser.TokenType.ASSIGN_LSH = new processing.parser.TokenType(processing.parser.AssignOperator.AssignOpLeftShift,2,2);
+processing.parser.TokenType.ASSIGN_RSH = new processing.parser.TokenType(processing.parser.AssignOperator.AssignOpRightShift,2,2);
+processing.parser.TokenType.ASSIGN_URSH = new processing.parser.TokenType(processing.parser.AssignOperator.AssignOpZeroRightShift,2,2);
+processing.parser.TokenType.ASSIGN_PLUS = new processing.parser.TokenType(processing.parser.AssignOperator.AssignOpPlus,2,2);
+processing.parser.TokenType.ASSIGN_MINUS = new processing.parser.TokenType(processing.parser.AssignOperator.AssignOpMinus,2,2);
+processing.parser.TokenType.ASSIGN_MUL = new processing.parser.TokenType(processing.parser.AssignOperator.AssignOpMul,2,2);
+processing.parser.TokenType.ASSIGN_DIV = new processing.parser.TokenType(processing.parser.AssignOperator.AssignOpDiv,2,2);
+processing.parser.TokenType.ASSIGN_MOD = new processing.parser.TokenType(processing.parser.AssignOperator.AssignOpMod,2,2);
+processing.parser.TokenType.INCREMENT = new processing.parser.TokenType(processing.parser.AssignOperator.AssignOpIncrement,15,1);
+processing.parser.TokenType.DECREMENT = new processing.parser.TokenType(processing.parser.AssignOperator.AssignOpDecrement,15,1);
 processing.parser.TokenType.NEWLINE = new processing.parser.TokenType("\n");
 processing.parser.TokenType.SEMICOLON = new processing.parser.TokenType(";",0);
 processing.parser.TokenType.COMMA = new processing.parser.TokenType(",",1,-2);
 processing.parser.TokenType.HOOK = new processing.parser.TokenType("?",2);
 processing.parser.TokenType.COLON = new processing.parser.TokenType(":",2);
-processing.parser.TokenType.OR = new processing.parser.TokenType("||",4,2);
-processing.parser.TokenType.AND = new processing.parser.TokenType("&&",5,2);
-processing.parser.TokenType.BITWISE_OR = new processing.parser.TokenType("|",6,2);
-processing.parser.TokenType.BITWISE_XOR = new processing.parser.TokenType("^",7,2);
-processing.parser.TokenType.BITWISE_AND = new processing.parser.TokenType("&",8,2);
-processing.parser.TokenType.STRICT_EQ = new processing.parser.TokenType("===",9,2);
-processing.parser.TokenType.EQ = new processing.parser.TokenType("==",9,2);
-processing.parser.TokenType.ASSIGN = new processing.parser.TokenType("=",2,2);
-processing.parser.TokenType.STRICT_NE = new processing.parser.TokenType("!==",9,2);
-processing.parser.TokenType.NE = new processing.parser.TokenType("!=",9,2);
-processing.parser.TokenType.LSH = new processing.parser.TokenType("<<",11,2);
-processing.parser.TokenType.LE = new processing.parser.TokenType("<=",10,2);
-processing.parser.TokenType.LT = new processing.parser.TokenType("<",10,2);
-processing.parser.TokenType.URSH = new processing.parser.TokenType(">>>",11,2);
-processing.parser.TokenType.RSH = new processing.parser.TokenType(">>",11,2);
-processing.parser.TokenType.GE = new processing.parser.TokenType(">=",10,2);
-processing.parser.TokenType.GT = new processing.parser.TokenType(">",10,2);
-processing.parser.TokenType.INCREMENT = new processing.parser.TokenType("++",15,1);
-processing.parser.TokenType.DECREMENT = new processing.parser.TokenType("--",15,1);
-processing.parser.TokenType.PLUS = new processing.parser.TokenType("+",12,2);
-processing.parser.TokenType.MINUS = new processing.parser.TokenType("-",12,2);
-processing.parser.TokenType.MUL = new processing.parser.TokenType("*",13,2);
-processing.parser.TokenType.DIV = new processing.parser.TokenType("/",13,2);
-processing.parser.TokenType.MOD = new processing.parser.TokenType("%",13,2);
-processing.parser.TokenType.NOT = new processing.parser.TokenType("!",14,1);
-processing.parser.TokenType.BITWISE_NOT = new processing.parser.TokenType("~",14,1);
 processing.parser.TokenType.DOT = new processing.parser.TokenType(".",17,2);
 processing.parser.TokenType.LEFT_BRACKET = new processing.parser.TokenType("[");
 processing.parser.TokenType.RIGHT_BRACKET = new processing.parser.TokenType("]");
@@ -1543,8 +2223,6 @@ processing.parser.TokenType.RIGHT_CURLY = new processing.parser.TokenType("}");
 processing.parser.TokenType.LEFT_PAREN = new processing.parser.TokenType("(");
 processing.parser.TokenType.RIGHT_PAREN = new processing.parser.TokenType(")");
 processing.parser.TokenType.CONDITIONAL = new processing.parser.TokenType("CONDITIONAL",2,3);
-processing.parser.TokenType.UNARY_PLUS = new processing.parser.TokenType("UNARY_PLUS",14,1);
-processing.parser.TokenType.UNARY_MINUS = new processing.parser.TokenType("UNARY_MINUS",14,1);
 processing.parser.TokenType.CAST = new processing.parser.TokenType("CAST",14,2);
 processing.parser.TokenType.BREAK = new processing.parser.TokenType();
 processing.parser.TokenType.CLASS = new processing.parser.TokenType();
@@ -1563,8 +2241,6 @@ processing.parser.TokenType.FINALLY = new processing.parser.TokenType();
 processing.parser.TokenType.FOR = new processing.parser.TokenType();
 processing.parser.TokenType.FUNCTION = new processing.parser.TokenType();
 processing.parser.TokenType.IF = new processing.parser.TokenType();
-processing.parser.TokenType.IN = new processing.parser.TokenType("in",10,2);
-processing.parser.TokenType.INSTANCEOF = new processing.parser.TokenType("instanceof",10,2);
 processing.parser.TokenType.NEW = new processing.parser.TokenType("new",16,1);
 processing.parser.TokenType.NULL = new processing.parser.TokenType(null);
 processing.parser.TokenType.PUBLIC = new processing.parser.TokenType("public");
@@ -1598,10 +2274,11 @@ processing.parser.TokenizerRegexList.COLOR = new EReg("^(?:0[xX]|#)([\\da-fA-F]{
 processing.parser.TokenizerRegexList.FLOAT = new EReg("^\\d+(?:\\.\\d*)?[fF]|^\\d+\\.\\d*(?:[eE][-+]?\\d+)?|^\\d+(?:\\.\\d*)?[eE][-+]?\\d+|^\\.\\d+(?:[eE][-+]?\\d+)?","");
 processing.parser.TokenizerRegexList.INTEGER = new EReg("^0[xX][\\da-fA-F]+|^0[0-7]*|^\\d+","");
 processing.parser.TokenizerRegexList.KEYWORD = new EReg("^\\w+","");
-processing.parser.TokenizerRegexList.ARRAY_DIMENSIONS = new EReg("^(?:\\[\\]){1,3}","");
+processing.parser.TokenizerRegexList.ARRAY_DIMENSIONS = new EReg("^(?:\\[\\]){1,}","");
 processing.parser.TokenizerRegexList.CHAR = new EReg("^'(?:[^']|\\\\.|\\\\u[0-9A-Fa-f]{4})'","");
 processing.parser.TokenizerRegexList.STRING = new EReg("^\"(?:\\\\.|[^\"])*\"|^'(?:[^']|\\\\.)*'","");
-processing.parser.TokenizerRegexList.OPERATOR = new EReg("^(\\n|\\|\\||&&|===?|!==?|<<|<=|>>>?|>=|\\+\\+|--|\\[\\]|[;,?:|^&=<>+\\-*/%!~.[\\]{}()])(=?)","");
+processing.parser.TokenizerRegexList.ASSIGN_OPERATOR = new EReg("^(\\||\\^|&|<<|>>>?|\\+|\\-|\\*|/|%)?=(?!=)|^\\+\\+|^--","");
+processing.parser.TokenizerRegexList.OPERATOR = new EReg("^(\\n|\\|\\||&&|===?|!==?|<<|<=|>>>?|>=|\\+\\+|--|\\[\\]|[;,?:|^&<>+\\-*/%!~.[\\]{}()])","");
 processing.parser.TokenizerRegexList.CHAR_BACKSPACE = new EReg("((?:[^\\\\]|^)(?:\\\\\\\\)+)\\\\b","g");
 processing.parser.TokenizerRegexList.CHAR_TAB = new EReg("((?:[^\\\\]|^)(?:\\\\\\\\)+)\\\\t","g");
 processing.parser.TokenizerRegexList.CHAR_NEWLINE = new EReg("((?:[^\\\\]|^)(?:\\\\\\\\)+)\\\\n","g");

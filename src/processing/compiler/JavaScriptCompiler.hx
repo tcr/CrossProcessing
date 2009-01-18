@@ -29,8 +29,8 @@ class JavaScriptCompiler implements ICompiler
 //[TODO]
 			return '';
 
-		case SAssignment(reference, value):
-			return serialize(reference) + ' = ' + serialize(value);
+//		case SAssignment(reference, value):
+//			return serialize(reference) + ' = ' + serialize(value);
 
 		case SBlock(statements):
 			var source:Array<String> = new Array();
@@ -65,8 +65,8 @@ class JavaScriptCompiler implements ICompiler
 		case SContinue(level):
 			return 'continue ' + level;
 			
-		case SDecrement(reference):
-			return serialize(reference) + '--';
+//		case SDecrement(reference):
+//			return serialize(reference) + '--';
 			
 		case SFunctionDefinition(identifier, type, params, body):
 			// format params
@@ -81,8 +81,8 @@ class JavaScriptCompiler implements ICompiler
 //[TODO] functions should just be declared
 			    'Processing.' + identifier + ' = ' + func;
 
-		case SIncrement(reference):
-			return serialize(reference) + '++';
+//		case SIncrement(reference):
+//			return serialize(reference) + '++';
 			
 		case SLiteral(value):
 //[TODO] remove "escape" flag necessity
@@ -116,9 +116,6 @@ class JavaScriptCompiler implements ICompiler
 		case SVariableDefinition(identifier, type):
 //[TODO] type
 			return (inClass != null ? 'this.' : 'var ') + identifier + ' = 0';
-		
-		case SValue(value):
-			return '(' + serialize(value) + ')';
 		}
 	}
 }
