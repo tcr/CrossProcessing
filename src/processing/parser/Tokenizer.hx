@@ -1,11 +1,35 @@
 package processing.parser;
 
+enum Token {
+	TEof;
+	TKeyword(keyword:String);
+	TIdentifier(identifier:String);
+	TOperator(operator:String );
+	TString(value:String);
+	TInteger(value:Int);
+	TFloat(value:Float);
+	TChar(value:Int);
+	TDimensions;
+	TParenOpen;
+	TParenClose;
+	TBracketOpen;
+	TBracketClose;
+	TDot;
+	TComma;
+	TSemicolon;
+	TBraceOpen;
+	TBraceClose;
+	TQuestion;
+	TDoubleDot;
+}
+
 //[TODO] might want to take cues from a real Tokenizer class....
 class Tokenizer {
 	public var source(default, null):String;
 	public var cursor(default, null):Int;
 	public var done(isDone, null):Bool;
 	public var line(getCurrentLineNumber, null):Int;
+	public var currentToken(default, null):Token;
 	public var scanOperand:Bool;
 	
 	public function new():Void
@@ -25,104 +49,105 @@ class Tokenizer {
 	// static regexes
 	public static var regexes = TokenizerRegexList;
 	
-	public function peek(lookAhead:Int = 1, onSameLine:Bool = false):Token
+	public function get():Token
 	{
 		// init variables
-		var peekCursor:Int = cursor, token:Token = null, input:String = '', regex:EReg;
-		while (lookAhead-- > 0) {
-			// eliminate comments/whitespace
-			while (true)
-			{
-				// get input
-				input = source.substr(peekCursor);
-				if ((regex = onSameLine ? regexes.WHITESPACE_SAME_LINE : regexes.WHITESPACE).match(input) ||
-				    (regex = regexes.COMMENT).match(input))
-					peekCursor += regex.matched(0).length;
-				else
-					break;
-			}
-						
-			// find next token
-			if ((regex = regexes.EOF).match(input))
-			{
-				// end
-				token = new Token(TokenType.END);
-			}
-			else if ((regex = regexes.COLOR).match(input))
-			{
-				// color
-				token = new Token(TokenType.NUMBER, Std.parseInt('0x' + regex.matched(1)) + (regex.matched(1).length == 6 ? 0xFF000000 : 0));
-			}
-			else if ((regex = regexes.FLOAT).match(input))
-			{
-				// float
-				token = new Token(TokenType.NUMBER, Std.parseFloat(regex.matched(0)));
-			}
-			else if ((regex = regexes.INTEGER).match(input))
-			{
-				// integer
-				token = new Token(TokenType.NUMBER, Std.parseInt(regex.matched(0)));
-			}
-			else if ((regex = regexes.KEYWORD).match(input))
-			{
-				// type
-				if (TokenType.TYPES.exists(regex.matched(0)))
-					token = new Token(TokenType.TYPE, TokenType.TYPES.get(regex.matched(0)));
-				// keyword
-				else if (TokenType.KEYWORDS.exists(regex.matched(0)))
-					token = new Token(TokenType.KEYWORDS.get(regex.matched(0)), TokenType.KEYWORDS.get(regex.matched(0)).value);
-					
-				// identifier
-				else
-					token = new Token(TokenType.IDENTIFIER, regex.matched(0));
-			}
-			else if ((regex = regexes.ARRAY_DIMENSIONS).match(input))
-			{
-				// array dimensions
-				token = new Token(TokenType.ARRAY_DIMENSION, regex.matched(0).length / 2);
-			}
-			else if ((regex = regexes.CHAR).match(input))
-			{
-				// char
-				token = new Token(TokenType.CHAR, parseStringLiteral(regex.matched(0).substr(1, regex.matched(0).length - 1)).charCodeAt(0));
-			}
-			else if ((regex = regexes.STRING).match(input))
-			{
-				// string
-				token = new Token(TokenType.STRING, parseStringLiteral(regex.matched(0).substr(1, regex.matched(0).length - 1)));
-			}
-			else if ((regex = regexes.ASSIGN_OPERATOR).match(input))
-			{
-				// assignment operator
-				var op:String = regex.matched(1);
-				token = new Token(TokenType.ASSIGNMENT_OPS.get(op), op);
-			}
-			else if ((regex = regexes.OPERATOR).match(input))
-			{
-				// operator
-				var op:String = regex.matched(1);
-				token = new Token(TokenType.OPS.get(op), op);
-				if (scanOperand) {
-					if (token.type == TokenType.PLUS)
-						token.type = TokenType.UNARY_PLUS;
-					if (token.type == TokenType.MINUS)
-						token.type = TokenType.UNARY_MINUS;
-				}
-			}
+		var token:Token = null, regex:EReg, input:String = '';
+
+		// eliminate comments/whitespace
+		while (true)
+		{
+			// cache input and strip whitespace
+			input = source.substr(cursor);
+			if ((regex = regexes.WHITESPACE).match(input) ||
+			    (regex = regexes.COMMENT).match(input))
+				cursor += regex.matched(0).length;
 			else
-			{
-				throw new TokenizerSyntaxError('Illegal token ' + input, this);
-			}
-	
-			// set token properties
-			token.content = regex.matched(0);
-			token.start = peekCursor;
-			token.line = getLineNumber(peekCursor);
-			
-			// move cursor
-			peekCursor += token.content.length;
+				break;
 		}
-		
+					
+		// find next token
+		if ((regex = regexes.EOF).match(input))
+		{
+			// end
+			token = TEof;
+		}
+		else if ((regex = regexes.COLOR).match(input))
+		{
+			// color
+			token = TInteger(Std.parseInt('0x' + regex.matched(1)) + (regex.matched(1).length == 6 ? 0xFF000000 : 0));
+		}
+		else if ((regex = regexes.FLOAT).match(input))
+		{
+			// float
+			token = TFloat(Std.parseFloat(regex.matched(0)));
+		}
+		else if ((regex = regexes.INTEGER).match(input))
+		{
+			// integer
+			token = TInteger(Std.parseInt(regex.matched(0)));
+		}
+		else if ((regex = regexes.KEYWORD).match(input))
+		{
+			// keyword
+			token = TKeyword(regex.matched(0));
+		}
+		else if ((regex = regexes.IDENTIFIER).match(input))
+		{
+			// identifier
+			token = TIdentifier(regex.matched(0));
+		}
+		else if ((regex = regexes.CHAR).match(input))
+		{
+			// char
+			token = TChar(parseStringLiteral(regex.matched(0).substr(1, regex.matched(0).length - 1)).charCodeAt(0));
+		}
+		else if ((regex = regexes.STRING).match(input))
+		{
+			// string
+			token = TString(parseStringLiteral(regex.matched(0).substr(1, regex.matched(0).length - 1)));
+		}
+		else if ((regex = regexes.OPERATOR).match(input))
+		{
+			// assignment operator
+			token = TOperator(regex.matched(1));
+		}
+		else if ((regex = regexes.PUNCUATION).match(input))
+		{
+			// puncuation
+			token = switch (regex.matched(0)) {
+			    case '[]': TDimensions;
+			    case '(': TParenOpen;
+			    case ')': TParenClose;
+			    case '[': TBracketOpen;
+			    case ']': TBracketClose;
+			    case '.': TDot;
+			    case ',': TComma;
+			    case ';': TSemicolon;
+			    case '{': TBraceOpen;
+			    case '}': TBraceClose;
+			    case '?': TQuestion;
+			    case ':': TDoubleDot;
+			}
+		}
+		else 
+		{
+			throw new TokenizerSyntaxError('Illegal token ' + input, this);
+		}
+			
+		// move cursor
+		cursor += regex.matched(0).length;
+		// return token		
+		return token;
+	}
+	
+	public function peek(lookAhead:Int = 1):Token {
+		// peek ahead a certain distance (but retain Tokenizer state)
+		var origCursor:Int = cursor, origToken:Token = currentToken, token:Token = null;
+		for (i in 0...lookAhead)
+			token = get();
+		cursor = origCursor;
+		currentToken = origToken;
 		return token;
 	}
 	
@@ -143,28 +168,19 @@ class Tokenizer {
 		return str;
 	}
 	
-	public var currentToken(default, null):Token;
-
-	public function get():Token {
-		// get next token
-		currentToken = peek();
-		// move variables
-		cursor = currentToken.start + currentToken.content.length;
-		return currentToken;
-	}
-	
-	public function match(matchType:TokenType, mustMatch:Bool = false):Bool {
-		var doesMatch:Bool = (peek().type == matchType);
+	public function match(to:Token, ?mustMatch:Bool = false):Bool {
+//[TODO] is this a good way to do this?
+		var doesMatch:Bool = (peek() == to);
 		if (doesMatch)
 			get();
 		else if (mustMatch)
-			throw new TokenizerSyntaxError('Tokenizer: Must match ' + matchType.value + ', found ' + peek().type, this);
+			throw new TokenizerSyntaxError('Tokenizer: Must match ' + Type.enumConstructor(to) + ', found ' + Type.enumConstructor(peek()), this);
 		return doesMatch;
 	}
 	
 	private function isDone():Bool
 	{
-		return match(TokenType.END);
+		return match(TEof);
 	}
 	
 	private function getCurrentLineNumber():Int
@@ -182,7 +198,6 @@ class TokenizerRegexList
 {
 	// dead space
 	public static var WHITESPACE:EReg = ~/^\s+/;
-	public static var WHITESPACE_SAME_LINE:EReg = ~/^[ \t]+/;
 	public static var COMMENT:EReg = ~/^\/(?:\*(?:.|\n|\r)*?\*\/|\/.*)/;
 	public static var NEWLINES:EReg = ~/\n/g;
 	
@@ -191,12 +206,12 @@ class TokenizerRegexList
 	public static var COLOR:EReg = ~/^(?:0[xX]|#)([\da-fA-F]{6}|[\da-fA-F]{8})/;
 	public static var FLOAT:EReg = ~/^\d+(?:\.\d*)?[fF]|^\d+\.\d*(?:[eE][-+]?\d+)?|^\d+(?:\.\d*)?[eE][-+]?\d+|^\.\d+(?:[eE][-+]?\d+)?/;
 	public static var INTEGER:EReg = ~/^0[xX][\da-fA-F]+|^0[0-7]*|^\d+/;
-	public static var KEYWORD:EReg = ~/^\w+/;
-	public static var ARRAY_DIMENSIONS:EReg = ~/^(?:\[\]){1,}/;
+	public static var KEYWORD:EReg = ~/^(break|class|case|catch|const|continue|debugger|default|delete|do|else|enum|false|finally|for|function|in|instanceof|new|null|public|private|return|static|switch|this|throw|true|try|typeof|var|while|with|boolean|char|void|float|int)\b/;
+	public static var IDENTIFIER:EReg = ~/^\w+/;
 	public static var CHAR:EReg = ~/^'(?:[^']|\\.|\\u[0-9A-Fa-f]{4})'/;
 	public static var STRING:EReg = ~/^"(?:\\.|[^"])*"|^'(?:[^']|\\.)*'/;
-	public static var ASSIGN_OPERATOR:EReg = ~/^(\||\^|&|<<|>>>?|\+|\-|\*|\/|%)?=(?!=)|^\+\+|^--/;
-	public static var OPERATOR:EReg = ~/^(\n|\|\||&&|===?|!==?|<<|<=|>>>?|>=|\+\+|--|\[\]|[;,?:|^&<>+\-*\/%!~.[\]{}()])/;
+	public static var OPERATOR:EReg = ~/^(\n|\|\||&&|===?|!==?|<<|<=|>>>?|>=|\+\+|--|[|^&<>+\-*\/%!~]|(\||\^|&|<<|>>>?|\+|\-|\*|\/|%)?=(?!=))/;
+	public static var PUNCUATION:EReg = ~/^\[\]|^[;,?:.[\]{}()]/;
 	
 	// characters
 	public static var CHAR_BACKSPACE:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\b/g;
@@ -209,4 +224,25 @@ class TokenizerRegexList
 	public static var CHAR_SINGLE_QUOTE:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\'/g;
 	public static var CHAR_BACKSLASH:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\\\/g;
 	public static var CHAR_UNICODE:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\u([0-9A-Fa-z]{4})/g;
+}
+
+//[TODO] standardized haXe error class?
+
+class TokenizerSyntaxError {
+	public var source:String;
+	public var line:Int;
+	public var cursor:Int;
+	public var message:String;
+	
+	public function new(message:String, tokenizer:Tokenizer) {
+		this.source = tokenizer.source;
+		this.line = tokenizer.line;
+		this.cursor = tokenizer.cursor;
+		this.message = message;
+	}
+	
+	public function toString():String
+	{
+		return message + ' (line ' + line + ', char ' + cursor + ')';
+	}
 }

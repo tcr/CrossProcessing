@@ -278,24 +278,3 @@ class TypeTokenTypeList extends Hash<TokenType>
 		set('int', TokenType.INT);
 	}
 }
-/*
-enum Token {
-	TEof;
-	TKeyword( s : String );
-	TIdentifier( s : String );
-	TOperator( s : String );
-//	TNumber(value:Dynamic);
-//	TString(value:String);
-	TLiteral(value:Dynamic);
-	TParenOpen;
-	TParenClose;
-	TBracketOpen;
-	TBracketClose;
-	TDot;
-	TComma;
-	TSemicolon;
-	TBraceOpen;
-	TBraceClose;
-	TQuestion;
-	TDoubleDot;
-}*/

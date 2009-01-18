@@ -12,6 +12,16 @@
 	<script src="Processing-parser.js"></script>
 	<script src="Processing-api.js"></script>
     <script>
+    
+function tokenize() {
+	// parse code
+	var script = document.getElementById('input').value;
+	document.getElementById('output').value = '';
+	var t = new processing.parser.Tokenizer();
+	t.load(script);
+	while (!t.isDone())
+		document.getElementById('output').value += t.get().toString() + '\n';
+}
 	    
 function parse() {
 	// parse code
@@ -52,6 +62,7 @@ for(int i = 0; i < width; i++) {
   line(i, 0, x, height);
 }</textarea><br>
 	    <textarea id="output" rows="20" cols="100"></textarea><br/>
+	    <input type="submit" value="Tokenize" onclick="tokenize()">
 	<input type="submit" value="Parse" onclick="parse()">
     <input type="submit" value="Run" onclick="runOutput()"><br>
     

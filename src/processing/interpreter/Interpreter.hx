@@ -5,7 +5,7 @@
 
 package processing.interpreter;
 
-import processing.parser.TokenType;
+import processing.parser.Tokenizer;
 import processing.parser.Statement;
 
 //[TODO] rewrite all to use Scope methods
@@ -17,6 +17,7 @@ class Interpreter
 		
 	}
 
+//[TODO] we can use Type class to get rid of byValue necessity
 	public function interpret(statement:Statement, context:Scope, ?byValue = true):Dynamic
 	{
 		switch (statement)

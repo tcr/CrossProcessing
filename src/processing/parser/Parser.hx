@@ -1,6 +1,7 @@
 package processing.parser;
 
 import processing.parser.Statement;
+import processing.parser.Tokenizer;
 
 class Parser {
 	public var tokenizer:Tokenizer;
@@ -23,11 +24,11 @@ class Parser {
 		return script;
 	}
 	
-	private function parseBlock(stopAt:TokenType = null):Statement {
+	private function parseBlock(stopAt:Token = null):Statement {
 		// parse code block
 		var block:Array<Statement> = new Array();
 //[TODO] right_curly should be a stopAt
-		while (!tokenizer.done && (stopAt == null || !tokenizer.peek().match(stopAt)))
+		while (!tokenizer.done && (stopAt == null || tokenizer.peek() != stopAt))
 			block.push(parseStatement());
 		return SBlock(block);
 	}
@@ -341,7 +342,7 @@ class Parser {
 	}
 	
 //[TODO] remove stopAt token altogether
-	private function parseList(stopAt:TokenType):Array<Statement>
+	private function parseList(stopAt:Token):Array<Statement>
 	{
 		// parse a list (array initializer, function call, &c.)
 		var list:Array<Statement> = [];
@@ -359,7 +360,7 @@ class Parser {
 		return list;
 	}
 	
-	private function parseExpression(?stopAt:TokenType):Statement
+	private function parseExpression(?stopAt:Token):Statement
 	{
 		// variable definitions
 		var operators:Array<Dynamic> = [], operands:Array<Dynamic> = [];
@@ -375,7 +376,7 @@ class Parser {
 		return operands.pop();
 	}
 
-	private function scanOperand(operators:Array<Dynamic>, operands:Array<Dynamic>, ?stopAt:TokenType, ?required:Bool):Bool
+	private function scanOperand(operators:Array<Dynamic>, operands:Array<Dynamic>, ?stopAt:Token, ?required:Bool):Bool
 	{
 		// get next token
 		tokenizer.scanOperand = true;
@@ -527,7 +528,7 @@ class Parser {
 	}
 
 //[TODO] remove Dynamic here
-	private function scanOperator(operators:Array<Dynamic>, operands:Array<Dynamic>, ?stopAt:TokenType):Bool {		
+	private function scanOperator(operators:Array<Dynamic>, operands:Array<Dynamic>, ?stopAt:Token):Bool {		
 		// get next token
 		tokenizer.scanOperand = false;
 		var token:Token = tokenizer.peek();
