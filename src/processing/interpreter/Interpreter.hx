@@ -54,7 +54,7 @@ class Interpreter
 			return retValue;
 		
 		case SBreak(level):
-			throw new BreakException(level);
+			throw new Break(level);
 			
 		case SCall(method, args):
 			// iterate args statements
@@ -122,7 +122,7 @@ class Interpreter
 			return;
 				
 		case SContinue(level):
-			throw new ContinueException(level);
+			throw new Continue(level);
 		
 		case SDecrement(reference):
 			// get simplified reference
@@ -131,67 +131,63 @@ class Interpreter
 			return ref.setValue(ref.getValue() - 1);
 			
 		case SFunctionDefinition(identifier, type, params, body):
-//[TODO] make this work
-/*
-			// check that a variable is not already defined
-//[TODO] this shouldn't have " || !context.scope[identifier]"; must remove predefined .setup from Processing API context!
-			if (!context.scope.hasOwnProperty(identifier) || !context.scope[identifier])
+			// make a new definition
+//[TODO] should this be deep?
+			if (!context.hasField(identifier))
 			{
 				// define wrapper function
-				context.scope[identifier] = Reflect.makeVarArgs(function (arguments)
-				{
-					// check that an overloader be available
-					if (!context.scope[identifier].overloads.hasOwnProperty(arguments.length))
-						throw new Error('Function called without proper argument number.');
-
-					// convert arguments object to array
-					var args:Array = [];
-					for (i in 0...arguments.length)
-						args.push(arguments[i]);
-					// call overload
-					return context.scope[identifier].overloads[args.length].apply(null, args);
-				});
-
-				// create overloads array
-				context.scope[identifier].overloads = [];
-			}
-			else if (context.scope[identifier] && !context.scope[identifier].hasOwnProperty('overloads'))
-			{
-				// cannot define function with name of declared variable
-				throw new Error('Cannot declare function "' + identifier + '" as it is already defined.');
-			}
-
-			// add overload
-//[TODO] overloads based on param type
-			context.scope[identifier].overloads[params.length] = Reflect.makeVarArgs(function (args)
-			{
-				// check that this be called as a function
-//[TODO] that
-				// create new evaluator context
-				var funcContext:ExecutionContext = new ExecutionContext({}, context);
-
-				// parse args
-				for (i in args)
-				{
-//[TODO] what happens when args/params differ?
-//[TODO] maybe shortcut something here?
-					(new VariableDefinition(params[i][0], params[i][1])).execute(funcContext);
-					(new Assignment(new Reference(new Literal(params[i][0])), new Literal(args[i]))).execute(funcContext);
-				}
+				context.setField(identifier, Reflect.makeVarArgs(function (arguments) {
+					// find a matching overload
+					for (overload in cast(context.getField('__' + identifier), Array<Dynamic>))
+					{
+						// check if arguments match
+						if (overload.params.length != arguments.length)
+							continue;
+						// iterate types
+						try {
+							for (i in 0...overload.params.length)
+								if (!Std.is(arguments[i], overload.params[i].type))
+									throw false;
+						} catch (e:Dynamic) { continue; }
+						
+						// call function
+						return Reflect.callMethod(context.thisObject, overload.method, arguments);
+					}
+					
+					throw 'Function called without matching overload.';
+				}));
 				
-				try
-				{
+				// define overloads
+//				untyped __js__("console.log('setField: __' + identifier)");
+				context.setField('__' + identifier, []);
+			}
+			
+			// add new overload
+//			untyped __js__("console.log('getField: __' + identifier)");
+			context.getField('__' + identifier).push( {
+				params: params,
+				type: type,
+				method: Reflect.makeVarArgs(function (arguments) {
+					// create new evaluator context
+					var funcContext:Scope = new Scope({}, context);
+
+					// define arguments
+					for (i in 0...params.length)
+						funcContext.setField(params[i].name, arguments[i]);
+					
 					// evaluate body
-					body.execute(funcContext);
-				}
-				catch (ret:Return)
-				{
-					// handle returns
+					var interpreter:Interpreter = new Interpreter();
+					try
+					{
+						return interpreter.interpret(body, funcContext);
+					}
+					catch (ret:Return)
+					{
 //[TODO] do something with type
-					return ret.value.execute(funcContext);
-				}
+						return interpreter.interpret(ret.value, funcContext);
+					}
+				})
 			});
-*/
 			return;
 		
 		case SIncrement(reference):
@@ -210,13 +206,13 @@ class Interpreter
 				try {
 					// execute body
 					interpret(body, context);
-				} catch (b:BreakException) {
+				} catch (b:Break) {
 					// decrease level and rethrow if necessary
 					if (--b.level <= 0)
 						throw b;
 					// else break loop
 					break;
-				} catch (c:ContinueException) {
+				} catch (c:Continue) {
 					// decrease level and rethrow if necessary
 					if (--c.level <= 0)
 						throw c;
@@ -229,7 +225,7 @@ class Interpreter
 //[TODO] make work in haXe
 /*
 			// parse class
-			var objClass:Class = method.execute(context);
+			var objClass:Class = interpret(method, context);
 			// iterate args statements
 			var parsedArgs:Array = [];
 			for (arg in args)
@@ -309,7 +305,7 @@ class Interpreter
 			return reference != null ? reference.getValue() : null;
 		
 		case SReturn(value):
-			throw new ReturnException(interpret(value, context));
+			throw new Return(interpret(value, context));
 			
 		case SThisReference:
 			// climb context inheritance to find defined thisObject
@@ -356,17 +352,17 @@ class Reference {
 	}
 }
 
-class BreakException {
+class Break {
 	public var level:Int;
 	public function new(level:Int) { this.level = level; }
 }
 
-class ContinueException {
+class Continue {
 	public var level:Int;
 	public function new(level:Int) { this.level = level; }
 }
 
-class ReturnException {
+class Return {
 	public var value:Dynamic;
 	public function new(value:Dynamic) { this.value = value; }
 }

@@ -27,7 +27,7 @@ function runOutput() {
 
 	// parse code
 	var script = document.getElementById('input').value;
-	var evaluator = new processing.evaluator.Evaluator([p]);
+	var evaluator = new processing.evaluator.Evaluator([p, {}]);
 	evaluator.evaluate(script);
 	
 	// start processing

@@ -20,7 +20,8 @@ enum Statement
 	SConditional(condition:Statement, thenBlock:Statement, ?elseBlock:Statement);
 	SContinue(?level:Int);
 	SDecrement(reference:Statement); // SReference
-	SFunctionDefinition(identifier:String, type:Type, params:Array < Array < Dynamic >> , body:Statement);
+//[TODO] params should be Param typedef
+	SFunctionDefinition(identifier:String, type:Type, params:Array<{name:String, type:Type}> , body:Statement);
 	SIncrement(reference:Statement); // SReference
 	SLiteral(value:Dynamic);
 	SLoop(condition:Statement, body:Statement);

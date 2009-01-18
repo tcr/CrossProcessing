@@ -540,7 +540,7 @@ processing.interpreter.Interpreter.prototype.interpret = function(statement,cont
 	case 4:
 	var level = $e[2];
 	{
-		throw new processing.interpreter.BreakException(level);
+		throw new processing.interpreter.Break(level);
 	}break;
 	case 5:
 	var args = $e[3], method = $e[2];
@@ -632,7 +632,7 @@ processing.interpreter.Interpreter.prototype.interpret = function(statement,cont
 	case 9:
 	var level = $e[2];
 	{
-		throw new processing.interpreter.ContinueException(level);
+		throw new processing.interpreter.Continue(level);
 	}break;
 	case 10:
 	var reference = $e[2];
@@ -643,6 +643,71 @@ processing.interpreter.Interpreter.prototype.interpret = function(statement,cont
 	case 11:
 	var body = $e[5], params = $e[4], type = $e[3], identifier = $e[2];
 	{
+		if(!context.hasField(identifier)) {
+			context.setField(identifier,Reflect.makeVarArgs(function(arguments) {
+				{
+					var _g = 0, _g1 = function($this) {
+						var $r;
+						var tmp = context.getField("__" + identifier);
+						$r = (Std["is"](tmp,Array)?tmp:function($this) {
+							var $r;
+							throw "Class cast error";
+							return $r;
+						}($this));
+						return $r;
+					}(this);
+					while(_g < _g1.length) {
+						var overload = _g1[_g];
+						++_g;
+						if(overload.params.length != arguments.length) continue;
+						try {
+							{
+								var _g3 = 0, _g2 = overload.params.length;
+								while(_g3 < _g2) {
+									var i = _g3++;
+									if(!Std["is"](arguments[i],overload.params[i].type)) throw false;
+								}
+							}
+						}
+						catch( $e4 ) {
+							{
+								var e = $e4;
+								{
+									continue;
+								}
+							}
+						}
+						return overload.method.apply(context.thisObject,arguments);
+					}
+				}
+				throw "Function called without matching overload.";
+			}));
+			console.log('setField: __' + identifier);
+			context.setField("__" + identifier,[]);
+		}
+		console.log('getField: __' + identifier);
+		context.getField("__" + identifier).push({ params : params, type : type, method : Reflect.makeVarArgs(function(arguments) {
+			var funcContext = new processing.interpreter.Scope({ },context);
+			{
+				var _g1 = 0, _g = params.length;
+				while(_g1 < _g) {
+					var i = _g1++;
+					funcContext.setField(params[i].name,arguments[i]);
+				}
+			}
+			var interpreter = new processing.interpreter.Interpreter();
+			try {
+				return interpreter.interpret(body,funcContext);
+			}
+			catch( $e5 ) {
+				if( js.Boot.__instanceof($e5,processing.interpreter.Return) ) {
+					var ret = $e5;
+					{
+						return interpreter.interpret(ret.value,funcContext);
+					}
+				} else throw($e5);
+			}
+		})});
 		return;
 	}break;
 	case 12:
@@ -665,20 +730,20 @@ processing.interpreter.Interpreter.prototype.interpret = function(statement,cont
 				try {
 					$this.interpret(body,context);
 				}
-				catch( $e4 ) {
-					if( js.Boot.__instanceof($e4,processing.interpreter.BreakException) ) {
-						var b = $e4;
+				catch( $e6 ) {
+					if( js.Boot.__instanceof($e6,processing.interpreter.Break) ) {
+						var b = $e6;
 						{
 							if(--b.level <= 0) throw b;
 							break;
 						}
-					} else if( js.Boot.__instanceof($e4,processing.interpreter.ContinueException) ) {
-						var c = $e4;
+					} else if( js.Boot.__instanceof($e6,processing.interpreter.Continue) ) {
+						var c = $e6;
 						{
 							if(--c.level <= 0) throw c;
 							continue;
 						}
-					} else throw($e4);
+					} else throw($e6);
 				}
 			}
 			return $r;
@@ -799,7 +864,7 @@ processing.interpreter.Interpreter.prototype.interpret = function(statement,cont
 	case 19:
 	var value = $e[2];
 	{
-		throw new processing.interpreter.ReturnException(this.interpret(value,context));
+		throw new processing.interpreter.Return(this.interpret(value,context));
 	}break;
 	case 20:
 	{
@@ -837,24 +902,24 @@ processing.interpreter.Reference.prototype.setValue = function(value) {
 	return this.base[this.identifier] = value;
 }
 processing.interpreter.Reference.prototype.__class__ = processing.interpreter.Reference;
-processing.interpreter.BreakException = function(level) { if( level === $_ ) return; {
+processing.interpreter.Break = function(level) { if( level === $_ ) return; {
 	this.level = level;
 }}
-processing.interpreter.BreakException.__name__ = ["processing","interpreter","BreakException"];
-processing.interpreter.BreakException.prototype.level = null;
-processing.interpreter.BreakException.prototype.__class__ = processing.interpreter.BreakException;
-processing.interpreter.ContinueException = function(level) { if( level === $_ ) return; {
+processing.interpreter.Break.__name__ = ["processing","interpreter","Break"];
+processing.interpreter.Break.prototype.level = null;
+processing.interpreter.Break.prototype.__class__ = processing.interpreter.Break;
+processing.interpreter.Continue = function(level) { if( level === $_ ) return; {
 	this.level = level;
 }}
-processing.interpreter.ContinueException.__name__ = ["processing","interpreter","ContinueException"];
-processing.interpreter.ContinueException.prototype.level = null;
-processing.interpreter.ContinueException.prototype.__class__ = processing.interpreter.ContinueException;
-processing.interpreter.ReturnException = function(value) { if( value === $_ ) return; {
+processing.interpreter.Continue.__name__ = ["processing","interpreter","Continue"];
+processing.interpreter.Continue.prototype.level = null;
+processing.interpreter.Continue.prototype.__class__ = processing.interpreter.Continue;
+processing.interpreter.Return = function(value) { if( value === $_ ) return; {
 	this.value = value;
 }}
-processing.interpreter.ReturnException.__name__ = ["processing","interpreter","ReturnException"];
-processing.interpreter.ReturnException.prototype.value = null;
-processing.interpreter.ReturnException.prototype.__class__ = processing.interpreter.ReturnException;
+processing.interpreter.Return.__name__ = ["processing","interpreter","Return"];
+processing.interpreter.Return.prototype.value = null;
+processing.interpreter.Return.prototype.__class__ = processing.interpreter.Return;
 EReg = function(r,opt) { if( r === $_ ) return; {
 	opt = opt.split("u").join("");
 	this.r = new RegExp(r,opt);
@@ -1084,8 +1149,27 @@ processing.interpreter.Scope = function(s,p,t) { if( s === $_ ) return; {
 	this.thisObject = t;
 }}
 processing.interpreter.Scope.__name__ = ["processing","interpreter","Scope"];
+processing.interpreter.Scope.prototype.findDefinition = function(name) {
+	return (this.hasField(name)?this:((this.parent != null?this.parent.findDefinition(name):null)));
+}
+processing.interpreter.Scope.prototype.getField = function(name,deep) {
+	return (this.hasField(name)?Reflect.field(this.scope,name):((deep?this.parent.getField(name,deep):null)));
+}
+processing.interpreter.Scope.prototype.hasField = function(name,deep) {
+	return Reflect.hasField(this.scope,name) || ((deep?this.parent.hasField(name,deep):false));
+}
 processing.interpreter.Scope.prototype.parent = null;
 processing.interpreter.Scope.prototype.scope = null;
+processing.interpreter.Scope.prototype.setField = function(name,value,deep) {
+	if(!this.hasField(name) && deep) {
+		var scope = this.findDefinition(name);
+		if(scope != null) {
+			scope.setField(name,value);
+			return;
+		}
+	}
+	this.scope[name] = value;
+}
 processing.interpreter.Scope.prototype.thisObject = null;
 processing.interpreter.Scope.prototype.__class__ = processing.interpreter.Scope;
 processing.parser.Type = function(t,d) { if( t === $_ ) return; {
@@ -1125,8 +1209,8 @@ Reflect.__name__ = ["Reflect"];
 Reflect.hasField = function(o,field) {
 	if(o.hasOwnProperty != null) return o.hasOwnProperty(field);
 	var arr = Reflect.fields(o);
-	{ var $it5 = arr.iterator();
-	while( $it5.hasNext() ) { var t = $it5.next();
+	{ var $it7 = arr.iterator();
+	while( $it7.hasNext() ) { var t = $it7.next();
 	if(t == field) return true;
 	}}
 	return false;
@@ -1136,9 +1220,9 @@ Reflect.field = function(o,field) {
 	try {
 		v = o[field];
 	}
-	catch( $e6 ) {
+	catch( $e8 ) {
 		{
-			var e = $e6;
+			var e = $e8;
 			null;
 		}
 	}
@@ -1165,9 +1249,9 @@ Reflect.fields = function(o) {
 		try {
 			t = o.__proto__;
 		}
-		catch( $e7 ) {
+		catch( $e9 ) {
 			{
-				var e = $e7;
+				var e = $e9;
 				{
 					t = null;
 				}
@@ -1330,7 +1414,7 @@ processing.parser.Parser.prototype.parseFunction = function() {
 		if(type == null) throw new processing.parser.TokenizerSyntaxError("Invalid formal parameter type",this.tokenizer);
 		if(!this.tokenizer.match(processing.parser.TokenType.IDENTIFIER)) throw new processing.parser.TokenizerSyntaxError("Invalid formal parameter",this.tokenizer);
 		var name = this.tokenizer.currentToken.value;
-		params.push([name,type]);
+		params.push({ name : name, type : type});
 		if(!this.tokenizer.peek().match(processing.parser.TokenType.RIGHT_PAREN)) this.tokenizer.match(processing.parser.TokenType.COMMA,true);
 	}
 	this.tokenizer.match(processing.parser.TokenType.RIGHT_PAREN,true);

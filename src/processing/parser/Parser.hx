@@ -227,7 +227,7 @@ class Parser {
 		
 		// parse parameters
 		tokenizer.match(TokenType.LEFT_PAREN, true);
-		var params:Array<Array<Dynamic>> = [];
+		var params:Array<FunctionParam> = [];
 		while (!tokenizer.peek().match(TokenType.RIGHT_PAREN))
 		{
 			// get type
@@ -240,7 +240,7 @@ class Parser {
 			var name:String = tokenizer.currentToken.value;
 			
 			// add parameter
-			params.push([name, type]);
+			params.push({name: name, type: type});
 			
 			// check for comma
 			if (!tokenizer.peek().match(TokenType.RIGHT_PAREN))
@@ -737,4 +737,9 @@ class Parser {
 
 //[TODO] should final operand be wrapped in an SLiteral?
 	}
+}
+
+typedef FunctionParam = {
+	var name:String;
+	var type:Type;
 }
