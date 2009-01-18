@@ -11,7 +11,7 @@ enum Statement
 {
 	SArrayInstantiation(type:{type:Dynamic, dimensions:Int}, sizes:Array<Statement>);
 	SArrayLiteral(values:Array<Statement>);
-	SAssignment(reference:Statement, value:Statement); //SReference
+//	SAssignment(reference:Statement, value:Statement); //SReference
 	SBlock(statements:Array<Statement>);
 	SBreak(?level:Int);
 	SCall(method:Statement, ?args:Array<Dynamic>);
@@ -19,10 +19,10 @@ enum Statement
 	SClassDefinition(identifier:String, constructorBody:Statement, publicBody:Statement, privateBody:Statement);
 	SConditional(condition:Statement, thenBlock:Statement, ?elseBlock:Statement);
 	SContinue(?level:Int);
-	SDecrement(reference:Statement); // SReference
+//	SDecrement(reference:Statement); // SReference
 //[TODO] params should be Param typedef
 	SFunctionDefinition(identifier:String, type:{type:Dynamic, dimensions:Int}, params:Array<{name:String, type:{type:Dynamic, dimensions:Int}}> , body:Statement);
-	SIncrement(reference:Statement); // SReference
+//	SIncrement(reference:Statement); // SReference
 	SLiteral(value:Dynamic);
 	SLoop(condition:Statement, body:Statement);
 	SObjectInstantiation(method:Statement, ?args:Array<Dynamic>);

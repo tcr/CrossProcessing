@@ -21,8 +21,13 @@ class JavaScriptCompiler implements ICompiler
 	{
 		switch (statement)
 		{
-//		case ArrayInstantiation(type, size1, size2, size3):
-//		case ArrayLiteral(values):
+		case SArrayInstantiation(type, sizes):
+//[TODO]
+			return '';
+			
+		case SArrayLiteral(values):
+//[TODO]
+			return '';
 
 		case SAssignment(reference, value):
 			return serialize(reference) + ' = ' + serialize(value);
@@ -42,8 +47,13 @@ class JavaScriptCompiler implements ICompiler
 				source.push(serialize(arg));
 			return serialize(method) + '(' + source.join(',') + ')';
 
-//		case SCast(type, expression):
-//		case SClassDefinition(identifier, constructorBody, publicBody, privateBody):
+		case SCast(type, expression):
+//[TODO]
+			return '';
+			
+		case SClassDefinition(identifier, constructorBody, publicBody, privateBody):
+//[TODO]
+			return '';
 
 		case SConditional(condition, thenBlock, elseBlock):
 			return '(' + serialize(condition) + ' ? ' + serialize(thenBlock) + ' : ' + serialize(elseBlock) + ')';
@@ -81,7 +91,10 @@ class JavaScriptCompiler implements ICompiler
 		case SLoop(condition, body):
 			return 'while (' + serialize(condition) + ')\n' + serialize(body) + '';
 
-//		case SObjectInstantiation(method, ?args):
+		case SObjectInstantiation(method, args):
+//[TODO]
+			return '';
+			
 		case SOperation(type, leftOperand, rightOperand):
 			if (rightOperand != null)
 				return '(' + serialize(leftOperand) + type.value + serialize(rightOperand) + ')';
@@ -106,9 +119,6 @@ class JavaScriptCompiler implements ICompiler
 		
 		case SValue(value):
 			return '(' + serialize(value) + ')';
-
-		default:
-			return 'hihihi';
 		}
 	}
 }

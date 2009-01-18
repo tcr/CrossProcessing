@@ -222,6 +222,16 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 	if(escape == null) escape = true;
 	var $e = (statement);
 	switch( $e[1] ) {
+	case 0:
+	var sizes = $e[3], type = $e[2];
+	{
+		return "";
+	}break;
+	case 1:
+	var values = $e[2];
+	{
+		return "";
+	}break;
 	case 2:
 	var value = $e[3], reference = $e[2];
 	{
@@ -259,6 +269,16 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 			}
 		}
 		return this.serialize(method) + "(" + source.join(",") + ")";
+	}break;
+	case 6:
+	var expression = $e[3], type = $e[2];
+	{
+		return "";
+	}break;
+	case 7:
+	var privateBody = $e[5], publicBody = $e[4], constructorBody = $e[3], identifier = $e[2];
+	{
+		return "";
 	}break;
 	case 8:
 	var elseBlock = $e[4], thenBlock = $e[3], condition = $e[2];
@@ -305,6 +325,11 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 	{
 		return "while (" + this.serialize(condition) + ")\n" + this.serialize(body) + "";
 	}break;
+	case 15:
+	var args = $e[3], method = $e[2];
+	{
+		return "";
+	}break;
 	case 16:
 	var rightOperand = $e[4], leftOperand = $e[3], type = $e[2];
 	{
@@ -335,9 +360,6 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 	var value = $e[2];
 	{
 		return "(" + this.serialize(value) + ")";
-	}break;
-	default:{
-		return "hihihi";
 	}break;
 	}
 }

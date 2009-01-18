@@ -703,6 +703,15 @@ class Parser {
 		    case TokenType.CAST:
 			operandList.push(SCast(operands[0], SValue(operands[1])));
 			
+		    // property operator
+		    case TokenType.INDEX, TokenType.DOT:
+			operandList.push(SReference(operands[1], operands[0]));
+
+		    // unary operators
+		    case TokenType.NOT, TokenType.BITWISE_NOT, TokenType.UNARY_PLUS, TokenType.UNARY_MINUS:
+			operandList.push(SOperation(operator, SValue(operands[0])));
+	
+//[TODO] roll these into unary operators, eliminate SValue
 		    // increment/decrement
 		    case TokenType.INCREMENT:
 			operandList.push(SIncrement(operands[0]));
@@ -712,16 +721,8 @@ class Parser {
 		    // assignment
 		    case TokenType.ASSIGN:
 			operandList.push(SAssignment(operands[0], operands[1]));
-			
-		    // property operator
-		    case TokenType.INDEX, TokenType.DOT:
-			operandList.push(SReference(operands[1], operands[0]));
 
-		    // unary operators
-		    case TokenType.NOT, TokenType.BITWISE_NOT, TokenType.UNARY_PLUS, TokenType.UNARY_MINUS:
-			operandList.push(SOperation(operator, SValue(operands[0])));
-	
-		    // operators
+		    // binary operators
 		    case TokenType.OR, TokenType.AND, TokenType.BITWISE_OR, TokenType.BITWISE_XOR,
 		        TokenType.BITWISE_AND, TokenType.EQ, TokenType.NE, TokenType.STRICT_EQ,
 			TokenType.STRICT_NE, TokenType.LT, TokenType.LE, TokenType.GE,
