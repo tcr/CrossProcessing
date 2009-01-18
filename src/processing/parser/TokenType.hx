@@ -1,32 +1,14 @@
 package processing.parser;
 
 class TokenType {
-	public function new(_value:Dynamic = '', _precedence:Int = 0, _arity:Int = 0, _type:Int = 0):Void {
-		value = _value;
-		precedence = _precedence;
-		arity = _arity;
-		type = _type;
-	}
-
-	//==============================================================
-	// properties
-	//==============================================================
-
 	public var value(default, null):Dynamic;
 	public var precedence(default, null):Int;
 	public var arity(default, null):Int;
-	public var type(default, null):Int;
 	
-	//==============================================================
-	// string functions
-	//==============================================================
-	
-	public function toString():String {
-		return value;
-	}
-	
-	public function valueOf():String {
-		return value;
+	public function new(value:Dynamic = '', precedence:Int = 0, arity:Int = 0):Void {
+		this.value = value;
+		this.precedence = precedence;
+		this.arity = arity;
 	}
 	
 	//==============================================================
@@ -36,7 +18,7 @@ class TokenType {
 	// get token constant (if one exists)
 	public static function getConstant(token:TokenType):String {
 		trace('THIS IS DEPRECATED');
-		return token.toString();
+		return token.value;
 //		 var description:XML = describeType(TokenType);
 //		 for each (var constant:XML in description..constant)
 //			if (TokenType[constant.@name] == token)
@@ -173,9 +155,7 @@ class OperatorTokenTypeList extends Hash<TokenType>
 {
 	public function new() {
 		super();
-		
-		set('\n', TokenType.NEWLINE);
-		set(';', TokenType.SEMICOLON);
+
 		set('\n', TokenType.NEWLINE);
 		set(';', TokenType.SEMICOLON);
 		set(',', TokenType.COMMA);

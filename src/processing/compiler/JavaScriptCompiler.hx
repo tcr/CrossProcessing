@@ -11,7 +11,7 @@ class JavaScriptCompiler implements ICompiler
 {	
 	public function new() { }
 
-	public function compile(code:Statement):String
+	public function compile(code:Statement):Dynamic
 	{		
 		// serialize code to JavaScript
 		return serialize(code);
@@ -24,41 +24,41 @@ class JavaScriptCompiler implements ICompiler
 //		case ArrayInstantiation(type, size1, size2, size3):
 //		case ArrayLiteral(values):
 
-		case Assignment(reference, value):
+		case SAssignment(reference, value):
 			return serialize(reference) + ' = ' + serialize(value);
 
-		case Block(statements):
+		case SBlock(statements):
 			var source:Array<String> = new Array();
 			for (statement in statements)
 				source.push(serialize(statement, true, null, true));
 			return inBlock ? source.join(';\n') : '{\n' + source.join(';\n') + ';\n}\n';
 		
-		case Break(level):
+		case SBreak(level):
 			return 'break ' + level;
 
-		case Call(method, args):
+		case SCall(method, args):
 			var source:Array<String> = new Array();
 			for (arg in args)
 				source.push(serialize(arg));
 			return serialize(method) + '(' + source.join(',') + ')';
 
-//		case Cast(type, expression):
-//		case ClassDefinition(identifier, constructorBody, publicBody, privateBody):
+//		case SCast(type, expression):
+//		case SClassDefinition(identifier, constructorBody, publicBody, privateBody):
 
-		case Conditional(condition, thenBlock, elseBlock):
+		case SConditional(condition, thenBlock, elseBlock):
 			return '(' + serialize(condition) + ' ? ' + serialize(thenBlock) + ' : ' + serialize(elseBlock) + ')';
 //			if (this.inline)
 //				return '(' + this.condition.serialize() + ' ? ' + this.thenBlock.serialize() + ' : ' + this.elseBlock.serialize() + ')';
 //			else
 //				return 'if (' + this.condition.serialize() + ') \n' + this.thenBlock.serialize() + (this.elseBlock ? ' else ' + this.elseBlock.serialize() : '');
 
-		case Continue(level):
+		case SContinue(level):
 			return 'continue ' + level;
 			
-		case Decrement(reference):
+		case SDecrement(reference):
 			return serialize(reference) + '--';
 			
-		case FunctionDefinition(identifier, type, params, body):
+		case SFunctionDefinition(identifier, type, params, body):
 			// format params
 			var paramKeys:Array<String> = new Array();
 			for (param in params)
@@ -71,38 +71,41 @@ class JavaScriptCompiler implements ICompiler
 //[TODO] functions should just be declared
 			    'Processing.' + identifier + ' = ' + func;
 
-		case Increment(reference):
+		case SIncrement(reference):
 			return serialize(reference) + '++';
 			
-		case Literal(value):
+		case SLiteral(value):
 //[TODO] remove "escape" flag necessity
 			return escape && Std.is(value, String) ? '"' + value + '"' : value;
 
-		case Loop(condition, body):
+		case SLoop(condition, body):
 			return 'while (' + serialize(condition) + ')\n' + serialize(body) + '';
 
-//		case ObjectInstantiation(method, ?args):
-		case Operation(type, leftOperand, rightOperand):
+//		case SObjectInstantiation(method, ?args):
+		case SOperation(type, leftOperand, rightOperand):
 			if (rightOperand != null)
 				return '(' + serialize(leftOperand) + type.value + serialize(rightOperand) + ')';
 			else
 				return '(' + type.value + serialize(leftOperand) + ')';
 
-		case Reference(identifier, base):
+		case SReference(identifier, base):
 			if (base == null)
 				return serialize(identifier, false);
 			else
 				return serialize(base) + '[' + serialize(identifier) + ']';
 				
-		case Return(value):
+		case SReturn(value):
 			return 'return ' + (value != null ? serialize(value) : '');
 			
-		case ThisReference:
+		case SThisReference:
 			return 'this';
 
-		case VariableDefinition(identifier, type):
+		case SVariableDefinition(identifier, type):
 //[TODO] type
 			return (inClass != null ? 'this.' : 'var ') + identifier + ' = 0';
+		
+		case SValue(value):
+			return '(' + serialize(value) + ')';
 
 		default:
 			return 'hihihi';

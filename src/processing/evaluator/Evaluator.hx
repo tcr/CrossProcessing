@@ -8,7 +8,7 @@ package processing.evaluator;
 import processing.parser.Parser;
 import processing.parser.Statement;
 
-#if jss
+#if js
 import processing.compiler.JavaScriptCompiler;
 #elseif flash
 import processing.compiler.FlashCompiler;
@@ -30,7 +30,7 @@ class Evaluator {
 		var parser:Parser = new Parser();
 		var script:Statement = parser.parse(code);
 
-#if jss
+#if js
 		// compile script
 		var compiler:JavaScriptCompiler = new JavaScriptCompiler();
 		var compiled:String = compiler.compile(script);

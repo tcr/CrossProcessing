@@ -27,11 +27,13 @@ function runOutput() {
 
 	// parse code
 	var script = document.getElementById('input').value;
-	var evaluator = new processing.evaluator.Evaluator([p, {}]);
-	evaluator.evaluate(script);
+	try {
+		var evaluator = new processing.evaluator.Evaluator([p]);
+		evaluator.evaluate(script);
 	
-	// start processing
-	p.init();
+		// start processing
+		p.init();
+	} catch (e) { console.log(e); }
 }
     
     </script>

@@ -5,9 +5,10 @@
 
 package processing.interpreter;
 
-import js.Lib;
 import processing.parser.TokenType;
 import processing.parser.Statement;
+
+//[TODO] rewrite all to use Scope methods
 
 class Interpreter 
 {
@@ -36,8 +37,8 @@ class Interpreter
 		case SArrayLiteral(values):
 			// parse array
 			var array:Array<Dynamic> = new Array();
-			for (i in 0...values.length)
-				array[i] = interpret(values[i], context);
+			for (value in values)
+				array.push(interpret(value, context));
 			return array;
 			
 		case SAssignment(reference, value):
@@ -132,23 +133,24 @@ class Interpreter
 			
 		case SFunctionDefinition(identifier, type, params, body):
 			// make a new definition
+//[TODO] an OverloadedFunction class would be cool beans
 //[TODO] should this be deep?
-			if (!context.hasField(identifier))
+			if (!context.hasField(identifier) || !context.hasField('__' + identifier))
 			{
 				// define wrapper function
 				context.setField(identifier, Reflect.makeVarArgs(function (arguments) {
 					// find a matching overload
 					for (overload in cast(context.getField('__' + identifier), Array<Dynamic>))
-					{
+					{						
 						// check if arguments match
 						if (overload.params.length != arguments.length)
 							continue;
-						// iterate types
-						try {
-							for (i in 0...overload.params.length)
-								if (!Std.is(arguments[i], overload.params[i].type))
-									throw false;
-						} catch (e:Dynamic) { continue; }
+//[TODO]					// iterate types
+//						try {
+//							for (i in 0...overload.params.length)
+//								if (!Std.is(arguments[i], overload.params[i].type))
+//									throw false;
+//						} catch (e:Dynamic) { continue; }
 						
 						// call function
 						return Reflect.callMethod(context.thisObject, overload.method, arguments);
@@ -158,12 +160,10 @@ class Interpreter
 				}));
 				
 				// define overloads
-//				untyped __js__("console.log('setField: __' + identifier)");
 				context.setField('__' + identifier, []);
 			}
 			
 			// add new overload
-//			untyped __js__("console.log('getField: __' + identifier)");
 			context.getField('__' + identifier).push( {
 				params: params,
 				type: type,
@@ -179,7 +179,8 @@ class Interpreter
 					var interpreter:Interpreter = new Interpreter();
 					try
 					{
-						return interpreter.interpret(body, funcContext);
+						interpreter.interpret(body, funcContext);
+						return;
 					}
 					catch (ret:Return)
 					{
@@ -202,7 +203,7 @@ class Interpreter
 			
 		case SLoop(condition, body):
 			// loop condition
-			return while (interpret(condition, context)) {
+			while (interpret(condition, context)) {
 				try {
 					// execute body
 					interpret(body, context);
@@ -219,20 +220,17 @@ class Interpreter
 					// else continue loop
 					continue;
 				}
-			};
+			}
+			return;
 			
 		case SObjectInstantiation(method, args):
-//[TODO] make work in haXe
-/*
 			// parse class
-			var objClass:Class = interpret(method, context);
+			var objClass:Class<Dynamic> = interpret(method, context);
 			// iterate args statements
-			var parsedArgs:Array = [];
+			var parsedArgs:Array<Dynamic> = [];
 			for (arg in args)
 				parsedArgs.push(interpret(arg, context));
 			return Type.createInstance(objClass, parsedArgs);
-*/
-			return;
 			
 		case SOperation(type, leftOperand, rightOperand):
 			// evaluate operands
@@ -278,31 +276,15 @@ class Interpreter
 		
 		case SReference(sIdentifier, sBase):
 			// evaluate identifier
-			var identifier:String = interpret(sIdentifier, context), base:Dynamic;
-			// evaluate base reference in current context
+			var identifier:String = interpret(sIdentifier, context);
+			// if a base is supplied, return it
 			if (sBase != null)
-			{
-				// base object exists
-				base = interpret(sBase, context);
-			}
-			else
-			{
-				// climb context inheritance to find declared identifier
-				var c:Scope = context;
-				while (c != null && !Reflect.hasField(c.scope, identifier))
-					c = c.parent;
-				if (c == null)
-					return null;
-				base = c.scope;
-			}
-
-			// return reduced reference
-			return new Reference(identifier, base);
-			
-		case SReferenceValue(reference):
-			// get simplified reference
-			var reference:Reference = interpret(reference, context);
-			return reference != null ? reference.getValue() : null;
+				return new Reference(identifier, interpret(sBase, context));
+			// else, evaluate base reference in current context
+			var definition:Scope = context.findDefinition(identifier);
+			if (definition == null)
+				return null;
+			return new Reference(identifier, definition.scope);
 		
 		case SReturn(value):
 			throw new Return(interpret(value, context));

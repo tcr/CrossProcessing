@@ -205,7 +205,7 @@ class Parser {
 		return SBlock(block);
 	}
 	
-	private function parseType():Type {
+	private function parseType():VariableType {
 		// try and match a type declaration
 		if (!tokenizer.match(TokenType.TYPE) && !tokenizer.match(TokenType.IDENTIFIER))
 			return null;
@@ -213,12 +213,12 @@ class Parser {
 		// return type declaration
 		var type = tokenizer.currentToken.value;
 		var dimensions:Int = tokenizer.match(TokenType.ARRAY_DIMENSION) ? tokenizer.currentToken.value : 0;
-		return new Type(type, dimensions);
+		return {type: type, dimensions: dimensions};
 	}
 	
 	private function parseFunction():Statement {
 		// get function type (if not constructor)
-		var funcType:Type = null;
+		var funcType:VariableType = null;
 		if (!tokenizer.peek(2).match(TokenType.LEFT_PAREN))
 			funcType = parseType();
 		// get function name
@@ -231,7 +231,7 @@ class Parser {
 		while (!tokenizer.peek().match(TokenType.RIGHT_PAREN))
 		{
 			// get type
-			var type:Type = parseType();
+			var type:VariableType = parseType();
 			if (type == null)
 				throw new TokenizerSyntaxError('Invalid formal parameter type', tokenizer);
 			// get identifier
@@ -316,7 +316,7 @@ class Parser {
 	private function parseVariables():Statement
 	{
 		// get main variable type
-		var declarationType:Type = parseType();
+		var declarationType:VariableType = parseType();
 		// get variable list
 		var block:Array<Statement> = new Array();
 		do {
@@ -327,7 +327,7 @@ class Parser {
 			var varDimensions:Int = tokenizer.match(TokenType.ARRAY_DIMENSION) ?
 			    tokenizer.currentToken.value : declarationType.dimensions;
 			// add definition
-			block.push(SVariableDefinition(varName, new Type(declarationType.type, varDimensions)));
+			block.push(SVariableDefinition(varName, {type: declarationType.type, dimensions: varDimensions}));
 			
 			// check for assignment operation
 			if (tokenizer.match(TokenType.ASSIGN))
@@ -426,7 +426,7 @@ class Parser {
 				if (operators[operators.length - 1] == TokenType.NEW &&
 				    tokenizer.peek(2).match(TokenType.LEFT_BRACKET)) {
 					// get type
-					var type:Type = parseType();
+					var type:VariableType = parseType();
 					// match array dimensions
 					var sizes:Array<Statement> = [];
 					while (tokenizer.match(TokenType.LEFT_BRACKET))
@@ -502,7 +502,7 @@ class Parser {
 					for (i in tmpOperators)
 						operators.push(i);
 					// add operands
-					operands.push(new Type(identifier));
+					operands.push({type: identifier, dimensions: null});
 					for (i in tmpOperands)
 						operands.push(i);
 				}
@@ -741,5 +741,10 @@ class Parser {
 
 typedef FunctionParam = {
 	var name:String;
-	var type:Type;
+	var type:VariableType;
+}
+
+typedef VariableType = {
+	var type:Dynamic;
+	var dimensions:Int;
 }
