@@ -3,8 +3,9 @@ package processing.parser;
 enum Token {
 	TEof;
 	TKeyword(keyword:String);
+	TType(type:String);
 	TIdentifier(identifier:String);
-	TOperator(operator:String );
+	TOperator(operator:String);
 	TString(value:String);
 	TInteger(value:Int);
 	TFloat(value:Float);
@@ -30,7 +31,6 @@ class Tokenizer {
 	public var done(isDone, null):Bool;
 	public var line(getCurrentLineNumber, null):Int;
 	public var currentToken(default, null):Token;
-	public var scanOperand:Bool;
 	
 	public function new():Void
 	{
@@ -43,7 +43,6 @@ class Tokenizer {
 		// load source and reset location
 		source = s;
 		cursor = 0;
-		scanOperand = true;
 	}
 	
 	// static regexes
@@ -72,41 +71,6 @@ class Tokenizer {
 			// end
 			token = TEof;
 		}
-		else if ((regex = regexes.COLOR).match(input))
-		{
-			// color
-			token = TInteger(Std.parseInt('0x' + regex.matched(1)) + (regex.matched(1).length == 6 ? 0xFF000000 : 0));
-		}
-		else if ((regex = regexes.FLOAT).match(input))
-		{
-			// float
-			token = TFloat(Std.parseFloat(regex.matched(0)));
-		}
-		else if ((regex = regexes.INTEGER).match(input))
-		{
-			// integer
-			token = TInteger(Std.parseInt(regex.matched(0)));
-		}
-		else if ((regex = regexes.KEYWORD).match(input))
-		{
-			// keyword
-			token = TKeyword(regex.matched(0));
-		}
-		else if ((regex = regexes.IDENTIFIER).match(input))
-		{
-			// identifier
-			token = TIdentifier(regex.matched(0));
-		}
-		else if ((regex = regexes.CHAR).match(input))
-		{
-			// char
-			token = TChar(parseStringLiteral(regex.matched(0).substr(1, regex.matched(0).length - 1)).charCodeAt(0));
-		}
-		else if ((regex = regexes.STRING).match(input))
-		{
-			// string
-			token = TString(parseStringLiteral(regex.matched(0).substr(1, regex.matched(0).length - 1)));
-		}
 		else if ((regex = regexes.OPERATOR).match(input))
 		{
 			// assignment operator
@@ -129,6 +93,46 @@ class Tokenizer {
 			    case '?': TQuestion;
 			    case ':': TDoubleDot;
 			}
+		}
+		else if ((regex = regexes.COLOR).match(input))
+		{
+			// color
+			token = TInteger(Std.parseInt('0x' + regex.matched(1)) + (regex.matched(1).length == 6 ? 0xFF000000 : 0));
+		}
+		else if ((regex = regexes.FLOAT).match(input))
+		{
+			// float
+			token = TFloat(Std.parseFloat(regex.matched(0)));
+		}
+		else if ((regex = regexes.INTEGER).match(input))
+		{
+			// integer
+			token = TInteger(Std.parseInt(regex.matched(0)));
+		}
+		else if ((regex = regexes.KEYWORD).match(input))
+		{
+			// keyword
+			token = TKeyword(regex.matched(0));
+		}
+		else if ((regex = regexes.TYPE).match(input))
+		{
+			// keyword
+			token = TType(regex.matched(0));
+		}
+		else if ((regex = regexes.IDENTIFIER).match(input))
+		{
+			// identifier
+			token = TIdentifier(regex.matched(0));
+		}
+		else if ((regex = regexes.CHAR).match(input))
+		{
+			// char
+			token = TChar(parseStringLiteral(regex.matched(0).substr(1, regex.matched(0).length - 1)).charCodeAt(0));
+		}
+		else if ((regex = regexes.STRING).match(input))
+		{
+			// string
+			token = TString(parseStringLiteral(regex.matched(0).substr(1, regex.matched(0).length - 1)));
 		}
 		else 
 		{
@@ -168,14 +172,22 @@ class Tokenizer {
 		return str;
 	}
 	
-	public function match(to:Token, ?mustMatch:Bool = false):Bool {
-//[TODO] is this a good way to do this?
-		var doesMatch:Bool = (peek() == to);
-		if (doesMatch)
-			get();
+	public function match(to:Dynamic, ?lookAhead:Int = 0, ?mustMatch:Bool = false):Bool {
+		// peek to find a match
+		var origCursor:Int = cursor, origToken:Token = currentToken, token:Token = get();
+		for (i in 0...lookAhead)
+			token = get();
+		
+		// check type of match
+		if ((Std.is(to, Token) && Type.enumEq(token, to)) || (Std.is(to, String) && Type.enumConstructor(token) == to))
+			return true;
 		else if (mustMatch)
-			throw new TokenizerSyntaxError('Tokenizer: Must match ' + Type.enumConstructor(to) + ', found ' + Type.enumConstructor(peek()), this);
-		return doesMatch;
+			throw new TokenizerSyntaxError('Tokenizer: Must match ' + to + ', found ' + token, this);
+		
+		// didn't match
+		cursor = origCursor;
+		currentToken = origToken;
+		return false;
 	}
 	
 	private function isDone():Bool
@@ -206,11 +218,12 @@ class TokenizerRegexList
 	public static var COLOR:EReg = ~/^(?:0[xX]|#)([\da-fA-F]{6}|[\da-fA-F]{8})/;
 	public static var FLOAT:EReg = ~/^\d+(?:\.\d*)?[fF]|^\d+\.\d*(?:[eE][-+]?\d+)?|^\d+(?:\.\d*)?[eE][-+]?\d+|^\.\d+(?:[eE][-+]?\d+)?/;
 	public static var INTEGER:EReg = ~/^0[xX][\da-fA-F]+|^0[0-7]*|^\d+/;
-	public static var KEYWORD:EReg = ~/^(break|class|case|catch|const|continue|debugger|default|delete|do|else|enum|false|finally|for|function|in|instanceof|new|null|public|private|return|static|switch|this|throw|true|try|typeof|var|while|with|boolean|char|void|float|int)\b/;
+	public static var KEYWORD:EReg = ~/^(break|class|case|catch|const|continue|debugger|default|delete|do|else|enum|false|finally|for|function|new|null|public|private|return|static|switch|this|throw|true|try|typeof|var|while|with)\b/;
+	public static var TYPE:EReg = ~/^(boolean|char|void|float|int)\b/;
 	public static var IDENTIFIER:EReg = ~/^\w+/;
 	public static var CHAR:EReg = ~/^'(?:[^']|\\.|\\u[0-9A-Fa-f]{4})'/;
 	public static var STRING:EReg = ~/^"(?:\\.|[^"])*"|^'(?:[^']|\\.)*'/;
-	public static var OPERATOR:EReg = ~/^(\n|\|\||&&|===?|!==?|<<|<=|>>>?|>=|\+\+|--|[|^&<>+\-*\/%!~]|(\||\^|&|<<|>>>?|\+|\-|\*|\/|%)?=(?!=))/;
+	public static var OPERATOR:EReg = ~/^(\n|\|\||&&|===?|!==?|<<|<=|>>>?|>=|\+\+|--|[|^&<>+\-*\/%!~]|(\||\^|&|<<|>>>?|\+|\-|\*|\/|%)?=(?!=)|in\b|instanceof\b)/;
 	public static var PUNCUATION:EReg = ~/^\[\]|^[;,?:.[\]{}()]/;
 	
 	// characters

@@ -6,7 +6,7 @@
 package processing.evaluator;
 
 import processing.parser.Parser;
-import processing.parser.Statement;
+import processing.parser.Syntax;
 
 #if jss
 import processing.compiler.JavaScriptCompiler;

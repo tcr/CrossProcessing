@@ -1,12 +1,10 @@
 package processing.parser;
 
-import processing.parser.Statement;
+import processing.parser.Syntax;
 import processing.parser.Tokenizer;
 
 class Parser {
 	public var tokenizer:Tokenizer;
-//[TODO] no parser contexts; but maybe add a Block.definitions array?
-//		public var context:ParserContext;
 
 	public function new() {
 		// create tokenizer
@@ -20,158 +18,167 @@ class Parser {
 		// parse script
 		var script:Statement = parseBlock();
 		if (!tokenizer.done)
-			throw new TokenizerSyntaxError('Syntax error', tokenizer);
+//[TODO] ParserSyntaxError?
+			throw new TokenizerSyntaxError('Script unterminated', tokenizer);
+		// return script
 		return script;
 	}
 	
-	private function parseBlock(stopAt:Token = null):Statement {
-		// parse code block
-		var block:Array<Statement> = new Array();
-//[TODO] right_curly should be a stopAt
-		while (!tokenizer.done && (stopAt == null || tokenizer.peek() != stopAt))
-			block.push(parseStatement());
-		return SBlock(block);
+	private function parseBlock():Statement {
+		// separate body and definitions
+		var body:Array<Statement> = [], definitions:Array<Statement> = [], statement:Statement;
+		while (statement = parseStatement())
+//[TODO] make this implicit in parseStatement?
+			switch (statement) {
+			    case SFunctionDefinition(identifier, _, _, _): definitions.push(statement);
+			    case SClassDefinition(identifier, _, _, _): definitions.push(statement);
+			    case SVariableDefinition(identifier, _): definitions.push(statement);
+			    default: body.push(Statement);
+			}
+		return SBlock(body, definitions);
 	}
 
 //[TODO] could parseStatement be made to only match certain "types"?
-	private function parseStatement():Statement {
+//[TODO] pass definitions array? flags for what context (Script, Function, Class) we're in?
+	private function parseStatement(definitions:Array<Statement>):Statement {
 		// parse current statement line
-		var block:Array<Statement> = new Array();
+		var block:Array<Statement> = [];
 
 		// peek to see what kind of statement this is
-		var token:Token = tokenizer.peek();
-		switch (token.type)
-		{				
-		    // if block
-		    case TokenType.IF:
-			var condition:Statement, thenBlock:Statement, elseBlock:Statement = null;
-			
-			// get condition
-			tokenizer.get();
-			tokenizer.match(TokenType.LEFT_PAREN, true);
-			condition = parseExpression();
-			tokenizer.match(TokenType.RIGHT_PAREN, true);
-			// get then block
-			if (tokenizer.match(TokenType.LEFT_CURLY)) {
-				thenBlock = parseBlock(TokenType.RIGHT_CURLY);
-				tokenizer.match(TokenType.RIGHT_CURLY, true);
-			} else {
-				thenBlock = parseStatement();
-			}
-			// get else block
-			if (tokenizer.match(TokenType.ELSE)) {
+		switch (tokenizer.peek())
+		{
+		    // keywords
+		    case TKeyword(keyword):
+			switch (keyword) {
+			    // if block
+			    case 'if':
+				var condition:Statement, thenBlock:Statement, elseBlock:Statement = null;
+				
+				// get condition
+				tokenizer.get();
+				tokenizer.match(TParenOpen, true);
+				condition = parseExpression();
+				tokenizer.match(TParenClose, true);
+				// get then block
+				if (tokenizer.match(TBraceOpen)) {
+					thenBlock = parseBlock(TBraceClose);
+					tokenizer.match(TBraceClose, true);
+				} else {
+					thenBlock = parseStatement();
+				}
+				// get else block
+				if (tokenizer.match(TKeyword('else'))) {
+					if (tokenizer.match(TBraceOpen)) {
+						elseBlock = parseBlock(TBraceClose);
+						tokenizer.match(TBraceClose, true);
+					} else {
+						elseBlock = parseStatement();
+					}
+				}
+				
+				// push conditional
+				return SConditional(condition, thenBlock, elseBlock);
+
+			    // while statement
+			    case 'while':
+				// match opening 'while' and '('
+				tokenizer.get();
+				tokenizer.match(TokenType.LEFT_PAREN, true);
+				
+				// match condition
+				var condition:Statement = parseExpression(TokenType.RIGHT_PAREN);
+				tokenizer.match(TokenType.RIGHT_PAREN, true);
+				// parse body
+				var body:Statement;
 				if (tokenizer.match(TokenType.LEFT_CURLY)) {
-					elseBlock = parseBlock(TokenType.RIGHT_CURLY);
+					body = parseBlock(TokenType.RIGHT_CURLY);
 					tokenizer.match(TokenType.RIGHT_CURLY, true);
 				} else {
-					elseBlock = parseStatement();
+					body = parseStatement();
 				}
-			}
-			
-			// push conditional
-			block.push(SConditional(condition, thenBlock, elseBlock));
-			return SBlock(block);
-			
-		    // while statement
-		    case TokenType.WHILE:
-			// match opening 'for' and '('
-			tokenizer.get();
-			tokenizer.match(TokenType.LEFT_PAREN, true);
-			
-			// match condition
-			var condition:Statement = parseExpression(TokenType.RIGHT_PAREN);
-			tokenizer.match(TokenType.RIGHT_PAREN, true);
-			// parse body
-			var body:Statement;
-			if (tokenizer.match(TokenType.LEFT_CURLY)) {
-				body = parseBlock(TokenType.RIGHT_CURLY);
-				tokenizer.match(TokenType.RIGHT_CURLY, true);
-			} else {
-				body = parseStatement();
-			}
 
-			// push for loop
-			block.push(SLoop(condition, body));
-			return SBlock(block);
+				// push for loop
+				return SLoop(condition, body);
 
-		    // for statement
-		    case TokenType.FOR:
-			// match opening 'for' and '('
-			tokenizer.get();
-			tokenizer.match(TokenType.LEFT_PAREN, true);
+			    // for statement
+			    case 'for':
+				// match opening 'for' and '('
+				tokenizer.get();
+				tokenizer.match(TokenType.LEFT_PAREN, true);
+				
+				// match initializer
+				if (!tokenizer.match(TokenType.SEMICOLON)) {
+					// variable definitions
+					if ((tokenizer.peek().match(TokenType.TYPE) ||
+					    tokenizer.peek().match(TokenType.IDENTIFIER)) &&
+					    tokenizer.peek(2).match(TokenType.IDENTIFIER))
+						block.push(parseVariables());
+					// expression
+					else
+						block.push(parseExpression(TokenType.SEMICOLON));
+						
+					// match semicolon
+					tokenizer.match(TokenType.SEMICOLON, true);
+				}
+				
+				// match condition
+				var condition:Statement = parseExpression();
+				tokenizer.match(TSemicolon, true);
+				// match update
+				var update:Array<Statement> = [];
+				do {
+					update.push(parseExpression());
+				} while (tokenizer.match(TSemicolon));
+				tokenizer.match(TokenType.RIGHT_PAREN, true);
+				
+				// parse body
+				var body:Array<Statement> = [];
+				if (tokenizer.match(TokenType.LEFT_CURLY)) {
+					body.push(parseBlock(TokenType.RIGHT_CURLY));
+					tokenizer.match(TokenType.RIGHT_CURLY, true);
+				} else {
+					body.push(parseStatement());
+				}
+				// append loop body
+				body = body.concat(update);
+				
+				// return loop
+				return SLoop(condition, SBlock(body));
 			
-			// match initializer
-			if (!tokenizer.match(TokenType.SEMICOLON)) {
-				// variable definitions
-				if ((tokenizer.peek().match(TokenType.TYPE) ||
-				    tokenizer.peek().match(TokenType.IDENTIFIER)) &&
-				    tokenizer.peek(2).match(TokenType.IDENTIFIER))
-					block.push(parseVariables());
-				// expression
-				else
-					block.push(parseExpression(TokenType.SEMICOLON));
-					
-				// match semicolon
-				tokenizer.match(TokenType.SEMICOLON, true);
+			    // returns
+			    case 'return':
+				tokenizer.get();
+				// push return statement
+				return SReturn(parseExpression());
+			
+			    // break
+			    case 'break':
+				tokenizer.get();			
+				// match break and optional level
+				return SBreak(tokenizer.match('TInteger') ? tokenizer.currentToken.value : 1);
+				
+			    // continue
+			    case 'continue' :
+				tokenizer.get();			
+				// match continue and optional level
+				return SContinue(tokenizer.match(TokenType.NUMBER) ? tokenizer.currentToken.value : 1);
+				
+			    // definition visibility
+			    case 'static', 'public', 'private':
+	//[TODO] what happens when "private" declared in main block? "static"?
+				// get definition
+				tokenizer.get();
+				return tokenizer.peek().match(TokenType.CLASS) ? parseClass() : parseFunction();
+				
+			    case 'class':
+				// get class definition
+				return parseClass();
+			
+			    default: throw new TokenizerSyntaxError('Unexpected keyword "' + keyword + '"', tokenizer);
 			}
-			
-			// match condition
-			var condition:Statement = parseExpression(TokenType.SEMICOLON);
-			tokenizer.match(TokenType.SEMICOLON, true);
-			// match update
-			var update:Statement = parseExpression(TokenType.RIGHT_PAREN);
-			tokenizer.match(TokenType.RIGHT_PAREN, true);
-			// parse body
-			var body:Array<Statement> = new Array();
-			if (tokenizer.match(TokenType.LEFT_CURLY)) {
-				body.push(parseBlock(TokenType.RIGHT_CURLY));
-				tokenizer.match(TokenType.RIGHT_CURLY, true);
-			} else {
-				body.push(parseStatement());
-			}
-			
-			// append loop body
-			if (update != null)
-				body.push(update);
-			// push for loop
-			block.push(SLoop(condition, SBlock(body)));
-			return SBlock(block);
-		
-		    // returns
-		    case TokenType.RETURN:
-			tokenizer.get();
-			// push return statement
-			block.push(SReturn(parseExpression()));
-		
-		    // break
-		    case TokenType.BREAK:
-			tokenizer.get();			
-			// match break and optional level
-			block.push(SBreak(tokenizer.match(TokenType.NUMBER) ?
-			    tokenizer.currentToken.value : 1));
-			
-		    // continue
-		    case TokenType.CONTINUE:
-			tokenizer.get();			
-			// match continue and optional level
-			block.push(SContinue(tokenizer.match(TokenType.NUMBER) ?
-			    tokenizer.currentToken.value : 1));
-			
-		    // definition visibility
-		    case TokenType.STATIC, TokenType.PUBLIC, TokenType.PRIVATE:
-//[TODO] what happens when "private" declared in main block? "static"?
-			// get definition
-			tokenizer.get();
-			block.push(tokenizer.peek().match(TokenType.CLASS) ? parseClass() : parseFunction());
-			return SBlock(block);
-			
-		    case TokenType.CLASS:
-			// get class definition
-			block.push(parseClass());
-			return SBlock(block);
 		
 		    // definitions
-		    case TokenType.TYPE, TokenType.IDENTIFIER:
+		    case TType(value), TIdentifier(value):
 			// resolve ambiguous identifier
 			var isArray:Bool = tokenizer.peek(2).match(TokenType.ARRAY_DIMENSION);
 			if (tokenizer.peek(isArray ? 3 : 2).match(TokenType.IDENTIFIER)) {
@@ -184,36 +191,38 @@ class Parser {
 				}
 					
 				// else, get variable list
-				block.push(parseVariables());
+				return parseVariables();
 			}
-			else
-			{
-				// expression
-				block.push(parseExpression(TokenType.SEMICOLON));
-			}
+			// fall-out
 		
-		    // expression
-		    default:
-			block.push(parseExpression(TokenType.SEMICOLON));
+		    // no statement block
+		    default:			
 		}
-
-		// match terminating semicolon
-		if (!tokenizer.match(TokenType.SEMICOLON))
+		
+		// match expression and terminating semicolon
+		block.push(parseExpression(TokenType.SEMICOLON));
+		if (!tokenizer.match(TSemicolon))
 			throw new TokenizerSyntaxError('Missing ; after statement', tokenizer);
-		// return parsed statement
 		return SBlock(block);
 	}
 	
 	private function parseType():VariableType {
-		// try and match a type declaration
-		if (!tokenizer.match(TokenType.TYPE) && !tokenizer.match(TokenType.IDENTIFIER))
+		// match a type declaration
+		switch (tokenizer.peek())
+		{
+		    case TType(value), TIdentifier(value):
+			// return type declaration
+			tokenizer.get();
+			var dimensions:Int = 0;
+			while (tokenizer.match(TDimensions))
+				dimensions++;
+			return { type: value, dimensions: dimensions };
+		
+		    default:
+			// no match
 			return null;
-			
-		// return type declaration
-		var type = tokenizer.currentToken.value;
-		var dimensions:Int = tokenizer.match(TokenType.ARRAY_DIMENSION) ? tokenizer.currentToken.value : 0;
-		return {type: type, dimensions: dimensions};
-	}
+		}
+	}	
 	
 	private function parseFunction():Statement {
 		// get function type (if not constructor)
@@ -346,15 +355,15 @@ class Parser {
 	{
 		// parse a list (array initializer, function call, &c.)
 		var list:Array<Statement> = [];
-		while (!tokenizer.peek().match(stopAt)) {
+		while (tokenizer.peek() != stopAt) {
 			// parse empty entries
-			if (tokenizer.match(TokenType.COMMA)) {
+			if (tokenizer.match(TComma)) {
 				list.push(null);
 				continue;
 			}
 			// parse arguments up to next comma
-			list.push(parseExpression(TokenType.COMMA));
-			if (!tokenizer.match(TokenType.COMMA))
+			list.push(parseExpression(TComma));
+			if (!tokenizer.match((TComma)))
 				break;
 		}
 		return list;
@@ -379,61 +388,59 @@ class Parser {
 	private function scanOperand(operators:Array<Dynamic>, operands:Array<Dynamic>, ?stopAt:Token, ?required:Bool):Bool
 	{
 		// get next token
-		tokenizer.scanOperand = true;
 		var token:Token = tokenizer.peek();
 		// stop if token matches stop parameter
-		if (stopAt != null && token.match(stopAt))
+		if (token == stopAt)
 			return false;
 
 		// switch based on type
-		switch (token.type)
-		{			
+		switch (token)
+		{
 		    // unary operators
-		    case TokenType.INCREMENT, TokenType.DECREMENT,
-//[TODO] which of these are used in processing?
-		    TokenType.DELETE, TokenType.TYPEOF, TokenType.NOT, TokenType.BITWISE_NOT,
-		    TokenType.UNARY_PLUS, TokenType.UNARY_MINUS, TokenType.NEW:					
-			// add operator
-			tokenizer.get();
-			operators.push(token.type);
-			
-			// match operand
-			return scanOperand(operators, operands, stopAt, true);
+		    case TOperator(opString):
+			// lookup operator
+			var operator:Dynamic = lookupOperator(opString, true);
+			switch (operator) {
+			    case AssignOpIncrement, AssignOpDecrement, OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus:
+				// push operator and match next operand
+				operators.push(operator);
+				tokenizer.get();
+				return scanOperand(operators, operands, stopAt, true);
+			}
 			
 		    // casting/array initialization
-		    case TokenType.TYPE, TokenType.IDENTIFIER:
-			var isArray:Bool = tokenizer.peek(2).match(TokenType.ARRAY_DIMENSION);
-			if (token.type == TokenType.TYPE &&
-			    tokenizer.peek(isArray ? 3 : 2).match(TokenType.LEFT_PAREN))
+		    case TType(value), TIdentifier(value):
+			var isArray:Bool = (tokenizer.peek(2) == TDimensions);
+			if (token == TType(value) && tokenizer.peek(isArray ? 3 : 2) == TParenClose)
 			{
 				// push casting operator
-				operators.push(TokenType.CAST);
+//[TODO] again with the plaintext operators!
+				operators.push('cast');
 				// push operands
 				operands.push(parseType());
-				tokenizer.match(TokenType.LEFT_PAREN, true);
-				operands.push(parseExpression(TokenType.RIGHT_PAREN));
-				tokenizer.match(TokenType.RIGHT_PAREN, true);
+				tokenizer.match(TParenOpen, true);
+				operands.push(parseExpression(TParenClose));
+				tokenizer.match(TParenClose, true);
 			}
 			else	// array initialization/references
 			{
 //[TODO] move this into NEW operator?
 				// check for new operator
-				if (operators[operators.length - 1] == TokenType.NEW &&
-				    tokenizer.peek(2).match(TokenType.LEFT_BRACKET)) {
+				if (operators[operators.length - 1] == 'new' && tokenizer.peek(2) == TBracketOpen) {
 					// get type
 					var type:VariableType = parseType();
 					// match array dimensions
 					var sizes:Array<Statement> = [];
-					while (tokenizer.match(TokenType.LEFT_BRACKET))
+					while (tokenizer.match(TBracketOpen))
 					{
-						sizes.push(parseExpression(TokenType.RIGHT_BRACKET));
-						tokenizer.match(TokenType.RIGHT_BRACKET, true);
+						sizes.push(parseExpression(TBracketClose));
+						tokenizer.match(TBracketClose, true);
 					}
 
 					// create array initializer
 					operators.pop();
 					operands.push(SArrayInstantiation(type, sizes));
-				} else if (!token.match(TokenType.IDENTIFIER)) {
+				} else if (Type.enumConstructor(token) != 'TIdentifier') {
 					// invalid use of type keyword
 					throw new TokenizerSyntaxError('Invalid type declaration', tokenizer);
 				}
@@ -441,51 +448,90 @@ class Parser {
 				{
 					// push reference
 					tokenizer.get();
-					operands.push(SReference(SLiteral(token.value)));
+					operands.push(SReference(SLiteral(value)));
 				}
 			}
-			
-		    case TokenType.THIS:
-			// push reference
-			tokenizer.get();
-			operands.push(SThisReference);
+			return true;
 
-		    // operands
-		    case TokenType.NULL, TokenType.TRUE, TokenType.FALSE, TokenType.NUMBER,
-		    TokenType.STRING, TokenType.CHAR:
-			// push literal
+		    // keywords
+		    case TKeyword(keyword):
+			switch (keyword) {
+			    // literals
+			    case 'this': operands.push(SThisReference);
+			    case 'null': operands.push(SLiteral(null));
+			    case 'true': operands.push(SLiteral(true));
+			    case 'false': operands.push(SLiteral(false));
+			
+			    // unary operators
+//[TODO] push operators as plaintext!?
+			    case 'delete', 'typeof', 'new':	
+				// add operator
+				tokenizer.get();
+				operators.push(keyword);
+				
+				// match operand
+				return scanOperand(operators, operands, stopAt, true);
+			
+			    default:
+				// missing operand
+				if (required)
+					throw new TokenizerSyntaxError('Missing operand', tokenizer);
+				else
+					return false;
+			}
 			tokenizer.get();
-			operands.push(SLiteral(token.value));
+			return true;
+			
+		    // literals
+//[TODO] simplify
+		    case TString(value):
+			tokenizer.get();
+			operands.push(SLiteral(value));
+			return true;
+		    case TInteger(value):
+			tokenizer.get();
+			operands.push(SLiteral(value));
+			return true;
+		    case TFloat(value):
+			tokenizer.get();
+			operands.push(SLiteral(value));
+			return true;
+		    case TChar(value):
+			tokenizer.get();
+			operands.push(SLiteral(value));
+			return true;
 			
 		    // array literal
-		    case TokenType.LEFT_CURLY:
-			// push array literal
+		    case TBraceOpen:
 			tokenizer.get();
-			operands.push(SArrayLiteral(parseList(TokenType.RIGHT_CURLY)));
-			tokenizer.match(TokenType.RIGHT_CURLY, true);
+			operands.push(SArrayLiteral(parseList(TBraceClose)));
+			tokenizer.match(TBraceClose, true);
+			return true;
 		
 		    // cast/group
-		    case TokenType.LEFT_PAREN:
+		    case TParenOpen:
 			tokenizer.get();
 
 			// check if this be a cast or a group
-			var isArray:Bool = tokenizer.peek(2).match(TokenType.ARRAY_DIMENSION);
-			if ((tokenizer.peek().match(TokenType.TYPE) ||
-			    (isArray && tokenizer.peek().match(TokenType.IDENTIFIER))) &&
-			    tokenizer.peek(isArray ? 3 : 2).match(TokenType.RIGHT_PAREN))
+//[TODO] what about multi-dimension arrays?
+			var isArray:Bool = tokenizer.match(TDimensions, 2);
+			if (tokenizer.match('TType', 1) ||
+			    (isArray && tokenizer.match('TIdentifier', 1)) &&
+			    tokenizer.match(TParenClose, isArray ? 3 : 2))
 			{
 				// push casting operator
-				operators.push(TokenType.CAST);
+//[TODO] what the hell is this
+				operators.push('cast');
 				// push operands
 				operands.push(parseType());
-				tokenizer.match(TokenType.RIGHT_PAREN, true);
+				tokenizer.match(TParenClose, true);
 				return scanOperand(operators, operands, stopAt, true);
 			}
-			else if (tokenizer.peek(2).match(TokenType.RIGHT_PAREN) && tokenizer.match(TokenType.IDENTIFIER))
+			else if (tokenizer.match(TParenClose, 2) && tokenizer.match('TIdentifier'))
 			{
 				// match ambiguous parenthetical
-				var identifier:String = tokenizer.currentToken.value;
-				tokenizer.match(TokenType.RIGHT_PAREN, true);
+				var identifier:String = Type.enumParameters(tokenizer.currentToken)[0];
+				tokenizer.match(TParenClose, true);
 				
 				// check if this be a cast
 //[TODO] proper casting these arrays
@@ -493,7 +539,7 @@ class Parser {
 				if (scanOperand(tmpOperators, tmpOperands))
 				{
 					// add operators
-					operators.push(TokenType.CAST);
+					operators.push('cast');
 					for (i in tmpOperators)
 						operators.push(i);
 					// add operands
@@ -510,27 +556,25 @@ class Parser {
 			else
 			{
 				// parse parenthetical
-				operands.push(parseExpression(TokenType.RIGHT_PAREN));
-				if (!tokenizer.match(TokenType.RIGHT_PAREN))
+				operands.push(parseExpression(TParenClose));
+				if (!tokenizer.match(TParenClose))
 					throw new TokenizerSyntaxError('Missing ) in parenthetical', tokenizer);
 			}
+			return true;
 			
-		    default:
-			// missing operand
-			if (required)
-				throw new TokenizerSyntaxError('Missing operand', tokenizer);
-			else
-				return false;
+			// not matched
+			default:
 		}
 
-		// matched operand
-		return true;
+		// missing operand
+		if (required)
+			throw new TokenizerSyntaxError('Missing operand', tokenizer);
+		return false;
 	}
 
 //[TODO] remove Dynamic here
 	private function scanOperator(operators:Array<Dynamic>, operands:Array<Dynamic>, ?stopAt:Token):Bool {		
 		// get next token
-		tokenizer.scanOperand = false;
 		var token:Token = tokenizer.peek();
 		// stop if token matches stop parameter
 		if (stopAt != null && token.match(stopAt))
@@ -538,42 +582,56 @@ class Parser {
 
 		// switch based on type
 		switch (token.type) {				
-		    // assignment
-		    case TokenType.ASSIGN, TokenType.ASSIGN_BITWISE_OR, TokenType.ASSIGN_BITWISE_XOR,
-		        TokenType.ASSIGN_BITWISE_AND, TokenType.ASSIGN_LSH, TokenType.ASSIGN_RSH,
-			TokenType.ASSIGN_URSH, TokenType.ASSIGN_PLUS, TokenType.ASSIGN_MINUS,
-			TokenType.ASSIGN_MUL, TokenType.ASSIGN_DIV, TokenType.ASSIGN_MOD:
-			// combine any higher-precedence expressions (using > and not >=, so postfix > prefix)
-			while (operators.length > 0 &&
-			    operators[operators.length - 1].precedence > token.type.precedence)
-				reduceExpression(operators, operands);
-				
-			// push operator
-			operators.push(tokenizer.get().type);
-			// push assignment value
-			operands.push(parseExpression(stopAt));
+		    // operators
+		    case TOperator(operator):
+			switch (operator) {
+			    // assignment
+			    case '=', '|=', '^=', '&=', '<<=', '>>=', '>>>=', '+=', '-=', '*=', '/=', '%=':
+				// combine any higher-precedence expressions (using > and not >=, so postfix > prefix)
+				while (operators.length > 0 &&
+				    operators[operators.length - 1].precedence > token.type.precedence)
+					reduceExpression(operators, operands);
+					
+				// push operator
+				operators.push(tokenizer.get().type);
+				// push assignment value
+				operands.push(parseExpression(stopAt));
 
-			// reached end of expression
-			return false;
-			
-		    // increment/decrement
-		    case TokenType.INCREMENT, TokenType.DECREMENT:
+				// reached end of expression
+				return false;
+		
+			    // increment/decrement
+			    case '++', '--':
 //[TODO] actually this doesn't actually work! how do we do a postfix in the middle of an expression...
-			// postfix; reduce higher-precedence operators (using > and not >=, so postfix > prefix)
-			while (operators.length > 0 &&
-			    operators[operators.length - 1].precedence > token.type.precedence)
+				// postfix; reduce higher-precedence operators (using > and not >=, so postfix > prefix)
+				while (operators.length > 0 &&
+				    operators[operators.length - 1].precedence > token.type.precedence)
+					reduceExpression(operators, operands);
+					
+				// add operator and reduce immediately
+//[TODO] is reducing immediately necessary? a matter of precedence...
+				operators.push(tokenizer.get().type);
 				reduceExpression(operators, operands);
 				
-			// add operator and reduce immediately
-//[TODO] is reducing immediately necessary? a matter of precedence...
-			operators.push(tokenizer.get().type);
-			reduceExpression(operators, operands);
+				// find next operator
+				return scanOperator(operators, operands, stopAt);
+				
+			    // binary operators
+			    case '||', '&&', '|', '^', '&', '==', '!=', '===', '!==', '<', '<=', '>=', '>', '<<', '>>',
+			        '>>>', '+', '-', '*', '/', '%', 'in', 'instanceof':
+				// combine any higher-precedence expressions
+				while (operators.length > 0 &&
+				    operators[operators.length - 1].precedence >= token.type.precedence)
+					reduceExpression(operators, operands);
+
+				// push operator and scan for operand
+				operators.push(tokenizer.get().type);
 			
-			// find next operator
-			return scanOperator(operators, operands, stopAt);
+			    default: throw 'Unrecognized operator!';
+			}
 			
 		    // dot operator
-		    case TokenType.DOT:			
+		    case TDot:			
 			// combine any higher-precedence expressions
 			while (operators.length > 0 &&
 			    operators[operators.length - 1].precedence >= token.type.precedence)
@@ -582,14 +640,14 @@ class Parser {
 			// push operator
 			operators.push(tokenizer.get().type);
 			// match and push required identifier as string
-			tokenizer.match(TokenType.IDENTIFIER, true);
+			tokenizer.match(TIdentifier, true);
 			operands.push(SLiteral(tokenizer.currentToken.value));
 
 			// operand already found; find next operator
 			return scanOperator(operators, operands, stopAt);
 
 		    // brackets
-		    case TokenType.LEFT_BRACKET:
+		    case TBracketOpen:
 			// combine any higher-precedence expressions
 			while (operators.length > 0 &&
 			    operators[operators.length - 1].precedence >= TokenType.INDEX.precedence)
@@ -604,24 +662,9 @@ class Parser {
 
 			// operand already found; find next operator
 			return scanOperator(operators, operands, stopAt);
-		
-		    // operators
-		    case TokenType.OR, TokenType.AND, TokenType.BITWISE_OR, TokenType.BITWISE_XOR,
-		        TokenType.BITWISE_AND, TokenType.EQ, TokenType.NE, TokenType.STRICT_EQ,
-			TokenType.STRICT_NE, TokenType.LT, TokenType.LE, TokenType.GE,
-			TokenType.GT, TokenType.IN, TokenType.INSTANCEOF, TokenType.LSH, TokenType.RSH,
-			TokenType.URSH, TokenType.PLUS, TokenType.MINUS, TokenType.MUL,
-			TokenType.DIV, TokenType.MOD:
-			// combine any higher-precedence expressions
-			while (operators.length > 0 &&
-			    operators[operators.length - 1].precedence >= token.type.precedence)
-				reduceExpression(operators, operands);
-
-			// push operator and scan for operand
-			operators.push(tokenizer.get().type);
 			
 		    // hook/colon operator
-		    case TokenType.HOOK:
+		    case TQuestion:
 			// reduce left-hand conditional
 			tokenizer.get();
 			while (operators.length > 0)
@@ -639,7 +682,7 @@ class Parser {
 			return false;
 		
 		    // call/instantiation
-		    case TokenType.LEFT_PAREN:
+		    case TParenOpen:
 			// reduce until we get the current function (or lower operator precedence than 'new')
 			while (operators.length > 0 &&
 			    operators[operators.length - 1].precedence > TokenType.NEW.precedence)
@@ -722,6 +765,43 @@ class Parser {
 		
 		    default:
 			throw 'Unknown operator "' + operator + '"';
+		}
+	}
+	
+	private static var IS_ASSIGNMENT_OPERATOR:EReg = ~/^(\||\^|&|<<|>>>?|\+|\-|\*|\/|%)?=$/;
+	
+	private function isAssignmentOperator(operator:String):Bool {
+		return IS_ASSIGNMENT_OPERATOR.match(operator);
+	}
+
+	private function lookupOperator(operator:String, scanOperand:Bool = false):Operator {
+		switch (operator) {
+		    case '!': return OpNot;
+		    case '~': return OpBitwiseNot;
+		    case '||': return OpOr;
+		    case '&&': return OpAnd;
+		    case '|'. '|=': return OpBitwiseOr;
+		    case '^', '^=': return OpBitwiseXor;
+		    case '&', '&=': return OpBitwiseAnd;
+		    case '==': return OpEqual;
+		    case '!=': return OpUnequal;
+		    case '===': return OpStrictEqual;
+		    case '!==': return OpStrictUnequal;
+		    case '<': return OpLessThan;
+		    case '<=': return OpLessThanOrEqual;
+		    case '>': return OpGreaterThan;
+		    case '>=': return OpGreaterThanOrEqual;
+		    case 'in': return OpIn;
+		    case 'instanceof': return OpInstanceOf;
+		    case '<<', '<<=': return OpLeftShift;
+		    case '>>', '>>=': return OpRightShift;
+		    case '>>>', '>>>=': return OpZeroRightShift;
+		    case '+', '+=': return scanOperand ? OpUnaryPlus : return OpPlus;
+		    case '-', '-=': return scanOperand ? OpUnaryMinus : return OpMinus;
+		    case '*', '*=': return OpMultiply;
+		    case '/', '/=': return OpDivide;
+		    case '%', '%=': return OpModulus;
+		    default: throw 'Unknown operator "' + operator + '"';
 		}
 	}
 }

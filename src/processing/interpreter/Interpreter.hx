@@ -6,7 +6,7 @@
 package processing.interpreter;
 
 import processing.parser.Tokenizer;
-import processing.parser.Statement;
+import processing.parser.Syntax;
 
 //[TODO] rewrite all to use Scope methods
 
