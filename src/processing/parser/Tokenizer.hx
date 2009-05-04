@@ -1,4 +1,5 @@
 package processing.parser;
+import js.Boot;
 
 enum Token {
 	TEof;
@@ -145,16 +146,6 @@ class Tokenizer {
 		return token;
 	}
 	
-	public function peek(lookAhead:Int = 1):Token {
-		// peek ahead a certain distance (but retain Tokenizer state)
-		var origCursor:Int = cursor, origToken:Token = currentToken, token:Token = null;
-		for (i in 0...lookAhead)
-			token = get();
-		cursor = origCursor;
-		currentToken = origToken;
-		return token;
-	}
-	
 	private function parseStringLiteral(str:String):String {
 		str = regexes.CHAR_BACKSPACE.replace(str, '$1\x08');
 		str = regexes.CHAR_TAB.replace(str, '$1\x09');
@@ -172,6 +163,20 @@ class Tokenizer {
 		return str;
 	}
 	
+	public function peek(?lookAhead:Int = 1):Token {
+		// peek ahead a certain distance (but retain Tokenizer state)
+		var origCursor:Int = cursor, origToken:Token = currentToken, token:Token = null;
+		for (i in 0...lookAhead)
+			token = get();
+		cursor = origCursor;
+		currentToken = origToken;
+		return token;
+	}
+	
+	public function peekMatch(to:Dynamic, ?lookAhead:Int = 1):Bool {
+		return Tokenizer.matchToken(peek(lookAhead), to);
+	}
+	
 	public function match(to:Dynamic, ?lookAhead:Int = 0, ?mustMatch:Bool = false):Bool {
 		// peek to find a match
 		var origCursor:Int = cursor, origToken:Token = currentToken, token:Token = get();
@@ -179,7 +184,7 @@ class Tokenizer {
 			token = get();
 		
 		// check type of match
-		if ((Std.is(to, Token) && Type.enumEq(token, to)) || (Std.is(to, String) && Type.enumConstructor(token) == to))
+		if (Tokenizer.matchToken(token, to))
 			return true;
 		else if (mustMatch)
 			throw new TokenizerSyntaxError('Tokenizer: Must match ' + to + ', found ' + token, this);
@@ -188,6 +193,12 @@ class Tokenizer {
 		cursor = origCursor;
 		currentToken = origToken;
 		return false;
+	}
+	
+	static public function matchToken(from:Token, to:Dynamic):Bool
+	{
+//[TODO] is this matching technique even correct?
+		return (Std.is(to, Token) && Type.enumEq(from, to)) || (Std.is(to, String) && Type.enumConstructor(from) == to);
 	}
 	
 	private function isDone():Bool

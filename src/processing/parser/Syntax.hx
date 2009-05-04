@@ -13,7 +13,7 @@ enum Statement
 	SArrayInstantiation(type:VariableType, sizes:Array<Statement>);
 	SArrayLiteral(values:Array<Statement>);
 	SAssignment(reference:Statement, value:Statement);
-	SBlock(statements:Array<Statement>, definitions:Array<Statement>);
+	SBlock(statements:Array<Statement>, definitions:Array<Definition>);
 	SBreak(?level:Int);
 	SCall(method:Statement, ?args:Array<Statement>);
 	SCast(type:VariableType, expression:Statement);
@@ -23,14 +23,23 @@ enum Statement
 	SLoop(condition:Statement, body:Statement);
 	SObjectInstantiation(method:Statement, ?args:Array<Statement>);
 	SOperation(type:Operator, leftOperand:Statement, ?rightOperand:Statement);
+SPostfix(statement:Statement, postfix:Statement);
 	SReference(identifier:Statement, ?base:Statement);
 	SReturn(?value:Statement);
 	SThisReference();
-	
-	// definitions
-	SFunctionDefinition(identifier:String, type:VariableType, params:Array<FunctionParam> , body:Statement);
-	SClassDefinition(identifier:String, constructorBody:Statement, publicBody:Statement, privateBody:Statement);
-	SVariableDefinition(identifier:String, type:VariableType);
+}
+
+enum Definition
+{
+	DVariable(identifier:String, visibility:Visibility, isStatic:Bool, type:VariableType);
+	DFunction(identifier:String, visibility:Visibility, isStatic:Bool, type:VariableType, params:Array<Definition>, body:Statement);
+	DClass(identifier:String, visibility:Visibility, isStatic:Bool, body:Statement);
+}
+
+enum Visibility
+{
+	VPublic;
+	VPrivate;
 }
 
 enum Operator {
@@ -64,11 +73,6 @@ enum Operator {
 	OpMultiply;			// a * b
 	OpDivide;			// a / b
 	OpModulus;			// a % b
-}
-
-typedef FunctionParam = {
-	var name:String;
-	var type:VariableType;
 }
 
 typedef VariableType = {
