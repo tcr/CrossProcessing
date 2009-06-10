@@ -22,7 +22,7 @@
     <option mainClass="" />
     <option override="False" />
     <option verbose="False" />
-    <option additional="processing.evaluator.Evaluator processing.parser.Parser" />
+    <option additional="processing.parser.Parser&#xA;processing.compiler.JavaScriptCompiler&#xA;processing.evaluator.Evaluator" />
   </build>
   <!-- haxelib libraries -->
   <haxelib>

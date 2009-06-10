@@ -5,7 +5,7 @@
 
 package processing.compiler;
 
-import processing.parser.Statement;
+import processing.parser.Syntax;
 
 interface ICompiler
 {

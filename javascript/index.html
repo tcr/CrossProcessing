@@ -8,7 +8,6 @@
 	<meta name="keywords" content="" />
 </head>
 <body>
-	<pre id="haxe:trace"></pre>
 	<script src="Processing-parser.js"></script>
 	<script src="Processing-api.js"></script>
     <script>
@@ -22,8 +21,16 @@ function tokenize() {
 	while (!t.isDone())
 		document.getElementById('output').value += t.get().toString() + '\n';
 }
-	    
+
 function parse() {
+	// parse code
+	var script = document.getElementById('input').value;
+	var parser = new processing.parser.Parser();
+//	parser.parse(script);
+	document.getElementById('output').value = parser.parse(script);
+}
+	    
+function compile() {
 	// parse code
 	var script = document.getElementById('input').value;
 	var parser = new processing.parser.Parser();
@@ -47,6 +54,15 @@ function runOutput() {
 }
     
     </script>
+    
+    <div id="controls">
+      <input type="submit" value="Tokenize" onclick="tokenize()">
+      <input type="submit" value="Parse" onclick="parse()">
+      <input type="submit" value="Compile" onclick="compile()">
+      <input type="submit" value="Evaluate" onclick="runOutput()">
+    </div>
+    
+    <pre id="haxe:trace"></pre>
 	
     <textarea id="input" rows="20" cols="100">// All Examples Written by Casey Reas and Ben Fry
 // unless otherwise stated.
@@ -62,9 +78,7 @@ for(int i = 0; i < width; i++) {
   line(i, 0, x, height);
 }</textarea><br>
 	    <textarea id="output" rows="20" cols="100"></textarea><br/>
-	    <input type="submit" value="Tokenize" onclick="tokenize()">
-	<input type="submit" value="Parse" onclick="parse()">
-    <input type="submit" value="Run" onclick="runOutput()"><br>
+	
     
     <canvas id="processing" width="200" height="200" style="border: 2px solid black"></canvas>
 </body>

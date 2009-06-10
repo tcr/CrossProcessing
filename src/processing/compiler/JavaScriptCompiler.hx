@@ -5,7 +5,7 @@
 
 package processing.compiler;
 
-import processing.parser.Statement;
+import processing.parser.Syntax;
 
 class JavaScriptCompiler implements ICompiler
 {	
@@ -21,53 +21,96 @@ class JavaScriptCompiler implements ICompiler
 	{
 		switch (statement)
 		{
-		case SArrayInstantiation(type, sizes):
+		    case SArrayAccess(type, sizes):
 //[TODO]
 			return '';
 			
-		case SArrayLiteral(values):
+		    case SArrayInstantiation(type, sizes):
+//[TODO]
+			return '';
+			
+		    case SArrayLiteral(values):
 //[TODO]
 			return '';
 
-//		case SAssignment(reference, value):
-//			return serialize(reference) + ' = ' + serialize(value);
+		    case SAssignment(reference, value):
+			return serialize(reference) + ' = ' + serialize(value);
 
-		case SBlock(statements):
+		    case SBlock(statements, definitions):
 			var source:Array<String> = new Array();
+			for (definition in definitions)
+				source.push(serializeDefinition(definition));
 			for (statement in statements)
 				source.push(serialize(statement, true, null, true));
 			return inBlock ? source.join(';\n') : '{\n' + source.join(';\n') + ';\n}\n';
 		
-		case SBreak(level):
+		    case SBreak(level):
 			return 'break ' + level;
 
-		case SCall(method, args):
+		    case SCall(method, args):
 			var source:Array<String> = new Array();
 			for (arg in args)
 				source.push(serialize(arg));
 			return serialize(method) + '(' + source.join(',') + ')';
 
-		case SCast(type, expression):
+		    case SCast(type, expression):
 //[TODO]
 			return '';
 			
-		case SClassDefinition(identifier, constructorBody, publicBody, privateBody):
-//[TODO]
-			return '';
 
-		case SConditional(condition, thenBlock, elseBlock):
+		    case SConditional(condition, thenBlock, elseBlock):
 			return '(' + serialize(condition) + ' ? ' + serialize(thenBlock) + ' : ' + serialize(elseBlock) + ')';
 //			if (this.inline)
 //				return '(' + this.condition.serialize() + ' ? ' + this.thenBlock.serialize() + ' : ' + this.elseBlock.serialize() + ')';
 //			else
 //				return 'if (' + this.condition.serialize() + ') \n' + this.thenBlock.serialize() + (this.elseBlock ? ' else ' + this.elseBlock.serialize() : '');
 
-		case SContinue(level):
+		    case SContinue(level):
 			return 'continue ' + level;
 			
-//		case SDecrement(reference):
-//			return serialize(reference) + '--';
+		    case SPostfix(reference, postfix):
+			return '(function () { var __ret = ' + serialize(reference) + '; ' + serialize(postfix) + '; return __ret; })()';
 			
+		    case SLiteral(value):
+//[TODO] remove "escape" flag necessity
+			return escape && Std.is(value, String) ? '"' + value + '"' : value;
+
+		    case SLoop(condition, body):
+			return 'while (' + serialize(condition) + ')\n' + serialize(body) + '';
+
+		    case SObjectInstantiation(method, args):
+//[TODO]
+			return '';
+			
+		    case SOperation(type, leftOperand, rightOperand):
+			if (rightOperand != null)
+				return '(' + serialize(leftOperand) + serializeOperator(type) + serialize(rightOperand) + ')';
+			else
+				return '(' + serializeOperator(type) + serialize(leftOperand) + ')';
+
+		    case SReference(identifier, base):
+			if (base == null)
+				return serialize(identifier, false);
+			else
+				return serialize(base) + '[' + serialize(identifier) + ']';
+				
+		    case SReturn(value):
+			return 'return ' + (value != null ? serialize(value) : '');
+			
+		    case SThisReference:
+			return 'this';
+		}
+	}
+	
+	public function serializeDefinition(definition:Definition, ?inClass:String):String
+	{
+		switch (definition)
+		{
+			case DVariable(identifier, visibility, isStatic, type):
+//[TODO] type
+				return (inClass != null ? 'this.' : 'var ') + identifier + ' = 0';
+			
+/*			DFunction(identifier:String, visibility:Visibility, isStatic:Bool, type:VariableType, params:Array<Definition>, body:Statement);
 		case SFunctionDefinition(identifier, type, params, body):
 			// format params
 			var paramKeys:Array<String> = new Array();
@@ -79,43 +122,43 @@ class JavaScriptCompiler implements ICompiler
 //			    inClass != null ?
 //			    'addMethod(this, "' + (identifier == inClass ? 'CONSTRUCTORMETHOD' : this.identifier) + '", ' + func + ')' :
 //[TODO] functions should just be declared
-			    'Processing.' + identifier + ' = ' + func;
-
-//		case SIncrement(reference):
-//			return serialize(reference) + '++';
-			
-		case SLiteral(value):
-//[TODO] remove "escape" flag necessity
-			return escape && Std.is(value, String) ? '"' + value + '"' : value;
-
-		case SLoop(condition, body):
-			return 'while (' + serialize(condition) + ')\n' + serialize(body) + '';
-
-		case SObjectInstantiation(method, args):
-//[TODO]
-			return '';
-			
-		case SOperation(type, leftOperand, rightOperand):
-			if (rightOperand != null)
-				return '(' + serialize(leftOperand) + type.value + serialize(rightOperand) + ')';
-			else
-				return '(' + type.value + serialize(leftOperand) + ')';
-
-		case SReference(identifier, base):
-			if (base == null)
-				return serialize(identifier, false);
-			else
-				return serialize(base) + '[' + serialize(identifier) + ']';
-				
-		case SReturn(value):
-			return 'return ' + (value != null ? serialize(value) : '');
-			
-		case SThisReference:
-			return 'this';
-
-		case SVariableDefinition(identifier, type):
-//[TODO] type
-			return (inClass != null ? 'this.' : 'var ') + identifier + ' = 0';
+			    'Processing.' + identifier + ' = ' + func;*/
+			    
+//			DClass(identifier:String, visibility:Visibility, isStatic:Bool, body:Statement);
+			default: return '';
+		}
+	}
+	
+	public function serializeOperator(operator:Operator):String {
+		return switch (operator)
+		{
+		    // unary operators
+		    case OpNot: '!';
+		    case OpBitwiseNot: '~';
+		    case OpUnaryPlus: '+';
+		    case OpUnaryMinus: '-';
+		
+		    // binary operators
+		    case OpOr: '||';
+		    case OpAnd: '&&';
+		    case OpBitwiseOr: '|';
+		    case OpBitwiseXor: '^';
+		    case OpBitwiseAnd: '&';
+		    case OpEqual: '==';
+		    case OpUnequal: '!=';
+		    case OpLessThan: '<';
+		    case OpLessThanOrEqual: '<=';
+		    case OpGreaterThan: '>';
+		    case OpGreaterThanOrEqual: '>=';
+		    case OpInstanceOf: 'instanceof';
+		    case OpLeftShift: '<<';
+		    case OpRightShift: '>>';
+		    case OpZeroRightShift: '>>>';
+		    case OpPlus: '+';
+		    case OpMinus: '=';
+		    case OpMultiply: '*';
+		    case OpDivide: '/';
+		    case OpModulus: '%';
 		}
 	}
 }

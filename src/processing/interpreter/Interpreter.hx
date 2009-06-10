@@ -258,16 +258,13 @@ class Interpreter
 			    case OpBitwiseOr:		return a | b;
 			    case OpBitwiseXor:		return a ^ b;
 			    case OpBitwiseAnd:		return a & b;
+//[TODO] java has .equals(); figure out relation between == and .equals
 			    case OpEqual:		return a == b;
 			    case OpUnequal:		return a != b;
-//[TODO] implement strict equality properly
-			    case OpStrictEqual:		return a == b;
-			    case OpStrictUnequal:	return a != b;
 			    case OpLessThan:		return a < b;
 			    case OpLessThanOrEqual:	return a <= b;
 			    case OpGreaterThan:		return a > b;
 			    case OpGreaterThanOrEqual:	return a >= b;
-			    case OpIn:			return Reflect.hasField(b, a);
 			    case OpInstanceOf:		return Std.is(a, b);
 			    case OpLeftShift:		return a << b;
 			    case OpRightShift:		return a >> b;

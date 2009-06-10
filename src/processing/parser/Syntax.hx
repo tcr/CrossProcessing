@@ -10,6 +10,7 @@ package processing.parser;
 enum Statement 
 {
 	// statements
+	SArrayAccess(reference:Statement, index:Statement);
 	SArrayInstantiation(type:VariableType, sizes:Array<Statement>);
 	SArrayLiteral(values:Array<Statement>);
 	SAssignment(reference:Statement, value:Statement);
@@ -23,7 +24,7 @@ enum Statement
 	SLoop(condition:Statement, body:Statement);
 	SObjectInstantiation(method:Statement, ?args:Array<Statement>);
 	SOperation(type:Operator, leftOperand:Statement, ?rightOperand:Statement);
-SPostfix(statement:Statement, postfix:Statement);
+	SPostfix(reference:Statement, postfix:Statement);
 	SReference(identifier:Statement, ?base:Statement);
 	SReturn(?value:Statement);
 	SThisReference();
@@ -57,13 +58,10 @@ enum Operator {
 	OpBitwiseAnd;			// a & b
 	OpEqual;			// a == b
 	OpUnequal;			// a != b
-	OpStrictEqual;			// a === b
-	OpStrictUnequal;		// a !== b
 	OpLessThan;			// a < b
 	OpLessThanOrEqual;		// a <= b
 	OpGreaterThan;			// a > b
 	OpGreaterThanOrEqual;		// a >= b
-	OpIn;				// a in b
 	OpInstanceOf;			// a instanceof b
 	OpLeftShift;			// a << b
 	OpRightShift;			// a >> b
@@ -78,4 +76,9 @@ enum Operator {
 typedef VariableType = {
 	var type:Dynamic;
 	var dimensions:Int;
+}
+
+typedef FunctionParam = {
+	var name:String;
+	var type:VariableType;
 }
