@@ -18,10 +18,10 @@ enum Statement
 	SBreak(?level:Int);
 	SCall(method:Statement, ?args:Array<Statement>);
 	SCast(type:VariableType, expression:Statement);
-	SConditional(condition:Statement, thenBlock:Statement, ?elseBlock:Statement);
+	SConditional(condition:Statement, thenBlock:Array<Statement>, ?elseBlock:Array<Statement>);
 	SContinue(?level:Int);
 	SLiteral(value:Dynamic);
-	SLoop(condition:Statement, body:Statement);
+	SLoop(condition:Statement, body:Array<Statement>);
 	SObjectInstantiation(method:Statement, ?args:Array<Statement>);
 	SOperation(type:Operator, leftOperand:Statement, ?rightOperand:Statement);
 	SPostfix(reference:Statement, postfix:Statement);
@@ -33,7 +33,7 @@ enum Statement
 enum Definition
 {
 	DVariable(identifier:String, visibility:Visibility, isStatic:Bool, type:VariableType);
-	DFunction(identifier:String, visibility:Visibility, isStatic:Bool, type:VariableType, params:Array<Definition>, body:Statement);
+	DFunction(identifier:String, visibility:Visibility, isStatic:Bool, type:VariableType, params:Array<FunctionParam>, body:Statement);
 	DClass(identifier:String, visibility:Visibility, isStatic:Bool, body:Statement);
 }
 

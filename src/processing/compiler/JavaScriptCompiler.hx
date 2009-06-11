@@ -40,9 +40,8 @@ class JavaScriptCompiler implements ICompiler
 			var source:Array<String> = new Array();
 			for (definition in definitions)
 				source.push(serializeDefinition(definition));
-			for (statement in statements)
-				source.push(serialize(statement, true, null, true));
-			return inBlock ? source.join(';\n') : '{\n' + source.join(';\n') + ';\n}\n';
+			source.push(serializeStatements(statements));
+			return source.join(';\n'); // inBlock ? source.join(';\n') : '{\n' + source.join(';\n') + ';\n}\n';
 		
 		    case SBreak(level):
 			return 'break ' + level;
@@ -59,11 +58,11 @@ class JavaScriptCompiler implements ICompiler
 			
 
 		    case SConditional(condition, thenBlock, elseBlock):
-			return '(' + serialize(condition) + ' ? ' + serialize(thenBlock) + ' : ' + serialize(elseBlock) + ')';
+//			return '(' + serialize(condition) + ' ? {' + serializeStatements(thenBlock) + '} : {' + serializeStatements(elseBlock) + '})';
 //			if (this.inline)
 //				return '(' + this.condition.serialize() + ' ? ' + this.thenBlock.serialize() + ' : ' + this.elseBlock.serialize() + ')';
 //			else
-//				return 'if (' + this.condition.serialize() + ') \n' + this.thenBlock.serialize() + (this.elseBlock ? ' else ' + this.elseBlock.serialize() : '');
+				return 'if (' + serialize(condition) + ') \n{' + serializeStatements(thenBlock) + '} else {' + serializeStatements(elseBlock) + '}';
 
 		    case SContinue(level):
 			return 'continue ' + level;
@@ -76,7 +75,7 @@ class JavaScriptCompiler implements ICompiler
 			return escape && Std.is(value, String) ? '"' + value + '"' : value;
 
 		    case SLoop(condition, body):
-			return 'while (' + serialize(condition) + ')\n' + serialize(body) + '';
+			return 'while (' + serialize(condition) + ')\n{\n' + serializeStatements(body) + '}\n';
 
 		    case SObjectInstantiation(method, args):
 //[TODO]
@@ -102,6 +101,14 @@ class JavaScriptCompiler implements ICompiler
 		}
 	}
 	
+	public function serializeStatements(statements:Array<Statement>):String
+	{
+		var source:Array<String> = [];
+		for (statement in statements)
+			source.push(serialize(statement, true, null, true));
+		return source.join(';\n');
+	}
+	
 	public function serializeDefinition(definition:Definition, ?inClass:String):String
 	{
 		switch (definition)
@@ -110,19 +117,18 @@ class JavaScriptCompiler implements ICompiler
 //[TODO] type
 				return (inClass != null ? 'this.' : 'var ') + identifier + ' = 0';
 			
-/*			DFunction(identifier:String, visibility:Visibility, isStatic:Bool, type:VariableType, params:Array<Definition>, body:Statement);
-		case SFunctionDefinition(identifier, type, params, body):
-			// format params
-			var paramKeys:Array<String> = new Array();
-			for (param in params)
-				paramKeys.push(paramKeys[0]);
-			var func:String = 'function ' + identifier + ' (' + paramKeys.join(',') + ') {\n' + serialize(body) + '\n}';
-			
-			return
-//			    inClass != null ?
-//			    'addMethod(this, "' + (identifier == inClass ? 'CONSTRUCTORMETHOD' : this.identifier) + '", ' + func + ')' :
+			case DFunction(identifier, visibility, isStatic, type, params, body):
+				// format params
+				var paramKeys:Array<String> = new Array();
+				for (param in params)
+					paramKeys.push(param.name);
+				var func:String = 'function ' + identifier + '(' + paramKeys.join(',') + ') {\n' + serialize(body) + '\n}';
+				
+				return
+//				    inClass != null ?
+//				    'addMethod(this, "' + (identifier == inClass ? 'CONSTRUCTORMETHOD' : this.identifier) + '", ' + func + ')' :
 //[TODO] functions should just be declared
-			    'Processing.' + identifier + ' = ' + func;*/
+				    identifier + ' = ' + func;
 			    
 //			DClass(identifier:String, visibility:Visibility, isStatic:Bool, body:Statement);
 			default: return '';
@@ -155,7 +161,7 @@ class JavaScriptCompiler implements ICompiler
 		    case OpRightShift: '>>';
 		    case OpZeroRightShift: '>>>';
 		    case OpPlus: '+';
-		    case OpMinus: '=';
+		    case OpMinus: '-';
 		    case OpMultiply: '*';
 		    case OpDivide: '/';
 		    case OpModulus: '%';

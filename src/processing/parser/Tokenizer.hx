@@ -230,7 +230,7 @@ class TokenizerRegexList
 	public static var FLOAT:EReg = ~/^\d+(?:\.\d*)?[fF]|^\d+\.\d*(?:[eE][-+]?\d+)?|^\d+(?:\.\d*)?[eE][-+]?\d+|^\.\d+(?:[eE][-+]?\d+)?/;
 	public static var INTEGER:EReg = ~/^0[xX][\da-fA-F]+|^0[0-7]*|^\d+/;
 //[TODO] new as operator?
-	public static var KEYWORD:EReg = ~/^(break|class|case|catch|const|continue|default|do|else|enum|false|finally|for|function|new|null|public|private|return|static|switch|this|throw|true|try|var|while|with)\b/;
+	public static var KEYWORD:EReg = ~/^(break|class|case|catch|const|continue|default|do|else|enum|false|finally|for|function|if|new|null|public|private|return|static|switch|this|throw|true|try|var|while|with)\b/;
 	public static var TYPE:EReg = ~/^(boolean|char|void|float|int)\b/;
 	public static var IDENTIFIER:EReg = ~/^\w+/;
 	public static var CHAR:EReg = ~/^'(?:[^']|\\.|\\u[0-9A-Fa-f]{4})'/;

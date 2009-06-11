@@ -19,9 +19,7 @@ class Parser {
 //[TODO] definitions should be a map!
 		var statements:Array<Statement> = [], definitions:Array<Definition> = [];
 		//[NOTE] function order is important here
-		while (parseVariableDefinition(statements, definitions) ||
-//		    parseFunctionDefinition(definitions) ||
-//		    parseClassDefinition(definitions) ||
+		while (parseDefinition(PScript, statements, definitions) ||
 		    parseStatement(statements, definitions))
 			continue;
 
@@ -34,43 +32,56 @@ class Parser {
 	}
 
 // required flag?
-	private function parseStatement(statements:Array<Statement>, definitions:Array<Definition>):Bool {
+	private function parseStatement(statements:Array<Statement>, definitions:Array<Definition>):Bool
+	{
+		// parse variable definitions first
+		if (parseDefinition(PBlock, statements, definitions))
+			return true;
+		
 		// peek to see what kind of statement this is
 		switch (tokenizer.peek())
 		{
 		    // keywords
 		    case TKeyword(keyword):
 			switch (keyword) {
-/*
+
 			    // if block
 			    case 'if':
-				var condition:Statement, thenBlock:Statement, elseBlock:Statement = null;
+				var condition:Statement, thenBlock:Array<Statement> = [], elseBlock:Array<Statement> = [];
 				
 				// get condition
 				tokenizer.get();
 				tokenizer.match(TParenOpen, true);
 				condition = parseExpression();
+//[TODO] allow empty expressions in conditional?
+				if (condition == null)
+					throw new TokenizerSyntaxError('Invalid expression in conditional.', tokenizer);
 				tokenizer.match(TParenClose, true);
-				// get then block
-				if (tokenizer.match(TBraceOpen)) {
-					thenBlock = parseBlock(TBraceClose);
+				// then block
+				if (tokenizer.match(TBraceOpen))
+				{
+					while (parseStatement(thenBlock, definitions))
+						continue;
 					tokenizer.match(TBraceClose, true);
-				} else {
-					thenBlock = parseStatement();
 				}
-				// get else block
-				if (tokenizer.match(TKeyword('else'))) {
-					if (tokenizer.match(TBraceOpen)) {
-						elseBlock = parseBlock(TBraceClose);
+				else if (!parseStatement(thenBlock, definitions))
+					throw new TokenizerSyntaxError('Invalid expression in conditional.', tokenizer);
+				// else block
+				if (tokenizer.match(TKeyword('else')))
+				{
+					if (tokenizer.match(TBraceOpen))
+					{
+						while (parseStatement(elseBlock, definitions))
+							continue;
 						tokenizer.match(TBraceClose, true);
-					} else {
-						elseBlock = parseStatement();
 					}
+					else if (!parseStatement(elseBlock, definitions))
+						throw new TokenizerSyntaxError('Invalid expression in conditional.', tokenizer);
 				}
 				
 				// add conditional
 				statements.push(SConditional(condition, thenBlock, elseBlock));
-
+/*
 			    // while statement
 			    case 'while':
 				// match opening 'while' and '('
@@ -115,21 +126,20 @@ class Parser {
 				tokenizer.match(TParenClose, true);
 				
 				// parse body
-//[TODO] allow scoped definitions at all?
-				var body:Array<Statement> = [], bodyDefinitions:Array<Definition> = [];
-				if (tokenizer.match(TBraceOpen)) {
-					while (parseVariableDefinition(body, bodyDefinitions) ||
-					    parseStatement(body, bodyDefinitions))
+				var body:Array<Statement> = [];
+				if (tokenizer.match(TBraceOpen))
+				{
+					while (parseStatement(body, definitions))
 						continue;
 					tokenizer.match(TBraceClose, true);
-				} else {
-					parseStatement(body, definitions);
 				}
+				else if (!parseStatement(body, definitions))
+					throw new TokenizerSyntaxError('Invalid expression in for loop.', tokenizer);
 				// append loop body
 				body = body.concat(update);
 				
 				// return loop
-				statements.push(SLoop(condition, SBlock(body, bodyDefinitions)));
+				statements.push(SLoop(condition, body));
 /*
 			    // returns
 			    case 'return':
@@ -170,24 +180,45 @@ class Parser {
 
 		return true;
 	}
-
-//[TODO] argument for not having visibility, static (inline definition)
-	private function isDefinition(type:Dynamic, hasType:Bool = true):Bool {
-		// match visibility and static
+	
+	private function parseDefinition(scope:ParserScope, statements:Array<Statement>, definitions:Array<Definition>)
+	{
+		// search ahead to find definition
 		var peek:Int = 1;
-		if (tokenizer.peekMatch(TKeyword('static'), peek))
-			peek++;
-		if (tokenizer.peekMatch(TKeyword('private'), peek) || tokenizer.match(TKeyword('public'), peek))
-			peek++;
-		if (hasType) {
-			if (tokenizer.peekMatch('TType', peek) || !tokenizer.peekMatch('TIdentifier', peek))
+		
+		// match visibility and static (except in block)
+		if (scope != PBlock)
+		{
+			if (tokenizer.peekMatch(TKeyword('static'), peek))
 				peek++;
-			else 
-				return false;
-			while (tokenizer.peekMatch(TDimensions, peek))
+			if (tokenizer.peekMatch(TKeyword('private'), peek) || tokenizer.match(TKeyword('public'), peek))
 				peek++;
 		}
-		return tokenizer.peekMatch(type, peek);
+		
+		// match class (PScript)
+//		if ((scope == PScript) && tokenizer.peekMatch(TKeyword('class'), peek))
+//			return parseClassDefinition(definitions);
+		
+		// match type definition
+		if (tokenizer.peekMatch('TType', peek) || tokenizer.peekMatch('TIdentifier', peek))
+			peek++;
+		else 
+			return false;
+		while (tokenizer.peekMatch(TDimensions, peek))
+			peek++;
+		
+		// match variable/function
+		if (tokenizer.peekMatch('TIdentifier', peek))
+		{
+			// function (PScript, PClass)
+			if ((scope != PBlock) && tokenizer.peekMatch(TParenOpen, peek + 1))
+				return parseFunctionDefinition(definitions);
+			// variable (PClass, PBlock) (PScript handled by parseStatement as PBlock)
+			else if (scope != PScript)
+				return parseVariableDefinition(statements, definitions);
+		}
+		// no match
+		return false;
 	}
 	
 	private function parseVisibility():Visibility {
@@ -196,86 +227,27 @@ class Parser {
 		tokenizer.match(TKeyword('public'));
 		return VPublic;
 	}
-/*
-	private function parseFunctionDefinition(definitions:Array < Definition > ):Bool {
-		// match definition
-		if (!isDefinition(TKeyword('function'), true))
-			return false;
-			
-		// get function definition
-		var isStatic:Bool = tokenizer.match(TKeyword('static'));
-		var visibility:Visibility = parseVisibility();
-		var fType:VariableType = parseType();
-		tokenizer.match(TKeyword('function'), true);
-		tokenizer.match(TIdentifier, true);
-		var identifier:String = Type.enumParameters(tokenizer.currentToken)[0];
-		
-		// parse parameters
-		tokenizer.match(TParenOpen, true);
-		var params:Array<FunctionParam> = [];
-		while (!tokenizer.peekMatch(TParenClose))
+	
+	private function parseType():VariableType {
+		// match a type declaration
+		switch (tokenizer.peek())
 		{
-			// get type
-			var type:VariableType = parseType();
-			if (type == null)
-				throw new TokenizerSyntaxError('Invalid formal parameter type', tokenizer);
-			// get identifier
-			if (!tokenizer.match(TIdentifier))
-				throw new TokenizerSyntaxError('Invalid formal parameter', tokenizer);
-			var name:String = tokenizer.currentToken;
-			
-			// add parameter
-			params.push({name: name, type: type});
-			
-			// check for comma
-			if (!tokenizer.peekMatch(TParenClose))
-				tokenizer.match(TComma, true);
-		}
-		tokenizer.match(TParenClose, true);
+		    case TType(value), TIdentifier(value):
+			// return type declaration
+			tokenizer.get();
+			var dimensions:Int = 0;
+			while (tokenizer.match(TDimensions))
+				dimensions++;
+			return { type: value, dimensions: dimensions };
 		
-		// parse body
-		tokenizer.match(TBraceOpen, true);
-		var fStatements:Array<Statement> = [], fDefinitions:Array<Statement> = [];
-		//[NOTE] function order is important here
-		while (parseVariableDefinition(fStatements, fDefinitions) ||
-		    parseStatement(fStatements))
-			continue;
-		tokenizer.match(TBraceClose, true);
-		// return function declaration statement
-		definitions.push(DFunction(identifier, visibility, isStatic, fType, params, SBlock(fStatements, fDefinitions)));
+		    default:
+			// no match
+			return null;
+		}
 	}
 	
-	private function parseClassDefinition(definitions:Array<Definition>):Bool
-	{
-		// match definition
-		if (!isDefinition(TKeyword('class'), false))
-			return false;
-			
-		// get class definition
-		var isStatic:Bool = tokenizer.match(TKeyword('static'));
-		var visibility:Visibility = parseVisibility();
-		tokenizer.match(TKeyword('class'), true);
-		tokenizer.match(TIdentifier, true);
-		var identifier:String = Type.enumParameters(tokenizer.currentToken)[0];
-		
-		// parse body
-		tokenizer.match(TBraceOpen, true);
-		var cStatements:Array<Statement> = [], cDefinitions:Array<Definition> = [];
-		//[NOTE] function order is important here
-		while (parseVariableDefinition(cDefinitions) ||
-		    parseFunctionDefinition(cDefinitions))
-			continue;
-		tokenizer.match(TBraceClose, true);
-		// return function declaration statement
-		definitions.push(DClass(identifier, visibility, isStatic, SBlock(cStatements, cDefinitions)));
-	}
-*/
 	private function parseVariableDefinition(statements:Array<Statement>, definitions:Array<Definition>):Bool
 	{
-		// match definition
-		if (!isDefinition('TIdentifier', true))
-			return false;
-
 		// get variable definition
 		var isStatic:Bool = tokenizer.match(TKeyword('static'));
 		var visibility:Visibility = parseVisibility();
@@ -311,24 +283,71 @@ class Parser {
 		// definition matched
 		return true;
 	}
-	
-	private function parseType():VariableType {
-		// match a type declaration
-		switch (tokenizer.peek())
-		{
-		    case TType(value), TIdentifier(value):
-			// return type declaration
-			tokenizer.get();
-			var dimensions:Int = 0;
-			while (tokenizer.match(TDimensions))
-				dimensions++;
-			return { type: value, dimensions: dimensions };
+
+	private function parseFunctionDefinition(definitions:Array<Definition>):Bool
+	{
+		// get function definition
+		var isStatic:Bool = tokenizer.match(TKeyword('static'));
+		var visibility:Visibility = parseVisibility();
+		var fType:VariableType = parseType();
+		tokenizer.match('TIdentifier', true);
+		var identifier:String = Type.enumParameters(tokenizer.currentToken)[0];
 		
-		    default:
-			// no match
-			return null;
+		// parse parameters
+		tokenizer.match(TParenOpen, true);
+		var params:Array<FunctionParam> = [];
+		while (!tokenizer.peekMatch(TParenClose))
+		{
+			// get type
+			var type:VariableType = parseType();
+			if (type == null)
+				throw new TokenizerSyntaxError('Invalid formal parameter type', tokenizer);
+			// get identifier
+			if (!tokenizer.match('TIdentifier'))
+				throw new TokenizerSyntaxError('Invalid formal parameter', tokenizer);
+			var name:String = Type.enumParameters(tokenizer.currentToken)[0];
+			
+			// add parameter
+			params.push({name: name, type: type});
+			
+			// check for comma
+			if (!tokenizer.peekMatch(TParenClose))
+				tokenizer.match(TComma, true);
 		}
+		tokenizer.match(TParenClose, true);
+		
+		// parse body
+		tokenizer.match(TBraceOpen, true);
+		var fStatements:Array<Statement> = [], fDefinitions:Array<Definition> = [];
+		//[NOTE] function order is important here
+		while (parseStatement(fStatements, fDefinitions))
+			continue;
+		tokenizer.match(TBraceClose, true);
+		// return function declaration statement
+		definitions.push(DFunction(identifier, visibility, isStatic, fType, params, SBlock(fStatements, fDefinitions)));
+		return true;
 	}
+/*
+	private function parseClassDefinition(definitions:Array<Definition>):Bool
+	{
+		// get class definition
+		var isStatic:Bool = tokenizer.match(TKeyword('static'));
+		var visibility:Visibility = parseVisibility();
+		tokenizer.match(TKeyword('class'), true);
+		tokenizer.match(TIdentifier, true);
+		var identifier:String = Type.enumParameters(tokenizer.currentToken)[0];
+		
+		// parse body
+		tokenizer.match(TBraceOpen, true);
+		var cStatements:Array<Statement> = [], cDefinitions:Array<Definition> = [];
+		//[NOTE] function order is important here
+		while (parseDefinition(PClass, statements, definitions))
+			continue;
+		tokenizer.match(TBraceClose, true);
+		// return function declaration statement
+		definitions.push(DClass(identifier, visibility, isStatic, SBlock(cStatements, cDefinitions)));
+	}
+*/
 	
 	private function parseList():Array<Statement>
 	{
@@ -567,20 +586,6 @@ class Parser {
 		{
 		    // operators
 		    case TOperator(opToken):
-/*
-			// assignment operators
-			if (isAssignmentOperator(operator)) {
-				// reduce expression
-				recursiveReduceExpression(operators, operands, 16);
-				
-				// add assignment
-				var reference:Statement = operands.pop();
-				if (!parseExpression(operands))
-					throw new TokenizerSyntaxError('Invalid assignment.');
-				operands.push(SAssignment(reference, SOperation(reference, operands.pop())));
-				return false;
-			}
-*/
 			// knock off token
 			tokenizer.get();
 			
@@ -594,9 +599,17 @@ class Parser {
 				// already matched operator, find operand
 				return scanOperand(operators, operands);
 			}
+			// assignment operators
+			else if (isAssignmentOperator(opToken)) {
+				// combine higher-precedence expressions and push
+				var operator:ParserOperator = (opToken == '=') ? PAssignment() : PAssignment(lookupOperatorType(opToken));
+				recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
+				operators.push(operator);
+			}
+			// regular operators
 			else
 			{
-				// regular operator, combine higher-precedence expressions and push
+				// combine higher-precedence expressions and push
 				var operator:ParserOperator = POperator(lookupOperatorType(opToken));
 				recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
 				operators.push(operator);
@@ -819,6 +832,12 @@ class Parser {
 		    case PCall(_): 15;
 		}
 	}
+}
+
+enum ParserScope {
+	PScript;
+	PClass;
+	PBlock;
 }
 
 enum ParserOperator {

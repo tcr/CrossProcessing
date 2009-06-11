@@ -40,7 +40,7 @@ class Evaluator {
 		for (i in 0...contexts.length)
 			func += 'with (contexts.shift()) ';
 		func += 'return eval(code); })';
-		// evaluate		
+		// evaluate
 		var evaluator:String -> Array <Dynamic> -> Dynamic = js.Lib.eval(func);
 		return evaluator(compiled, contexts);
 #elseif flash

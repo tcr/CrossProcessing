@@ -480,16 +480,9 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 				source.push(this.serializeDefinition(definition));
 			}
 		}
+		source.push(this.serializeStatements(statements));
 		{
-			var _g = 0;
-			while(_g < statements.length) {
-				var statement1 = statements[_g];
-				++_g;
-				source.push(this.serialize(statement1,true,null,true));
-			}
-		}
-		{
-			var $tmp = (inBlock?source.join(";\n"):"{\n" + source.join(";\n") + ";\n}\n");
+			var $tmp = source.join(";\n");
 			$s.pop();
 			return $tmp;
 		}
@@ -533,7 +526,7 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 	var elseBlock = $e[4], thenBlock = $e[3], condition = $e[2];
 	{
 		{
-			var $tmp = "(" + this.serialize(condition) + " ? " + this.serialize(thenBlock) + " : " + this.serialize(elseBlock) + ")";
+			var $tmp = "if (" + this.serialize(condition) + ") \n{" + this.serializeStatements(thenBlock) + "} else {" + this.serializeStatements(elseBlock) + "}";
 			$s.pop();
 			return $tmp;
 		}
@@ -569,7 +562,7 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 	var body = $e[3], condition = $e[2];
 	{
 		{
-			var $tmp = "while (" + this.serialize(condition) + ")\n" + this.serialize(body) + "";
+			var $tmp = "while (" + this.serialize(condition) + ")\n{\n" + this.serializeStatements(body) + "}\n";
 			$s.pop();
 			return $tmp;
 		}
@@ -639,6 +632,25 @@ processing.compiler.JavaScriptCompiler.prototype.serializeDefinition = function(
 	{
 		{
 			var $tmp = ((inClass != null?"this.":"var ")) + identifier + " = 0";
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	case 1:
+	var body = $e[7], params = $e[6], type = $e[5], isStatic = $e[4], visibility = $e[3], identifier = $e[2];
+	{
+		var paramKeys = new Array();
+		{
+			var _g = 0;
+			while(_g < params.length) {
+				var param = params[_g];
+				++_g;
+				paramKeys.push(param.name);
+			}
+		}
+		var func = "function " + identifier + "(" + paramKeys.join(",") + ") {\n" + this.serialize(body) + "\n}";
+		{
+			var $tmp = identifier + " = " + func;
 			$s.pop();
 			return $tmp;
 		}
@@ -742,7 +754,7 @@ processing.compiler.JavaScriptCompiler.prototype.serializeOperator = function(op
 			}break;
 			case 20:
 			{
-				$r = "=";
+				$r = "-";
 			}break;
 			case 21:
 			{
@@ -762,6 +774,25 @@ processing.compiler.JavaScriptCompiler.prototype.serializeOperator = function(op
 			}
 			return $r;
 		}(this);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+processing.compiler.JavaScriptCompiler.prototype.serializeStatements = function(statements) {
+	$s.push("processing.compiler.JavaScriptCompiler::serializeStatements");
+	var $spos = $s.length;
+	var source = [];
+	{
+		var _g = 0;
+		while(_g < statements.length) {
+			var statement = statements[_g];
+			++_g;
+			source.push(this.serialize(statement,true,null,true));
+		}
+	}
+	{
+		var $tmp = source.join(";\n");
 		$s.pop();
 		return $tmp;
 	}
@@ -1963,28 +1994,6 @@ processing.parser.Parser.prototype.isAssignmentOperator = function(operator) {
 	}
 	$s.pop();
 }
-processing.parser.Parser.prototype.isDefinition = function(type,hasType) {
-	$s.push("processing.parser.Parser::isDefinition");
-	var $spos = $s.length;
-	if(hasType == null) hasType = true;
-	var peek = 1;
-	if(this.tokenizer.peekMatch(processing.parser.Token.TKeyword("static"),peek)) peek++;
-	if(this.tokenizer.peekMatch(processing.parser.Token.TKeyword("private"),peek) || this.tokenizer.match(processing.parser.Token.TKeyword("public"),peek)) peek++;
-	if(hasType) {
-		if(this.tokenizer.peekMatch("TType",peek) || !this.tokenizer.peekMatch("TIdentifier",peek)) peek++;
-		else {
-			$s.pop();
-			return false;
-		}
-		while(this.tokenizer.peekMatch(processing.parser.Token.TDimensions,peek)) peek++;
-	}
-	{
-		var $tmp = this.tokenizer.peekMatch(type,peek);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
 processing.parser.Parser.prototype.lookupOperatorPrecedence = function(operator) {
 	$s.push("processing.parser.Parser::lookupOperatorPrecedence");
 	var $spos = $s.length;
@@ -2277,12 +2286,44 @@ processing.parser.Parser.prototype.parse = function(code) {
 	var $spos = $s.length;
 	this.tokenizer.load(code);
 	var statements = [], definitions = [];
-	while(this.parseVariableDefinition(statements,definitions) || this.parseStatement(statements,definitions)) continue;
+	while(this.parseDefinition(processing.parser.ParserScope.PScript,statements,definitions) || this.parseStatement(statements,definitions)) continue;
 	if(!this.tokenizer.isDone()) throw new processing.parser.TokenizerSyntaxError("Script unterminated",this.tokenizer);
 	{
 		var $tmp = processing.parser.Statement.SBlock(statements,definitions);
 		$s.pop();
 		return $tmp;
+	}
+	$s.pop();
+}
+processing.parser.Parser.prototype.parseDefinition = function(scope,statements,definitions) {
+	$s.push("processing.parser.Parser::parseDefinition");
+	var $spos = $s.length;
+	var peek = 1;
+	if(scope != processing.parser.ParserScope.PBlock) {
+		if(this.tokenizer.peekMatch(processing.parser.Token.TKeyword("static"),peek)) peek++;
+		if(this.tokenizer.peekMatch(processing.parser.Token.TKeyword("private"),peek) || this.tokenizer.match(processing.parser.Token.TKeyword("public"),peek)) peek++;
+	}
+	if(this.tokenizer.peekMatch("TType",peek) || this.tokenizer.peekMatch("TIdentifier",peek)) peek++;
+	else {
+		$s.pop();
+		return false;
+	}
+	while(this.tokenizer.peekMatch(processing.parser.Token.TDimensions,peek)) peek++;
+	if(this.tokenizer.peekMatch("TIdentifier",peek)) {
+		if((scope != processing.parser.ParserScope.PBlock) && this.tokenizer.peekMatch(processing.parser.Token.TParenOpen,peek + 1)) {
+			var $tmp = this.parseFunctionDefinition(definitions);
+			$s.pop();
+			return $tmp;
+		}
+		else if(scope != processing.parser.ParserScope.PScript) {
+			var $tmp = this.parseVariableDefinition(statements,definitions);
+			$s.pop();
+			return $tmp;
+		}
+	}
+	{
+		$s.pop();
+		return false;
 	}
 	$s.pop();
 }
@@ -2301,6 +2342,36 @@ processing.parser.Parser.prototype.parseExpression = function() {
 		var $tmp = operands[0];
 		$s.pop();
 		return $tmp;
+	}
+	$s.pop();
+}
+processing.parser.Parser.prototype.parseFunctionDefinition = function(definitions) {
+	$s.push("processing.parser.Parser::parseFunctionDefinition");
+	var $spos = $s.length;
+	var isStatic = this.tokenizer.match(processing.parser.Token.TKeyword("static"));
+	var visibility = this.parseVisibility();
+	var fType = this.parseType();
+	this.tokenizer.match("TIdentifier",null,true);
+	var identifier = Type.enumParameters(this.tokenizer.currentToken)[0];
+	this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
+	var params = [];
+	while(!this.tokenizer.peekMatch(processing.parser.Token.TParenClose)) {
+		var type = this.parseType();
+		if(type == null) throw new processing.parser.TokenizerSyntaxError("Invalid formal parameter type",this.tokenizer);
+		if(!this.tokenizer.match("TIdentifier")) throw new processing.parser.TokenizerSyntaxError("Invalid formal parameter",this.tokenizer);
+		var name = Type.enumParameters(this.tokenizer.currentToken)[0];
+		params.push({ name : name, type : type});
+		if(!this.tokenizer.peekMatch(processing.parser.Token.TParenClose)) this.tokenizer.match(processing.parser.Token.TComma,null,true);
+	}
+	this.tokenizer.match(processing.parser.Token.TParenClose,null,true);
+	this.tokenizer.match(processing.parser.Token.TBraceOpen,null,true);
+	var fStatements = [], fDefinitions = [];
+	while(this.parseStatement(fStatements,fDefinitions)) continue;
+	this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
+	definitions.push(processing.parser.Definition.DFunction(identifier,visibility,isStatic,fType,params,processing.parser.Statement.SBlock(fStatements,fDefinitions)));
+	{
+		$s.pop();
+		return true;
 	}
 	$s.pop();
 }
@@ -2326,12 +2397,37 @@ processing.parser.Parser.prototype.parseList = function() {
 processing.parser.Parser.prototype.parseStatement = function(statements,definitions) {
 	$s.push("processing.parser.Parser::parseStatement");
 	var $spos = $s.length;
+	if(this.parseDefinition(processing.parser.ParserScope.PBlock,statements,definitions)) {
+		$s.pop();
+		return true;
+	}
 	var $e = (this.tokenizer.peek());
 	switch( $e[1] ) {
 	case 1:
 	var keyword = $e[2];
 	{
 		switch(keyword) {
+		case "if":{
+			var condition, thenBlock = [], elseBlock = [];
+			this.tokenizer.get();
+			this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
+			condition = this.parseExpression();
+			if(condition == null) throw new processing.parser.TokenizerSyntaxError("Invalid expression in conditional.",this.tokenizer);
+			this.tokenizer.match(processing.parser.Token.TParenClose,null,true);
+			if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
+				while(this.parseStatement(thenBlock,definitions)) continue;
+				this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
+			}
+			else if(!this.parseStatement(thenBlock,definitions)) throw new processing.parser.TokenizerSyntaxError("Invalid expression in conditional.",this.tokenizer);
+			if(this.tokenizer.match(processing.parser.Token.TKeyword("else"))) {
+				if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
+					while(this.parseStatement(elseBlock,definitions)) continue;
+					this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
+				}
+				else if(!this.parseStatement(elseBlock,definitions)) throw new processing.parser.TokenizerSyntaxError("Invalid expression in conditional.",this.tokenizer);
+			}
+			statements.push(processing.parser.Statement.SConditional(condition,thenBlock,elseBlock));
+		}break;
 		case "for":{
 			this.tokenizer.get();
 			this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
@@ -2344,16 +2440,14 @@ processing.parser.Parser.prototype.parseStatement = function(statements,definiti
 			this.tokenizer.match(processing.parser.Token.TSemicolon,null,true);
 			var update = this.parseList();
 			this.tokenizer.match(processing.parser.Token.TParenClose,null,true);
-			var body = [], bodyDefinitions = [];
+			var body = [];
 			if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
-				while(this.parseVariableDefinition(body,bodyDefinitions) || this.parseStatement(body,bodyDefinitions)) continue;
+				while(this.parseStatement(body,definitions)) continue;
 				this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
 			}
-			else {
-				this.parseStatement(body,definitions);
-			}
+			else if(!this.parseStatement(body,definitions)) throw new processing.parser.TokenizerSyntaxError("Invalid expression in for loop.",this.tokenizer);
 			body = body.concat(update);
-			statements.push(processing.parser.Statement.SLoop(condition,processing.parser.Statement.SBlock(body,bodyDefinitions)));
+			statements.push(processing.parser.Statement.SLoop(condition,body));
 		}break;
 		default:{
 			{
@@ -2410,10 +2504,6 @@ processing.parser.Parser.prototype.parseType = function() {
 processing.parser.Parser.prototype.parseVariableDefinition = function(statements,definitions) {
 	$s.push("processing.parser.Parser::parseVariableDefinition");
 	var $spos = $s.length;
-	if(!this.isDefinition("TIdentifier",true)) {
-		$s.pop();
-		return false;
-	}
 	var isStatic = this.tokenizer.match(processing.parser.Token.TKeyword("static"));
 	var visibility = this.parseVisibility();
 	var vType = this.parseType();
@@ -2631,6 +2721,11 @@ processing.parser.Parser.prototype.scanOperator = function(operators,operands,re
 				return $tmp;
 			}
 		}
+		else if(this.isAssignmentOperator(opToken)) {
+			var operator = ((opToken == "=")?processing.parser.ParserOperator.PAssignment():processing.parser.ParserOperator.PAssignment(this.lookupOperatorType(opToken)));
+			this.recursiveReduceExpression(operators,operands,this.lookupOperatorPrecedence(operator));
+			operators.push(operator);
+		}
 		else {
 			var operator = processing.parser.ParserOperator.POperator(this.lookupOperatorType(opToken));
 			this.recursiveReduceExpression(operators,operands,this.lookupOperatorPrecedence(operator));
@@ -2682,6 +2777,16 @@ processing.parser.Parser.prototype.scanOperator = function(operators,operands,re
 }
 processing.parser.Parser.prototype.tokenizer = null;
 processing.parser.Parser.prototype.__class__ = processing.parser.Parser;
+processing.parser.ParserScope = { __ename__ : ["processing","parser","ParserScope"], __constructs__ : ["PScript","PClass","PBlock"] }
+processing.parser.ParserScope.PBlock = ["PBlock",2];
+processing.parser.ParserScope.PBlock.toString = $estr;
+processing.parser.ParserScope.PBlock.__enum__ = processing.parser.ParserScope;
+processing.parser.ParserScope.PClass = ["PClass",1];
+processing.parser.ParserScope.PClass.toString = $estr;
+processing.parser.ParserScope.PClass.__enum__ = processing.parser.ParserScope;
+processing.parser.ParserScope.PScript = ["PScript",0];
+processing.parser.ParserScope.PScript.toString = $estr;
+processing.parser.ParserScope.PScript.__enum__ = processing.parser.ParserScope;
 processing.parser.ParserOperator = { __ename__ : ["processing","parser","ParserOperator"], __constructs__ : ["POperator","PAssignment","PNew","PCast","PPrefix","PPostfix","PDot","PArrayAccess","PCall"] }
 processing.parser.ParserOperator.PArrayAccess = function(index) { var $x = ["PArrayAccess",7,index]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
 processing.parser.ParserOperator.PAssignment = function(operator) { var $x = ["PAssignment",1,operator]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
@@ -2940,7 +3045,7 @@ processing.parser.TokenizerRegexList.EOF = new EReg("^$","");
 processing.parser.TokenizerRegexList.COLOR = new EReg("^(?:0[xX]|#)([\\da-fA-F]{6}|[\\da-fA-F]{8})","");
 processing.parser.TokenizerRegexList.FLOAT = new EReg("^\\d+(?:\\.\\d*)?[fF]|^\\d+\\.\\d*(?:[eE][-+]?\\d+)?|^\\d+(?:\\.\\d*)?[eE][-+]?\\d+|^\\.\\d+(?:[eE][-+]?\\d+)?","");
 processing.parser.TokenizerRegexList.INTEGER = new EReg("^0[xX][\\da-fA-F]+|^0[0-7]*|^\\d+","");
-processing.parser.TokenizerRegexList.KEYWORD = new EReg("^(break|class|case|catch|const|continue|default|do|else|enum|false|finally|for|function|new|null|public|private|return|static|switch|this|throw|true|try|var|while|with)\\b","");
+processing.parser.TokenizerRegexList.KEYWORD = new EReg("^(break|class|case|catch|const|continue|default|do|else|enum|false|finally|for|function|if|new|null|public|private|return|static|switch|this|throw|true|try|var|while|with)\\b","");
 processing.parser.TokenizerRegexList.TYPE = new EReg("^(boolean|char|void|float|int)\\b","");
 processing.parser.TokenizerRegexList.IDENTIFIER = new EReg("^\\w+","");
 processing.parser.TokenizerRegexList.CHAR = new EReg("^'(?:[^']|\\\\.|\\\\u[0-9A-Fa-f]{4})'","");
