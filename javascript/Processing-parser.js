@@ -2556,6 +2556,19 @@ processing.parser.Parser.prototype.parseStatement = function(statements,definiti
 			}
 			statements.push(processing.parser.Statement.SConditional(condition,thenBlock,elseBlock));
 		}break;
+		case "while":{
+			this.tokenizer.get();
+			this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
+			var condition = this.parseExpression();
+			this.tokenizer.match(processing.parser.Token.TSemicolon,null,true);
+			var body = [];
+			if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
+				while(this.parseStatement(body,definitions)) continue;
+				this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
+			}
+			else if(!this.parseStatement(body,definitions)) throw new processing.parser.TokenizerSyntaxError("Invalid expression in for loop.",this.tokenizer);
+			statements.push(processing.parser.Statement.SLoop(condition,body));
+		}break;
 		case "for":{
 			this.tokenizer.get();
 			this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);

@@ -83,28 +83,31 @@ class Parser {
 				statements.push(SConditional(condition, thenBlock, elseBlock));
 				
 //[TODO] handle loop labels!
-/*
+
 			    // while statement
 			    case 'while':
-				// match opening 'while' and '('
+				// match opening 'while'
 				tokenizer.get();
-				tokenizer.match(TokenType.LEFT_PAREN, true);
-				
-				// match condition
-				var condition:Statement = parseExpression(TokenType.RIGHT_PAREN);
-				tokenizer.match(TokenType.RIGHT_PAREN, true);
-				// parse body
-				var body:Statement;
-				if (tokenizer.match(TokenType.LEFT_CURLY)) {
-					body = parseBlock(TokenType.RIGHT_CURLY);
-					tokenizer.match(TokenType.RIGHT_CURLY, true);
-				} else {
-					body = parseStatement();
-				}
 
-				// push for loop
+				// match condition
+				tokenizer.match(TParenOpen, true);
+				var condition:Expression = parseExpression();
+				tokenizer.match(TSemicolon, true);
+				
+				// parse body
+				var body:Array<Statement> = [];
+				if (tokenizer.match(TBraceOpen))
+				{
+					while (parseStatement(body, definitions))
+						continue;
+					tokenizer.match(TBraceClose, true);
+				}
+				else if (!parseStatement(body, definitions))
+					throw new TokenizerSyntaxError('Invalid expression in for loop.', tokenizer);
+				
+				// add loop
 				statements.push(SLoop(condition, body));
-*/
+
 			    // for statement
 			    case 'for':
 				// match opening 'for' and '('
@@ -141,7 +144,7 @@ class Parser {
 				for (statement in update)
 					body.push(SExpression(statement));
 				
-				// return loop
+				// add loop
 				statements.push(SLoop(condition, body));
 
 			    // returns
