@@ -9,26 +9,30 @@ package processing.parser;
 
 enum Statement 
 {
-	// statements
-	SArrayAccess(reference:Statement, index:Statement);
-	SArrayInstantiation(type:VariableType, sizes:Array<Statement>);
-	SArrayLiteral(values:Array<Statement>);
-	SAssignment(reference:Statement, value:Statement);
 	SBlock(statements:Array<Statement>, definitions:Array<Definition>);
-	SBreak(?identifier:String);
-	SCall(method:Statement, ?args:Array<Statement>);
-	SCast(type:VariableType, expression:Statement);
-	SConditional(condition:Statement, thenBlock:Array<Statement>, ?elseBlock:Array<Statement>);
-	SContinue(?identifier:String);
-	SInlineConditional(condition:Statement, thenStatement:Statement, elseStatement:Statement);
-	SLiteral(value:Dynamic);
-	SLoop(condition:Statement, body:Array<Statement>);
-	SObjectInstantiation(method:Statement, ?args:Array<Statement>);
-	SOperation(type:Operator, leftOperand:Statement, ?rightOperand:Statement);
-	SPostfix(reference:Statement, postfix:Statement);
-	SReference(identifier:Statement, ?base:Statement);
-	SReturn(?value:Statement);
-	SThisReference();
+	SBreak(?label:String);
+	SConditional(condition:Expression, thenBlock:Array<Statement>, ?elseBlock:Array<Statement>);
+	SContinue(?label:String);
+	SExpression(expression:Expression);
+	SLoop(condition:Expression, body:Array<Statement>);
+	SReturn(?value:Expression);
+}
+
+enum Expression
+{
+	EArrayAccess(reference:Expression, index:Expression);
+	EArrayInstantiation(type:VariableType, sizes:Array<Expression>);
+	EArrayLiteral(values:Array<Expression>);
+	EAssignment(reference:Expression, value:Expression);
+	ECall(method:Expression, ?args:Array<Expression>);
+	ECast(type:VariableType, expression:Expression);
+	EConditional(condition:Expression, thenStatement:Expression, elseStatement:Expression);
+	ELiteral(value:Dynamic);
+	EObjectInstantiation(method:Expression, ?args:Array<Expression>);
+	EOperation(type:Operator, leftOperand:Expression, ?rightOperand:Expression);
+	EPostfix(reference:Expression, postfix:Expression);
+	EReference(identifier:Expression, ?base:Expression);
+	EThisReference();
 }
 
 enum Definition
