@@ -290,7 +290,7 @@ class Parser {
 				var expression:Expression = parseExpression();
 				if (expression == null)
 					throw new TokenizerSyntaxError('Invalid assignment left-hand side.', tokenizer);
-				statements.push(SExpression(EAssignment(EReference(ELiteral(identifier)), expression)));
+				statements.push(SExpression(EAssignment(EReference(identifier), expression)));
 			}
 		} while (tokenizer.match(TComma));
 		
@@ -416,7 +416,7 @@ class Parser {
 			// prefix operators
 			if (opString == '++' || opString == '--') {
 				// reduce and push operator
-				var operator:ParserOperator = PPrefix(lookupOperatorType(opString));
+				var operator:ParserOperator = PPrefix(lookupIncrementType(opString));
 				recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
 				operators.push(operator);
 
@@ -461,7 +461,7 @@ class Parser {
 		    case TIdentifier(value):
 			// push reference
 			tokenizer.get();
-			operands.push(EReference(ELiteral(value)));
+			operands.push(EReference(value));
 
 		    // keywords
 		    case TKeyword(keyword):
@@ -502,7 +502,7 @@ class Parser {
 				{
 					// match class
 					tokenizer.match('TIdentifier', true);
-					var reference:Expression = Type.enumParameters(tokenizer.currentToken)[0];
+					var reference:String = Type.enumParameters(tokenizer.currentToken)[0];
 					// match optional arguments
 					var args:Array<Expression> = null;
 					if (tokenizer.match(TParenOpen))
@@ -513,8 +513,8 @@ class Parser {
 					
 					// operand
 					args == null ?
-					    operands.push(EObjectInstantiation(EReference(ELiteral(reference)))) :
-					    operands.push(EObjectInstantiation(EReference(ELiteral(reference)), args));
+					    operands.push(EObjectInstantiation(EReference(reference))) :
+					    operands.push(EObjectInstantiation(EReference(reference), args));
 				}
 			
 			    default:
@@ -639,7 +639,7 @@ class Parser {
 			if (opToken == '++' || opToken == '--')
 			{
 				// reduce and push operator
-				var operator:ParserOperator = PPostfix(lookupOperatorType(opToken));
+				var operator:ParserOperator = PPostfix(lookupIncrementType(opToken));
 				recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
 				operators.push(operator);
 				
@@ -669,16 +669,13 @@ class Parser {
 		    case TDot:
 			// knock off token
 			tokenizer.get();
-			// reduce and push operator
-			var operator:ParserOperator = PDot;
-			recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
-			operators.push(operator);
 			
 			// match and push required identifier as string
 			tokenizer.match('TIdentifier', true);
-			operands.push(ELiteral(Type.enumParameters(tokenizer.currentToken)[0]));
-			// reduce now to concatenate reference
-			reduceExpression(operators, operands);
+			// reduce and push operator
+			var operator:ParserOperator = PDot(Type.enumParameters(tokenizer.currentToken)[0]);
+			recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
+			operators.push(operator);
 
 			// matched operand, find next operator
 			return scanOperator(operators, operands, required);
@@ -794,7 +791,7 @@ class Parser {
 			var expression:Expression = operands.pop();
 			operands.push(ECast(type, expression));
 		    
-		    case PPrefix(operator):
+		    case PPrefix(type):
 			// get reference
 		        var reference:Expression = operands.pop();
 			// we can only assign to a reference
@@ -802,9 +799,9 @@ class Parser {
 				throw new TokenizerSyntaxError('Invalid assignment left-hand side.', tokenizer);
 				
 			// compound prefix operation
-			operands.push(EAssignment(reference, EOperation(operator, reference, ELiteral(1))));
+			operands.push(EPrefix(reference, type));
 		    
-		    case PPostfix(operator):
+		    case PPostfix(type):
 			// get reference
 		        var reference:Expression = operands.pop();
 			// we can only assign to a reference
@@ -812,12 +809,11 @@ class Parser {
 				throw new TokenizerSyntaxError('Invalid assignment left-hand side.', tokenizer);
 				
 			// compound postfix operation
-			operands.push(EPostfix(reference,
-			    EAssignment(reference, EOperation(operator, reference, ELiteral(1)))));
+			operands.push(EPostfix(reference, type));
 		    
-		    case PDot:
+		    case PDot(identifier):
 			// get property and base
-		        var identifier:Expression = operands.pop(), base:Expression = operands.pop();
+		        var base:Expression = operands.pop();
 			// compound reference
 			operands.push(EReference(identifier, base));
 		    
@@ -870,9 +866,20 @@ class Parser {
 		    default: throw 'Unknown operator "' + operator + '"';
 		}
 	}
+	
+	private function lookupIncrementType(operator:String):IncrementType
+	{
+		switch (operator)
+		{
+		    case '++': return IIncrement;
+		    case '--': return IDecrement;
+		    default: throw 'Unknown increment operator "' + operator + '"';
+		}
+	}
 
 // http://www.particle.kth.se/~lindsey/JavaCourse/Book/Part1/Java/Chapter02/operators.html
-	private function lookupOperatorPrecedence(operator:ParserOperator) {
+	private function lookupOperatorPrecedence(operator:ParserOperator)
+	{
 		return switch (operator) {
 		    case POperator(operator):
 			switch (operator) {
@@ -894,27 +901,29 @@ class Parser {
 		    case PCast(_): 13;
 		    case PPrefix(_): 14;
 		    case PPostfix(_): 15;
-		    case PDot: 15;
+		    case PDot(_): 15;
 		    case PArrayAccess(_): 15;
 		    case PCall(_): 15;
 		}
 	}
 }
 
-enum ParserScope {
+enum ParserScope
+{
 	PScript;
 	PClass(identifier:String);
 	PBlock;
 }
 
-enum ParserOperator {
+enum ParserOperator
+{
 	POperator(operator:Operator);
 	PAssignment(?operator:Operator);
 //	PNew;
 	PCast(type:VariableType);
-	PPrefix(operator:Operator);
-	PPostfix(operator:Operator);
-	PDot;
+	PPrefix(type:IncrementType);
+	PPostfix(type:IncrementType);
+	PDot(identifier:String);
 	PArrayAccess(index:Expression);
 	PCall(args:Array<Expression>);
 }

@@ -9,6 +9,7 @@ package processing.parser;
 
 enum Statement 
 {
+//[TODO] change SBlock to DScript or something. move statements, definitions into respective definitions
 	SBlock(statements:Array<Statement>, definitions:Array<Definition>);
 	SBreak(?label:String);
 	SConditional(condition:Expression, thenBlock:Array<Statement>, ?elseBlock:Array<Statement>);
@@ -30,8 +31,9 @@ enum Expression
 	ELiteral(value:Dynamic);
 	EObjectInstantiation(method:Expression, ?args:Array<Expression>);
 	EOperation(type:Operator, leftOperand:Expression, ?rightOperand:Expression);
-	EPostfix(reference:Expression, postfix:Expression);
-	EReference(identifier:Expression, ?base:Expression);
+	EPrefix(reference:Expression, type:IncrementType);
+	EPostfix(reference:Expression, type:IncrementType);
+	EReference(identifier:String, ?base:Expression);
 	EThisReference();
 }
 
@@ -40,6 +42,7 @@ enum Definition
 	DVariable(identifier:String, visibility:Visibility, isStatic:Bool, type:VariableType);
 	DFunction(identifier:String, visibility:Visibility, isStatic:Bool, type:VariableType, params:Array<FunctionParam>, body:Statement);
 	DClass(identifier:String, visibility:Visibility, isStatic:Bool, body:Statement);
+//	DScript(statements:Array<Statement>, definitions:Array<Definition>);
 }
 
 enum Visibility
@@ -76,6 +79,11 @@ enum Operator {
 	OpMultiply;			// a * b
 	OpDivide;			// a / b
 	OpModulus;			// a % b
+}
+
+enum IncrementType {
+	IIncrement;
+	IDecrement;
 }
 
 typedef VariableType = {

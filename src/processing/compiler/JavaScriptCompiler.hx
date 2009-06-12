@@ -17,17 +17,18 @@ class JavaScriptCompiler implements ICompiler
 		return serializeStatement(code);
 	}
 	
-//[TODO] scope argument!
-	private function serializeStatement(statement:Statement, ?escape:Bool = true, ?inClass:Bool = false, ?inBlock:Bool = false):String
+	private function serializeStatement(statement:Statement, ?scope:CompilerScope):String
 	{
 		switch (statement)
 		{
 		    case SBlock(statements, definitions):
 			var source:Array<String> = new Array();
+			source.push('// definitions');
 			for (definition in definitions)
-				source.push(serializeDefinition(definition, inClass));
+				source.push(serializeDefinition(definition, scope));
+			source.push('// statements');
 			for (statement in statements)
-				source.push(serializeStatement(statement, escape, inClass, inBlock));
+				source.push(serializeStatement(statement));
 			return source.join('\n'); // inBlock ? source.join(';\n') : '{\n' + source.join(';\n') + ';\n}\n';
 		
 		    case SBreak(label):
@@ -48,7 +49,7 @@ class JavaScriptCompiler implements ICompiler
 			return 'continue' + (label == null ? '' : ' ' + label) + ';';
 			
 		    case SExpression(expression):
-			return serializeExpression(expression, escape, inClass, inBlock) + ';';
+			return serializeExpression(expression) + ';';
 
 		    case SLoop(condition, body):
 			var source:Array<String> = new Array();
@@ -59,19 +60,12 @@ class JavaScriptCompiler implements ICompiler
 			return source.join('\n');
 				
 		    case SReturn(value):
-			return 'return' + (value == null ? '' : ' ' + serializeExpression(value, escape, inClass, inBlock)) + ';';
+//[TODO] variable type binding here?
+			return 'return' + (value == null ? '' : ' ' + serializeExpression(value)) + ';';
 		}
 	}
 	
-	public function serializeStatements(statements:Array<Statement>):String
-	{
-		var source:Array<String> = [];
-		for (statement in statements)
-			source.push(serializeStatement(statement, true, null, true));
-		return source.join(';\n');
-	}
-	
-	private function serializeExpression(expression:Expression, ?escape:Bool = true, ?inClass:Bool = false, ?inBlock:Bool = false):String
+	private function serializeExpression(expression:Expression):String
 	{
 		switch (expression)
 		{
@@ -82,12 +76,13 @@ class JavaScriptCompiler implements ICompiler
 			var source:Array<String> = new Array();
 			for (size in sizes)
 				source.push(serializeExpression(size));
-			return 'new ArrayList(' + source.join(',') + ')';
+			return 'new ArrayList(' + source.join(', ') + ')';
 			
 		    case EArrayLiteral(values):
 //[TODO]
 			return '';
 
+//[TODO] variable type binding here?
 		    case EAssignment(reference, value):
 			return serializeExpression(reference) + ' = ' + serializeExpression(value);
 
@@ -95,7 +90,7 @@ class JavaScriptCompiler implements ICompiler
 			var source:Array<String> = new Array();
 			for (arg in args)
 				source.push(serializeExpression(arg));
-			return serializeExpression(method) + '(' + source.join(',') + ')';
+			return serializeExpression(method) + '(' + source.join(', ') + ')';
 
 		    case ECast(type, expression):
 //[TODO] actually cast
@@ -103,13 +98,21 @@ class JavaScriptCompiler implements ICompiler
 		
 		    case EConditional(condition, thenStatement, elseStatement):
 			return '((' + serializeExpression(condition) + ') ? (' + serializeExpression(thenStatement) + ') : (' + serializeExpression(elseStatement) + '))';
+			
+		    case EPrefix(reference, type):
+			return switch (type) {
+			    case IIncrement: '(++' + serializeExpression(reference) + ')';
+			    case IDecrement: '(--' + serializeExpression(reference) + ')';
+			}
 
-		    case EPostfix(reference, postfix):
-			return '(function () { var __ret = ' + serializeExpression(reference) + '; ' + serializeExpression(postfix) + '; return __ret; })()';
+		    case EPostfix(reference, type):
+			return switch (type) {
+			    case IIncrement: '(' + serializeExpression(reference) + '++)';
+			    case IDecrement: '(' + serializeExpression(reference) + '--)';
+			}
 			
 		    case ELiteral(value):
-//[TODO] remove "escape" flag necessity
-			return escape && Std.is(value, String) ? '"' + value + '"' : value;
+			return Std.is(value, String) ? '"' + value + '"' : value;
 
 		    case EObjectInstantiation(method, args):
 			var source:Array<String> = new Array();
@@ -126,40 +129,35 @@ class JavaScriptCompiler implements ICompiler
 
 		    case EReference(identifier, base):
 			if (base == null)
-				return serializeExpression(identifier, false);
+				return identifier;
 			else
-				return serializeExpression(base) + '[' + serializeExpression(identifier) + ']';
+				return '(' + serializeExpression(base) + ').' + identifier;
 
 		    case EThisReference:
 			return 'this';
 		}
 	}
 	
-	public function serializeDefinition(definition:Definition, ?inClass:Bool = false):String
+	public function serializeDefinition(definition:Definition, ?scope:CompilerScope):String
 	{
 		switch (definition)
 		{
 			case DVariable(identifier, visibility, isStatic, type):
-//[TODO] type
-				return (inClass ? 'this.' : 'var ') + identifier + ' = 0;';
+				return (scope == SClass ? 'this.' : 'var ') + identifier + ' = 0;';
 			
 			case DFunction(identifier, visibility, isStatic, type, params, body):
 				// format params
 				var paramKeys:Array<String> = new Array();
 				for (param in params)
 					paramKeys.push(param.name);
-				var func:String = 'function ' + identifier + '(' + paramKeys.join(',') + ') {\n' + serializeStatement(body) + '\n};';
+				var func:String = 'function ' + identifier + '(' + paramKeys.join(', ') + ') {\n' + serializeStatement(body) + '\n};';
 				
-				return
-//				    inClass != null ?
-//				    'addMethod(this, "' + (identifier == inClass ? 'CONSTRUCTORMETHOD' : this.identifier) + '", ' + func + ')' :
-//[TODO] functions should just be declared
-				    (inClass ? 'this.' : '') + identifier + ' = ' + func;
+				return (scope == SClass ? 'this.' : '') + identifier + ' = ' + func;
 			    
 			case DClass(identifier, visibility, isStatic, body):
-				return 'function ' + identifier + '() {\nwith (this) {\n' + serializeStatement(body, true, true) + ';\n}\nthis.' + identifier + '.apply(this, arguments);\n}';
-			
-			default: return '';
+				return 'function ' + identifier + '() {\nwith (this) {\n' +
+				    serializeStatement(body, SClass) +
+				    '\n}\nthis.' + identifier + '.apply(this, arguments);\n}';
 		}
 	}
 	
@@ -195,6 +193,12 @@ class JavaScriptCompiler implements ICompiler
 		    case OpModulus: '%';
 		}
 	}
+}
+
+enum CompilerScope 
+{
+	SClass;
+	SBlock;
 }
 	
 	/*
