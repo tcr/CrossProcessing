@@ -15,11 +15,12 @@ enum Statement
 	SArrayLiteral(values:Array<Statement>);
 	SAssignment(reference:Statement, value:Statement);
 	SBlock(statements:Array<Statement>, definitions:Array<Definition>);
-	SBreak(?level:Int);
+	SBreak(?identifier:String);
 	SCall(method:Statement, ?args:Array<Statement>);
 	SCast(type:VariableType, expression:Statement);
 	SConditional(condition:Statement, thenBlock:Array<Statement>, ?elseBlock:Array<Statement>);
-	SContinue(?level:Int);
+	SContinue(?identifier:String);
+	SInlineConditional(condition:Statement, thenStatement:Statement, elseStatement:Statement);
 	SLiteral(value:Dynamic);
 	SLoop(condition:Statement, body:Array<Statement>);
 	SObjectInstantiation(method:Statement, ?args:Array<Statement>);

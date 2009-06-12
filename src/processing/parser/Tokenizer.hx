@@ -77,24 +77,6 @@ class Tokenizer {
 			// assignment operator
 			currentToken = TOperator(regex.matched(1));
 		}
-		else if ((regex = regexes.PUNCUATION).match(input))
-		{
-			// puncuation
-			currentToken = switch (regex.matched(0)) {
-			    case '[]': TDimensions;
-			    case '(': TParenOpen;
-			    case ')': TParenClose;
-			    case '[': TBracketOpen;
-			    case ']': TBracketClose;
-			    case '.': TDot;
-			    case ',': TComma;
-			    case ';': TSemicolon;
-			    case '{': TBraceOpen;
-			    case '}': TBraceClose;
-			    case '?': TQuestion;
-			    case ':': TDoubleDot;
-			}
-		}
 		else if ((regex = regexes.COLOR).match(input))
 		{
 			// color
@@ -135,6 +117,24 @@ class Tokenizer {
 			// string
 			currentToken = TString(parseStringLiteral(regex.matched(0).substr(1, regex.matched(0).length - 1)));
 		}
+		else if ((regex = regexes.PUNCUATION).match(input))
+		{
+			// puncuation
+			currentToken = switch (regex.matched(0)) {
+			    case '[]': TDimensions;
+			    case '(': TParenOpen;
+			    case ')': TParenClose;
+			    case '[': TBracketOpen;
+			    case ']': TBracketClose;
+			    case '.': TDot;
+			    case ',': TComma;
+			    case ';': TSemicolon;
+			    case '{': TBraceOpen;
+			    case '}': TBraceClose;
+			    case '?': TQuestion;
+			    case ':': TDoubleDot;
+			}
+		}
 		else 
 		{
 			throw new TokenizerSyntaxError('Illegal token ' + input, this);
@@ -162,7 +162,8 @@ class Tokenizer {
 			});
 		return str;
 	}
-	
+
+//[TODO] pushState, popState, clearState, instead of peek
 	public function peek(?lookAhead:Int = 1):Token {
 		// peek ahead a certain distance (but retain Tokenizer state)
 		var origCursor:Int = cursor, origToken:Token = currentToken, token:Token = origToken;
@@ -235,7 +236,7 @@ class TokenizerRegexList
 	public static var IDENTIFIER:EReg = ~/^\w+/;
 	public static var CHAR:EReg = ~/^'(?:[^']|\\.|\\u[0-9A-Fa-f]{4})'/;
 	public static var STRING:EReg = ~/^"(?:\\.|[^"])*"|^'(?:[^']|\\.)*'/;
-	public static var OPERATOR:EReg = ~/^(\n|\|\||&&|[!=]=|<<|<=|>>>?|>=|\+\+|--|[|^&<>+\-*\/%!~]|(\||\^|&|<<|>>>?|\+|\-|\*|\/|%)?=(?!=)|in\b|instanceof\b)/;
+	public static var OPERATOR:EReg = ~/^(\n|\|\||&&|[!=]=|(\||\^|&|<<|>>>?|\+|\-|\*|\/|%)?=(?!=)|<<|<=|>>>?|>=|\+\+|--|[|^&<>+\-*\/%!~]|instanceof\b)/;
 	public static var PUNCUATION:EReg = ~/^\[\]|^[;,?:.[\]{}()]/;
 	
 	// characters

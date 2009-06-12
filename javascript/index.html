@@ -44,13 +44,13 @@ function runOutput() {
 
 	// parse code
 	var script = document.getElementById('input').value;
-	try {
+//	try {
 		var evaluator = new processing.evaluator.Evaluator([p]);
 		evaluator.evaluate(script);
 
 		// start processing
 		p.init();
-	} catch (e) { console.log(e); }
+//	} catch (e) { console.log(e); }
 }
     
     </script>

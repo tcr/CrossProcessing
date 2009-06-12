@@ -432,23 +432,36 @@ processing.compiler.JavaScriptCompiler.prototype.compile = function(code) {
 processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,escape,inClass,inBlock) {
 	$s.push("processing.compiler.JavaScriptCompiler::serialize");
 	var $spos = $s.length;
+	if(inBlock == null) inBlock = false;
+	if(inClass == null) inClass = false;
 	if(escape == null) escape = true;
 	var $e = (statement);
 	switch( $e[1] ) {
 	case 0:
-	var sizes = $e[3], type = $e[2];
+	var index = $e[3], reference = $e[2];
 	{
 		{
+			var $tmp = this.serialize(reference) + "[" + this.serialize(index) + "]";
 			$s.pop();
-			return "";
+			return $tmp;
 		}
 	}break;
 	case 1:
 	var sizes = $e[3], type = $e[2];
 	{
+		var source = new Array();
 		{
+			var _g = 0;
+			while(_g < sizes.length) {
+				var size = sizes[_g];
+				++_g;
+				source.push(this.serialize(size));
+			}
+		}
+		{
+			var $tmp = "new ArrayList(" + source.join(",") + ")";
 			$s.pop();
-			return "";
+			return $tmp;
 		}
 	}break;
 	case 2:
@@ -477,7 +490,7 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 			while(_g < definitions.length) {
 				var definition = definitions[_g];
 				++_g;
-				source.push(this.serializeDefinition(definition));
+				source.push(this.serializeDefinition(definition,inClass));
 			}
 		}
 		source.push(this.serializeStatements(statements));
@@ -491,7 +504,7 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 	var level = $e[2];
 	{
 		{
-			var $tmp = "break " + level;
+			var $tmp = (level == null?"break":"break " + level);
 			$s.pop();
 			return $tmp;
 		}
@@ -518,15 +531,25 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 	var expression = $e[3], type = $e[2];
 	{
 		{
+			var $tmp = this.serialize(expression);
 			$s.pop();
-			return "";
+			return $tmp;
+		}
+	}break;
+	case 10:
+	var elseStatement = $e[4], thenStatement = $e[3], condition = $e[2];
+	{
+		{
+			var $tmp = "((" + this.serialize(condition) + ") ? (" + this.serialize(thenStatement) + ") : (" + this.serialize(elseStatement) + "))";
+			$s.pop();
+			return $tmp;
 		}
 	}break;
 	case 8:
 	var elseBlock = $e[4], thenBlock = $e[3], condition = $e[2];
 	{
 		{
-			var $tmp = "if (" + this.serialize(condition) + ") \n{" + this.serializeStatements(thenBlock) + "} else {" + this.serializeStatements(elseBlock) + "}";
+			var $tmp = "if (" + this.serialize(condition) + ") \n{\n" + this.serializeStatements(thenBlock) + "\n} else {\n" + this.serializeStatements(elseBlock) + "\n}";
 			$s.pop();
 			return $tmp;
 		}
@@ -535,12 +558,12 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 	var level = $e[2];
 	{
 		{
-			var $tmp = "continue " + level;
+			var $tmp = (level == null?"continue":"continue " + level);
 			$s.pop();
 			return $tmp;
 		}
 	}break;
-	case 14:
+	case 15:
 	var postfix = $e[3], reference = $e[2];
 	{
 		{
@@ -549,7 +572,7 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 			return $tmp;
 		}
 	}break;
-	case 10:
+	case 11:
 	var value = $e[2];
 	{
 		{
@@ -558,24 +581,34 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 			return $tmp;
 		}
 	}break;
-	case 11:
+	case 12:
 	var body = $e[3], condition = $e[2];
 	{
 		{
-			var $tmp = "while (" + this.serialize(condition) + ")\n{\n" + this.serializeStatements(body) + "}\n";
+			var $tmp = "while (" + this.serialize(condition) + ")\n{\n" + this.serializeStatements(body) + ";\n}";
 			$s.pop();
 			return $tmp;
 		}
 	}break;
-	case 12:
+	case 13:
 	var args = $e[3], method = $e[2];
 	{
+		var source = new Array();
+		if(args != null) {
+			var _g = 0;
+			while(_g < args.length) {
+				var arg = args[_g];
+				++_g;
+				source.push(this.serialize(arg));
+			}
+		}
 		{
+			var $tmp = "new " + this.serialize(method) + "(" + source.join(", ") + ")";
 			$s.pop();
-			return "";
+			return $tmp;
 		}
 	}break;
-	case 13:
+	case 14:
 	var rightOperand = $e[4], leftOperand = $e[3], type = $e[2];
 	{
 		if(rightOperand != null) {
@@ -589,7 +622,7 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 			return $tmp;
 		}
 	}break;
-	case 15:
+	case 16:
 	var base = $e[3], identifier = $e[2];
 	{
 		if(base == null) {
@@ -603,7 +636,7 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 			return $tmp;
 		}
 	}break;
-	case 16:
+	case 17:
 	var value = $e[2];
 	{
 		{
@@ -612,7 +645,7 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 			return $tmp;
 		}
 	}break;
-	case 17:
+	case 18:
 	{
 		{
 			$s.pop();
@@ -625,13 +658,14 @@ processing.compiler.JavaScriptCompiler.prototype.serialize = function(statement,
 processing.compiler.JavaScriptCompiler.prototype.serializeDefinition = function(definition,inClass) {
 	$s.push("processing.compiler.JavaScriptCompiler::serializeDefinition");
 	var $spos = $s.length;
+	if(inClass == null) inClass = false;
 	var $e = (definition);
 	switch( $e[1] ) {
 	case 0:
 	var type = $e[5], isStatic = $e[4], visibility = $e[3], identifier = $e[2];
 	{
 		{
-			var $tmp = ((inClass != null?"this.":"var ")) + identifier + " = 0";
+			var $tmp = ((inClass?"this.":"var ")) + identifier + " = 0";
 			$s.pop();
 			return $tmp;
 		}
@@ -650,7 +684,16 @@ processing.compiler.JavaScriptCompiler.prototype.serializeDefinition = function(
 		}
 		var func = "function " + identifier + "(" + paramKeys.join(",") + ") {\n" + this.serialize(body) + "\n}";
 		{
-			var $tmp = identifier + " = " + func;
+			var $tmp = ((inClass?"this.":"")) + identifier + " = " + func;
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	case 2:
+	var body = $e[5], isStatic = $e[4], visibility = $e[3], identifier = $e[2];
+	{
+		{
+			var $tmp = "function " + identifier + "() {\nwith (this) {\n" + this.serialize(body,true,true) + ";\n}\nthis." + identifier + ".apply(this, arguments);\n}";
 			$s.pop();
 			return $tmp;
 		}
@@ -1488,6 +1531,30 @@ processing.parser.Tokenizer.prototype.get = function() {
 	else if((regex = processing.parser.Tokenizer.regexes.OPERATOR).match(input)) {
 		this.currentToken = processing.parser.Token.TOperator(regex.matched(1));
 	}
+	else if((regex = processing.parser.Tokenizer.regexes.COLOR).match(input)) {
+		this.currentToken = processing.parser.Token.TInteger(Std.parseInt("0x" + regex.matched(1)) + ((regex.matched(1).length == 6?-16777216:0)));
+	}
+	else if((regex = processing.parser.Tokenizer.regexes.FLOAT).match(input)) {
+		this.currentToken = processing.parser.Token.TFloat(Std.parseFloat(regex.matched(0)));
+	}
+	else if((regex = processing.parser.Tokenizer.regexes.INTEGER).match(input)) {
+		this.currentToken = processing.parser.Token.TInteger(Std.parseInt(regex.matched(0)));
+	}
+	else if((regex = processing.parser.Tokenizer.regexes.KEYWORD).match(input)) {
+		this.currentToken = processing.parser.Token.TKeyword(regex.matched(0));
+	}
+	else if((regex = processing.parser.Tokenizer.regexes.TYPE).match(input)) {
+		this.currentToken = processing.parser.Token.TType(regex.matched(0));
+	}
+	else if((regex = processing.parser.Tokenizer.regexes.IDENTIFIER).match(input)) {
+		this.currentToken = processing.parser.Token.TIdentifier(regex.matched(0));
+	}
+	else if((regex = processing.parser.Tokenizer.regexes.CHAR).match(input)) {
+		this.currentToken = processing.parser.Token.TChar(this.parseStringLiteral(regex.matched(0).substr(1,regex.matched(0).length - 1)).charCodeAt(0));
+	}
+	else if((regex = processing.parser.Tokenizer.regexes.STRING).match(input)) {
+		this.currentToken = processing.parser.Token.TString(this.parseStringLiteral(regex.matched(0).substr(1,regex.matched(0).length - 1)));
+	}
 	else if((regex = processing.parser.Tokenizer.regexes.PUNCUATION).match(input)) {
 		this.currentToken = function($this) {
 			var $r;
@@ -1534,30 +1601,6 @@ processing.parser.Tokenizer.prototype.get = function() {
 			}
 			return $r;
 		}(this);
-	}
-	else if((regex = processing.parser.Tokenizer.regexes.COLOR).match(input)) {
-		this.currentToken = processing.parser.Token.TInteger(Std.parseInt("0x" + regex.matched(1)) + ((regex.matched(1).length == 6?-16777216:0)));
-	}
-	else if((regex = processing.parser.Tokenizer.regexes.FLOAT).match(input)) {
-		this.currentToken = processing.parser.Token.TFloat(Std.parseFloat(regex.matched(0)));
-	}
-	else if((regex = processing.parser.Tokenizer.regexes.INTEGER).match(input)) {
-		this.currentToken = processing.parser.Token.TInteger(Std.parseInt(regex.matched(0)));
-	}
-	else if((regex = processing.parser.Tokenizer.regexes.KEYWORD).match(input)) {
-		this.currentToken = processing.parser.Token.TKeyword(regex.matched(0));
-	}
-	else if((regex = processing.parser.Tokenizer.regexes.TYPE).match(input)) {
-		this.currentToken = processing.parser.Token.TType(regex.matched(0));
-	}
-	else if((regex = processing.parser.Tokenizer.regexes.IDENTIFIER).match(input)) {
-		this.currentToken = processing.parser.Token.TIdentifier(regex.matched(0));
-	}
-	else if((regex = processing.parser.Tokenizer.regexes.CHAR).match(input)) {
-		this.currentToken = processing.parser.Token.TChar(this.parseStringLiteral(regex.matched(0).substr(1,regex.matched(0).length - 1)).charCodeAt(0));
-	}
-	else if((regex = processing.parser.Tokenizer.regexes.STRING).match(input)) {
-		this.currentToken = processing.parser.Token.TString(this.parseStringLiteral(regex.matched(0).substr(1,regex.matched(0).length - 1)));
 	}
 	else {
 		throw new processing.parser.TokenizerSyntaxError("Illegal token " + input,this);
@@ -2083,11 +2126,11 @@ processing.parser.Parser.prototype.lookupOperatorPrecedence = function(operator)
 			}break;
 			case 3:
 			{
-				$r = 13;
+				$r = 14;
 			}break;
 			case 4:
 			{
-				$r = 14;
+				$r = 15;
 			}break;
 			case 5:
 			{
@@ -2098,10 +2141,6 @@ processing.parser.Parser.prototype.lookupOperatorPrecedence = function(operator)
 				$r = 15;
 			}break;
 			case 7:
-			{
-				$r = 15;
-			}break;
-			case 8:
 			{
 				$r = 15;
 			}break;
@@ -2295,6 +2334,25 @@ processing.parser.Parser.prototype.parse = function(code) {
 	}
 	$s.pop();
 }
+processing.parser.Parser.prototype.parseClassDefinition = function(definitions) {
+	$s.push("processing.parser.Parser::parseClassDefinition");
+	var $spos = $s.length;
+	var isStatic = this.tokenizer.match(processing.parser.Token.TKeyword("static"));
+	var visibility = this.parseVisibility();
+	this.tokenizer.match(processing.parser.Token.TKeyword("class"),null,true);
+	this.tokenizer.match("TIdentifier",null,true);
+	var identifier = Type.enumParameters(this.tokenizer.currentToken)[0];
+	this.tokenizer.match(processing.parser.Token.TBraceOpen,null,true);
+	var cStatements = [], cDefinitions = [];
+	while(this.parseDefinition(processing.parser.ParserScope.PClass(identifier),cStatements,cDefinitions)) continue;
+	this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
+	definitions.push(processing.parser.Definition.DClass(identifier,visibility,isStatic,processing.parser.Statement.SBlock(cStatements,cDefinitions)));
+	{
+		$s.pop();
+		return true;
+	}
+	$s.pop();
+}
 processing.parser.Parser.prototype.parseDefinition = function(scope,statements,definitions) {
 	$s.push("processing.parser.Parser::parseDefinition");
 	var $spos = $s.length;
@@ -2302,6 +2360,16 @@ processing.parser.Parser.prototype.parseDefinition = function(scope,statements,d
 	if(scope != processing.parser.ParserScope.PBlock) {
 		if(this.tokenizer.peekMatch(processing.parser.Token.TKeyword("static"),peek)) peek++;
 		if(this.tokenizer.peekMatch(processing.parser.Token.TKeyword("private"),peek) || this.tokenizer.match(processing.parser.Token.TKeyword("public"),peek)) peek++;
+	}
+	if((scope == processing.parser.ParserScope.PScript) && this.tokenizer.peekMatch(processing.parser.Token.TKeyword("class"),peek)) {
+		var $tmp = this.parseClassDefinition(definitions);
+		$s.pop();
+		return $tmp;
+	}
+	if((Type.enumConstructor(scope) == "PClass") && this.tokenizer.peekMatch(processing.parser.Token.TIdentifier(Type.enumParameters(scope)[0]),peek) && this.tokenizer.peekMatch(processing.parser.Token.TParenOpen,peek + 1)) {
+		var $tmp = this.parseFunctionDefinition(definitions,true);
+		$s.pop();
+		return $tmp;
 	}
 	if(this.tokenizer.peekMatch("TType",peek) || this.tokenizer.peekMatch("TIdentifier",peek)) peek++;
 	else {
@@ -2345,12 +2413,13 @@ processing.parser.Parser.prototype.parseExpression = function() {
 	}
 	$s.pop();
 }
-processing.parser.Parser.prototype.parseFunctionDefinition = function(definitions) {
+processing.parser.Parser.prototype.parseFunctionDefinition = function(definitions,constructor) {
 	$s.push("processing.parser.Parser::parseFunctionDefinition");
 	var $spos = $s.length;
+	if(constructor == null) constructor = false;
 	var isStatic = this.tokenizer.match(processing.parser.Token.TKeyword("static"));
-	var visibility = this.parseVisibility();
-	var fType = this.parseType();
+	var visibility = this.parseVisibility(), fType = null;
+	if(!constructor) fType = this.parseType();
 	this.tokenizer.match("TIdentifier",null,true);
 	var identifier = Type.enumParameters(this.tokenizer.currentToken)[0];
 	this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
@@ -2408,17 +2477,18 @@ processing.parser.Parser.prototype.parseStatement = function(statements,definiti
 	{
 		switch(keyword) {
 		case "if":{
-			var condition, thenBlock = [], elseBlock = [];
 			this.tokenizer.get();
 			this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
-			condition = this.parseExpression();
+			var condition = this.parseExpression();
 			if(condition == null) throw new processing.parser.TokenizerSyntaxError("Invalid expression in conditional.",this.tokenizer);
 			this.tokenizer.match(processing.parser.Token.TParenClose,null,true);
+			var thenBlock = [];
 			if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
 				while(this.parseStatement(thenBlock,definitions)) continue;
 				this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
 			}
 			else if(!this.parseStatement(thenBlock,definitions)) throw new processing.parser.TokenizerSyntaxError("Invalid expression in conditional.",this.tokenizer);
+			var elseBlock = [];
 			if(this.tokenizer.match(processing.parser.Token.TKeyword("else"))) {
 				if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
 					while(this.parseStatement(elseBlock,definitions)) continue;
@@ -2431,9 +2501,16 @@ processing.parser.Parser.prototype.parseStatement = function(statements,definiti
 		case "for":{
 			this.tokenizer.get();
 			this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
-			if(!this.parseVariableDefinition(statements,definitions)) {
-				var expression = this.parseExpression();
-				if(expression != null) statements.push(expression);
+			if(!this.parseDefinition(processing.parser.ParserScope.PBlock,statements,definitions)) {
+				var init = this.parseList();
+				{
+					var _g = 0;
+					while(_g < init.length) {
+						var statement = init[_g];
+						++_g;
+						statements.push(statement);
+					}
+				}
 				this.tokenizer.match(processing.parser.Token.TSemicolon,null,true);
 			}
 			var condition = this.parseExpression();
@@ -2448,6 +2525,20 @@ processing.parser.Parser.prototype.parseStatement = function(statements,definiti
 			else if(!this.parseStatement(body,definitions)) throw new processing.parser.TokenizerSyntaxError("Invalid expression in for loop.",this.tokenizer);
 			body = body.concat(update);
 			statements.push(processing.parser.Statement.SLoop(condition,body));
+		}break;
+		case "return":{
+			this.tokenizer.get();
+			statements.push(processing.parser.Statement.SReturn(this.parseExpression()));
+		}break;
+		case "break":{
+			this.tokenizer.get();
+			if(this.tokenizer.match("TIdentifier")) statements.push(processing.parser.Statement.SBreak(Type.enumParameters(this.tokenizer.currentToken)[0]));
+			else statements.push(processing.parser.Statement.SBreak());
+		}break;
+		case "continue":{
+			this.tokenizer.get();
+			if(this.tokenizer.match("TIdentifier")) statements.push(processing.parser.Statement.SContinue(Type.enumParameters(this.tokenizer.currentToken)[0]));
+			else statements.push(processing.parser.Statement.SContinue());
 		}break;
 		default:{
 			{
@@ -2548,7 +2639,7 @@ processing.parser.Parser.prototype.recursiveReduceExpression = function(operator
 	$s.push("processing.parser.Parser::recursiveReduceExpression");
 	var $spos = $s.length;
 	if(precedence == null) precedence = 0;
-	while(operators.length > 0 && this.lookupOperatorPrecedence(operators[operators.length - 1]) > precedence) this.reduceExpression(operators,operands);
+	while(operators.length > 0 && this.lookupOperatorPrecedence(operators[operators.length - 1]) >= precedence) this.reduceExpression(operators,operands);
 	$s.pop();
 }
 processing.parser.Parser.prototype.reduceExpression = function(operators,operands) {
@@ -2599,42 +2690,40 @@ processing.parser.Parser.prototype.reduceExpression = function(operators,operand
 	var operator = $e[2];
 	{
 		var value = operands.pop(), reference = operands.pop();
-		if(Type.enumConstructor(reference) != "SReference") throw new processing.parser.TokenizerSyntaxError("Invalid assignment left-hand side.",this.tokenizer);
+		if((Type.enumConstructor(reference) != "SReference") && (Type.enumConstructor(reference) != "SArrayAccess")) throw new processing.parser.TokenizerSyntaxError("Invalid assignment left-hand side.",this.tokenizer);
 		if(operator != null) value = processing.parser.Statement.SOperation(operator,reference,value);
 		operands.push(processing.parser.Statement.SAssignment(reference,value));
 	}break;
 	case 2:
+	var type = $e[2];
 	{
-		null;
+		var expression = operands.pop();
+		operands.push(processing.parser.Statement.SCast(type,expression));
 	}break;
 	case 3:
-	var type = $e[2];
+	var operator = $e[2];
 	{
 		null;
 	}break;
 	case 4:
 	var operator = $e[2];
 	{
-		null;
-	}break;
-	case 5:
-	var operator = $e[2];
-	{
 		var reference = operands.pop();
 		if(Type.enumConstructor(reference) != "SReference") throw new processing.parser.TokenizerSyntaxError("Invalid assignment left-hand side.",this.tokenizer);
 		operands.push(processing.parser.Statement.SPostfix(reference,processing.parser.Statement.SAssignment(reference,processing.parser.Statement.SOperation(operator,reference,processing.parser.Statement.SLiteral(1)))));
 	}break;
-	case 6:
+	case 5:
 	{
 		var identifier = operands.pop(), base = operands.pop();
 		operands.push(processing.parser.Statement.SReference(identifier,base));
 	}break;
-	case 7:
+	case 6:
 	var index = $e[2];
 	{
-		null;
+		var reference = operands.pop();
+		operands.push(processing.parser.Statement.SArrayAccess(reference,index));
 	}break;
-	case 8:
+	case 7:
 	var args = $e[2];
 	{
 		var method = operands.pop();
@@ -2650,11 +2739,102 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 	var token = this.tokenizer.peek();
 	var $e = (token);
 	switch( $e[1] ) {
+	case 4:
+	var opString = $e[2];
+	{
+		this.tokenizer.get();
+		var operation = this.lookupOperatorType(opString,true);
+		var $e = (operation);
+		switch( $e[1] ) {
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+		{
+			var operator = processing.parser.ParserOperator.POperator(operation);
+			this.recursiveReduceExpression(operators,operands,this.lookupOperatorPrecedence(operator));
+			operators.push(operator);
+			{
+				var $tmp = this.scanOperand(operators,operands,required);
+				$s.pop();
+				return $tmp;
+			}
+		}break;
+		default:{
+			throw new processing.parser.TokenizerSyntaxError("Invalid operator.",this.tokenizer);
+		}break;
+		}
+	}break;
+	case 2:
+	var value = $e[2];
+	{
+		var type = this.parseType();
+		operators.push(processing.parser.ParserOperator.PCast(type));
+		this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
+		var expression = this.parseExpression();
+		if(expression == null) throw new processing.parser.TokenizerSyntaxError("Invalid expression in cast.",this.tokenizer);
+		this.tokenizer.match(processing.parser.Token.TParenClose,null,true);
+		operands.push(expression);
+	}break;
 	case 3:
 	var value = $e[2];
 	{
 		this.tokenizer.get();
 		operands.push(processing.parser.Statement.SReference(processing.parser.Statement.SLiteral(value)));
+	}break;
+	case 1:
+	var keyword = $e[2];
+	{
+		switch(keyword) {
+		case "this":{
+			this.tokenizer.get();
+			operands.push(processing.parser.Statement.SThisReference);
+		}break;
+		case "null":{
+			this.tokenizer.get();
+			operands.push(processing.parser.Statement.SLiteral(null));
+		}break;
+		case "true":{
+			this.tokenizer.get();
+			operands.push(processing.parser.Statement.SLiteral(true));
+		}break;
+		case "false":{
+			this.tokenizer.get();
+			operands.push(processing.parser.Statement.SLiteral(false));
+		}break;
+		case "new":{
+			this.tokenizer.get();
+			if((this.tokenizer.peekMatch("TIdentifier") || this.tokenizer.peekMatch("TType")) && this.tokenizer.peekMatch(processing.parser.Token.TBracketOpen,2)) {
+				var type = this.parseType();
+				var sizes = [];
+				while(this.tokenizer.match(processing.parser.Token.TBracketOpen)) {
+					var expression = this.parseExpression();
+					if(expression == null) throw new processing.parser.TokenizerSyntaxError("Invalid array dimension.",this.tokenizer);
+					sizes.push(expression);
+					this.tokenizer.match(processing.parser.Token.TBracketClose,null,true);
+				}
+				operands.push(processing.parser.Statement.SArrayInstantiation(type,sizes));
+			}
+			else {
+				this.tokenizer.match("TIdentifier",null,true);
+				var reference = Type.enumParameters(this.tokenizer.currentToken)[0];
+				var args = null;
+				if(this.tokenizer.match(processing.parser.Token.TParenOpen)) {
+					args = this.parseList();
+					this.tokenizer.match(processing.parser.Token.TParenClose);
+				}
+				if(args == null) operands.push(processing.parser.Statement.SObjectInstantiation(processing.parser.Statement.SReference(processing.parser.Statement.SLiteral(reference))));
+				else operands.push(processing.parser.Statement.SObjectInstantiation(processing.parser.Statement.SReference(processing.parser.Statement.SLiteral(reference)),args));
+			}
+		}break;
+		default:{
+			if(required) throw new processing.parser.TokenizerSyntaxError("Missing operand",this.tokenizer);
+			{
+				$s.pop();
+				return false;
+			}
+		}break;
+		}
 	}break;
 	case 5:
 	var value = $e[2];
@@ -2686,6 +2866,14 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 		operands.push(processing.parser.Statement.SArrayLiteral(this.parseList()));
 		this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
 	}break;
+	case 10:
+	{
+		this.tokenizer.get();
+		var expression = this.parseExpression();
+		if(expression == null) throw new processing.parser.TokenizerSyntaxError("Invalid parenthetical expression.",this.tokenizer);
+		operands.push(expression);
+		if(!this.tokenizer.match(processing.parser.Token.TParenClose)) throw new processing.parser.TokenizerSyntaxError("Missing ) in parenthetical",this.tokenizer);
+	}break;
 	default:{
 		if(required) throw new processing.parser.TokenizerSyntaxError("Missing operand",this.tokenizer);
 		{
@@ -2716,7 +2904,7 @@ processing.parser.Parser.prototype.scanOperator = function(operators,operands,re
 			this.recursiveReduceExpression(operators,operands,this.lookupOperatorPrecedence(operator));
 			operators.push(operator);
 			{
-				var $tmp = this.scanOperand(operators,operands);
+				var $tmp = this.scanOperator(operators,operands,required);
 				$s.pop();
 				return $tmp;
 			}
@@ -2742,7 +2930,22 @@ processing.parser.Parser.prototype.scanOperator = function(operators,operands,re
 		operands.push(processing.parser.Statement.SLiteral(Type.enumParameters(this.tokenizer.currentToken)[0]));
 		this.reduceExpression(operators,operands);
 		{
-			var $tmp = this.scanOperator(operators,operands);
+			var $tmp = this.scanOperator(operators,operands,required);
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	case 12:
+	{
+		this.tokenizer.match(processing.parser.Token.TBracketOpen,null,true);
+		var index = this.parseExpression();
+		if(index == null) throw new processing.parser.TokenizerSyntaxError("Invalid array index.",this.tokenizer);
+		this.tokenizer.match(processing.parser.Token.TBracketClose,null,true);
+		var operator = processing.parser.ParserOperator.PArrayAccess(index);
+		this.recursiveReduceExpression(operators,operands,this.lookupOperatorPrecedence(operator));
+		operators.push(operator);
+		{
+			var $tmp = this.scanOperator(operators,operands,required);
 			$s.pop();
 			return $tmp;
 		}
@@ -2781,26 +2984,21 @@ processing.parser.ParserScope = { __ename__ : ["processing","parser","ParserScop
 processing.parser.ParserScope.PBlock = ["PBlock",2];
 processing.parser.ParserScope.PBlock.toString = $estr;
 processing.parser.ParserScope.PBlock.__enum__ = processing.parser.ParserScope;
-processing.parser.ParserScope.PClass = ["PClass",1];
-processing.parser.ParserScope.PClass.toString = $estr;
-processing.parser.ParserScope.PClass.__enum__ = processing.parser.ParserScope;
+processing.parser.ParserScope.PClass = function(identifier) { var $x = ["PClass",1,identifier]; $x.__enum__ = processing.parser.ParserScope; $x.toString = $estr; return $x; }
 processing.parser.ParserScope.PScript = ["PScript",0];
 processing.parser.ParserScope.PScript.toString = $estr;
 processing.parser.ParserScope.PScript.__enum__ = processing.parser.ParserScope;
-processing.parser.ParserOperator = { __ename__ : ["processing","parser","ParserOperator"], __constructs__ : ["POperator","PAssignment","PNew","PCast","PPrefix","PPostfix","PDot","PArrayAccess","PCall"] }
-processing.parser.ParserOperator.PArrayAccess = function(index) { var $x = ["PArrayAccess",7,index]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
+processing.parser.ParserOperator = { __ename__ : ["processing","parser","ParserOperator"], __constructs__ : ["POperator","PAssignment","PCast","PPrefix","PPostfix","PDot","PArrayAccess","PCall"] }
+processing.parser.ParserOperator.PArrayAccess = function(index) { var $x = ["PArrayAccess",6,index]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
 processing.parser.ParserOperator.PAssignment = function(operator) { var $x = ["PAssignment",1,operator]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
-processing.parser.ParserOperator.PCall = function(args) { var $x = ["PCall",8,args]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
-processing.parser.ParserOperator.PCast = function(type) { var $x = ["PCast",3,type]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
-processing.parser.ParserOperator.PDot = ["PDot",6];
+processing.parser.ParserOperator.PCall = function(args) { var $x = ["PCall",7,args]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
+processing.parser.ParserOperator.PCast = function(type) { var $x = ["PCast",2,type]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
+processing.parser.ParserOperator.PDot = ["PDot",5];
 processing.parser.ParserOperator.PDot.toString = $estr;
 processing.parser.ParserOperator.PDot.__enum__ = processing.parser.ParserOperator;
-processing.parser.ParserOperator.PNew = ["PNew",2];
-processing.parser.ParserOperator.PNew.toString = $estr;
-processing.parser.ParserOperator.PNew.__enum__ = processing.parser.ParserOperator;
 processing.parser.ParserOperator.POperator = function(operator) { var $x = ["POperator",0,operator]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
-processing.parser.ParserOperator.PPostfix = function(operator) { var $x = ["PPostfix",5,operator]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
-processing.parser.ParserOperator.PPrefix = function(operator) { var $x = ["PPrefix",4,operator]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
+processing.parser.ParserOperator.PPostfix = function(operator) { var $x = ["PPostfix",4,operator]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
+processing.parser.ParserOperator.PPrefix = function(operator) { var $x = ["PPrefix",3,operator]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
 StringBuf = function(p) { if( p === $_ ) return; {
 	$s.push("StringBuf::new");
 	var $spos = $s.length;
@@ -2838,25 +3036,26 @@ StringBuf.prototype.toString = function() {
 	$s.pop();
 }
 StringBuf.prototype.__class__ = StringBuf;
-processing.parser.Statement = { __ename__ : ["processing","parser","Statement"], __constructs__ : ["SArrayAccess","SArrayInstantiation","SArrayLiteral","SAssignment","SBlock","SBreak","SCall","SCast","SConditional","SContinue","SLiteral","SLoop","SObjectInstantiation","SOperation","SPostfix","SReference","SReturn","SThisReference"] }
+processing.parser.Statement = { __ename__ : ["processing","parser","Statement"], __constructs__ : ["SArrayAccess","SArrayInstantiation","SArrayLiteral","SAssignment","SBlock","SBreak","SCall","SCast","SConditional","SContinue","SInlineConditional","SLiteral","SLoop","SObjectInstantiation","SOperation","SPostfix","SReference","SReturn","SThisReference"] }
 processing.parser.Statement.SArrayAccess = function(reference,index) { var $x = ["SArrayAccess",0,reference,index]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SArrayInstantiation = function(type,sizes) { var $x = ["SArrayInstantiation",1,type,sizes]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SArrayLiteral = function(values) { var $x = ["SArrayLiteral",2,values]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SAssignment = function(reference,value) { var $x = ["SAssignment",3,reference,value]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SBlock = function(statements,definitions) { var $x = ["SBlock",4,statements,definitions]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SBreak = function(level) { var $x = ["SBreak",5,level]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SBreak = function(identifier) { var $x = ["SBreak",5,identifier]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SCall = function(method,args) { var $x = ["SCall",6,method,args]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SCast = function(type,expression) { var $x = ["SCast",7,type,expression]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
 processing.parser.Statement.SConditional = function(condition,thenBlock,elseBlock) { var $x = ["SConditional",8,condition,thenBlock,elseBlock]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SContinue = function(level) { var $x = ["SContinue",9,level]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SLiteral = function(value) { var $x = ["SLiteral",10,value]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SLoop = function(condition,body) { var $x = ["SLoop",11,condition,body]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SObjectInstantiation = function(method,args) { var $x = ["SObjectInstantiation",12,method,args]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SOperation = function(type,leftOperand,rightOperand) { var $x = ["SOperation",13,type,leftOperand,rightOperand]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SPostfix = function(reference,postfix) { var $x = ["SPostfix",14,reference,postfix]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SReference = function(identifier,base) { var $x = ["SReference",15,identifier,base]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SReturn = function(value) { var $x = ["SReturn",16,value]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
-processing.parser.Statement.SThisReference = ["SThisReference",17];
+processing.parser.Statement.SContinue = function(identifier) { var $x = ["SContinue",9,identifier]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SInlineConditional = function(condition,thenStatement,elseStatement) { var $x = ["SInlineConditional",10,condition,thenStatement,elseStatement]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SLiteral = function(value) { var $x = ["SLiteral",11,value]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SLoop = function(condition,body) { var $x = ["SLoop",12,condition,body]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SObjectInstantiation = function(method,args) { var $x = ["SObjectInstantiation",13,method,args]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SOperation = function(type,leftOperand,rightOperand) { var $x = ["SOperation",14,type,leftOperand,rightOperand]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SPostfix = function(reference,postfix) { var $x = ["SPostfix",15,reference,postfix]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SReference = function(identifier,base) { var $x = ["SReference",16,identifier,base]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SReturn = function(value) { var $x = ["SReturn",17,value]; $x.__enum__ = processing.parser.Statement; $x.toString = $estr; return $x; }
+processing.parser.Statement.SThisReference = ["SThisReference",18];
 processing.parser.Statement.SThisReference.toString = $estr;
 processing.parser.Statement.SThisReference.__enum__ = processing.parser.Statement;
 processing.parser.Definition = { __ename__ : ["processing","parser","Definition"], __constructs__ : ["DVariable","DFunction","DClass"] }
@@ -3050,7 +3249,7 @@ processing.parser.TokenizerRegexList.TYPE = new EReg("^(boolean|char|void|float|
 processing.parser.TokenizerRegexList.IDENTIFIER = new EReg("^\\w+","");
 processing.parser.TokenizerRegexList.CHAR = new EReg("^'(?:[^']|\\\\.|\\\\u[0-9A-Fa-f]{4})'","");
 processing.parser.TokenizerRegexList.STRING = new EReg("^\"(?:\\\\.|[^\"])*\"|^'(?:[^']|\\\\.)*'","");
-processing.parser.TokenizerRegexList.OPERATOR = new EReg("^(\\n|\\|\\||&&|[!=]=|<<|<=|>>>?|>=|\\+\\+|--|[|^&<>+\\-*/%!~]|(\\||\\^|&|<<|>>>?|\\+|\\-|\\*|/|%)?=(?!=)|in\\b|instanceof\\b)","");
+processing.parser.TokenizerRegexList.OPERATOR = new EReg("^(\\n|\\|\\||&&|[!=]=|(\\||\\^|&|<<|>>>?|\\+|\\-|\\*|/|%)?=(?!=)|<<|<=|>>>?|>=|\\+\\+|--|[|^&<>+\\-*/%!~]|instanceof\\b)","");
 processing.parser.TokenizerRegexList.PUNCUATION = new EReg("^\\[\\]|^[;,?:.[\\]{}()]","");
 processing.parser.TokenizerRegexList.CHAR_BACKSPACE = new EReg("((?:[^\\\\]|^)(?:\\\\\\\\)+)\\\\b","g");
 processing.parser.TokenizerRegexList.CHAR_TAB = new EReg("((?:[^\\\\]|^)(?:\\\\\\\\)+)\\\\t","g");
