@@ -11,7 +11,8 @@ class Parser {
 		tokenizer = new Tokenizer();
 	}
 	
-	public function parse(code:String):Statement {
+	public function parse(code:String):Statement
+	{
 		// initialize tokenizer
 		tokenizer.load(code);
 
@@ -232,14 +233,16 @@ class Parser {
 		return false;
 	}
 	
-	private function parseVisibility():Visibility {
+	private function parseVisibility():Visibility
+	{
 		if (tokenizer.match(TKeyword('private')))
 			return VPrivate;
 		tokenizer.match(TKeyword('public'));
 		return VPublic;
 	}
 	
-	private function parseType():VariableType {
+	private function parseType():VariableType
+	{
 		// match a type declaration
 		switch (tokenizer.peek())
 		{
@@ -407,10 +410,10 @@ class Parser {
 			// knock off token
 			tokenizer.get();
 			
-/*			// prefix operators
-			if (opToken == '++' || opToken == '--') {
+			// prefix operators
+			if (opString == '++' || opString == '--') {
 				// reduce and push operator
-				var operator:ParserOperator = PPrefix(lookupOperatorType(opToken));
+				var operator:ParserOperator = PPrefix(lookupOperatorType(opString));
 				recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
 				operators.push(operator);
 
@@ -418,10 +421,11 @@ class Parser {
 				return scanOperand(operators, operands, required);
 			}
 			else
-			{*/
+			{
 				// lookup operator
 				var operation:Operator = lookupOperatorType(opString, true);
-				switch (operation) {
+				switch (operation)
+				{
 				    case OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus:
 					// reduce and push operator
 					var operator:ParserOperator = POperator(operation);
@@ -434,7 +438,7 @@ class Parser {
 				    default:
 					throw new TokenizerSyntaxError('Invalid operator.', tokenizer);
 				}
-//			}
+			}
 
 		    // explicit cast (Processing-specific)
 		    case TType(value):
@@ -694,22 +698,26 @@ class Parser {
 			return scanOperator(operators, operands, required);
 			
 		    // hook/colon operator
-/*		    case TQuestion:
-			// reduce left-hand conditional
+		    case TQuestion:
+			// knock off token
 			tokenizer.get();
-			while (operators.length > 0)
-				reduceExpression(operators, operands);
-			var conditional:Statement = operands.pop();
-			// parse then block
-			var thenBlock:Statement = parseExpression(TokenType.COLON);
-			// parse else block
-			tokenizer.match(TokenType.COLON, true);
-			var elseBlock:Statement = parseExpression();
 			
+			// reduce left-hand conditional
+			recursiveReduceExpression(operators, operands);
+			var conditional:Expression = operands.pop();
+			// parse statements
+			var thenExpression:Expression = parseExpression();
+			tokenizer.match(TDoubleDot, true);
+			var elseExpression:Expression = parseExpression();
+			
+			// validate expressions
+			if ((thenExpression == null) || (elseExpression == null))
+				throw new TokenizerSyntaxError('Invalid expression in ternary conditional.', tokenizer);
 			// add conditional
-			operands.push(SConditional(conditional, thenBlock, elseBlock));
-			// already matched expression
-			return false;*/
+			operands.push(EConditional(conditional, thenExpression, elseExpression));
+			
+			// reached end of expression
+			return false;
 
 		    // method call
 		    case TParenOpen:
@@ -737,14 +745,15 @@ class Parser {
 		return true;
 	}
 	
-	private function recursiveReduceExpression(operators:Array<ParserOperator> , operands:Array<Expression>, ?precedence:Int = 0):Void {
+	private function recursiveReduceExpression(operators:Array<ParserOperator> , operands:Array<Expression>, ?precedence:Int = 0):Void
+	{
 		while (operators.length > 0 && lookupOperatorPrecedence(operators[operators.length - 1]) >= precedence)
 			reduceExpression(operators, operands);
 	}
 
-	private function reduceExpression(operators:Array<ParserOperator>, operands:Array<Expression>):Void {
+	private function reduceExpression(operators:Array<ParserOperator>, operands:Array<Expression>):Void
+	{
 		// reduce topmost operator
-//[TODO] ternary?
 		switch (operators.pop())
 		{
 		    case POperator(operator):
@@ -783,7 +792,14 @@ class Parser {
 			operands.push(ECast(type, expression));
 		    
 		    case PPrefix(operator):
-//[TODO]
+			// get reference
+		        var reference:Expression = operands.pop();
+			// we can only assign to a reference
+			if (Type.enumConstructor(reference) != 'EReference')
+				throw new TokenizerSyntaxError('Invalid assignment left-hand side.', tokenizer);
+				
+			// compound prefix operation
+			operands.push(EAssignment(reference, EOperation(operator, reference, ELiteral(1))));
 		    
 		    case PPostfix(operator):
 			// get reference
@@ -816,13 +832,16 @@ class Parser {
 	
 	private static var IS_ASSIGNMENT_OPERATOR:EReg = ~/^(\||\^|&|<<|>>>?|\+|\-|\*|\/|%)?=$/;
 	
-	private function isAssignmentOperator(operator:String):Bool {
+	private function isAssignmentOperator(operator:String):Bool
+	{
 		return IS_ASSIGNMENT_OPERATOR.match(operator);
 	}
 	
 //[TODO] lookupSimpleOperatorType
-	private function lookupOperatorType(operator:String, scanOperand:Bool = false):Operator {
-		switch (operator) {
+	private function lookupOperatorType(operator:String, scanOperand:Bool = false):Operator
+	{
+		switch (operator)
+		{
 		    case '!': return OpNot;
 		    case '~': return OpBitwiseNot;
 		    case '||': return OpOr;

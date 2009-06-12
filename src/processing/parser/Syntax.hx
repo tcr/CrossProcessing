@@ -26,7 +26,7 @@ enum Expression
 	EAssignment(reference:Expression, value:Expression);
 	ECall(method:Expression, ?args:Array<Expression>);
 	ECast(type:VariableType, expression:Expression);
-	EConditional(condition:Expression, thenStatement:Expression, elseStatement:Expression);
+	EConditional(condition:Expression, thenExpression:Expression, elseExpression:Expression);
 	ELiteral(value:Dynamic);
 	EObjectInstantiation(method:Expression, ?args:Array<Expression>);
 	EOperation(type:Operator, leftOperand:Expression, ?rightOperand:Expression);

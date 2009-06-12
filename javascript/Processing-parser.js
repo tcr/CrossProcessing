@@ -2768,7 +2768,9 @@ processing.parser.Parser.prototype.reduceExpression = function(operators,operand
 	case 3:
 	var operator = $e[2];
 	{
-		null;
+		var reference = operands.pop();
+		if(Type.enumConstructor(reference) != "EReference") throw new processing.parser.TokenizerSyntaxError("Invalid assignment left-hand side.",this.tokenizer);
+		operands.push(processing.parser.Expression.EAssignment(reference,processing.parser.Expression.EOperation(operator,reference,processing.parser.Expression.ELiteral(1))));
 	}break;
 	case 4:
 	var operator = $e[2];
@@ -2808,15 +2810,8 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 	var opString = $e[2];
 	{
 		this.tokenizer.get();
-		var operation = this.lookupOperatorType(opString,true);
-		var $e = (operation);
-		switch( $e[1] ) {
-		case 0:
-		case 1:
-		case 2:
-		case 3:
-		{
-			var operator = processing.parser.ParserOperator.POperator(operation);
+		if(opString == "++" || opString == "--") {
+			var operator = processing.parser.ParserOperator.PPrefix(this.lookupOperatorType(opString));
 			this.recursiveReduceExpression(operators,operands,this.lookupOperatorPrecedence(operator));
 			operators.push(operator);
 			{
@@ -2824,10 +2819,29 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 				$s.pop();
 				return $tmp;
 			}
-		}break;
-		default:{
-			throw new processing.parser.TokenizerSyntaxError("Invalid operator.",this.tokenizer);
-		}break;
+		}
+		else {
+			var operation = this.lookupOperatorType(opString,true);
+			var $e = (operation);
+			switch( $e[1] ) {
+			case 0:
+			case 1:
+			case 2:
+			case 3:
+			{
+				var operator = processing.parser.ParserOperator.POperator(operation);
+				this.recursiveReduceExpression(operators,operands,this.lookupOperatorPrecedence(operator));
+				operators.push(operator);
+				{
+					var $tmp = this.scanOperand(operators,operands,required);
+					$s.pop();
+					return $tmp;
+				}
+			}break;
+			default:{
+				throw new processing.parser.TokenizerSyntaxError("Invalid operator.",this.tokenizer);
+			}break;
+			}
 		}
 	}break;
 	case 2:
@@ -3015,6 +3029,21 @@ processing.parser.Parser.prototype.scanOperator = function(operators,operands,re
 			return $tmp;
 		}
 	}break;
+	case 19:
+	{
+		this.tokenizer.get();
+		this.recursiveReduceExpression(operators,operands);
+		var conditional = operands.pop();
+		var thenExpression = this.parseExpression();
+		this.tokenizer.match(processing.parser.Token.TDoubleDot,null,true);
+		var elseExpression = this.parseExpression();
+		if((thenExpression == null) || (elseExpression == null)) throw new processing.parser.TokenizerSyntaxError("Invalid expression in ternary conditional.",this.tokenizer);
+		operands.push(processing.parser.Expression.EConditional(conditional,thenExpression,elseExpression));
+		{
+			$s.pop();
+			return false;
+		}
+	}break;
 	case 10:
 	{
 		this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
@@ -3116,7 +3145,7 @@ processing.parser.Expression.EArrayLiteral = function(values) { var $x = ["EArra
 processing.parser.Expression.EAssignment = function(reference,value) { var $x = ["EAssignment",3,reference,value]; $x.__enum__ = processing.parser.Expression; $x.toString = $estr; return $x; }
 processing.parser.Expression.ECall = function(method,args) { var $x = ["ECall",4,method,args]; $x.__enum__ = processing.parser.Expression; $x.toString = $estr; return $x; }
 processing.parser.Expression.ECast = function(type,expression) { var $x = ["ECast",5,type,expression]; $x.__enum__ = processing.parser.Expression; $x.toString = $estr; return $x; }
-processing.parser.Expression.EConditional = function(condition,thenStatement,elseStatement) { var $x = ["EConditional",6,condition,thenStatement,elseStatement]; $x.__enum__ = processing.parser.Expression; $x.toString = $estr; return $x; }
+processing.parser.Expression.EConditional = function(condition,thenExpression,elseExpression) { var $x = ["EConditional",6,condition,thenExpression,elseExpression]; $x.__enum__ = processing.parser.Expression; $x.toString = $estr; return $x; }
 processing.parser.Expression.ELiteral = function(value) { var $x = ["ELiteral",7,value]; $x.__enum__ = processing.parser.Expression; $x.toString = $estr; return $x; }
 processing.parser.Expression.EObjectInstantiation = function(method,args) { var $x = ["EObjectInstantiation",8,method,args]; $x.__enum__ = processing.parser.Expression; $x.toString = $estr; return $x; }
 processing.parser.Expression.EOperation = function(type,leftOperand,rightOperand) { var $x = ["EOperation",9,type,leftOperand,rightOperand]; $x.__enum__ = processing.parser.Expression; $x.toString = $estr; return $x; }
