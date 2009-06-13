@@ -1471,10 +1471,11 @@ processing.parser.Parser.prototype.parseDefinition = function(scope,statements,d
 	}
 	return false;
 }
-processing.parser.Parser.prototype.parseExpression = function() {
+processing.parser.Parser.prototype.parseExpression = function(required) {
 	var operators = [], operands = [];
 	this.scanOperand(operators,operands);
-	if(operands.length == 0) return null;
+	if(operands.length == 0) if(required) throw this.tokenizer.createSyntaxError("Expected expression.");
+	else return null;
 	while(this.scanOperator(operators,operands)) this.scanOperand(operators,operands,true);
 	this.recursiveReduceExpression(operators,operands);
 	return operands[0];
@@ -1505,21 +1506,19 @@ processing.parser.Parser.prototype.parseFunctionDefinition = function(definition
 	return true;
 }
 processing.parser.Parser.prototype.parseList = function() {
-	var list = [], expression;
-	do {
-		expression = this.parseExpression();
-		if(expression == null) if(list.length == 0) return list;
-		else throw this.tokenizer.createSyntaxError("Invalid expression in list.");
-		list.push(expression);
-	} while(this.tokenizer.match(processing.parser.Token.TComma));
+	var list = [];
+	if(!this.tokenizer.match(processing.parser.Token.TParenClose)) {
+		do {
+			list.push(this.parseExpression(true));
+		} while(this.tokenizer.match(processing.parser.Token.TComma));
+	}
 	return list;
 }
 processing.parser.Parser.prototype.parseStatement = function(statements,definitions) {
 	if(this.parseDefinition(processing.parser.ParserScope.PBlock,statements,definitions)) return true;
 	if(this.tokenizer.match(processing.parser.Token.TKeyword("if"))) {
 		this.tokenizer.match(processing.parser.Token.TParenOpen,true);
-		var condition = this.parseExpression();
-		if(condition == null) throw this.tokenizer.createSyntaxError("Invalid expression in conditional.");
+		var condition = this.parseExpression(true);
 		this.tokenizer.match(processing.parser.Token.TParenClose,true);
 		var thenBlock = [];
 		if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
@@ -1539,8 +1538,8 @@ processing.parser.Parser.prototype.parseStatement = function(statements,definiti
 	}
 	else if(this.tokenizer.match(processing.parser.Token.TKeyword("while"))) {
 		this.tokenizer.match(processing.parser.Token.TParenOpen,true);
-		var condition = this.parseExpression();
-		this.tokenizer.match(processing.parser.Token.TSemicolon,true);
+		var condition = this.parseExpression(true);
+		this.tokenizer.match(processing.parser.Token.TParenClose,true);
 		var body = [];
 		if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
 			while(this.parseStatement(body,definitions)) continue;
@@ -1563,7 +1562,8 @@ processing.parser.Parser.prototype.parseStatement = function(statements,definiti
 			}
 			this.tokenizer.match(processing.parser.Token.TSemicolon,true);
 		}
-		var condition = this.parseExpression();
+		var condition = this.parseExpression(false);
+		if(condition == null) condition = processing.parser.Expression.ELiteral(true);
 		this.tokenizer.match(processing.parser.Token.TSemicolon,true);
 		var update = this.parseList();
 		this.tokenizer.match(processing.parser.Token.TParenClose,true);
@@ -1584,7 +1584,7 @@ processing.parser.Parser.prototype.parseStatement = function(statements,definiti
 		statements.push(processing.parser.Statement.SLoop(condition,body));
 	}
 	else if(this.tokenizer.match(processing.parser.Token.TKeyword("return"))) {
-		statements.push(processing.parser.Statement.SReturn(this.parseExpression()));
+		statements.push(processing.parser.Statement.SReturn(this.parseExpression(false)));
 	}
 	else if(this.tokenizer.match(processing.parser.Token.TKeyword("break"))) {
 		if(this.tokenizer.match("TIdentifier")) statements.push(processing.parser.Statement.SBreak(Type.enumParameters(this.tokenizer.current())[0]));
@@ -1595,7 +1595,7 @@ processing.parser.Parser.prototype.parseStatement = function(statements,definiti
 		else statements.push(processing.parser.Statement.SContinue());
 	}
 	else {
-		var expression = this.parseExpression();
+		var expression = this.parseExpression(false);
 		if(expression == null) return this.tokenizer.match(processing.parser.Token.TSemicolon);
 		this.tokenizer.match(processing.parser.Token.TSemicolon,true);
 		statements.push(processing.parser.Statement.SExpression(expression));
@@ -1634,8 +1634,7 @@ processing.parser.Parser.prototype.parseVariableDefinition = function(statements
 		}
 		definitions.push(processing.parser.Definition.DVariable(identifier,visibility,isStatic,{ type : vType.type, dimensions : vTypeDimensions}));
 		if(this.tokenizer.match(processing.parser.Token.TOperator("="))) {
-			var expression = this.parseExpression();
-			if(expression == null) throw this.tokenizer.createSyntaxError("Invalid assignment left-hand side.");
+			var expression = this.parseExpression(true);
 			statements.push(processing.parser.Statement.SExpression(processing.parser.Expression.EAssignment(processing.parser.Expression.EReference(identifier),expression)));
 		}
 	} while(this.tokenizer.match(processing.parser.Token.TComma));
@@ -1774,8 +1773,7 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 		var type = this.parseType();
 		operators.push(processing.parser.ParserOperator.PCast(type));
 		this.tokenizer.match(processing.parser.Token.TParenOpen,true);
-		var expression = this.parseExpression();
-		if(expression == null) throw this.tokenizer.createSyntaxError("Invalid expression in cast.");
+		var expression = this.parseExpression(true);
 		this.tokenizer.match(processing.parser.Token.TParenClose,true);
 		operands.push(expression);
 	}break;
@@ -1811,9 +1809,7 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 				var type = this.parseType();
 				var sizes = [];
 				while(this.tokenizer.match(processing.parser.Token.TBracketOpen)) {
-					var expression = this.parseExpression();
-					if(expression == null) throw this.tokenizer.createSyntaxError("Invalid array dimension.");
-					sizes.push(expression);
+					sizes.push(this.parseExpression(true));
 					this.tokenizer.match(processing.parser.Token.TBracketClose,true);
 				}
 				operands.push(processing.parser.Expression.EArrayInstantiation(type,sizes));
@@ -1881,9 +1877,7 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 			operators.pop();
 		}
 		this.tokenizer.popState();
-		var expression = this.parseExpression();
-		if(expression == null) throw this.tokenizer.createSyntaxError("Invalid parenthetical expression.");
-		operands.push(expression);
+		operands.push(this.parseExpression(true));
 		if(!this.tokenizer.match(processing.parser.Token.TParenClose)) throw this.tokenizer.createSyntaxError("Missing ) in parenthetical");
 	}break;
 	default:{
@@ -1912,8 +1906,7 @@ processing.parser.Parser.prototype.scanOperator = function(operators,operands,re
 			this.recursiveReduceExpression(operators,operands);
 			var reference = operands.pop();
 			if((Type.enumConstructor(reference) != "EReference") && (Type.enumConstructor(reference) != "EArrayAccess")) throw this.tokenizer.createSyntaxError("Invalid assignment left-hand side.");
-			var value = this.parseExpression();
-			if(value == null) throw this.tokenizer.createSyntaxError("Invalid assignment right-hand side.");
+			var value = this.parseExpression(true);
 			if(opToken != "=") value = processing.parser.Expression.EOperation(this.lookupOperatorType(opToken),reference,value);
 			operands.push(processing.parser.Expression.EAssignment(reference,value));
 			return false;
@@ -1936,8 +1929,7 @@ processing.parser.Parser.prototype.scanOperator = function(operators,operands,re
 	case 12:
 	{
 		this.tokenizer.match(processing.parser.Token.TBracketOpen,true);
-		var index = this.parseExpression();
-		if(index == null) throw this.tokenizer.createSyntaxError("Invalid array index.");
+		var index = this.parseExpression(true);
 		this.tokenizer.match(processing.parser.Token.TBracketClose,true);
 		var operator = processing.parser.ParserOperator.PArrayAccess(index);
 		this.recursiveReduceExpression(operators,operands,this.lookupOperatorPrecedence(operator));
@@ -1949,10 +1941,9 @@ processing.parser.Parser.prototype.scanOperator = function(operators,operands,re
 		this.tokenizer.next();
 		this.recursiveReduceExpression(operators,operands);
 		var conditional = operands.pop();
-		var thenExpression = this.parseExpression();
+		var thenExpression = this.parseExpression(true);
 		this.tokenizer.match(processing.parser.Token.TDoubleDot,true);
-		var elseExpression = this.parseExpression();
-		if((thenExpression == null) || (elseExpression == null)) throw this.tokenizer.createSyntaxError("Invalid expression in ternary conditional.");
+		var elseExpression = this.parseExpression(true);
 		operands.push(processing.parser.Expression.EConditional(conditional,thenExpression,elseExpression));
 		return false;
 	}break;
