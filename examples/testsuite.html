@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+	
+<html lang="en-US">
+ <head>
+    <title>Processing Testsuite</title>
+    
+    <!-- page script/styles -->
+    <link rel="stylesheet" href="style.css" type="text/css" media="screen">
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="jquery-ui-personalized-1.5.min.js"></script>
+    <script type="text/javascript" src="domec.js"></script>
+
+    <!-- processing.js -->
+    <script type="text/javascript" src="processing.js/processing.js"></script>
+    <!-- crossprocessing -->
+    <script type="text/javascript" src="crossprocessing/Processing-api.js"></script>
+    <script type="text/javascript" src="crossprocessing/Processing-parser.js"></script>
+    
+    <!-- page script -->
+    <script type="text/javascript">
+    
+var TestSuite = {
+	stop: function () {
+		// kill any running scripts
+		if (TestSuite.jsObject)
+			TestSuite.jsObject.exit();
+		$('#processing-java').each(function (i, elem) { if (elem.exit) elem.exit(); });
+		
+		// remove elements
+		$('#testsuite-container > *').remove();
+		$('#testsuite-options > button').css({fontWeight: 'normal'});
+	},
+
+	//----------------------------------------------------------------------
+	// java
+	//----------------------------------------------------------------------
+
+	startJava: function () {
+		// kill any running scripts
+		TestSuite.stop();
+		// set indicator
+		$('#testsuite-option-java').css({fontWeight: 'bold'});
+		
+		// create object
+		$.create('object', {width: TestSuite.currentTest.width, height: TestSuite.currentTest.height,
+		    id: 'processing-java', type: 'application/x-java-applet', classid: 'java:' + TestSuite.currentTest.id + '.class',
+		    archive: TestSuite.currentTest.javaPath + TestSuite.currentTest.id + '.jar'}, [
+		  $.create('param', {name: 'archive', value: TestSuite.currentTest.javaPath + TestSuite.currentTest.id + '.jar'})
+		]).appendTo($('#testsuite-container'));
+	},
+	
+	//----------------------------------------------------------------------
+	// javascript
+	//----------------------------------------------------------------------
+	
+	startJS: function (useParser) {
+		// kill any running scripts
+		TestSuite.stop();
+		// set indicator
+		$('#testsuite-option-js' + (useParser ? '-parser' : '')).css({fontWeight: 'bold'});
+		
+		// create canvas
+		$.create('canvas', {width: TestSuite.currentTest.width, height: TestSuite.currentTest.height, id: 'processing-js'})
+		    .appendTo($('#testsuite-container'));
+		    
+		// an image preloader! how very 1990's...
+		var imageStack = TestSuite.currentTest.getImages();
+		var imageLoader = function () {
+			// run script if finished
+			if (!imageStack.length && useParser) {
+				TestSuite.jsObject = Processing($('#processing-js')[0]);
+				(new ProcessingParser(TestSuite.jsObject)).load(TestSuite.currentTest.getScript());
+			} else if (!imageStack.length) {
+				TestSuite.jsObject = Processing($('#processing-js')[0], TestSuite.currentTest.getScript());
+			} else {
+				// pop image
+				var imageData = imageStack.pop();
+				$.create('img', {src: imageData[1], id: imageData[0]})
+				    .appendTo($('#hidden'))
+				    .load(imageLoader);
+			}
+		}
+		imageLoader();
+	},
+	
+	jsObject: null,
+	
+	//----------------------------------------------------------------------
+	// tests
+	//----------------------------------------------------------------------
+	
+	tests: {},
+	
+	addTest: function (test) {
+		// add test
+		TestSuite.tests[test.id] = test;
+		// add node
+		$(test.node).appendTo('#tests');
+	},
+	
+	getTest: function (id) {
+		return TestSuite.tests[id];
+	},
+	
+	currentTest: null,
+	
+	setCurrentTest: function (test) {
+		// load test
+		TestSuite.stop();
+		TestSuite.currentTest = test;
+		
+		// append nodes
+		$('#test-' + test.id + ' .container .description').after($('#testsuite'));
+		// set container variables
+		$('#testsuite-container').css({height: test.height + 'px'});
+		$('#testsuite-source').attr({href: 'sketches/' + test.id + '.processing'});
+		
+		// check if java is enabled
+		$('#testsuite-options button').removeAttr('disabled');
+		if (!test.javaPath)
+			$('#testsuite-option-java').attr('disabled', 'true');
+	}
+};
+
+function CustomTest() {
+	this.id = 'Custom';
+	this.description = 'Write your own script in the textbox below, and click the JavaScript or Flash buttons to dynamically compile and evaluate it.';
+	this.width = 200;
+	this.height = 200;
+	this.javaPath = false;
+	
+	// create node
+	this.node = $.create('li', {id: 'test-' + this.id}, [
+	  $.create('h3', {'class': 'title'}, [this.id]),
+	  $.create('div', {'class': 'container'}, [
+	    $.create('p', {'class': 'description'}, [
+	      this.description,
+	      $.create('textarea', {rows: 10, cols: 72, id: 'custom-editor'}, ['// All Examples Written by Casey Reas and Ben Fry\n// unless otherwise stated.\nsize(200, 200);\nsmooth();\nbackground(0);\nstrokeWeight(10);\n\nfor(int i = 0; i < width; i++) {\n  float r = random(255);\n  float x = random(0, width);\n  stroke(r, 100);\n  line(i, 0, x, height);\n}'])
+	    ])
+	  ])
+	])[0];
+
+	this.getScript = function () {
+		// load script
+		return $('#custom-editor').val();
+	}
+	
+	this.getImages = function () {
+		// sketchy loadImage pre-processing
+		var regex = /\(("[^"]+(?:\.jpg|\.gif|\.png)"|'[^']+(?:\.jpg|\.gif|\.png)')\)/g;
+		for (var matches, images = []; (matches = regex.exec(this.getScript())) != null; )
+			images.push([matches[1].substring(1, matches[1].length - 1), 'images/' + matches[1].substring(1, matches[1].length - 1)]);
+		return images;
+	}
+}
+
+function Test(id, description, width, height, javaPath) {
+	this.id = id;
+	this.description = description;
+	this.width = width || 200;
+	this.height = height || 200;
+	this.javaPath = javaPath;
+	
+	// create node
+	this.node = $.create('li', {id: 'test-' + this.id}, [
+	  $.create('h3', {'class': 'title'}, [this.id]),
+	  $.create('div', {'class': 'container'}, [
+	    $.create('p', {'class': 'description'}, [this.description])
+	  ])
+	])[0];
+
+	// script pre-loading
+	var script = null;
+	$.get('sketches/' + id + '.processing', function(file) {
+		script = file.replace(/\r\n?/g, '\n');
+	}, 'text');	
+	
+	this.getScript = function () {
+		if (!script)
+			alert('Script for "' + id + '" not yet loaded.');
+		// load script
+		return script;
+	}
+	
+	this.getImages = function () {
+		// sketchy loadImage pre-processing
+		var regex = /\(("[^"]+(?:\.jpg|\.gif|\.png)"|'[^']+(?:\.jpg|\.gif|\.png)')\)/g;
+		for (var matches, images = []; (matches = regex.exec(script)) != null; )
+			images.push([matches[1].substring(1, matches[1].length - 1), 'images/' + matches[1].substring(1, matches[1].length - 1)]);
+		return images;
+	}
+}
+
+// load test list
+$(function () {
+	// custom test
+	TestSuite.addTest(new CustomTest());
+
+	// basics
+	TestSuite.addTest(new Test('CreateGraphics', 'The createGraphics() function creates an object from the PGraphics class (PGraphics is the main graphics and rendering context for Processing). The beginDraw() method is necessary to prepare for drawing and endDraw() is necessary to finish. Use this class if you need to draw into an off-screen graphics buffer or to maintain two contexts with different properties.', 200, 200, 'http://processing.org/learning/basics/media/'));
+	TestSuite.addTest(new Test('Recursion', 'A demonstration of recursion, which means functions call themselves. Notice how the drawCircle() function calls itself at the end of its block. It continues to do this until the variable "level" is equal to 1.', 200, 200, 'http://processing.org/learning/basics/media/'));
+	TestSuite.addTest(new Test('Distance2D', 'Move the mouse across the image to obscure and reveal the matrix. Measures the distance from the mouse to each square and sets the size proportionally.', 200, 200, 'http://processing.org/learning/basics/media/'));
+	TestSuite.addTest(new Test('Arctangent', 'Move the mouse to change the direction of the eyes. The atan2() function computes the angle from each eye to the cursor.', 200, 200, 'http://processing.org/learning/basics/media/'));
+	TestSuite.addTest(new Test('Random', 'Random numbers create the basis of this image. Each time the program is loaded the result is different.', 200, 200, 'http://processing.org/learning/basics/media/'));
+	TestSuite.addTest(new Test('NoiseWave', 'by Daniel Shiffman. Using Perlin Noise to generate a wave-like pattern.', 200, 200, 'http://processing.org/learning/basics/media/'));
+	TestSuite.addTest(new Test('Pointillism', 'by Daniel Shiffman. Mouse horizontal location controls size of dots. Creates a simple pointillist effect using ellipses colored according to pixels in an image.', 200, 200, 'http://processing.org/learning/basics/media/'));
+	TestSuite.addTest(new Test('CreateImage', 'The createImage() function provides a fresh buffer of pixels to play with. This example creates an image gradient.', 200, 200, 'http://processing.org/learning/basics/media/'));
+	TestSuite.addTest(new Test('Mouse2D', 'Moving the mouse changes the position and size of each box.', 200, 200, 'http://processing.org/learning/basics/media/'));
+	TestSuite.addTest(new Test('BezierEllipse', 'by Ira Greenberg. Generates an ellipse using bezier() and trig functions. Approximately every 1/2 second a new ellipse is plotted using random values for control/anchor points.', 200, 200, 'http://processing.org/learning/basics/media/'));
+	TestSuite.addTest(new Test('StoringInput', 'Move the mouse across the screen to change the position of the circles. The positions of the mouse are recorded into an array and played back every frame. Between each frame, the newest value are added to the end of each array and the oldest value is deleted.', 200, 200, 'http://processing.org/learning/basics/media/'));
+	TestSuite.addTest(new Test('MouseFunctions', 'Click on the box and drag it across the screen.', 200, 200, 'http://processing.org/learning/basics/media/'));
+	TestSuite.addTest(new Test('KeyboardFunctions', 'Modified from code by Martin. Original "Color Typewriter" concept by John Maeda. Click on the window to give it focus and press the letter keys to type colors. The keyboard function keyPressed() is called whenever a key is pressed. keyReleased() is another keyboard function that is called when a key is released.', 200, 200, 'http://processing.org/learning/basics/media/'));
+	TestSuite.addTest(new Test('Clock', 'The current time can be read with the second(), minute(), and hour() functions. In this example, sin() and cos() values are used to set the position of the hands.', 200, 200, 'http://processing.org/learning/basics/media/'));
+	
+	// topics
+	TestSuite.addTest(new Test('Handles', 'Click and drag the white boxes to change their position.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Wolfram', 'by Daniel Shiffman. Simple demonstration of a Wolfram 1-dimensional cellular automata When the system reaches bottom of the window, it restarts with a new ruleset Mouse click restarts as well.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Conway', 'by Mike Davis. This program is a simple version of Conway\'s game of Life. A lit point turns off if there are fewer than two or more than three surrounding lit points. An unlit point turns on if there are exactly three lit neighbors. The \'density\' parameter determines how much of the board will start out lit.', 100, 100, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Animator', 'A simple animation tool that displays a continuous cycle of twelve images. Each image is displayed for 100 milliseconds (one tenth of a second) to create animation. While each image is displayed, it\'s possible to draw directly into it by pressing the mouse and moving the cursor. Start drawing to get it started.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Pattern', 'Move the cursor over the image to draw with a software tool which responds to the speed of the mouse.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('PixelArray', 'Click and drag the mouse up and down to control the signal and press and hold any key to see the current pixel being read. This program sequentially reads the color of every pixel of an image and displays this color to fill the window.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Brightness', 'by Daniel Shiffman. Adjusts the brightness of part of the image Pixels closer to the mouse will appear brighter.', 33, 33));
+	TestSuite.addTest(new Test('LinearImage', 'Click and drag mouse up and down to control the signal. Press and hold any key to watch the scanning.', 33, 33));
+	TestSuite.addTest(new Test('Scrollbar', 'Move the scrollbars left and right to change the positions of the images.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Histogram', 'Calculates the histogram of an image. A histogram is the frequency distribution of the gray levels with the number of pure black values displayed on the left and number of pure white values on the right.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('BouncyBubbles', 'Based on code from Keith Peters (www.bit-101.com). Multiple-object collision.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Collision', 'Move the mouse up and down to move the paddle.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Reflection1', 'by Ira Greenberg. Based on the equation (R = 2N(N*L)-L) where R is the reflection vector, N is the normal, and L is the incident vector.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Reflection2', 'by Ira Greenberg. Based on Keith Peter\'s Solution in Foundation Actionscript Animation: Making Things Move! (http://www.friendsofed.com/book.html?isbn=1590597915)', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Spring', 'Click, drag, and release the horizontal bar to start the spring.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Springs', 'Move the mouse over one of the circles and click to re-position. When you release the mouse, it will snap back into position. Each circle has a slightly different behavior.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Reach3', 'Based on code from Keith Peters (www.bit-101.com) The arm follows the position of the ball by calculating the angles with atan2().', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('SimpleParticleSystem', 'by Daniel Shiffman. Particles are generated each cycle through draw(), fall with gravity and fade out over time A ParticleSystem object manages a variable size (ArrayList) list of particles.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Flocking', 'by Daniel Shiffman. An implementation of Craig Reynold\'s Boids program to simulate the flocking behavior of birds. Each boid steers itself based on rules of avoidance, alignment, and coherence. Click the mouse to add a new boid.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Koch', 'by Daniel Shiffman. Renders a simple fractal, the Koch snowflake. Each recursive level drawn in sequence.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Mandelbrot', 'by Daniel Shiffman. Simple rendering of the Mandelbrot set.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('Tree', 'by Daniel Shiffman. Renders a simple tree-like structure via recursion Branching angle calculated as a function of horizontal mouse location.', 200, 200, 'http://processing.org/learning/topics/media/'));
+	TestSuite.addTest(new Test('SoftBody', 'by Ira Greenberg. Softbody dynamics simulation using curveVertex() and curveTightness()', 200, 200, 'http://processing.org/learning/topics/media/'));
+	
+	// special
+	TestSuite.addTest(new Test('MoltenBar', 'A dynamically-generated bar chart. Move mouse to view dynamic pie chart.', 600, 150));
+	TestSuite.addTest(new Test('Substrate', 'An artistic watercolor visualization by J. Tarbell (http://complexification.net/).', 250, 250));
+	TestSuite.addTest(new Test('Snake', 'A snake that follows your cursor.', 320, 240));
+	
+	// format tests
+	$('#tests').accordion({header: 'h3', animated: false, autoheight: false, alwaysOpen: false, active: false})
+	    .bind("accordionchange", function(event, ui) {
+		// override malfunctioning no-autoheight...
+		ui.newContent.css({height: 'auto'});
+		// load this test
+		TestSuite.setCurrentTest(TestSuite.getTest(ui.newHeader.text()));
+	    })
+	    .accordion('activate', 0);
+});
+
+    </script>
+
+  </head>
+  
+  <body>
+    <div id="header">
+      <h1>Processing Testsuite</h1>
+
+      <p>This testsuite demos the Java, JavaScript, and Flash Processing interpreters. JavaScript and Flash demos are loaded from scripts and images located on the server. Java demos, when available, are .jar archives loaded off-site. All demos are created by their respective owners.</p>
+      <p><strong>Note:</strong> Some of these demos may grind your browser to a halt, including loading too many demos at once! Stay clear of Mandelbrot, Substrate, and Conway, unless you don't mind resetting your browser.</p>
+    </div>
+    
+    <ul id="tests"></ul>
+    
+    <div id="hidden" style="display: none">
+      <div id="testsuite">
+        <div id="testsuite-container"></div>
+
+        <p id="testsuite-options">
+          <button id="testsuite-option-java" onclick="if (!this.disabled) TestSuite.startJava()">Java</button>
+	  <button id="testsuite-option-js" onclick="TestSuite.startJS()">JavaScript</button>
+	  <button id="testsuite-option-crossprocessing" onclick="TestSuite.startCrossProcessing()">CrossProcessing</button>
+	  <a href="#" id="testsuite-source">View Source</a>
+        </p>
+      </div>
+
+    </div>
+    
+    <p id="footer">All demos &copy; their respective owners.</p>
+  </body>
+</html>

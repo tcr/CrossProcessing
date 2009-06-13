@@ -1,0 +1,77 @@
+html {
+	background: #766045;
+	font-size: 76%;
+}
+
+body {
+	width: 625px;
+	margin: 0 auto;
+	font-family: Georgia;
+	font-size: 1.2em;
+	color: white;
+}
+
+#custom-editor {
+	width: 98%;
+	margin-top: 0.75em;
+}
+
+#tests, #testsuite {
+	color: black;
+}
+
+#tests, #tests li {
+	display: block;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+#tests li .title {
+	background: #eda;
+	padding: 0.25em 0.5em;
+	margin: 0;
+	cursor: pointer;
+	border: 1px solid;
+	border-color: #fea #ca7 #a85;
+}
+
+#tests li .description {
+	background: #dca;
+	border-bottom: 1px solid #863;
+	padding: 0.75em 1em;
+	margin: 0;
+}
+
+#testsuite-container {
+	background: #ddd;
+	margin: 0;
+	padding: 10px 0;
+	text-align: center;
+}
+
+#testsuite-options {
+	border-top: 1px solid #777;
+	background: #999;
+	font-size: 0.8em;
+	margin: 0;
+	padding: 0.6em 0.8em;
+	position: relative;
+}
+
+#testsuite-options button {
+	font-size: inherit;
+}
+
+#testsuite-source {
+	color: #008;
+	position: absolute;
+	right: 0.75em;
+	fofnt-weight: bold;
+	line-height: 1.7em;
+}
+
+#footer {
+	font-size: 0.8em;
+	text-align: center;
+}
