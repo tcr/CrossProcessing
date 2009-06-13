@@ -12,9 +12,10 @@
 
     <!-- processing.js -->
     <script type="text/javascript" src="processing.js/processing.js"></script>
+    
     <!-- crossprocessing -->
-    <script type="text/javascript" src="crossprocessing/Processing-api.js"></script>
-    <script type="text/javascript" src="crossprocessing/Processing-parser.js"></script>
+    <script type="text/javascript" src="../javascript/Processing-api.js"></script>
+    <script type="text/javascript" src="../javascript/Processing-parser.js"></script>
     
     <!-- page script -->
     <script type="text/javascript">
@@ -53,11 +54,11 @@ var TestSuite = {
 	// javascript
 	//----------------------------------------------------------------------
 	
-	startJS: function (useParser) {
+	startJS: function () {
 		// kill any running scripts
 		TestSuite.stop();
 		// set indicator
-		$('#testsuite-option-js' + (useParser ? '-parser' : '')).css({fontWeight: 'bold'});
+		$('#testsuite-option-js').css({fontWeight: 'bold'});
 		
 		// create canvas
 		$.create('canvas', {width: TestSuite.currentTest.width, height: TestSuite.currentTest.height, id: 'processing-js'})
@@ -67,10 +68,7 @@ var TestSuite = {
 		var imageStack = TestSuite.currentTest.getImages();
 		var imageLoader = function () {
 			// run script if finished
-			if (!imageStack.length && useParser) {
-				TestSuite.jsObject = Processing($('#processing-js')[0]);
-				(new ProcessingParser(TestSuite.jsObject)).load(TestSuite.currentTest.getScript());
-			} else if (!imageStack.length) {
+			if (!imageStack.length) {
 				TestSuite.jsObject = Processing($('#processing-js')[0], TestSuite.currentTest.getScript());
 			} else {
 				// pop image
@@ -84,6 +82,36 @@ var TestSuite = {
 	},
 	
 	jsObject: null,
+	
+	startCrossProcessing: function (useParser) {
+		// kill any running scripts
+		TestSuite.stop();
+		// set indicator
+		$('#testsuite-option-xpde').css({fontWeight: 'bold'});
+		
+		// create canvas
+		$.create('canvas', {width: TestSuite.currentTest.width, height: TestSuite.currentTest.height, id: 'processing-js'})
+		    .appendTo($('#testsuite-container'));
+		    
+		// an image preloader! how very 1990's...
+		var imageStack = TestSuite.currentTest.getImages();
+		var imageLoader = function () {
+			// run script if finished
+			if (!imageStack.length) {
+				TestSuite.jsObject = CrossProcessing($('#processing-js')[0]);
+				var evaluator = new processing.evaluator.Evaluator([TestSuite.jsObject]);
+				evaluator.evaluate(TestSuite.currentTest.getScript());
+				TestSuite.jsObject.init();
+			} else {
+				// pop image
+				var imageData = imageStack.pop();
+				$.create('img', {src: imageData[1], id: imageData[0]})
+				    .appendTo($('#hidden'))
+				    .load(imageLoader);
+			}
+		}
+		imageLoader();
+	},
 	
 	//----------------------------------------------------------------------
 	// tests
@@ -274,7 +302,7 @@ $(function () {
         <p id="testsuite-options">
           <button id="testsuite-option-java" onclick="if (!this.disabled) TestSuite.startJava()">Java</button>
 	  <button id="testsuite-option-js" onclick="TestSuite.startJS()">JavaScript</button>
-	  <button id="testsuite-option-crossprocessing" onclick="TestSuite.startCrossProcessing()">CrossProcessing</button>
+	  <button id="testsuite-option-xpde" onclick="TestSuite.startCrossProcessing()">CrossProcessing</button>
 	  <a href="#" id="testsuite-source">View Source</a>
         </p>
       </div>
