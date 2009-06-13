@@ -27,6 +27,8 @@
  * Adapted from standard haXe EReg class, for speed on JS platforms
  */
 
+package processing.parser;
+
 class SimpleEReg {
 
 	var r : Dynamic;
@@ -126,6 +128,130 @@ class SimpleEReg {
 			if( n >= untyped __call__("count", matches)) return null;
 			if(untyped __php__("$this->matches[$n][1] < 0")) return null;
 			return untyped __php__("$this->matches[$n][0]");
+		#else
+			return null;
+		#end
+	}
+	
+	/**
+		Returns the position of the matched substring within the
+		original matched string.
+	**/
+	public function matchedPos() : { pos : Int, len : Int } {
+		#if neko
+			return regexp_matched_pos(r,0);
+		#elseif js
+			if( untyped r.m == null ) throw "No string matched";
+			return untyped { pos : r.m.index, len : r.m[0].length };
+		#elseif flash9
+			if( result == null ) throw "No string matched";
+			return { pos : result.index, len : result[0].length };
+		#elseif php
+			return untyped { pos : __php__("$this->matches[0][1]"), len : __php__("strlen")(__php__("$this->matches[0][0]")) };
+		#else
+			return null;
+		#end
+	}
+
+	/**
+		Split a string by using the regular expression to match
+		the separators.
+	**/
+	public function split( s : String ) : Array<String> {
+		#if neko
+			var pos = 0;
+			var len = s.length;
+			var a = new Array();
+			var first = true;
+			do {
+				if( !regexp_match(r,untyped s.__s,pos,len) )
+					break;
+				var p = regexp_matched_pos(r,0);
+				if( p.len == 0 && !first ) {
+					if( p.pos == s.length )
+						break;
+					p.pos += 1;
+				}
+				a.push(s.substr(pos,p.pos - pos));
+				var tot = p.pos + p.len - pos;
+				pos += tot;
+				len -= tot;
+				first = false;
+			} while( global );
+			a.push(s.substr(pos,len));
+			return a;
+		#elseif (js || flash9)
+			// we can't use directly s.split because it's ignoring the 'g' flag
+			var d = "#__delim__#";
+			return untyped s.replace(r,d).split(d);
+		#elseif php
+			return untyped __php__("new _hx_array(preg_split($this->re, $s, $this->hglobal ? -1 : 2))");
+		#else
+			return null;
+		#end
+	}
+
+	/**
+		Replaces a pattern by another string. The [by] format can
+		contains [$1] to [$9] that will correspond to groups matched
+		while replacing. [$$] means the [$] character.
+	**/
+	public function replace( s : String, by : String ) : String {
+		#if neko
+			var b = new StringBuf();
+			var pos = 0;
+			var len = s.length;
+			var a = by.split("$");
+			var first = true;
+			do {
+				if( !regexp_match(r,untyped s.__s,pos,len) )
+					break;
+				var p = regexp_matched_pos(r,0);
+				if( p.len == 0 && !first ) {
+					if( p.pos == s.length )
+						break;
+					p.pos += 1;
+				}
+				b.addSub(s,pos,p.pos-pos);
+				if( a.length > 0 )
+					b.add(a[0]);
+				var i = 1;
+				while( i < a.length ) {
+					var k = a[i];
+					var c = k.charCodeAt(0);
+					// 1...9
+					if( c >= 49 && c <= 57 ) {
+						var p = try regexp_matched_pos(r,c-48) catch( e : String ) null;
+						if( p == null ){
+							b.add("$");
+							b.add(k);
+						}else{
+						b.addSub(s,p.pos,p.len);
+						b.addSub(k,1,k.length - 1);
+						}
+					} else if( c == null ) {
+						b.add("$");
+						i++;
+						var k2 = a[i];
+						if( k2 != null && k2.length > 0 )
+							b.add(k2);
+					} else
+						b.add("$"+k);
+					i++;
+				}
+				var tot = p.pos + p.len - pos;
+				pos += tot;
+				len -= tot;
+				first = false;
+			} while( global );
+			b.addSub(s,pos,len);
+			return b.toString();
+		#elseif (js || flash9)
+			return untyped s.replace(r,by);
+		#elseif php
+			by = untyped __call__("str_replace", "$$", "\\$", by);
+			untyped __php__("if(!preg_match('/\\\\([^?].+?\\\\)/', $this->re)) $by = preg_replace('/\\$(\\d+)/', '\\\\\\$\\1', $by)");
+			return untyped __php__("preg_replace")(re, by, s, global ? -1 : 1);
 		#else
 			return null;
 		#end

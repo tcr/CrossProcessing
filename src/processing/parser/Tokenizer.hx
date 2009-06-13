@@ -59,7 +59,7 @@ class Tokenizer
 	public function next():Token
 	{
 		// init variables
-		var regex:EReg, input:String = '';
+		var regex:SimpleEReg, input:String = '';
 
 		// eliminate comments/whitespace
 		while (true)
@@ -264,37 +264,36 @@ class Tokenizer
 }
 
 class TokenizerRegexList
-{
+{	
 	// dead space
-	public static var WHITESPACE:SimpleEReg = new SimpleEReg('^\s+');
-	public static var COMMENT:SimpleEReg = new SimpleEReg('^\/(?:\*(?:.|\n|\r)*?\*\/|\/.*)');
-	public static var NEWLINES:SimpleEReg = new SimpleEReg('\n', 'g');
+	public static var WHITESPACE = new SimpleEReg("^\\s+","");
+	public static var COMMENT = new SimpleEReg("^/(?:\\*(?:.|\\n|\\r)*?\\*/|/.*)","");
+	public static var NEWLINES = new SimpleEReg("\\n", "g");
 	
 	// tokens
-	public static var EOF:SimpleEReg = new SimpleEReg('^$');
-	public static var COLOR:SimpleEReg = new SimpleEReg('^(?:0[xX]|#)([\da-fA-F]{6}|[\da-fA-F]{8})');
-	public static var FLOAT:SimpleEReg = new SimpleEReg('^\d+(?:\.\d*)?[fF]|^\d+\.\d*(?:[eE][-+]?\d+)?|^\d+(?:\.\d*)?[eE][-+]?\d+|^\.\d+(?:[eE][-+]?\d+)?');
-	public static var INTEGER:SimpleEReg = new SimpleEReg('^0[xX][\da-fA-F]+|^0[0-7]*|^\d+');
-//[TODO] new as operator?
-	public static var KEYWORD:SimpleEReg = new SimpleEReg('^(break|class|case|catch|const|continue|default|do|else|enum|false|finally|for|function|if|new|null|public|private|return|static|switch|this|throw|true|try|var|while|with)\b');
-	public static var TYPE:SimpleEReg = new SimpleEReg('^(boolean|char|void|float|int)\b');
-	public static var IDENTIFIER:SimpleEReg = new SimpleEReg('^\w+');
-	public static var CHAR:SimpleEReg = new SimpleEReg('^\'(?:[^\']|\\.|\\u[0-9A-Fa-f]{4})\'');
-	public static var STRING:SimpleEReg = new SimpleEReg('^"(?:\\.|[^"])*"|^\'(?:[^\']|\\.)*\'');
-	public static var OPERATOR:SimpleEReg = new SimpleEReg('^(\n|\|\||&&|[!=]=|(\||\^|&|<<|>>>?|\+|\-|\*|\/|%)?=(?!=)|<<|<=|>>>?|>=|\+\+|--|[|^&<>+\-*\/%!~]|instanceof\b)');
-	public static var PUNCUATION:SimpleEReg = new SimpleEReg('^\[\]|^[;,?:.[\]{}()]');
+	public static var EOF = new SimpleEReg("^$","");
+	public static var COLOR = new SimpleEReg("^(?:0[xX]|#)([\\da-fA-F]{6}|[\\da-fA-F]{8})","");
+	public static var FLOAT = new SimpleEReg("^\\d+(?:\\.\\d*)?[fF]|^\\d+\\.\\d*(?:[eE][-+]?\\d+)?|^\\d+(?:\\.\\d*)?[eE][-+]?\\d+|^\\.\\d+(?:[eE][-+]?\\d+)?","");
+	public static var INTEGER = new SimpleEReg("^0[xX][\\da-fA-F]+|^0[0-7]*|^\\d+","");
+	public static var KEYWORD = new SimpleEReg("^(break|class|case|catch|const|continue|default|do|else|enum|false|finally|for|function|if|new|null|public|private|return|static|switch|this|throw|true|try|var|while|with)\\b","");
+	public static var TYPE = new SimpleEReg("^(boolean|char|void|float|int)\\b","");
+	public static var IDENTIFIER = new SimpleEReg("^\\w+","");
+	public static var CHAR = new SimpleEReg("^'(?:[^']|\\\\.|\\\\u[0-9A-Fa-f]{4})'","");
+	public static var STRING = new SimpleEReg("^\"(?:\\\\.|[^\"])*\"|^'(?:[^']|\\\\.)*'","");
+	public static var OPERATOR = new SimpleEReg("^(\\n|\\|\\||&&|[!=]=|(\\||\\^|&|<<|>>>?|\\+|\\-|\\*|/|%)?=(?!=)|<<|<=|>>>?|>=|\\+\\+|--|[|^&<>+\\-*/%!~]|instanceof\\b)","");
+	public static var PUNCUATION = new SimpleEReg("^\\[\\]|^[;,?:.[\\]{}()]", "");
 	
 	// characters
-	public static var CHAR_BACKSPACE:SimpleEReg = new SimpleEReg('((?:[^\\]|^)(?:\\\\)+)\\b', 'g');
-	public static var CHAR_TAB:SimpleEReg = new SimpleEReg('((?:[^\\]|^)(?:\\\\)+)\\t', 'g');
-	public static var CHAR_NEWLINE:SimpleEReg = new SimpleEReg('((?:[^\\]|^)(?:\\\\)+)\\n', 'g');
-	public static var CHAR_VERTICAL_TAB:SimpleEReg = new SimpleEReg('((?:[^\\]|^)(?:\\\\)+)\\v', 'g');
-	public static var CHAR_FORM_FEED:SimpleEReg = new SimpleEReg('((?:[^\\]|^)(?:\\\\)+)\\f', 'g');
-	public static var CHAR_CARRIAGE_RETURN:SimpleEReg = new SimpleEReg('((?:[^\\]|^)(?:\\\\)+)\\r', 'g');
-	public static var CHAR_DOUBLE_QUOTE:SimpleEReg = new SimpleEReg('((?:[^\\]|^)(?:\\\\)+)\\"', 'g');
-	public static var CHAR_SINGLE_QUOTE:SimpleEReg = new SimpleEReg('((?:[^\\]|^)(?:\\\\)+)\\'', 'g');
-	public static var CHAR_BACKSLASH:SimpleEReg = new SimpleEReg('((?:[^\\]|^)(?:\\\\)+)\\\\', 'g');
-	public static var CHAR_UNICODE:SimpleEReg = new SimpleEReg('((?:[^\\]|^)(?:\\\\)+)\\u([0-9A-Fa-z]{4})', 'g');
+	public static var CHAR_BACKSPACE:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\b/g;
+	public static var CHAR_TAB:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\t/g;
+	public static var CHAR_NEWLINE:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\n/g;
+	public static var CHAR_VERTICAL_TAB:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\v/g;
+	public static var CHAR_FORM_FEED:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\f/g;
+	public static var CHAR_CARRIAGE_RETURN:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\r/g;
+	public static var CHAR_DOUBLE_QUOTE:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\"/g;
+	public static var CHAR_SINGLE_QUOTE:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\'/g;
+	public static var CHAR_BACKSLASH:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\\\/g;
+	public static var CHAR_UNICODE:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\u([0-9A-Fa-z]{4})/g;
 }
 
 //[TODO] standardized haXe error class?

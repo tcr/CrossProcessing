@@ -777,7 +777,7 @@ class Parser {
 		}
 	}
 	
-	private static var IS_ASSIGNMENT_OPERATOR:EReg = ~/^(\||\^|&|<<|>>>?|\+|\-|\*|\/|%)?=$/;
+	private static var IS_ASSIGNMENT_OPERATOR = new SimpleEReg("^(\\||\\^|&|<<|>>>?|\\+|\\-|\\*|/|%)?=$","");
 	
 	private function isAssignmentOperator(operator:String):Bool
 	{

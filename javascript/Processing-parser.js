@@ -851,6 +851,36 @@ processing.parser.Token.TSemicolon.toString = $estr;
 processing.parser.Token.TSemicolon.__enum__ = processing.parser.Token;
 processing.parser.Token.TString = function(value) { var $x = ["TString",5,value]; $x.__enum__ = processing.parser.Token; $x.toString = $estr; return $x; }
 processing.parser.Token.TType = function(type) { var $x = ["TType",2,type]; $x.__enum__ = processing.parser.Token; $x.toString = $estr; return $x; }
+processing.parser.SimpleEReg = function(r,opt) { if( r === $_ ) return; {
+	opt = opt.split("u").join("");
+	this.r = new RegExp(r,opt);
+}}
+processing.parser.SimpleEReg.__name__ = ["processing","parser","SimpleEReg"];
+processing.parser.SimpleEReg.prototype.match = function(s) {
+	this.r.m = this.r.exec(s);
+	this.r.s = s;
+	return (this.r.m != null);
+}
+processing.parser.SimpleEReg.prototype.matched = function(n) {
+	return (this.r.m != null && n >= 0 && n < this.r.m.length?this.r.m[n]:function($this) {
+		var $r;
+		throw "EReg::matched";
+		return $r;
+	}(this));
+}
+processing.parser.SimpleEReg.prototype.matchedPos = function() {
+	if(this.r.m == null) throw "No string matched";
+	return { pos : this.r.m.index, len : this.r.m[0].length}
+}
+processing.parser.SimpleEReg.prototype.r = null;
+processing.parser.SimpleEReg.prototype.replace = function(s,by) {
+	return s.replace(this.r,by);
+}
+processing.parser.SimpleEReg.prototype.split = function(s) {
+	var d = "#__delim__#";
+	return s.replace(this.r,d).split(d);
+}
+processing.parser.SimpleEReg.prototype.__class__ = processing.parser.SimpleEReg;
 EReg = function(r,opt) { if( r === $_ ) return; {
 	opt = opt.split("u").join("");
 	this.r = new RegExp(r,opt);
@@ -870,8 +900,8 @@ EReg.prototype.customReplace = function(s,f) {
 EReg.prototype.match = function(s) {
 	this.r.m = this.r.exec(s);
 	this.r.s = s;
-//	this.r.l = RegExp.leftContext;
-//	this.r.r = RegExp.rightContext;
+	this.r.l = RegExp.leftContext;
+	this.r.r = RegExp.rightContext;
 	return (this.r.m != null);
 }
 EReg.prototype.matched = function(n) {
@@ -952,7 +982,7 @@ processing.parser.Tokenizer.prototype.match = function(to,mustMatch) {
 		this.clearState();
 		return true;
 	}
-	else if(mustMatch) throw this.createSyntaxError("Tokenizer: Must match " + to + ", found " + token);
+	else if(mustMatch) throw this.createSyntaxError("Must match " + to + ", found " + token);
 	this.popState();
 	return false;
 }
@@ -2190,20 +2220,20 @@ js.Boot.__init();
 	Math.__name__ = ["Math"];
 }
 js.Lib.onerror = null;
-processing.parser.TokenizerRegexList.WHITESPACE = new EReg("^\\s+","");
-processing.parser.TokenizerRegexList.COMMENT = new EReg("^/(?:\\*(?:.|\\n|\\r)*?\\*/|/.*)","");
-processing.parser.TokenizerRegexList.NEWLINES = new EReg("\\n","g");
-processing.parser.TokenizerRegexList.EOF = new EReg("^$","");
-processing.parser.TokenizerRegexList.COLOR = new EReg("^(?:0[xX]|#)([\\da-fA-F]{6}|[\\da-fA-F]{8})","");
-processing.parser.TokenizerRegexList.FLOAT = new EReg("^\\d+(?:\\.\\d*)?[fF]|^\\d+\\.\\d*(?:[eE][-+]?\\d+)?|^\\d+(?:\\.\\d*)?[eE][-+]?\\d+|^\\.\\d+(?:[eE][-+]?\\d+)?","");
-processing.parser.TokenizerRegexList.INTEGER = new EReg("^0[xX][\\da-fA-F]+|^0[0-7]*|^\\d+","");
-processing.parser.TokenizerRegexList.KEYWORD = new EReg("^(break|class|case|catch|const|continue|default|do|else|enum|false|finally|for|function|if|new|null|public|private|return|static|switch|this|throw|true|try|var|while|with)\\b","");
-processing.parser.TokenizerRegexList.TYPE = new EReg("^(boolean|char|void|float|int)\\b","");
-processing.parser.TokenizerRegexList.IDENTIFIER = new EReg("^\\w+","");
-processing.parser.TokenizerRegexList.CHAR = new EReg("^'(?:[^']|\\\\.|\\\\u[0-9A-Fa-f]{4})'","");
-processing.parser.TokenizerRegexList.STRING = new EReg("^\"(?:\\\\.|[^\"])*\"|^'(?:[^']|\\\\.)*'","");
-processing.parser.TokenizerRegexList.OPERATOR = new EReg("^(\\n|\\|\\||&&|[!=]=|(\\||\\^|&|<<|>>>?|\\+|\\-|\\*|/|%)?=(?!=)|<<|<=|>>>?|>=|\\+\\+|--|[|^&<>+\\-*/%!~]|instanceof\\b)","");
-processing.parser.TokenizerRegexList.PUNCUATION = new EReg("^\\[\\]|^[;,?:.[\\]{}()]","");
+processing.parser.TokenizerRegexList.WHITESPACE = new processing.parser.SimpleEReg("^\\s+","");
+processing.parser.TokenizerRegexList.COMMENT = new processing.parser.SimpleEReg("^/(?:\\*(?:.|\\n|\\r)*?\\*/|/.*)","");
+processing.parser.TokenizerRegexList.NEWLINES = new processing.parser.SimpleEReg("\\n","g");
+processing.parser.TokenizerRegexList.EOF = new processing.parser.SimpleEReg("^$","");
+processing.parser.TokenizerRegexList.COLOR = new processing.parser.SimpleEReg("^(?:0[xX]|#)([\\da-fA-F]{6}|[\\da-fA-F]{8})","");
+processing.parser.TokenizerRegexList.FLOAT = new processing.parser.SimpleEReg("^\\d+(?:\\.\\d*)?[fF]|^\\d+\\.\\d*(?:[eE][-+]?\\d+)?|^\\d+(?:\\.\\d*)?[eE][-+]?\\d+|^\\.\\d+(?:[eE][-+]?\\d+)?","");
+processing.parser.TokenizerRegexList.INTEGER = new processing.parser.SimpleEReg("^0[xX][\\da-fA-F]+|^0[0-7]*|^\\d+","");
+processing.parser.TokenizerRegexList.KEYWORD = new processing.parser.SimpleEReg("^(break|class|case|catch|const|continue|default|do|else|enum|false|finally|for|function|if|new|null|public|private|return|static|switch|this|throw|true|try|var|while|with)\\b","");
+processing.parser.TokenizerRegexList.TYPE = new processing.parser.SimpleEReg("^(boolean|char|void|float|int)\\b","");
+processing.parser.TokenizerRegexList.IDENTIFIER = new processing.parser.SimpleEReg("^\\w+","");
+processing.parser.TokenizerRegexList.CHAR = new processing.parser.SimpleEReg("^'(?:[^']|\\\\.|\\\\u[0-9A-Fa-f]{4})'","");
+processing.parser.TokenizerRegexList.STRING = new processing.parser.SimpleEReg("^\"(?:\\\\.|[^\"])*\"|^'(?:[^']|\\\\.)*'","");
+processing.parser.TokenizerRegexList.OPERATOR = new processing.parser.SimpleEReg("^(\\n|\\|\\||&&|[!=]=|(\\||\\^|&|<<|>>>?|\\+|\\-|\\*|/|%)?=(?!=)|<<|<=|>>>?|>=|\\+\\+|--|[|^&<>+\\-*/%!~]|instanceof\\b)","");
+processing.parser.TokenizerRegexList.PUNCUATION = new processing.parser.SimpleEReg("^\\[\\]|^[;,?:.[\\]{}()]","");
 processing.parser.TokenizerRegexList.CHAR_BACKSPACE = new EReg("((?:[^\\\\]|^)(?:\\\\\\\\)+)\\\\b","g");
 processing.parser.TokenizerRegexList.CHAR_TAB = new EReg("((?:[^\\\\]|^)(?:\\\\\\\\)+)\\\\t","g");
 processing.parser.TokenizerRegexList.CHAR_NEWLINE = new EReg("((?:[^\\\\]|^)(?:\\\\\\\\)+)\\\\n","g");
@@ -2215,4 +2245,4 @@ processing.parser.TokenizerRegexList.CHAR_SINGLE_QUOTE = new EReg("((?:[^\\\\]|^
 processing.parser.TokenizerRegexList.CHAR_BACKSLASH = new EReg("((?:[^\\\\]|^)(?:\\\\\\\\)+)\\\\\\\\","g");
 processing.parser.TokenizerRegexList.CHAR_UNICODE = new EReg("((?:[^\\\\]|^)(?:\\\\\\\\)+)\\\\u([0-9A-Fa-z]{4})","g");
 processing.parser.Tokenizer.regexes = processing.parser.TokenizerRegexList;
-processing.parser.Parser.IS_ASSIGNMENT_OPERATOR = new EReg("^(\\||\\^|&|<<|>>>?|\\+|\\-|\\*|/|%)?=$","");
+processing.parser.Parser.IS_ASSIGNMENT_OPERATOR = new processing.parser.SimpleEReg("^(\\||\\^|&|<<|>>>?|\\+|\\-|\\*|/|%)?=$","");
