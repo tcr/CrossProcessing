@@ -170,10 +170,15 @@ class Parser {
 				    statements.push(SContinue());
 
 			    default:
-//[TODO] this might have to be a check on every loop
-//				if (required)
-//					throw new TokenizerSyntaxError('Unexpected keyword "' + keyword + '"', tokenizer);
-				return false;
+//[TODO] is this right?
+				// match expression or semicolon
+				var expression:Expression = parseExpression();
+				if (expression == null)
+					return tokenizer.match(TSemicolon);
+				tokenizer.match(TSemicolon, true);
+				
+				// push expression
+				statements.push(SExpression(expression));
 			}
 		
 		    // expression
@@ -195,16 +200,15 @@ class Parser {
 	{
 		// search ahead to find definition
 		var peek:Int = 1;
-		
 		// match visibility and static (except in block)
 		if (scope != PBlock)
 		{
 			if (tokenizer.peekMatch(TKeyword('static'), peek))
 				peek++;
-			if (tokenizer.peekMatch(TKeyword('private'), peek) || tokenizer.match(TKeyword('public'), peek))
+			if (tokenizer.peekMatch(TKeyword('private'), peek) || tokenizer.peekMatch(TKeyword('public'), peek))
 				peek++;
 		}
-		
+
 		// match class (PScript)
 		if ((scope == PScript) && tokenizer.peekMatch(TKeyword('class'), peek))
 			return parseClassDefinition(definitions);
@@ -213,7 +217,7 @@ class Parser {
 		    tokenizer.peekMatch(TIdentifier(Type.enumParameters(scope)[0]), peek) &&
 		    tokenizer.peekMatch(TParenOpen, peek + 1))
 			return parseFunctionDefinition(definitions, true);
-		
+
 		// match type definition
 		if (tokenizer.peekMatch('TType', peek) || tokenizer.peekMatch('TIdentifier', peek))
 			peek++;
@@ -221,7 +225,7 @@ class Parser {
 			return false;
 		while (tokenizer.peekMatch(TDimensions, peek))
 			peek++;
-		
+
 		// match variable/function
 		if (tokenizer.peekMatch('TIdentifier', peek))
 		{
@@ -361,6 +365,7 @@ class Parser {
 		while (parseDefinition(PClass(identifier), cStatements, cDefinitions))
 			continue;
 		tokenizer.match(TBraceClose, true);
+
 		// return function declaration statement
 		definitions.push(DClass(identifier, visibility, isStatic, SBlock(cStatements, cDefinitions)));
 		return true;
@@ -547,70 +552,40 @@ class Parser {
 		
 		    // cast/group
 		    case TParenOpen:
-			// parse parenthetical
+			// knock off token
 			tokenizer.get();
+			
+			// check for cast or parenthetical
+			tokenizer.pushState();
+			var isPrimitive:Bool = tokenizer.peekMatch('TType');
+			var type:VariableType = parseType();
+			if ((type != null) && tokenizer.match(TParenClose))
+			{
+				// push temp operator (before scanning for operand)
+				operators.push(PCast(type));
+				// ensure this be a cast
+				// ( ReferenceType ) UnaryExpressionNotPlusMinus
+				if ((isPrimitive || !(tokenizer.peekMatch(TOperator('+')) && !tokenizer.peekMatch(TOperator('-')))) &&
+				    scanOperand(operators, operands))
+				{
+					// matched operand already
+					tokenizer.clearState();
+					return true;
+				}
+
+				// clear operator
+				operators.pop();
+			}
+			// clear state
+			tokenizer.popState();
+			
+			// parse parenthetical
 			var expression:Expression = parseExpression();
 			if (expression == null)
 				throw new TokenizerSyntaxError('Invalid parenthetical expression.', tokenizer);
 			operands.push(expression);
 			if (!tokenizer.match(TParenClose))
 				throw new TokenizerSyntaxError('Missing ) in parenthetical', tokenizer);
-
-/*
-		    // cast/group
-		    case TParenOpen:
-			tokenizer.get();
-
-			// check if this be a cast or a group
-//[TODO] what about multi-dimension arrays?
-			var isArray:Bool = tokenizer.match(TDimensions, 2);
-			if (tokenizer.match('TType', 1) ||
-			    (isArray && tokenizer.match('TIdentifier', 1)) &&
-			    tokenizer.match(TParenClose, isArray ? 3 : 2))
-			{
-				// push casting operator
-//[TODO] what the hell is this
-				operators.push('cast');
-				// push operands
-				operands.push(parseType());
-				tokenizer.match(TParenClose, true);
-				return scanOperand(operators, operands, stopAt, true);
-			}
-			else if (tokenizer.match(TParenClose, 2) && tokenizer.match('TIdentifier'))
-			{
-				// match ambiguous parenthetical
-				var identifier:String = Type.enumParameters(tokenizer.currentToken)[0];
-				tokenizer.match(TParenClose, true);
-				
-				// check if this be a cast
-//[TODO] proper casting these arrays
-				var tmpOperators:Array<Dynamic> = [], tmpOperands:Array<Dynamic> = [];
-				if (scanOperand(tmpOperators, tmpOperands))
-				{
-					// add operators
-					operators.push('cast');
-					for (i in tmpOperators)
-						operators.push(i);
-					// add operands
-					operands.push({type: identifier, dimensions: null});
-					for (i in tmpOperands)
-						operands.push(i);
-				}
-				else
-				{
-					// not a cast; add operand
-					operands.push(SReference(SLiteral(identifier)));
-				}
-			}
-			else
-			{
-				// parse parenthetical
-				operands.push(parseExpression(TParenClose));
-				if (!tokenizer.match(TParenClose))
-					throw new TokenizerSyntaxError('Missing ) in parenthetical', tokenizer);
-			}
-			return true;
-*/
 
 		    // missing operand
 		    default:
@@ -649,12 +624,25 @@ class Parser {
 			// assignment operators
 			else if (isAssignmentOperator(opToken))
 			{
-				// combine higher-precedence expressions and push
-				var operator:ParserOperator = (opToken == '=') ? PAssignment() : PAssignment(lookupOperatorType(opToken));
-				recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
-				operators.push(operator);
-
-//[TODO] probably just push operand expression here
+				// reduce left-hand expression
+				recursiveReduceExpression(operators, operands);
+				// we can only assign to a reference
+				var reference:Expression = operands.pop();
+				if ((Type.enumConstructor(reference) != 'EReference') &&
+				    (Type.enumConstructor(reference) != 'EArrayAccess'))
+					throw new TokenizerSyntaxError('Invalid assignment left-hand side.', tokenizer);
+				
+				// get value
+				var value:Expression = parseExpression();
+				if (value == null)
+					throw new TokenizerSyntaxError('Invalid assignment right-hand side.', tokenizer);
+				if (opToken != '=')
+					value = EOperation(lookupOperatorType(opToken), reference, value);
+					
+				// add assignment
+				operands.push(EAssignment(reference, value));
+				// expression finished
+				return false;
 			}
 			// regular operators
 			else
@@ -773,7 +761,7 @@ class Parser {
 				operands.push(EOperation(operator, a, b));
 			}
 			
-		    case PAssignment(operator):
+/*		    case PAssignment(operator):
 			// get assignment
 		        var value:Expression = operands.pop(), reference:Expression = operands.pop();
 			// we can only assign to a reference
@@ -784,7 +772,7 @@ class Parser {
 			// compound assignment operations
 			if (operator != null)
 				value = EOperation(operator, reference, value);
-			operands.push(EAssignment(reference, value));
+			operands.push(EAssignment(reference, value));*/
 	    
 		    case PCast(type):
 			// expression cast
@@ -896,7 +884,7 @@ class Parser {
 			    case OpMultiply, OpDivide, OpModulus: 12;
 			    case OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus: 14;
 			}
-		    case PAssignment(_): 1;
+//		    case PAssignment(_): 1;
 //		    case PNew: 13;
 		    case PCast(_): 13;
 		    case PPrefix(_): 14;
@@ -918,7 +906,7 @@ enum ParserScope
 enum ParserOperator
 {
 	POperator(operator:Operator);
-	PAssignment(?operator:Operator);
+//	PAssignment(?operator:Operator);
 //	PNew;
 	PCast(type:VariableType);
 	PPrefix(type:IncrementType);

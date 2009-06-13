@@ -94,6 +94,8 @@ class JavaScriptCompiler implements ICompiler
 
 		    case ECast(type, expression):
 //[TODO] actually cast
+			if (~/^(boolean|char|void|float|int)$/.match(type.type))
+				return type.type + '(' + serializeExpression(expression) + ')';
 			return serializeExpression(expression);
 		
 		    case EConditional(condition, thenStatement, elseStatement):

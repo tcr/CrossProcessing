@@ -1,5 +1,6 @@
 package processing.parser;
 import js.Boot;
+import processing.compiler.JavaScriptCompiler;
 
 enum Token {
 	TEof;
@@ -35,7 +36,11 @@ class Tokenizer {
 	
 	public function new():Void
 	{
+		// reset source/cursor
 		load('');
+		
+		// initialize states
+		states = [];
 	}
 	
 //[TODO] argument to start tokenizing /from line/?
@@ -165,12 +170,12 @@ class Tokenizer {
 
 //[TODO] pushState, popState, clearState, instead of peek
 	public function peek(?lookAhead:Int = 1):Token {
-		// peek ahead a certain distance (but retain Tokenizer state)
-		var origCursor:Int = cursor, origToken:Token = currentToken, token:Token = origToken;
+		// peek ahead x tokens, retaining state
+		pushState();
+		var token:Token = currentToken;
 		for (i in 0...lookAhead)
 			token = get();
-		cursor = origCursor;
-		currentToken = origToken;
+		popState();
 		return token;
 	}
 	
@@ -215,6 +220,29 @@ class Tokenizer {
 	private function getLineNumber(searchCursor:Int):Int
 	{
 		return regexes.NEWLINES.split(source.substr(0, searchCursor)).length + 1;
+	}
+	
+	/*
+	 * tokenizer stack
+	 */
+	
+	private var states:Array<Dynamic>;
+	
+	public function pushState():Void
+	{
+		states.push({cursor: cursor, current: currentToken});
+	}
+	
+	public function popState():Void
+	{
+		var state:Dynamic = states.pop();
+		cursor = state.cursor;
+		currentToken = state.current;
+	}
+	
+	public function clearState():Void 
+	{
+		states.pop();
 	}
 }
 
