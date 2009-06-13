@@ -869,7 +869,7 @@ enum ParserOperator
 	PCast(type:VariableType);
 	PPrefix(type:IncrementType);
 	
-	// highest precedence
+	// highest precedence (could be eliminated)
 	PPostfix(type:IncrementType);
 	PDot(identifier:String);
 	PArrayAccess(index:Expression);

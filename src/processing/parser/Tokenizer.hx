@@ -72,7 +72,7 @@ class Tokenizer
 			else
 				break;
 		}
-					
+
 		// find next token
 		if ((regex = regexes.EOF).match(input))
 		{

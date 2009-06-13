@@ -18,8 +18,8 @@ function tokenize() {
 	document.getElementById('output').value = '';
 	var t = new processing.parser.Tokenizer();
 	t.load(script);
-	while (t.hasNext()) t.next();
-		//document.getElementById('output').value += t.next().toString() + '\n';
+	while (t.hasNext()) //t.next();
+		document.getElementById('output').value += t.next().toString() + '\n';
 }
 
 function parse() {
