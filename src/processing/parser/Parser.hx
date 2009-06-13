@@ -156,6 +156,7 @@ class Parser {
 			    statements.push(SContinue(Type.enumParameters(tokenizer.current())[0])) :
 			    statements.push(SContinue());
 		}
+//[TODO] switch, try/catch/finally, do loop, 
 		// expression
 		else
 		{
@@ -828,9 +829,11 @@ class Parser {
 
 	private function lookupOperatorPrecedence(operator:ParserOperator)
 	{
-		return switch (operator) {
+		return switch (operator)
+		{
 		    case POperator(operator):
-			switch (operator) {
+			switch (operator)
+			{
 			    case OpOr: 3;
 			    case OpAnd: 4;
 			    case OpBitwiseOr: 5;
@@ -865,6 +868,8 @@ enum ParserOperator
 	POperator(operator:Operator);
 	PCast(type:VariableType);
 	PPrefix(type:IncrementType);
+	
+	// highest precedence
 	PPostfix(type:IncrementType);
 	PDot(identifier:String);
 	PArrayAccess(index:Expression);

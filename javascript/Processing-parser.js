@@ -870,8 +870,8 @@ EReg.prototype.customReplace = function(s,f) {
 EReg.prototype.match = function(s) {
 	this.r.m = this.r.exec(s);
 	this.r.s = s;
-	this.r.l = RegExp.leftContext;
-	this.r.r = RegExp.rightContext;
+//	this.r.l = RegExp.leftContext;
+//	this.r.r = RegExp.rightContext;
 	return (this.r.m != null);
 }
 EReg.prototype.matched = function(n) {
