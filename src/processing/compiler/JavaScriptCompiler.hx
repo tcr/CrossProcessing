@@ -29,7 +29,7 @@ class JavaScriptCompiler implements ICompiler
 			source.push('// statements');
 			for (statement in statements)
 				source.push(serializeStatement(statement));
-			return source.join('\n'); // inBlock ? source.join(';\n') : '{\n' + source.join(';\n') + ';\n}\n';
+			return source.join('\n');
 		
 		    case SBreak(label):
 			return 'break' + (label == null ? '' : ' ' + label) + ';';
@@ -79,8 +79,10 @@ class JavaScriptCompiler implements ICompiler
 			return 'new ArrayList(' + source.join(', ') + ')';
 			
 		    case EArrayLiteral(values):
-//[TODO]
-			return '';
+			var source:Array<String> = new Array();
+			for (value in values)
+				source.push(serializeExpression(value));
+			return '[' + source.join(', ') + ']';
 
 //[TODO] variable type binding here?
 		    case EAssignment(reference, value):
@@ -94,7 +96,7 @@ class JavaScriptCompiler implements ICompiler
 
 		    case ECast(type, expression):
 //[TODO] actually cast
-			if (~/^(boolean|char|void|float|int)$/.match(type.type))
+			if (~/^(boolean|char|void|float|int)$/.match(type.type) && (type.dimensions == 0))
 				return type.type + '(' + serializeExpression(expression) + ')';
 			return serializeExpression(expression);
 		
@@ -145,21 +147,26 @@ class JavaScriptCompiler implements ICompiler
 		switch (definition)
 		{
 			case DVariable(identifier, visibility, isStatic, type):
-				return (scope == SClass ? 'this.' : 'var ') + identifier + ' = 0;';
+				return ((scope != null) && Type.enumConstructor(scope) == 'SClass' ? 'this.' : 'var ') +
+				    identifier + ' = 0;';
 			
 			case DFunction(identifier, visibility, isStatic, type, params, body):
 				// format params
 				var paramKeys:Array<String> = new Array();
 				for (param in params)
 					paramKeys.push(param.name);
-				var func:String = 'function ' + identifier + '(' + paramKeys.join(', ') + ') {\n' + serializeStatement(body) + '\n};';
-				
-				return (scope == SClass ? 'this.' : '') + identifier + ' = ' + func;
+				var func:String = 'function ' + identifier + '(' + paramKeys.join(', ') + ') {\n' + serializeStatement(body) + '\n}';
+
+				return ((scope != null) && Type.enumConstructor(scope) == 'SClass') ?
+				    'addMethod(this, "' +
+				      (identifier == Type.enumParameters(scope)[0] ? '__construct' : identifier) +
+				      '", ' + func + ');' :
+				    identifier + ' = ' + func + ';';
 			    
 			case DClass(identifier, visibility, isStatic, body):
 				return 'function ' + identifier + '() {\nwith (this) {\n' +
-				    serializeStatement(body, SClass) +
-				    '\n}\nthis.' + identifier + '.apply(this, arguments);\n}';
+				    serializeStatement(body, SClass(identifier)) +
+				    '\n}\nthis.__construct && this.__construct.apply(this, arguments);\n } ';
 		}
 	}
 	
@@ -199,7 +206,7 @@ class JavaScriptCompiler implements ICompiler
 
 enum CompilerScope 
 {
-	SClass;
+	SClass(identifier:String);
 	SBlock;
 }
 	

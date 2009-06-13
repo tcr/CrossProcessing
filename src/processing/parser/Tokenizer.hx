@@ -72,7 +72,7 @@ class Tokenizer
 			else
 				break;
 		}
-
+		
 		// find next token
 		if ((regex = regexes.EOF).match(input))
 		{
@@ -117,12 +117,12 @@ class Tokenizer
 		else if ((regex = regexes.CHAR).match(input))
 		{
 			// char
-			currentToken = TChar(parseStringLiteral(regex.matched(0).substr(1, regex.matched(0).length - 1)).charCodeAt(0));
+			currentToken = TChar(parseStringLiteral(regex.matched(0).substr(1, regex.matched(0).length - 2)).charCodeAt(0));
 		}
 		else if ((regex = regexes.STRING).match(input))
 		{
 			// string
-			currentToken = TString(parseStringLiteral(regex.matched(0).substr(1, regex.matched(0).length - 1)));
+			currentToken = TString(parseStringLiteral(regex.matched(0).substr(1, regex.matched(0).length - 2)));
 		}
 		else if ((regex = regexes.PUNCUATION).match(input))
 		{
@@ -264,7 +264,7 @@ class Tokenizer
 }
 
 class TokenizerRegexList
-{	
+{
 	// dead space
 	public static var WHITESPACE = new SimpleEReg("^\\s+","");
 	public static var COMMENT = new SimpleEReg("^/(?:\\*(?:.|\\n|\\r)*?\\*/|/.*)","");

@@ -224,7 +224,7 @@ processing.compiler.JavaScriptCompiler.prototype.serializeDefinition = function(
 	case 0:
 	var type = $e[5], isStatic = $e[4], visibility = $e[3], identifier = $e[2];
 	{
-		return ((scope == processing.compiler.CompilerScope.SClass?"this.":"var ")) + identifier + " = 0;";
+		return (((scope != null) && Type.enumConstructor(scope) == "SClass"?"this.":"var ")) + identifier + " = 0;";
 	}break;
 	case 1:
 	var body = $e[7], params = $e[6], type = $e[5], isStatic = $e[4], visibility = $e[3], identifier = $e[2];
@@ -238,13 +238,13 @@ processing.compiler.JavaScriptCompiler.prototype.serializeDefinition = function(
 				paramKeys.push(param.name);
 			}
 		}
-		var func = "function " + identifier + "(" + paramKeys.join(", ") + ") {\n" + this.serializeStatement(body) + "\n};";
-		return ((scope == processing.compiler.CompilerScope.SClass?"this.":"")) + identifier + " = " + func;
+		var func = "function " + identifier + "(" + paramKeys.join(", ") + ") {\n" + this.serializeStatement(body) + "\n}";
+		return (((scope != null) && Type.enumConstructor(scope) == "SClass")?"addMethod(this, \"" + ((identifier == Type.enumParameters(scope)[0]?"__construct":identifier)) + "\", " + func + ");":identifier + " = " + func + ";");
 	}break;
 	case 2:
 	var body = $e[5], isStatic = $e[4], visibility = $e[3], identifier = $e[2];
 	{
-		return "function " + identifier + "() {\nwith (this) {\n" + this.serializeStatement(body,processing.compiler.CompilerScope.SClass) + "\n}\nthis." + identifier + ".apply(this, arguments);\n}";
+		return "function " + identifier + "() {\nwith (this) {\n" + this.serializeStatement(body,processing.compiler.CompilerScope.SClass(identifier)) + "\n}\nthis.__construct && this.__construct.apply(this, arguments);\n } ";
 	}break;
 	}
 }
@@ -273,7 +273,16 @@ processing.compiler.JavaScriptCompiler.prototype.serializeExpression = function(
 	case 2:
 	var values = $e[2];
 	{
-		return "";
+		var source = new Array();
+		{
+			var _g = 0;
+			while(_g < values.length) {
+				var value = values[_g];
+				++_g;
+				source.push(this.serializeExpression(value));
+			}
+		}
+		return "[" + source.join(", ") + "]";
 	}break;
 	case 3:
 	var value = $e[3], reference = $e[2];
@@ -297,7 +306,7 @@ processing.compiler.JavaScriptCompiler.prototype.serializeExpression = function(
 	case 5:
 	var expression1 = $e[3], type = $e[2];
 	{
-		if(new EReg("^(boolean|char|void|float|int)$","").match(type.type)) return type.type + "(" + this.serializeExpression(expression1) + ")";
+		if(new EReg("^(boolean|char|void|float|int)$","").match(type.type) && (type.dimensions == 0)) return type.type + "(" + this.serializeExpression(expression1) + ")";
 		return this.serializeExpression(expression1);
 	}break;
 	case 6:
@@ -590,9 +599,7 @@ processing.compiler.CompilerScope = { __ename__ : ["processing","compiler","Comp
 processing.compiler.CompilerScope.SBlock = ["SBlock",1];
 processing.compiler.CompilerScope.SBlock.toString = $estr;
 processing.compiler.CompilerScope.SBlock.__enum__ = processing.compiler.CompilerScope;
-processing.compiler.CompilerScope.SClass = ["SClass",0];
-processing.compiler.CompilerScope.SClass.toString = $estr;
-processing.compiler.CompilerScope.SClass.__enum__ = processing.compiler.CompilerScope;
+processing.compiler.CompilerScope.SClass = function(identifier) { var $x = ["SClass",0,identifier]; $x.__enum__ = processing.compiler.CompilerScope; $x.toString = $estr; return $x; }
 js.Lib = function() { }
 js.Lib.__name__ = ["js","Lib"];
 js.Lib.isIE = null;
@@ -1018,10 +1025,10 @@ processing.parser.Tokenizer.prototype.next = function() {
 		this.currentToken = processing.parser.Token.TIdentifier(regex.matched(0));
 	}
 	else if((regex = processing.parser.Tokenizer.regexes.CHAR).match(input)) {
-		this.currentToken = processing.parser.Token.TChar(this.parseStringLiteral(regex.matched(0).substr(1,regex.matched(0).length - 1)).charCodeAt(0));
+		this.currentToken = processing.parser.Token.TChar(this.parseStringLiteral(regex.matched(0).substr(1,regex.matched(0).length - 2)).charCodeAt(0));
 	}
 	else if((regex = processing.parser.Tokenizer.regexes.STRING).match(input)) {
-		this.currentToken = processing.parser.Token.TString(this.parseStringLiteral(regex.matched(0).substr(1,regex.matched(0).length - 1)));
+		this.currentToken = processing.parser.Token.TString(this.parseStringLiteral(regex.matched(0).substr(1,regex.matched(0).length - 2)));
 	}
 	else if((regex = processing.parser.Tokenizer.regexes.PUNCUATION).match(input)) {
 		this.currentToken = function($this) {
