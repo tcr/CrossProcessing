@@ -159,7 +159,10 @@ class Tokenizer
 		// compare next token
 		var token:Token = next();		
 		if (compareTokens(token, to))
+		{
+			clearState();
 			return true;
+		}
 		else if (mustMatch)
 			throw createSyntaxError('Tokenizer: Must match ' + to + ', found ' + token);
 		// didn't match

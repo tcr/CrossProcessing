@@ -948,7 +948,10 @@ processing.parser.Tokenizer.prototype.match = function(to,mustMatch) {
 	if(mustMatch == null) mustMatch = false;
 	this.pushState();
 	var token = this.next();
-	if(this.compareTokens(token,to)) return true;
+	if(this.compareTokens(token,to)) {
+		this.clearState();
+		return true;
+	}
 	else if(mustMatch) throw this.createSyntaxError("Tokenizer: Must match " + to + ", found " + token);
 	this.popState();
 	return false;
@@ -1455,20 +1458,37 @@ processing.parser.Parser.prototype.parseClassDefinition = function(definitions) 
 	return true;
 }
 processing.parser.Parser.prototype.parseDefinition = function(scope,statements,definitions) {
-	var peek = 1;
+	this.tokenizer.pushState();
 	if(scope != processing.parser.ParserScope.PBlock) {
-		if(this.tokenizer.peekMatch(processing.parser.Token.TKeyword("static"),peek)) peek++;
-		if(this.tokenizer.peekMatch(processing.parser.Token.TKeyword("private"),peek) || this.tokenizer.peekMatch(processing.parser.Token.TKeyword("public"),peek)) peek++;
+		this.tokenizer.match(processing.parser.Token.TKeyword("static"));
+		this.tokenizer.match(processing.parser.Token.TKeyword("private")) || this.tokenizer.match(processing.parser.Token.TKeyword("public"));
 	}
-	if((scope == processing.parser.ParserScope.PScript) && this.tokenizer.peekMatch(processing.parser.Token.TKeyword("class"),peek)) return this.parseClassDefinition(definitions);
-	if((Type.enumConstructor(scope) == "PClass") && this.tokenizer.peekMatch(processing.parser.Token.TIdentifier(Type.enumParameters(scope)[0]),peek) && this.tokenizer.peekMatch(processing.parser.Token.TParenOpen,peek + 1)) return this.parseFunctionDefinition(definitions,true);
-	if(this.tokenizer.peekMatch("TType",peek) || this.tokenizer.peekMatch("TIdentifier",peek)) peek++;
-	else return false;
-	while(this.tokenizer.peekMatch(processing.parser.Token.TDimensions,peek)) peek++;
-	if(this.tokenizer.peekMatch("TIdentifier",peek)) {
-		if((scope != processing.parser.ParserScope.PBlock) && this.tokenizer.peekMatch(processing.parser.Token.TParenOpen,peek + 1)) return this.parseFunctionDefinition(definitions);
-		else if(scope != processing.parser.ParserScope.PScript) return this.parseVariableDefinition(statements,definitions);
+	if((scope == processing.parser.ParserScope.PScript) && this.tokenizer.match(processing.parser.Token.TKeyword("class"))) {
+		this.tokenizer.popState();
+		return this.parseClassDefinition(definitions);
 	}
+	this.tokenizer.pushState();
+	if((Type.enumConstructor(scope) == "PClass") && this.tokenizer.match(processing.parser.Token.TIdentifier(Type.enumParameters(scope)[0])) && this.tokenizer.match(processing.parser.Token.TParenOpen)) {
+		this.tokenizer.popState();
+		this.tokenizer.popState();
+		return this.parseFunctionDefinition(definitions,true);
+	}
+	this.tokenizer.popState();
+	if(this.parseType() == null) {
+		this.tokenizer.popState();
+		return false;
+	}
+	if(this.tokenizer.match("TIdentifier")) {
+		if((scope != processing.parser.ParserScope.PBlock) && this.tokenizer.match(processing.parser.Token.TParenOpen)) {
+			this.tokenizer.popState();
+			return this.parseFunctionDefinition(definitions);
+		}
+		else if(scope != processing.parser.ParserScope.PScript) {
+			this.tokenizer.popState();
+			return this.parseVariableDefinition(statements,definitions);
+		}
+	}
+	this.tokenizer.popState();
 	return false;
 }
 processing.parser.Parser.prototype.parseExpression = function(required) {
@@ -1507,11 +1527,11 @@ processing.parser.Parser.prototype.parseFunctionDefinition = function(definition
 }
 processing.parser.Parser.prototype.parseList = function() {
 	var list = [];
-	if(!this.tokenizer.match(processing.parser.Token.TParenClose)) {
-		do {
-			list.push(this.parseExpression(true));
-		} while(this.tokenizer.match(processing.parser.Token.TComma));
-	}
+	do {
+		var expression = this.parseExpression(list.length > 0);
+		if(expression == null) return list;
+		list.push(expression);
+	} while(this.tokenizer.match(processing.parser.Token.TComma));
 	return list;
 }
 processing.parser.Parser.prototype.parseStatement = function(statements,definitions) {

@@ -17,7 +17,7 @@ class Parser {
 		tokenizer.load(code);
 
 		// parse global block
-//[TODO] definitions should be a map!
+//[TODO] should definitions be a map?
 		var statements:Array<Statement> = [], definitions:Array<Definition> = [];
 		//[NOTE] function order is important here
 		while (parseDefinition(PScript, statements, definitions) ||
@@ -176,44 +176,58 @@ class Parser {
 	private function parseDefinition(scope:ParserScope, statements:Array<Statement>, definitions:Array<Definition>)
 	{
 		// search ahead to find definition
-		var peek:Int = 1;
+		tokenizer.pushState();
+
 		// match visibility and static (except in block)
 		if (scope != PBlock)
 		{
-			if (tokenizer.peekMatch(TKeyword('static'), peek))
-				peek++;
-			if (tokenizer.peekMatch(TKeyword('private'), peek) || tokenizer.peekMatch(TKeyword('public'), peek))
-				peek++;
+			tokenizer.match(TKeyword('static'));
+			tokenizer.match(TKeyword('private')) || tokenizer.match(TKeyword('public'));
 		}
 
 		// match class (PScript)
-		if ((scope == PScript) && tokenizer.peekMatch(TKeyword('class'), peek))
+		if ((scope == PScript) && tokenizer.match(TKeyword('class')))
+		{
+			tokenizer.popState();
 			return parseClassDefinition(definitions);
+		}
 		// class constructor
+		tokenizer.pushState();
 		if ((Type.enumConstructor(scope) == 'PClass') &&
-		    tokenizer.peekMatch(TIdentifier(Type.enumParameters(scope)[0]), peek) &&
-		    tokenizer.peekMatch(TParenOpen, peek + 1))
+		    tokenizer.match(TIdentifier(Type.enumParameters(scope)[0])) &&
+		    tokenizer.match(TParenOpen))
+		{
+			tokenizer.popState();
+			tokenizer.popState();
 			return parseFunctionDefinition(definitions, true);
+		}
+		tokenizer.popState();
 
 		// match type definition
-		if (tokenizer.peekMatch('TType', peek) || tokenizer.peekMatch('TIdentifier', peek))
-			peek++;
-		else
+		if (parseType() == null)
+		{
+			tokenizer.popState();
 			return false;
-		while (tokenizer.peekMatch(TDimensions, peek))
-			peek++;
-
+		}
 		// match variable/function
-		if (tokenizer.peekMatch('TIdentifier', peek))
+		if (tokenizer.match('TIdentifier'))
 		{
 			// function (PScript, PClass)
-			if ((scope != PBlock) && tokenizer.peekMatch(TParenOpen, peek + 1))
+			if ((scope != PBlock) && tokenizer.match(TParenOpen))
+			{
+				tokenizer.popState();
 				return parseFunctionDefinition(definitions);
+			}
 			// variable (PClass, PBlock) (PScript handled by parseStatement as PBlock)
 			else if (scope != PScript)
+			{
+				tokenizer.popState();
 				return parseVariableDefinition(statements, definitions);
+			}
 		}
+		
 		// no match
+		tokenizer.popState();
 		return false;
 	}
 	
@@ -318,7 +332,6 @@ class Parser {
 		// parse body
 		tokenizer.match(TBraceOpen, true);
 		var fStatements:Array<Statement> = [], fDefinitions:Array<Definition> = [];
-		//[NOTE] function order is important here
 		while (parseStatement(fStatements, fDefinitions))
 			continue;
 		tokenizer.match(TBraceClose, true);
@@ -352,13 +365,13 @@ class Parser {
 	{
 		// parse a comma-delimited list of expressions (array initializer, function call, &c.)
 		var list:Array<Expression> = [];
-		if (!tokenizer.match(TParenClose))
+		do
 		{
-			do
-			{
-				list.push(parseExpression(true));
-			} while (tokenizer.match(TComma));
-		}
+			var expression = parseExpression(list.length > 0);
+			if (expression == null)
+				return list;
+			list.push(expression);
+		} while (tokenizer.match(TComma));
 		return list;
 	}
 
@@ -384,9 +397,8 @@ class Parser {
 
 	private function scanOperand(operators:Array<ParserOperator>, operands:Array<Expression>, ?required:Bool = false):Bool
 	{
-		// get next token
+		// switch based on next token
 		var token:Token = tokenizer.peek();
-		// switch based on type
 		switch (token)
 		{
 		    // unary operators
@@ -720,19 +732,6 @@ class Parser {
 				var b:Expression = operands.pop(), a:Expression = operands.pop();
 				operands.push(EOperation(operator, a, b));
 			}
-			
-/*		    case PAssignment(operator):
-			// get assignment
-		        var value:Expression = operands.pop(), reference:Expression = operands.pop();
-			// we can only assign to a reference
-			if ((Type.enumConstructor(reference) != 'EReference') &&
-			    (Type.enumConstructor(reference) != 'EArrayAccess'))
-				throw new TokenizerSyntaxError('Invalid assignment left-hand side.', tokenizer);
-				
-			// compound assignment operations
-			if (operator != null)
-				value = EOperation(operator, reference, value);
-			operands.push(EAssignment(reference, value));*/
 	    
 		    case PCast(type):
 			// expression cast
@@ -826,12 +825,12 @@ class Parser {
 	}
 
 // http://www.particle.kth.se/~lindsey/JavaCourse/Book/Part1/Java/Chapter02/operators.html
+
 	private function lookupOperatorPrecedence(operator:ParserOperator)
 	{
 		return switch (operator) {
 		    case POperator(operator):
 			switch (operator) {
-//[TODO] ternary?
 			    case OpOr: 3;
 			    case OpAnd: 4;
 			    case OpBitwiseOr: 5;
@@ -844,8 +843,6 @@ class Parser {
 			    case OpMultiply, OpDivide, OpModulus: 12;
 			    case OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus: 14;
 			}
-//		    case PAssignment(_): 1;
-//		    case PNew: 13;
 		    case PCast(_): 13;
 		    case PPrefix(_): 14;
 		    case PPostfix(_): 15;
@@ -866,8 +863,6 @@ enum ParserScope
 enum ParserOperator
 {
 	POperator(operator:Operator);
-//	PAssignment(?operator:Operator);
-//	PNew;
 	PCast(type:VariableType);
 	PPrefix(type:IncrementType);
 	PPostfix(type:IncrementType);
