@@ -59,7 +59,7 @@ class Tokenizer
 	public function next():Token
 	{
 		// init variables
-		var regex:EReg, input:String = '';
+		var regex:SimpleEReg, input:String = '';
 
 		// eliminate comments/whitespace
 		while (true)
@@ -264,25 +264,24 @@ class Tokenizer
 }
 
 class TokenizerRegexList
-{
+{	
 	// dead space
-	public static var WHITESPACE:EReg = ~/^\s+/;
-	public static var COMMENT:EReg = ~/^\/(?:\*(?:.|\n|\r)*?\*\/|\/.*)/;
-	public static var NEWLINES:EReg = ~/\n/g;
+	public static var WHITESPACE = new SimpleEReg("^\\s+","");
+	public static var COMMENT = new SimpleEReg("^/(?:\\*(?:.|\\n|\\r)*?\\*/|/.*)","");
+	public static var NEWLINES = new SimpleEReg("\\n", "g");
 	
 	// tokens
-	public static var EOF:EReg = ~/^$/;
-	public static var COLOR:EReg = ~/^(?:0[xX]|#)([\da-fA-F]{6}|[\da-fA-F]{8})/;
-	public static var FLOAT:EReg = ~/^\d+(?:\.\d*)?[fF]|^\d+\.\d*(?:[eE][-+]?\d+)?|^\d+(?:\.\d*)?[eE][-+]?\d+|^\.\d+(?:[eE][-+]?\d+)?/;
-	public static var INTEGER:EReg = ~/^0[xX][\da-fA-F]+|^0[0-7]*|^\d+/;
-//[TODO] new as operator?
-	public static var KEYWORD:EReg = ~/^(break|class|case|catch|const|continue|default|do|else|enum|false|finally|for|function|if|new|null|public|private|return|static|switch|this|throw|true|try|var|while|with)\b/;
-	public static var TYPE:EReg = ~/^(boolean|char|void|float|int)\b/;
-	public static var IDENTIFIER:EReg = ~/^\w+/;
-	public static var CHAR:EReg = ~/^'(?:[^']|\\.|\\u[0-9A-Fa-f]{4})'/;
-	public static var STRING:EReg = ~/^"(?:\\.|[^"])*"|^'(?:[^']|\\.)*'/;
-	public static var OPERATOR:EReg = ~/^(\n|\|\||&&|[!=]=|(\||\^|&|<<|>>>?|\+|\-|\*|\/|%)?=(?!=)|<<|<=|>>>?|>=|\+\+|--|[|^&<>+\-*\/%!~]|instanceof\b)/;
-	public static var PUNCUATION:EReg = ~/^\[\]|^[;,?:.[\]{}()]/;
+	public static var EOF = new SimpleEReg("^$","");
+	public static var COLOR = new SimpleEReg("^(?:0[xX]|#)([\\da-fA-F]{6}|[\\da-fA-F]{8})","");
+	public static var FLOAT = new SimpleEReg("^\\d+(?:\\.\\d*)?[fF]|^\\d+\\.\\d*(?:[eE][-+]?\\d+)?|^\\d+(?:\\.\\d*)?[eE][-+]?\\d+|^\\.\\d+(?:[eE][-+]?\\d+)?","");
+	public static var INTEGER = new SimpleEReg("^0[xX][\\da-fA-F]+|^0[0-7]*|^\\d+","");
+	public static var KEYWORD = new SimpleEReg("^(break|class|case|catch|const|continue|default|do|else|enum|false|finally|for|function|if|new|null|public|private|return|static|switch|this|throw|true|try|var|while|with)\\b","");
+	public static var TYPE = new SimpleEReg("^(boolean|char|void|float|int)\\b","");
+	public static var IDENTIFIER = new SimpleEReg("^\\w+","");
+	public static var CHAR = new SimpleEReg("^'(?:[^']|\\\\.|\\\\u[0-9A-Fa-f]{4})'","");
+	public static var STRING = new SimpleEReg("^\"(?:\\\\.|[^\"])*\"|^'(?:[^']|\\\\.)*'","");
+	public static var OPERATOR = new SimpleEReg("^(\\n|\\|\\||&&|[!=]=|(\\||\\^|&|<<|>>>?|\\+|\\-|\\*|/|%)?=(?!=)|<<|<=|>>>?|>=|\\+\\+|--|[|^&<>+\\-*/%!~]|instanceof\\b)","");
+	public static var PUNCUATION = new SimpleEReg("^\\[\\]|^[;,?:.[\\]{}()]", "");
 	
 	// characters
 	public static var CHAR_BACKSPACE:EReg = ~/((?:[^\\]|^)(?:\\\\)+)\\b/g;
