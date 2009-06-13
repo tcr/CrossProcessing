@@ -5,7 +5,6 @@
 
 package processing.interpreter;
 
-import processing.parser.Tokenizer;
 import processing.parser.Syntax;
 
 //[TODO] rewrite all to use Scope methods
@@ -18,11 +17,62 @@ class Interpreter
 	}
 
 //[TODO] we can use Type class to get rid of byValue necessity
-	public function interpret(statement:Statement, context:Scope, ?byValue = true):Dynamic
+	public function interpretStatement(statement:Statement, context:Scope, ?byValue = true):Dynamic
 	{
 		switch (statement)
 		{
-		case SArrayInstantiation(type, sizes):
+		    case SBlock(statements):
+			// iterate block
+			var retValue:Dynamic = null;
+			for (i in statements)
+				retValue = interpret(i, context);
+			return retValue;
+		
+		    case SBreak(level):
+			throw new Break(level);
+
+		    case SConditional(condition, thenBlock, elseBlock):
+			if (interpret(condition, context))
+				return interpret(thenBlock, context);
+			else if (elseBlock != null)
+				return interpret(elseBlock, context);
+			return;
+				
+		    case SContinue(level):
+			throw new Continue(level);
+
+		    case SLoop(condition, body):
+			// loop condition
+			while (interpret(condition, context)) {
+				try {
+					// execute body
+					interpret(body, context);
+				} catch (b:Break) {
+					// decrease level and rethrow if necessary
+					if (--b.level <= 0)
+						throw b;
+					// else break loop
+					break;
+				} catch (c:Continue) {
+					// decrease level and rethrow if necessary
+					if (--c.level <= 0)
+						throw c;
+					// else continue loop
+					continue;
+				}
+			}
+			return;
+
+		    case SReturn(value):
+			throw new Return(interpret(value, context));
+		}
+	}
+	
+	public function interpretExpression(expression:Expression, context:Scope, ?byValue = true):Dynamic
+	{
+		switch (expression)
+		{
+		    case EArrayInstantiation(type, sizes):
 			// return new (multi-)dimensional array
 			var array:Array<Dynamic> = [], current:Dynamic = 0;
 			sizes.reverse();
@@ -35,47 +85,20 @@ class Interpreter
 			}
 			return current;
 
-		case SArrayLiteral(values):
+		    case EArrayLiteral(values):
 			// parse array
 			var array:Array<Dynamic> = new Array();
 			for (value in values)
 				array.push(interpret(value, context));
 			return array;
 		
-		case SAssignment(type, reference, value):
+		    case EAssignment(reference, value):
 			// evaluate operands
-			var a:Reference = interpret(reference, context, false), b:Dynamic = null;
-			if (value != null)
-				b = interpret(value, context);
+			var a:Reference = interpret(reference, context, false);
+			var b:Dynamic = interpret(value, context);
+			a.setValue(b);
 			
-			switch (type) {
-			    case AssignOp: 		return a.setValue(b);
-			    case AssignOpBitwiseOr: 	return a.setValue(a.getValue() | b);
-			    case AssignOpBitwiseXor: 	return a.setValue(a.getValue() ^ b);
-			    case AssignOpBitewiseAnd: 	return a.setValue(a.getValue() & b);
-			    case AssignOpLeftShift: 	return a.setValue(a.getValue() << b);
-			    case AssignOpRightShift: 	return a.setValue(a.getValue() >> b);
-			    case AssignOpZeroRightShift:return a.setValue(a.getValue() >>> b);
-			    case AssignOpPlus: 		return a.setValue(a.getValue() + b);
-			    case AssignOpMinus: 	return a.setValue(a.getValue() - b);
-			    case AssignOpMul: 		return a.setValue(a.getValue() * b);
-			    case AssignOpDiv: 		return a.setValue(a.getValue() / b);
-			    case AssignOpMod: 		return a.setValue(a.getValue() % b);
-			    case AssignOpIncrement: 	return a.setValue(a.getValue() + 1);
-			    case AssignOpDecrement: 	return a.setValue(a.getValue() - 1);
-			}
-
-		case SBlock(statements):
-			// iterate block
-			var retValue:Dynamic = null;
-			for (i in statements)
-				retValue = interpret(i, context);
-			return retValue;
-		
-		case SBreak(level):
-			throw new Break(level);
-			
-		case SCall(method, args):
+		    case ECall(method, args):
 			// iterate args statements
 			var parsedArgs:Array<Dynamic> = [];
 			for (arg in args)
@@ -83,7 +106,7 @@ class Interpreter
 			// apply function
 			return Reflect.callMethod(context.scope, interpret(method, context), parsedArgs);
 			
-		case SCast(type, expression):
+		    case ECast(type, expression):
 			// parse value
 			var value:Dynamic = interpret(expression, context);
 			
@@ -105,7 +128,97 @@ class Interpreter
 //[TODO] throw error
 			return value;
 
-		case SClassDefinition(identifier, constructorBody, publicBody, privateBody):
+		    case EConditional(condition, thenExpression, elseExpression):
+			if (interpret(condition, context))
+				return interpret(thenBlock, context);
+			else if (elseBlock != null)
+				return interpret(elseBlock, context);
+			return;
+			
+		    case ELiteral(value):
+			// return literal
+			return value;
+
+		    case EObjectInstantiation(method, args):
+			// parse class
+			var objClass:Class<Dynamic> = interpret(method, context);
+			// iterate args statements
+			var parsedArgs:Array<Dynamic> = [];
+			for (arg in args)
+				parsedArgs.push(interpret(arg, context));
+			return Type.createInstance(objClass, parsedArgs);
+			
+		    case EOperation(type, leftOperand, rightOperand):
+			// evaluate operands
+			var a:Dynamic = interpret(leftOperand, context), b:Dynamic = null;
+			if (rightOperand != null)
+				b = interpret(rightOperand, context);
+
+			// evaluate operation
+			switch (type) {
+			    // unary operators
+			    case OpNot:			return !a;
+			    case OpBitwiseNot:		return ~a;
+			    case OpUnaryPlus:		return a;
+			    case OpUnaryMinus:		return -a;
+
+			    // binary operators
+			    case OpOr:			return a || b;
+			    case OpAnd:			return a && b;
+			    case OpBitwiseOr:		return a | b;
+			    case OpBitwiseXor:		return a ^ b;
+			    case OpBitwiseAnd:		return a & b;
+//[TODO] java has .equals(); figure out relation between == and .equals
+			    case OpEqual:		return a == b;
+			    case OpUnequal:		return a != b;
+			    case OpLessThan:		return a < b;
+			    case OpLessThanOrEqual:	return a <= b;
+			    case OpGreaterThan:		return a > b;
+			    case OpGreaterThanOrEqual:	return a >= b;
+			    case OpInstanceOf:		return Std.is(a, b);
+			    case OpLeftShift:		return a << b;
+			    case OpRightShift:		return a >> b;
+			    case OpZeroRightShift:	return a >>> b;
+			    case OpPlus:		return a + b;
+			    case OpMinus:		return a - b;
+			    case OpMultiply:		return a * b;
+			    case OpDivide:		return a / b;
+			    case OpModulus:		return a % b;
+			}
+		
+		    case EReference(sIdentifier, sBase):
+			// evaluate identifier
+			var identifier:String = interpret(sIdentifier, context), ref:Reference;
+			// evaluate base in current context
+			if (sBase != null)
+			{
+				// if a base is supplied, return it
+				ref = new Reference(identifier, interpret(sBase, context));
+			}
+			else
+			{
+				// find definition of this identifier
+				var definition:Scope = context.findDefinition(identifier);
+				if (definition == null)
+					return null;
+				ref = new Reference(identifier, definition.scope);
+			}
+			return byValue ? ref.getValue() : ref;
+
+		    case EThisReference:
+			// climb context inheritance to find defined thisObject
+			var c:Scope = context;
+			while (c != null && c.thisObject == null)
+			    c = c.parent;
+			return c == null ? c.thisObject : null;
+		}
+	}
+	
+	public function interpretDefinition(definition:Definition, context:Scope, ?byValue = true):Dynamic
+	{
+		switch (definition)
+		{
+		    case DClass(identifier, constructorBody, publicBody, privateBody):
 //[TODO] figure out how to do this in haXe
 /*
 			// create class constructor
@@ -132,18 +245,8 @@ class Interpreter
 			}));
 */
 			return;
-			
-		case SConditional(condition, thenBlock, elseBlock):
-			if (interpret(condition, context))
-				return interpret(thenBlock, context);
-			else if (elseBlock != null)
-				return interpret(elseBlock, context);
-			return;
-				
-		case SContinue(level):
-			throw new Continue(level);
 
-		case SFunctionDefinition(identifier, type, params, body):
+		    case DFunction(identifier, type, params, body):
 			// make a new definition
 //[TODO] an OverloadedFunction class would be cool beans
 //[TODO] should this be deep?
@@ -203,109 +306,7 @@ class Interpreter
 			});
 			return;
 
-		case SLiteral(value):
-			// return literal
-			return value;
-			
-		case SLoop(condition, body):
-			// loop condition
-			while (interpret(condition, context)) {
-				try {
-					// execute body
-					interpret(body, context);
-				} catch (b:Break) {
-					// decrease level and rethrow if necessary
-					if (--b.level <= 0)
-						throw b;
-					// else break loop
-					break;
-				} catch (c:Continue) {
-					// decrease level and rethrow if necessary
-					if (--c.level <= 0)
-						throw c;
-					// else continue loop
-					continue;
-				}
-			}
-			return;
-			
-		case SObjectInstantiation(method, args):
-			// parse class
-			var objClass:Class<Dynamic> = interpret(method, context);
-			// iterate args statements
-			var parsedArgs:Array<Dynamic> = [];
-			for (arg in args)
-				parsedArgs.push(interpret(arg, context));
-			return Type.createInstance(objClass, parsedArgs);
-			
-		case SOperation(type, leftOperand, rightOperand):
-			// evaluate operands
-			var a:Dynamic = interpret(leftOperand, context), b:Dynamic = null;
-			if (rightOperand != null)
-				b = interpret(rightOperand, context);
-
-			// evaluate operation
-			switch (type) {
-			    // unary operators
-			    case OpNot:			return !a;
-			    case OpBitwiseNot:		return ~a;
-			    case OpUnaryPlus:		return a;
-			    case OpUnaryMinus:		return -a;
-
-			    // binary operators
-			    case OpOr:			return a || b;
-			    case OpAnd:			return a && b;
-			    case OpBitwiseOr:		return a | b;
-			    case OpBitwiseXor:		return a ^ b;
-			    case OpBitwiseAnd:		return a & b;
-//[TODO] java has .equals(); figure out relation between == and .equals
-			    case OpEqual:		return a == b;
-			    case OpUnequal:		return a != b;
-			    case OpLessThan:		return a < b;
-			    case OpLessThanOrEqual:	return a <= b;
-			    case OpGreaterThan:		return a > b;
-			    case OpGreaterThanOrEqual:	return a >= b;
-			    case OpInstanceOf:		return Std.is(a, b);
-			    case OpLeftShift:		return a << b;
-			    case OpRightShift:		return a >> b;
-			    case OpZeroRightShift:	return a >>> b;
-			    case OpPlus:		return a + b;
-			    case OpMinus:		return a - b;
-			    case OpMultiply:		return a * b;
-			    case OpDivide:		return a / b;
-			    case OpModulus:		return a % b;
-			}
-		
-		case SReference(sIdentifier, sBase):
-			// evaluate identifier
-			var identifier:String = interpret(sIdentifier, context), ref:Reference;
-			// evaluate base in current context
-			if (sBase != null)
-			{
-				// if a base is supplied, return it
-				ref = new Reference(identifier, interpret(sBase, context));
-			}
-			else
-			{
-				// find definition of this identifier
-				var definition:Scope = context.findDefinition(identifier);
-				if (definition == null)
-					return null;
-				ref = new Reference(identifier, definition.scope);
-			}
-			return byValue ? ref.getValue() : ref;
-		
-		case SReturn(value):
-			throw new Return(interpret(value, context));
-			
-		case SThisReference:
-			// climb context inheritance to find defined thisObject
-			var c:Scope = context;
-			while (c != null && c.thisObject == null)
-			    c = c.parent;
-			return c == null ? c.thisObject : null;
-			
-		case SVariableDefinition(identifier, type):
+		    case DVariable(identifier, type):
 //[TODO] do something with type
 			// define variable (by default, 0)
 			Reflect.setField(context.scope, identifier, 0);
