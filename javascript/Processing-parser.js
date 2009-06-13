@@ -3,81 +3,40 @@ js = {}
 js.Boot = function() { }
 js.Boot.__name__ = ["js","Boot"];
 js.Boot.__unhtml = function(s) {
-	$s.push("js.Boot::__unhtml");
-	var $spos = $s.length;
-	{
-		var $tmp = s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
 }
 js.Boot.__trace = function(v,i) {
-	$s.push("js.Boot::__trace");
-	var $spos = $s.length;
 	var msg = (i != null?i.fileName + ":" + i.lineNumber + ": ":"");
 	msg += js.Boot.__unhtml(js.Boot.__string_rec(v,"")) + "<br/>";
 	var d = document.getElementById("haxe:trace");
 	if(d == null) alert("No haxe:trace element defined\n" + msg);
 	else d.innerHTML += msg;
-	$s.pop();
 }
 js.Boot.__clear_trace = function() {
-	$s.push("js.Boot::__clear_trace");
-	var $spos = $s.length;
 	var d = document.getElementById("haxe:trace");
 	if(d != null) d.innerHTML = "";
 	else null;
-	$s.pop();
 }
 js.Boot.__closure = function(o,f) {
-	$s.push("js.Boot::__closure");
-	var $spos = $s.length;
 	var m = o[f];
-	if(m == null) {
-		$s.pop();
-		return null;
-	}
+	if(m == null) return null;
 	var f1 = function() {
-		$s.push("js.Boot::__closure@67");
-		var $spos = $s.length;
-		{
-			var $tmp = m.apply(o,arguments);
-			$s.pop();
-			return $tmp;
-		}
-		$s.pop();
+		return m.apply(o,arguments);
 	}
 	f1.scope = o;
 	f1.method = m;
-	{
-		$s.pop();
-		return f1;
-	}
-	$s.pop();
+	return f1;
 }
 js.Boot.__string_rec = function(o,s) {
-	$s.push("js.Boot::__string_rec");
-	var $spos = $s.length;
-	if(o == null) {
-		$s.pop();
-		return "null";
-	}
-	if(s.length >= 5) {
-		$s.pop();
-		return "<...>";
-	}
+	if(o == null) return "null";
+	if(s.length >= 5) return "<...>";
 	var t = typeof(o);
 	if(t == "function" && (o.__name__ != null || o.__ename__ != null)) t = "object";
 	switch(t) {
 	case "object":{
 		if(o instanceof Array) {
 			if(o.__enum__ != null) {
-				if(o.length == 2) {
-					var $tmp = o[0];
-					$s.pop();
-					return $tmp;
-				}
+				if(o.length == 2) return o[0];
 				var str = o[0] + "(";
 				s += "\t";
 				{
@@ -88,11 +47,7 @@ js.Boot.__string_rec = function(o,s) {
 						else str += js.Boot.__string_rec(o[i],s);
 					}
 				}
-				{
-					var $tmp = str + ")";
-					$s.pop();
-					return $tmp;
-				}
+				return str + ")";
 			}
 			var l = o.length;
 			var i;
@@ -106,10 +61,7 @@ js.Boot.__string_rec = function(o,s) {
 				}
 			}
 			str += "]";
-			{
-				$s.pop();
-				return str;
-			}
+			return str;
 		}
 		var tostr;
 		try {
@@ -119,22 +71,13 @@ js.Boot.__string_rec = function(o,s) {
 			{
 				var e = $e0;
 				{
-					$e = [];
-					while($s.length >= $spos) $e.unshift($s.pop());
-					$s.push($e[0]);
-					{
-						$s.pop();
-						return "???";
-					}
+					return "???";
 				}
 			}
 		}
 		if(tostr != null && tostr != Object.toString) {
 			var s2 = o.toString();
-			if(s2 != "[object Object]") {
-				$s.pop();
-				return s2;
-			}
+			if(s2 != "[object Object]") return s2;
 		}
 		var k = null;
 		var str = "{\n";
@@ -148,245 +91,107 @@ js.Boot.__string_rec = function(o,s) {
 		}
 		s = s.substring(1);
 		str += "\n" + s + "}";
-		{
-			$s.pop();
-			return str;
-		}
+		return str;
 	}break;
 	case "function":{
-		{
-			$s.pop();
-			return "<function>";
-		}
+		return "<function>";
 	}break;
 	case "string":{
-		{
-			$s.pop();
-			return o;
-		}
+		return o;
 	}break;
 	default:{
-		{
-			var $tmp = String(o);
-			$s.pop();
-			return $tmp;
-		}
+		return String(o);
 	}break;
 	}
-	$s.pop();
 }
 js.Boot.__interfLoop = function(cc,cl) {
-	$s.push("js.Boot::__interfLoop");
-	var $spos = $s.length;
-	if(cc == null) {
-		$s.pop();
-		return false;
-	}
-	if(cc == cl) {
-		$s.pop();
-		return true;
-	}
+	if(cc == null) return false;
+	if(cc == cl) return true;
 	var intf = cc.__interfaces__;
 	if(intf != null) {
 		var _g1 = 0, _g = intf.length;
 		while(_g1 < _g) {
 			var i = _g1++;
 			var i1 = intf[i];
-			if(i1 == cl || js.Boot.__interfLoop(i1,cl)) {
-				$s.pop();
-				return true;
-			}
+			if(i1 == cl || js.Boot.__interfLoop(i1,cl)) return true;
 		}
 	}
-	{
-		var $tmp = js.Boot.__interfLoop(cc.__super__,cl);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return js.Boot.__interfLoop(cc.__super__,cl);
 }
 js.Boot.__instanceof = function(o,cl) {
-	$s.push("js.Boot::__instanceof");
-	var $spos = $s.length;
 	try {
 		if(o instanceof cl) {
-			if(cl == Array) {
-				var $tmp = (o.__enum__ == null);
-				$s.pop();
-				return $tmp;
-			}
-			{
-				$s.pop();
-				return true;
-			}
-		}
-		if(js.Boot.__interfLoop(o.__class__,cl)) {
-			$s.pop();
+			if(cl == Array) return (o.__enum__ == null);
 			return true;
 		}
+		if(js.Boot.__interfLoop(o.__class__,cl)) return true;
 	}
 	catch( $e1 ) {
 		{
 			var e = $e1;
 			{
-				$e = [];
-				while($s.length >= $spos) $e.unshift($s.pop());
-				$s.push($e[0]);
-				if(cl == null) {
-					$s.pop();
-					return false;
-				}
+				if(cl == null) return false;
 			}
 		}
 	}
 	switch(cl) {
 	case Int:{
-		{
-			var $tmp = Math.ceil(o%2147483648.0) === o;
-			$s.pop();
-			return $tmp;
-		}
+		return Math.ceil(o%2147483648.0) === o;
 	}break;
 	case Float:{
-		{
-			var $tmp = typeof(o) == "number";
-			$s.pop();
-			return $tmp;
-		}
+		return typeof(o) == "number";
 	}break;
 	case Bool:{
-		{
-			var $tmp = o === true || o === false;
-			$s.pop();
-			return $tmp;
-		}
+		return o === true || o === false;
 	}break;
 	case String:{
-		{
-			var $tmp = typeof(o) == "string";
-			$s.pop();
-			return $tmp;
-		}
+		return typeof(o) == "string";
 	}break;
 	case Dynamic:{
-		{
-			$s.pop();
-			return true;
-		}
+		return true;
 	}break;
 	default:{
-		if(o == null) {
-			$s.pop();
-			return false;
-		}
-		{
-			var $tmp = o.__enum__ == cl || (cl == Class && o.__name__ != null) || (cl == Enum && o.__ename__ != null);
-			$s.pop();
-			return $tmp;
-		}
+		if(o == null) return false;
+		return o.__enum__ == cl || (cl == Class && o.__name__ != null) || (cl == Enum && o.__ename__ != null);
 	}break;
 	}
-	$s.pop();
 }
 js.Boot.__init = function() {
-	$s.push("js.Boot::__init");
-	var $spos = $s.length;
 	js.Lib.isIE = (document.all != null && window.opera == null);
 	js.Lib.isOpera = (window.opera != null);
 	Array.prototype.copy = Array.prototype.slice;
 	Array.prototype.insert = function(i,x) {
-		$s.push("js.Boot::__init@199");
-		var $spos = $s.length;
 		this.splice(i,0,x);
-		$s.pop();
 	}
-	Array.prototype.remove = (Array.prototype.indexOf?function(obj) {
-		$s.push("js.Boot::__init@202");
-		var $spos = $s.length;
-		var idx = this.indexOf(obj);
-		if(idx == -1) {
-			$s.pop();
-			return false;
-		}
-		this.splice(idx,1);
-		{
-			$s.pop();
-			return true;
-		}
-		$s.pop();
-	}:function(obj) {
-		$s.push("js.Boot::__init@207");
-		var $spos = $s.length;
+	Array.prototype.remove = function(obj) {
 		var i = 0;
 		var l = this.length;
 		while(i < l) {
 			if(this[i] == obj) {
 				this.splice(i,1);
-				{
-					$s.pop();
-					return true;
-				}
+				return true;
 			}
 			i++;
 		}
-		{
-			$s.pop();
-			return false;
-		}
-		$s.pop();
-	});
+		return false;
+	}
 	Array.prototype.iterator = function() {
-		$s.push("js.Boot::__init@219");
-		var $spos = $s.length;
-		{
-			var $tmp = { cur : 0, arr : this, hasNext : function() {
-				$s.push("js.Boot::__init@219@223");
-				var $spos = $s.length;
-				{
-					var $tmp = this.cur < this.arr.length;
-					$s.pop();
-					return $tmp;
-				}
-				$s.pop();
-			}, next : function() {
-				$s.push("js.Boot::__init@219@226");
-				var $spos = $s.length;
-				{
-					var $tmp = this.arr[this.cur++];
-					$s.pop();
-					return $tmp;
-				}
-				$s.pop();
-			}}
-			$s.pop();
-			return $tmp;
-		}
-		$s.pop();
+		return { cur : 0, arr : this, hasNext : function() {
+			return this.cur < this.arr.length;
+		}, next : function() {
+			return this.arr[this.cur++];
+		}}
 	}
 	var cca = String.prototype.charCodeAt;
 	String.prototype.cca = cca;
 	String.prototype.charCodeAt = function(i) {
-		$s.push("js.Boot::__init@233");
-		var $spos = $s.length;
 		var x = cca.call(this,i);
-		if(isNaN(x)) {
-			$s.pop();
-			return null;
-		}
-		{
-			$s.pop();
-			return x;
-		}
-		$s.pop();
+		if(isNaN(x)) return null;
+		return x;
 	}
 	var oldsub = String.prototype.substr;
 	String.prototype.substr = function(pos,len) {
-		$s.push("js.Boot::__init@240");
-		var $spos = $s.length;
-		if(pos != null && pos != 0 && len != null && len < 0) {
-			$s.pop();
-			return "";
-		}
+		if(pos != null && pos != 0 && len != null && len < 0) return "";
 		if(len == null) len = this.length;
 		if(pos < 0) {
 			pos = this.length + pos;
@@ -395,15 +200,9 @@ js.Boot.__init = function() {
 		else if(len < 0) {
 			len = this.length + len - pos;
 		}
-		{
-			var $tmp = oldsub.apply(this,[pos,len]);
-			$s.pop();
-			return $tmp;
-		}
-		$s.pop();
+		return oldsub.apply(this,[pos,len]);
 	}
 	$closure = js.Boot.__closure;
-	$s.pop();
 }
 js.Boot.prototype.__class__ = js.Boot;
 processing = {}
@@ -413,35 +212,19 @@ processing.compiler.ICompiler.__name__ = ["processing","compiler","ICompiler"];
 processing.compiler.ICompiler.prototype.compile = null;
 processing.compiler.ICompiler.prototype.__class__ = processing.compiler.ICompiler;
 processing.compiler.JavaScriptCompiler = function(p) { if( p === $_ ) return; {
-	$s.push("processing.compiler.JavaScriptCompiler::new");
-	var $spos = $s.length;
 	null;
-	$s.pop();
 }}
 processing.compiler.JavaScriptCompiler.__name__ = ["processing","compiler","JavaScriptCompiler"];
 processing.compiler.JavaScriptCompiler.prototype.compile = function(code) {
-	$s.push("processing.compiler.JavaScriptCompiler::compile");
-	var $spos = $s.length;
-	{
-		var $tmp = this.serializeStatement(code);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return this.serializeStatement(code);
 }
 processing.compiler.JavaScriptCompiler.prototype.serializeDefinition = function(definition,scope) {
-	$s.push("processing.compiler.JavaScriptCompiler::serializeDefinition");
-	var $spos = $s.length;
 	var $e = (definition);
 	switch( $e[1] ) {
 	case 0:
 	var type = $e[5], isStatic = $e[4], visibility = $e[3], identifier = $e[2];
 	{
-		{
-			var $tmp = ((scope == processing.compiler.CompilerScope.SClass?"this.":"var ")) + identifier + " = 0;";
-			$s.pop();
-			return $tmp;
-		}
+		return ((scope == processing.compiler.CompilerScope.SClass?"this.":"var ")) + identifier + " = 0;";
 	}break;
 	case 1:
 	var body = $e[7], params = $e[6], type = $e[5], isStatic = $e[4], visibility = $e[3], identifier = $e[2];
@@ -456,37 +239,22 @@ processing.compiler.JavaScriptCompiler.prototype.serializeDefinition = function(
 			}
 		}
 		var func = "function " + identifier + "(" + paramKeys.join(", ") + ") {\n" + this.serializeStatement(body) + "\n};";
-		{
-			var $tmp = ((scope == processing.compiler.CompilerScope.SClass?"this.":"")) + identifier + " = " + func;
-			$s.pop();
-			return $tmp;
-		}
+		return ((scope == processing.compiler.CompilerScope.SClass?"this.":"")) + identifier + " = " + func;
 	}break;
 	case 2:
 	var body = $e[5], isStatic = $e[4], visibility = $e[3], identifier = $e[2];
 	{
-		{
-			var $tmp = "function " + identifier + "() {\nwith (this) {\n" + this.serializeStatement(body,processing.compiler.CompilerScope.SClass) + "\n}\nthis." + identifier + ".apply(this, arguments);\n}";
-			$s.pop();
-			return $tmp;
-		}
+		return "function " + identifier + "() {\nwith (this) {\n" + this.serializeStatement(body,processing.compiler.CompilerScope.SClass) + "\n}\nthis." + identifier + ".apply(this, arguments);\n}";
 	}break;
 	}
-	$s.pop();
 }
 processing.compiler.JavaScriptCompiler.prototype.serializeExpression = function(expression) {
-	$s.push("processing.compiler.JavaScriptCompiler::serializeExpression");
-	var $spos = $s.length;
 	var $e = (expression);
 	switch( $e[1] ) {
 	case 0:
 	var index = $e[3], reference = $e[2];
 	{
-		{
-			var $tmp = this.serializeExpression(reference) + "[" + this.serializeExpression(index) + "]";
-			$s.pop();
-			return $tmp;
-		}
+		return this.serializeExpression(reference) + "[" + this.serializeExpression(index) + "]";
 	}break;
 	case 1:
 	var sizes = $e[3], type = $e[2];
@@ -500,28 +268,17 @@ processing.compiler.JavaScriptCompiler.prototype.serializeExpression = function(
 				source.push(this.serializeExpression(size));
 			}
 		}
-		{
-			var $tmp = "new ArrayList(" + source.join(", ") + ")";
-			$s.pop();
-			return $tmp;
-		}
+		return "new ArrayList(" + source.join(", ") + ")";
 	}break;
 	case 2:
 	var values = $e[2];
 	{
-		{
-			$s.pop();
-			return "";
-		}
+		return "";
 	}break;
 	case 3:
 	var value = $e[3], reference = $e[2];
 	{
-		{
-			var $tmp = this.serializeExpression(reference) + " = " + this.serializeExpression(value);
-			$s.pop();
-			return $tmp;
-		}
+		return this.serializeExpression(reference) + " = " + this.serializeExpression(value);
 	}break;
 	case 4:
 	var args = $e[3], method = $e[2];
@@ -535,95 +292,67 @@ processing.compiler.JavaScriptCompiler.prototype.serializeExpression = function(
 				source.push(this.serializeExpression(arg));
 			}
 		}
-		{
-			var $tmp = this.serializeExpression(method) + "(" + source.join(", ") + ")";
-			$s.pop();
-			return $tmp;
-		}
+		return this.serializeExpression(method) + "(" + source.join(", ") + ")";
 	}break;
 	case 5:
 	var expression1 = $e[3], type = $e[2];
 	{
-		if(new EReg("^(boolean|char|void|float|int)$","").match(type.type)) {
-			var $tmp = type.type + "(" + this.serializeExpression(expression1) + ")";
-			$s.pop();
-			return $tmp;
-		}
-		{
-			var $tmp = this.serializeExpression(expression1);
-			$s.pop();
-			return $tmp;
-		}
+		if(new EReg("^(boolean|char|void|float|int)$","").match(type.type)) return type.type + "(" + this.serializeExpression(expression1) + ")";
+		return this.serializeExpression(expression1);
 	}break;
 	case 6:
 	var elseStatement = $e[4], thenStatement = $e[3], condition = $e[2];
 	{
-		{
-			var $tmp = "((" + this.serializeExpression(condition) + ") ? (" + this.serializeExpression(thenStatement) + ") : (" + this.serializeExpression(elseStatement) + "))";
-			$s.pop();
-			return $tmp;
-		}
+		return "((" + this.serializeExpression(condition) + ") ? (" + this.serializeExpression(thenStatement) + ") : (" + this.serializeExpression(elseStatement) + "))";
 	}break;
 	case 10:
 	var type = $e[3], reference = $e[2];
 	{
-		{
-			var $tmp = function($this) {
-				var $r;
-				var $e = (type);
-				switch( $e[1] ) {
-				case 0:
-				{
-					$r = "(++" + $this.serializeExpression(reference) + ")";
-				}break;
-				case 1:
-				{
-					$r = "(--" + $this.serializeExpression(reference) + ")";
-				}break;
-				default:{
-					$r = null;
-				}break;
-				}
-				return $r;
-			}(this);
-			$s.pop();
-			return $tmp;
-		}
+		return function($this) {
+			var $r;
+			var $e = (type);
+			switch( $e[1] ) {
+			case 0:
+			{
+				$r = "(++" + $this.serializeExpression(reference) + ")";
+			}break;
+			case 1:
+			{
+				$r = "(--" + $this.serializeExpression(reference) + ")";
+			}break;
+			default:{
+				$r = null;
+			}break;
+			}
+			return $r;
+		}(this);
 	}break;
 	case 11:
 	var type = $e[3], reference = $e[2];
 	{
-		{
-			var $tmp = function($this) {
-				var $r;
-				var $e = (type);
-				switch( $e[1] ) {
-				case 0:
-				{
-					$r = "(" + $this.serializeExpression(reference) + "++)";
-				}break;
-				case 1:
-				{
-					$r = "(" + $this.serializeExpression(reference) + "--)";
-				}break;
-				default:{
-					$r = null;
-				}break;
-				}
-				return $r;
-			}(this);
-			$s.pop();
-			return $tmp;
-		}
+		return function($this) {
+			var $r;
+			var $e = (type);
+			switch( $e[1] ) {
+			case 0:
+			{
+				$r = "(" + $this.serializeExpression(reference) + "++)";
+			}break;
+			case 1:
+			{
+				$r = "(" + $this.serializeExpression(reference) + "--)";
+			}break;
+			default:{
+				$r = null;
+			}break;
+			}
+			return $r;
+		}(this);
 	}break;
 	case 7:
 	var value = $e[2];
 	{
-		{
-			var $tmp = (Std["is"](value,String)?"\"" + value + "\"":value);
-			$s.pop();
-			return $tmp;
-		}
+		return (Std["is"](value,String)?"\"" + value + "\"":value);
 	}break;
 	case 8:
 	var args = $e[3], method = $e[2];
@@ -637,167 +366,135 @@ processing.compiler.JavaScriptCompiler.prototype.serializeExpression = function(
 				source.push(this.serializeExpression(arg));
 			}
 		}
-		{
-			var $tmp = "new " + this.serializeExpression(method) + "(" + source.join(", ") + ")";
-			$s.pop();
-			return $tmp;
-		}
+		return "new " + this.serializeExpression(method) + "(" + source.join(", ") + ")";
 	}break;
 	case 9:
 	var rightOperand = $e[4], leftOperand = $e[3], type = $e[2];
 	{
-		if(rightOperand != null) {
-			var $tmp = "(" + this.serializeExpression(leftOperand) + this.serializeOperator(type) + this.serializeExpression(rightOperand) + ")";
-			$s.pop();
-			return $tmp;
-		}
-		else {
-			var $tmp = "(" + this.serializeOperator(type) + this.serializeExpression(leftOperand) + ")";
-			$s.pop();
-			return $tmp;
-		}
+		if(rightOperand != null) return "(" + this.serializeExpression(leftOperand) + this.serializeOperator(type) + this.serializeExpression(rightOperand) + ")";
+		else return "(" + this.serializeOperator(type) + this.serializeExpression(leftOperand) + ")";
 	}break;
 	case 12:
 	var base = $e[3], identifier = $e[2];
 	{
-		if(base == null) {
-			$s.pop();
-			return identifier;
-		}
-		else {
-			var $tmp = "(" + this.serializeExpression(base) + ")." + identifier;
-			$s.pop();
-			return $tmp;
-		}
+		if(base == null) return identifier;
+		else return "(" + this.serializeExpression(base) + ")." + identifier;
 	}break;
 	case 13:
 	{
-		{
-			$s.pop();
-			return "this";
-		}
+		return "this";
 	}break;
 	}
-	$s.pop();
 }
 processing.compiler.JavaScriptCompiler.prototype.serializeOperator = function(operator) {
-	$s.push("processing.compiler.JavaScriptCompiler::serializeOperator");
-	var $spos = $s.length;
-	{
-		var $tmp = function($this) {
-			var $r;
-			var $e = (operator);
-			switch( $e[1] ) {
-			case 0:
-			{
-				$r = "!";
-			}break;
-			case 1:
-			{
-				$r = "~";
-			}break;
-			case 2:
-			{
-				$r = "+";
-			}break;
-			case 3:
-			{
-				$r = "-";
-			}break;
-			case 4:
-			{
-				$r = "||";
-			}break;
-			case 5:
-			{
-				$r = "&&";
-			}break;
-			case 6:
-			{
-				$r = "|";
-			}break;
-			case 7:
-			{
-				$r = "^";
-			}break;
-			case 8:
-			{
-				$r = "&";
-			}break;
-			case 9:
-			{
-				$r = "==";
-			}break;
-			case 10:
-			{
-				$r = "!=";
-			}break;
-			case 11:
-			{
-				$r = "<";
-			}break;
-			case 12:
-			{
-				$r = "<=";
-			}break;
-			case 13:
-			{
-				$r = ">";
-			}break;
-			case 14:
-			{
-				$r = ">=";
-			}break;
-			case 15:
-			{
-				$r = "instanceof";
-			}break;
-			case 16:
-			{
-				$r = "<<";
-			}break;
-			case 17:
-			{
-				$r = ">>";
-			}break;
-			case 18:
-			{
-				$r = ">>>";
-			}break;
-			case 19:
-			{
-				$r = "+";
-			}break;
-			case 20:
-			{
-				$r = "-";
-			}break;
-			case 21:
-			{
-				$r = "*";
-			}break;
-			case 22:
-			{
-				$r = "/";
-			}break;
-			case 23:
-			{
-				$r = "%";
-			}break;
-			default:{
-				$r = null;
-			}break;
-			}
-			return $r;
-		}(this);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return function($this) {
+		var $r;
+		var $e = (operator);
+		switch( $e[1] ) {
+		case 0:
+		{
+			$r = "!";
+		}break;
+		case 1:
+		{
+			$r = "~";
+		}break;
+		case 2:
+		{
+			$r = "+";
+		}break;
+		case 3:
+		{
+			$r = "-";
+		}break;
+		case 4:
+		{
+			$r = "||";
+		}break;
+		case 5:
+		{
+			$r = "&&";
+		}break;
+		case 6:
+		{
+			$r = "|";
+		}break;
+		case 7:
+		{
+			$r = "^";
+		}break;
+		case 8:
+		{
+			$r = "&";
+		}break;
+		case 9:
+		{
+			$r = "==";
+		}break;
+		case 10:
+		{
+			$r = "!=";
+		}break;
+		case 11:
+		{
+			$r = "<";
+		}break;
+		case 12:
+		{
+			$r = "<=";
+		}break;
+		case 13:
+		{
+			$r = ">";
+		}break;
+		case 14:
+		{
+			$r = ">=";
+		}break;
+		case 15:
+		{
+			$r = "instanceof";
+		}break;
+		case 16:
+		{
+			$r = "<<";
+		}break;
+		case 17:
+		{
+			$r = ">>";
+		}break;
+		case 18:
+		{
+			$r = ">>>";
+		}break;
+		case 19:
+		{
+			$r = "+";
+		}break;
+		case 20:
+		{
+			$r = "-";
+		}break;
+		case 21:
+		{
+			$r = "*";
+		}break;
+		case 22:
+		{
+			$r = "/";
+		}break;
+		case 23:
+		{
+			$r = "%";
+		}break;
+		default:{
+			$r = null;
+		}break;
+		}
+		return $r;
+	}(this);
 }
 processing.compiler.JavaScriptCompiler.prototype.serializeStatement = function(statement,scope) {
-	$s.push("processing.compiler.JavaScriptCompiler::serializeStatement");
-	var $spos = $s.length;
 	var $e = (statement);
 	switch( $e[1] ) {
 	case 0:
@@ -822,20 +519,12 @@ processing.compiler.JavaScriptCompiler.prototype.serializeStatement = function(s
 				source.push(this.serializeStatement(statement1));
 			}
 		}
-		{
-			var $tmp = source.join("\n");
-			$s.pop();
-			return $tmp;
-		}
+		return source.join("\n");
 	}break;
 	case 1:
 	var label = $e[2];
 	{
-		{
-			var $tmp = "break" + ((label == null?"":" " + label)) + ";";
-			$s.pop();
-			return $tmp;
-		}
+		return "break" + ((label == null?"":" " + label)) + ";";
 	}break;
 	case 2:
 	var elseBlock = $e[4], thenBlock = $e[3], condition = $e[2];
@@ -860,29 +549,17 @@ processing.compiler.JavaScriptCompiler.prototype.serializeStatement = function(s
 			}
 		}
 		source.push("}");
-		{
-			var $tmp = source.join("\n");
-			$s.pop();
-			return $tmp;
-		}
+		return source.join("\n");
 	}break;
 	case 3:
 	var label = $e[2];
 	{
-		{
-			var $tmp = "continue" + ((label == null?"":" " + label)) + ";";
-			$s.pop();
-			return $tmp;
-		}
+		return "continue" + ((label == null?"":" " + label)) + ";";
 	}break;
 	case 4:
 	var expression = $e[2];
 	{
-		{
-			var $tmp = this.serializeExpression(expression) + ";";
-			$s.pop();
-			return $tmp;
-		}
+		return this.serializeExpression(expression) + ";";
 	}break;
 	case 5:
 	var body = $e[3], condition = $e[2];
@@ -898,23 +575,14 @@ processing.compiler.JavaScriptCompiler.prototype.serializeStatement = function(s
 			}
 		}
 		source.push("}");
-		{
-			var $tmp = source.join("\n");
-			$s.pop();
-			return $tmp;
-		}
+		return source.join("\n");
 	}break;
 	case 6:
 	var value = $e[2];
 	{
-		{
-			var $tmp = "return" + ((value == null?"":" " + this.serializeExpression(value))) + ";";
-			$s.pop();
-			return $tmp;
-		}
+		return "return" + ((value == null?"":" " + this.serializeExpression(value))) + ";";
 	}break;
 	}
-	$s.pop();
 }
 processing.compiler.JavaScriptCompiler.prototype.__class__ = processing.compiler.JavaScriptCompiler;
 processing.compiler.JavaScriptCompiler.__interfaces__ = [processing.compiler.ICompiler];
@@ -932,26 +600,13 @@ js.Lib.isOpera = null;
 js.Lib.document = null;
 js.Lib.window = null;
 js.Lib.alert = function(v) {
-	$s.push("js.Lib::alert");
-	var $spos = $s.length;
 	alert(js.Boot.__string_rec(v,""));
-	$s.pop();
 }
 js.Lib.eval = function(code) {
-	$s.push("js.Lib::eval");
-	var $spos = $s.length;
-	{
-		var $tmp = eval(code);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return eval(code);
 }
 js.Lib.setErrorHandler = function(f) {
-	$s.push("js.Lib::setErrorHandler");
-	var $spos = $s.length;
 	js.Lib.onerror = f;
-	$s.pop();
 }
 js.Lib.prototype.__class__ = js.Lib;
 ValueType = { __ename__ : ["ValueType"], __constructs__ : ["TNull","TInt","TFloat","TBool","TObject","TFunction","TClass","TEnum","TUnknown"] }
@@ -981,76 +636,27 @@ ValueType.TUnknown.__enum__ = ValueType;
 Type = function() { }
 Type.__name__ = ["Type"];
 Type.getClass = function(o) {
-	$s.push("Type::getClass");
-	var $spos = $s.length;
-	if(o == null) {
-		$s.pop();
-		return null;
-	}
-	if(o.__enum__ != null) {
-		$s.pop();
-		return null;
-	}
-	{
-		var $tmp = o.__class__;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	if(o == null) return null;
+	if(o.__enum__ != null) return null;
+	return o.__class__;
 }
 Type.getEnum = function(o) {
-	$s.push("Type::getEnum");
-	var $spos = $s.length;
-	if(o == null) {
-		$s.pop();
-		return null;
-	}
-	{
-		var $tmp = o.__enum__;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	if(o == null) return null;
+	return o.__enum__;
 }
 Type.getSuperClass = function(c) {
-	$s.push("Type::getSuperClass");
-	var $spos = $s.length;
-	{
-		var $tmp = c.__super__;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return c.__super__;
 }
 Type.getClassName = function(c) {
-	$s.push("Type::getClassName");
-	var $spos = $s.length;
-	if(c == null) {
-		$s.pop();
-		return null;
-	}
+	if(c == null) return null;
 	var a = c.__name__;
-	{
-		var $tmp = a.join(".");
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return a.join(".");
 }
 Type.getEnumName = function(e) {
-	$s.push("Type::getEnumName");
-	var $spos = $s.length;
 	var a = e.__ename__;
-	{
-		var $tmp = a.join(".");
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return a.join(".");
 }
 Type.resolveClass = function(name) {
-	$s.push("Type::resolveClass");
-	var $spos = $s.length;
 	var cl;
 	try {
 		cl = eval(name);
@@ -1059,26 +665,14 @@ Type.resolveClass = function(name) {
 		{
 			var e = $e2;
 			{
-				$e = [];
-				while($s.length >= $spos) $e.unshift($s.pop());
-				$s.push($e[0]);
 				cl = null;
 			}
 		}
 	}
-	if(cl == null || cl.__name__ == null) {
-		$s.pop();
-		return null;
-	}
-	{
-		$s.pop();
-		return cl;
-	}
-	$s.pop();
+	if(cl == null || cl.__name__ == null) return null;
+	return cl;
 }
 Type.resolveEnum = function(name) {
-	$s.push("Type::resolveEnum");
-	var $spos = $s.length;
 	var e;
 	try {
 		e = eval(name);
@@ -1087,320 +681,125 @@ Type.resolveEnum = function(name) {
 		{
 			var err = $e3;
 			{
-				$e = [];
-				while($s.length >= $spos) $e.unshift($s.pop());
-				$s.push($e[0]);
 				e = null;
 			}
 		}
 	}
-	if(e == null || e.__ename__ == null) {
-		$s.pop();
-		return null;
-	}
-	{
-		$s.pop();
-		return e;
-	}
-	$s.pop();
+	if(e == null || e.__ename__ == null) return null;
+	return e;
 }
 Type.createInstance = function(cl,args) {
-	$s.push("Type::createInstance");
-	var $spos = $s.length;
-	if(args.length <= 3) {
-		var $tmp = new cl(args[0],args[1],args[2]);
-		$s.pop();
-		return $tmp;
-	}
+	if(args.length <= 3) return new cl(args[0],args[1],args[2]);
 	if(args.length > 8) throw "Too many arguments";
-	{
-		var $tmp = new cl(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7]);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return new cl(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7]);
 }
 Type.createEmptyInstance = function(cl) {
-	$s.push("Type::createEmptyInstance");
-	var $spos = $s.length;
-	{
-		var $tmp = new cl($_);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return new cl($_);
 }
 Type.createEnum = function(e,constr,params) {
-	$s.push("Type::createEnum");
-	var $spos = $s.length;
 	var f = Reflect.field(e,constr);
 	if(f == null) throw "No such constructor " + constr;
 	if(Reflect.isFunction(f)) {
 		if(params == null) throw "Constructor " + constr + " need parameters";
-		{
-			var $tmp = f.apply(e,params);
-			$s.pop();
-			return $tmp;
-		}
+		return f.apply(e,params);
 	}
 	if(params != null && params.length != 0) throw "Constructor " + constr + " does not need parameters";
-	{
-		$s.pop();
-		return f;
-	}
-	$s.pop();
+	return f;
 }
 Type.getInstanceFields = function(c) {
-	$s.push("Type::getInstanceFields");
-	var $spos = $s.length;
 	var a = Reflect.fields(c.prototype);
 	a.remove("__class__");
-	{
-		$s.pop();
-		return a;
-	}
-	$s.pop();
+	return a;
 }
 Type.getClassFields = function(c) {
-	$s.push("Type::getClassFields");
-	var $spos = $s.length;
 	var a = Reflect.fields(c);
 	a.remove("__name__");
 	a.remove("__interfaces__");
 	a.remove("__super__");
 	a.remove("prototype");
-	{
-		$s.pop();
-		return a;
-	}
-	$s.pop();
+	return a;
 }
 Type.getEnumConstructs = function(e) {
-	$s.push("Type::getEnumConstructs");
-	var $spos = $s.length;
-	{
-		var $tmp = e.__constructs__;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return e.__constructs__;
 }
 Type["typeof"] = function(v) {
-	$s.push("Type::typeof");
-	var $spos = $s.length;
 	switch(typeof(v)) {
 	case "boolean":{
-		{
-			var $tmp = ValueType.TBool;
-			$s.pop();
-			return $tmp;
-		}
+		return ValueType.TBool;
 	}break;
 	case "string":{
-		{
-			var $tmp = ValueType.TClass(String);
-			$s.pop();
-			return $tmp;
-		}
+		return ValueType.TClass(String);
 	}break;
 	case "number":{
-		if(Math.ceil(v) == v % 2147483648.0) {
-			var $tmp = ValueType.TInt;
-			$s.pop();
-			return $tmp;
-		}
-		{
-			var $tmp = ValueType.TFloat;
-			$s.pop();
-			return $tmp;
-		}
+		if(Math.ceil(v) == v % 2147483648.0) return ValueType.TInt;
+		return ValueType.TFloat;
 	}break;
 	case "object":{
-		if(v == null) {
-			var $tmp = ValueType.TNull;
-			$s.pop();
-			return $tmp;
-		}
+		if(v == null) return ValueType.TNull;
 		var e = v.__enum__;
-		if(e != null) {
-			var $tmp = ValueType.TEnum(e);
-			$s.pop();
-			return $tmp;
-		}
+		if(e != null) return ValueType.TEnum(e);
 		var c = v.__class__;
-		if(c != null) {
-			var $tmp = ValueType.TClass(c);
-			$s.pop();
-			return $tmp;
-		}
-		{
-			var $tmp = ValueType.TObject;
-			$s.pop();
-			return $tmp;
-		}
+		if(c != null) return ValueType.TClass(c);
+		return ValueType.TObject;
 	}break;
 	case "function":{
-		if(v.__name__ != null) {
-			var $tmp = ValueType.TObject;
-			$s.pop();
-			return $tmp;
-		}
-		{
-			var $tmp = ValueType.TFunction;
-			$s.pop();
-			return $tmp;
-		}
+		if(v.__name__ != null) return ValueType.TObject;
+		return ValueType.TFunction;
 	}break;
 	case "undefined":{
-		{
-			var $tmp = ValueType.TNull;
-			$s.pop();
-			return $tmp;
-		}
+		return ValueType.TNull;
 	}break;
 	default:{
-		{
-			var $tmp = ValueType.TUnknown;
-			$s.pop();
-			return $tmp;
-		}
+		return ValueType.TUnknown;
 	}break;
 	}
-	$s.pop();
 }
 Type.enumEq = function(a,b) {
-	$s.push("Type::enumEq");
-	var $spos = $s.length;
-	if(a == b) {
-		$s.pop();
-		return true;
-	}
-	if(a[0] != b[0]) {
-		$s.pop();
-		return false;
-	}
+	if(a == b) return true;
+	if(a[0] != b[0]) return false;
 	{
 		var _g1 = 2, _g = a.length;
 		while(_g1 < _g) {
 			var i = _g1++;
-			if(!Type.enumEq(a[i],b[i])) {
-				$s.pop();
-				return false;
-			}
+			if(!Type.enumEq(a[i],b[i])) return false;
 		}
 	}
 	var e = a.__enum__;
-	if(e != b.__enum__ || e == null) {
-		$s.pop();
-		return false;
-	}
-	{
-		$s.pop();
-		return true;
-	}
-	$s.pop();
+	if(e != b.__enum__ || e == null) return false;
+	return true;
 }
 Type.enumConstructor = function(e) {
-	$s.push("Type::enumConstructor");
-	var $spos = $s.length;
-	{
-		var $tmp = e[0];
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return e[0];
 }
 Type.enumParameters = function(e) {
-	$s.push("Type::enumParameters");
-	var $spos = $s.length;
-	{
-		var $tmp = e.slice(2);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return e.slice(2);
 }
 Type.enumIndex = function(e) {
-	$s.push("Type::enumIndex");
-	var $spos = $s.length;
-	{
-		var $tmp = e[1];
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return e[1];
 }
 Type.prototype.__class__ = Type;
 Std = function() { }
 Std.__name__ = ["Std"];
 Std["is"] = function(v,t) {
-	$s.push("Std::is");
-	var $spos = $s.length;
-	{
-		var $tmp = js.Boot.__instanceof(v,t);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return js.Boot.__instanceof(v,t);
 }
 Std.string = function(s) {
-	$s.push("Std::string");
-	var $spos = $s.length;
-	{
-		var $tmp = js.Boot.__string_rec(s,"");
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return js.Boot.__string_rec(s,"");
 }
 Std["int"] = function(x) {
-	$s.push("Std::int");
-	var $spos = $s.length;
-	if(x < 0) {
-		var $tmp = Math.ceil(x);
-		$s.pop();
-		return $tmp;
-	}
-	{
-		var $tmp = Math.floor(x);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	if(x < 0) return Math.ceil(x);
+	return Math.floor(x);
 }
 Std.parseInt = function(x) {
-	$s.push("Std::parseInt");
-	var $spos = $s.length;
 	var v = parseInt(x);
-	if(Math.isNaN(v)) {
-		$s.pop();
-		return null;
-	}
-	{
-		$s.pop();
-		return v;
-	}
-	$s.pop();
+	if(Math.isNaN(v)) return null;
+	return v;
 }
 Std.parseFloat = function(x) {
-	$s.push("Std::parseFloat");
-	var $spos = $s.length;
-	{
-		var $tmp = parseFloat(x);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return parseFloat(x);
 }
 Std.random = function(x) {
-	$s.push("Std::random");
-	var $spos = $s.length;
-	{
-		var $tmp = Math.floor(Math.random() * x);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return Math.floor(Math.random() * x);
 }
 Std.prototype.__class__ = Std;
 processing.parser = {}
@@ -1453,161 +852,108 @@ processing.parser.Token.TSemicolon.__enum__ = processing.parser.Token;
 processing.parser.Token.TString = function(value) { var $x = ["TString",5,value]; $x.__enum__ = processing.parser.Token; $x.toString = $estr; return $x; }
 processing.parser.Token.TType = function(type) { var $x = ["TType",2,type]; $x.__enum__ = processing.parser.Token; $x.toString = $estr; return $x; }
 EReg = function(r,opt) { if( r === $_ ) return; {
-	$s.push("EReg::new");
-	var $spos = $s.length;
 	opt = opt.split("u").join("");
 	this.r = new RegExp(r,opt);
-	$s.pop();
 }}
 EReg.__name__ = ["EReg"];
 EReg.prototype.customReplace = function(s,f) {
-	$s.push("EReg::customReplace");
-	var $spos = $s.length;
 	var buf = new StringBuf();
 	while(true) {
 		if(!this.match(s)) break;
-		buf.b[buf.b.length] = this.matchedLeft();
-		buf.b[buf.b.length] = f(this);
+		buf.b += this.matchedLeft();
+		buf.b += f(this);
 		s = this.matchedRight();
 	}
-	buf.b[buf.b.length] = s;
-	{
-		var $tmp = buf.b.join("");
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	buf.b += s;
+	return buf.b;
 }
 EReg.prototype.match = function(s) {
-	$s.push("EReg::match");
-	var $spos = $s.length;
 	this.r.m = this.r.exec(s);
 	this.r.s = s;
 	this.r.l = RegExp.leftContext;
 	this.r.r = RegExp.rightContext;
-	{
-		var $tmp = (this.r.m != null);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return (this.r.m != null);
 }
 EReg.prototype.matched = function(n) {
-	$s.push("EReg::matched");
-	var $spos = $s.length;
-	{
-		var $tmp = (this.r.m != null && n >= 0 && n < this.r.m.length?this.r.m[n]:function($this) {
-			var $r;
-			throw "EReg::matched";
-			return $r;
-		}(this));
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return (this.r.m != null && n >= 0 && n < this.r.m.length?this.r.m[n]:function($this) {
+		var $r;
+		throw "EReg::matched";
+		return $r;
+	}(this));
 }
 EReg.prototype.matchedLeft = function() {
-	$s.push("EReg::matchedLeft");
-	var $spos = $s.length;
 	if(this.r.m == null) throw "No string matched";
-	if(this.r.l == null) {
-		var $tmp = this.r.s.substr(0,this.r.m.index);
-		$s.pop();
-		return $tmp;
-	}
-	{
-		var $tmp = this.r.l;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	if(this.r.l == null) return this.r.s.substr(0,this.r.m.index);
+	return this.r.l;
 }
 EReg.prototype.matchedPos = function() {
-	$s.push("EReg::matchedPos");
-	var $spos = $s.length;
 	if(this.r.m == null) throw "No string matched";
-	{
-		var $tmp = { pos : this.r.m.index, len : this.r.m[0].length}
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return { pos : this.r.m.index, len : this.r.m[0].length}
 }
 EReg.prototype.matchedRight = function() {
-	$s.push("EReg::matchedRight");
-	var $spos = $s.length;
 	if(this.r.m == null) throw "No string matched";
 	if(this.r.r == null) {
 		var sz = this.r.m.index + this.r.m[0].length;
-		{
-			var $tmp = this.r.s.substr(sz,this.r.s.length - sz);
-			$s.pop();
-			return $tmp;
-		}
+		return this.r.s.substr(sz,this.r.s.length - sz);
 	}
-	{
-		var $tmp = this.r.r;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return this.r.r;
 }
 EReg.prototype.r = null;
 EReg.prototype.replace = function(s,by) {
-	$s.push("EReg::replace");
-	var $spos = $s.length;
-	{
-		var $tmp = s.replace(this.r,by);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return s.replace(this.r,by);
 }
 EReg.prototype.split = function(s) {
-	$s.push("EReg::split");
-	var $spos = $s.length;
 	var d = "#__delim__#";
-	{
-		var $tmp = s.replace(this.r,d).split(d);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return s.replace(this.r,d).split(d);
 }
 EReg.prototype.__class__ = EReg;
 processing.parser.TokenizerRegexList = function() { }
 processing.parser.TokenizerRegexList.__name__ = ["processing","parser","TokenizerRegexList"];
 processing.parser.TokenizerRegexList.prototype.__class__ = processing.parser.TokenizerRegexList;
 processing.parser.Tokenizer = function(p) { if( p === $_ ) return; {
-	$s.push("processing.parser.Tokenizer::new");
-	var $spos = $s.length;
 	this.load("");
-	this.states = [];
-	$s.pop();
 }}
 processing.parser.Tokenizer.__name__ = ["processing","parser","Tokenizer"];
-processing.parser.Tokenizer.matchToken = function(from,to) {
-	$s.push("processing.parser.Tokenizer::matchToken");
-	var $spos = $s.length;
-	{
-		var $tmp = (Type.enumEq(from,to) || (Type.enumConstructor(from) == to));
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
 processing.parser.Tokenizer.prototype.clearState = function() {
-	$s.push("processing.parser.Tokenizer::clearState");
-	var $spos = $s.length;
 	this.states.pop();
-	$s.pop();
+}
+processing.parser.Tokenizer.prototype.compareTokens = function(from,to) {
+	return (Type.enumEq(from,to) || (Type.enumConstructor(from) == to));
+}
+processing.parser.Tokenizer.prototype.createSyntaxError = function(message) {
+	var error = new processing.parser.TokenizerSyntaxError(message);
+	error.source = this.source;
+	error.cursor = this.cursor;
+	error.line = this.getCurrentLineNumber();
+	return error;
+}
+processing.parser.Tokenizer.prototype.current = function() {
+	return this.currentToken;
 }
 processing.parser.Tokenizer.prototype.currentToken = null;
 processing.parser.Tokenizer.prototype.cursor = null;
-processing.parser.Tokenizer.prototype.done = null;
-processing.parser.Tokenizer.prototype.get = function() {
-	$s.push("processing.parser.Tokenizer::get");
-	var $spos = $s.length;
+processing.parser.Tokenizer.prototype.getCurrentLineNumber = function() {
+	return processing.parser.Tokenizer.regexes.NEWLINES.split(this.source.substr(0,this.cursor)).length + 1;
+}
+processing.parser.Tokenizer.prototype.hasNext = function() {
+	return !this.match(processing.parser.Token.TEof);
+}
+processing.parser.Tokenizer.prototype.load = function(s) {
+	this.source = s;
+	this.cursor = 0;
+	this.currentToken = null;
+	this.states = [];
+}
+processing.parser.Tokenizer.prototype.match = function(to,mustMatch) {
+	if(mustMatch == null) mustMatch = false;
+	this.pushState();
+	var token = this.next();
+	if(this.compareTokens(token,to)) return true;
+	else if(mustMatch) throw this.createSyntaxError("Tokenizer: Must match " + to + ", found " + token);
+	this.popState();
+	return false;
+}
+processing.parser.Tokenizer.prototype.next = function() {
 	var regex, input = "";
 	while(true) {
 		input = this.source.substr(this.cursor);
@@ -1692,83 +1038,12 @@ processing.parser.Tokenizer.prototype.get = function() {
 		}(this);
 	}
 	else {
-		throw new processing.parser.TokenizerSyntaxError("Illegal token " + input,this);
+		throw this.createSyntaxError("Illegal token " + input);
 	}
 	this.cursor += regex.matched(0).length;
-	{
-		var $tmp = this.currentToken;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-processing.parser.Tokenizer.prototype.getCurrentLineNumber = function() {
-	$s.push("processing.parser.Tokenizer::getCurrentLineNumber");
-	var $spos = $s.length;
-	{
-		var $tmp = this.getLineNumber(this.cursor);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-processing.parser.Tokenizer.prototype.getLineNumber = function(searchCursor) {
-	$s.push("processing.parser.Tokenizer::getLineNumber");
-	var $spos = $s.length;
-	{
-		var $tmp = processing.parser.Tokenizer.regexes.NEWLINES.split(this.source.substr(0,searchCursor)).length + 1;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-processing.parser.Tokenizer.prototype.isDone = function() {
-	$s.push("processing.parser.Tokenizer::isDone");
-	var $spos = $s.length;
-	{
-		var $tmp = this.match(processing.parser.Token.TEof);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-processing.parser.Tokenizer.prototype.line = null;
-processing.parser.Tokenizer.prototype.load = function(s) {
-	$s.push("processing.parser.Tokenizer::load");
-	var $spos = $s.length;
-	this.source = s;
-	this.cursor = 0;
-	$s.pop();
-}
-processing.parser.Tokenizer.prototype.match = function(to,lookAhead,mustMatch) {
-	$s.push("processing.parser.Tokenizer::match");
-	var $spos = $s.length;
-	if(mustMatch == null) mustMatch = false;
-	if(lookAhead == null) lookAhead = 0;
-	var origCursor = this.cursor, origToken = this.currentToken, token = this.get();
-	{
-		var _g = 0;
-		while(_g < lookAhead) {
-			var i = _g++;
-			token = this.get();
-		}
-	}
-	if(processing.parser.Tokenizer.matchToken(token,to)) {
-		$s.pop();
-		return true;
-	}
-	else if(mustMatch) throw new processing.parser.TokenizerSyntaxError("Tokenizer: Must match " + to + ", found " + token,this);
-	this.cursor = origCursor;
-	this.currentToken = origToken;
-	{
-		$s.pop();
-		return false;
-	}
-	$s.pop();
+	return this.currentToken;
 }
 processing.parser.Tokenizer.prototype.parseStringLiteral = function(str) {
-	$s.push("processing.parser.Tokenizer::parseStringLiteral");
-	var $spos = $s.length;
 	str = processing.parser.Tokenizer.regexes.CHAR_BACKSPACE.replace(str,"$1");
 	str = processing.parser.Tokenizer.regexes.CHAR_TAB.replace(str,"$1\t");
 	str = processing.parser.Tokenizer.regexes.CHAR_NEWLINE.replace(str,"$1\n");
@@ -1779,24 +1054,11 @@ processing.parser.Tokenizer.prototype.parseStringLiteral = function(str) {
 	str = processing.parser.Tokenizer.regexes.CHAR_SINGLE_QUOTE.replace(str,"$1'");
 	str = processing.parser.Tokenizer.regexes.CHAR_BACKSLASH.replace(str,"\\");
 	str = processing.parser.Tokenizer.regexes.CHAR_UNICODE.customReplace(str,function(regex) {
-		$s.push("processing.parser.Tokenizer::parseStringLiteral@165");
-		var $spos = $s.length;
-		{
-			var $tmp = regex.matchedLeft() + String.fromCharCode(Std.parseInt("0x" + regex.matched(1))) + regex.matchedRight();
-			$s.pop();
-			return $tmp;
-		}
-		$s.pop();
+		return regex.matchedLeft() + String.fromCharCode(Std.parseInt("0x" + regex.matched(1))) + regex.matchedRight();
 	});
-	{
-		$s.pop();
-		return str;
-	}
-	$s.pop();
+	return str;
 }
 processing.parser.Tokenizer.prototype.peek = function(lookAhead) {
-	$s.push("processing.parser.Tokenizer::peek");
-	var $spos = $s.length;
 	if(lookAhead == null) lookAhead = 1;
 	this.pushState();
 	var token = this.currentToken;
@@ -1804,52 +1066,29 @@ processing.parser.Tokenizer.prototype.peek = function(lookAhead) {
 		var _g = 0;
 		while(_g < lookAhead) {
 			var i = _g++;
-			token = this.get();
+			token = this.next();
 		}
 	}
 	this.popState();
-	{
-		$s.pop();
-		return token;
-	}
-	$s.pop();
+	return token;
 }
 processing.parser.Tokenizer.prototype.peekMatch = function(to,lookAhead) {
-	$s.push("processing.parser.Tokenizer::peekMatch");
-	var $spos = $s.length;
 	if(lookAhead == null) lookAhead = 1;
-	{
-		var $tmp = processing.parser.Tokenizer.matchToken(this.peek(lookAhead),to);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return this.compareTokens(this.peek(lookAhead),to);
 }
 processing.parser.Tokenizer.prototype.popState = function() {
-	$s.push("processing.parser.Tokenizer::popState");
-	var $spos = $s.length;
 	var state = this.states.pop();
 	this.cursor = state.cursor;
 	this.currentToken = state.current;
-	$s.pop();
 }
 processing.parser.Tokenizer.prototype.pushState = function() {
-	$s.push("processing.parser.Tokenizer::pushState");
-	var $spos = $s.length;
 	this.states.push({ cursor : this.cursor, current : this.currentToken});
-	$s.pop();
 }
 processing.parser.Tokenizer.prototype.source = null;
 processing.parser.Tokenizer.prototype.states = null;
 processing.parser.Tokenizer.prototype.__class__ = processing.parser.Tokenizer;
-processing.parser.TokenizerSyntaxError = function(message,tokenizer) { if( message === $_ ) return; {
-	$s.push("processing.parser.TokenizerSyntaxError::new");
-	var $spos = $s.length;
-	this.source = tokenizer.source;
-	this.line = tokenizer.getCurrentLineNumber();
-	this.cursor = tokenizer.cursor;
+processing.parser.TokenizerSyntaxError = function(message) { if( message === $_ ) return; {
 	this.message = message;
-	$s.pop();
 }}
 processing.parser.TokenizerSyntaxError.__name__ = ["processing","parser","TokenizerSyntaxError"];
 processing.parser.TokenizerSyntaxError.prototype.cursor = null;
@@ -1857,28 +1096,16 @@ processing.parser.TokenizerSyntaxError.prototype.line = null;
 processing.parser.TokenizerSyntaxError.prototype.message = null;
 processing.parser.TokenizerSyntaxError.prototype.source = null;
 processing.parser.TokenizerSyntaxError.prototype.toString = function() {
-	$s.push("processing.parser.TokenizerSyntaxError::toString");
-	var $spos = $s.length;
-	{
-		var $tmp = this.message + " (line " + this.line + ", char " + this.cursor + ")";
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return this.message + " (line " + this.line + ", char " + this.cursor + ")";
 }
 processing.parser.TokenizerSyntaxError.prototype.__class__ = processing.parser.TokenizerSyntaxError;
 processing.evaluator = {}
 processing.evaluator.Evaluator = function(_contexts) { if( _contexts === $_ ) return; {
-	$s.push("processing.evaluator.Evaluator::new");
-	var $spos = $s.length;
 	this.contexts = (_contexts != null?_contexts:[]);
-	$s.pop();
 }}
 processing.evaluator.Evaluator.__name__ = ["processing","evaluator","Evaluator"];
 processing.evaluator.Evaluator.prototype.contexts = null;
 processing.evaluator.Evaluator.prototype.evaluate = function(code) {
-	$s.push("processing.evaluator.Evaluator::evaluate");
-	var $spos = $s.length;
 	var parser = new processing.parser.Parser();
 	var script = parser.parse(code);
 	var compiler = new processing.compiler.JavaScriptCompiler();
@@ -1893,41 +1120,21 @@ processing.evaluator.Evaluator.prototype.evaluate = function(code) {
 	}
 	func += "return eval(code); })";
 	var evaluator = js.Lib.eval(func);
-	{
-		var $tmp = evaluator(compiled,this.contexts);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return evaluator(compiled,this.contexts);
 }
 processing.evaluator.Evaluator.prototype.__class__ = processing.evaluator.Evaluator;
 Reflect = function() { }
 Reflect.__name__ = ["Reflect"];
 Reflect.hasField = function(o,field) {
-	$s.push("Reflect::hasField");
-	var $spos = $s.length;
-	if(o.hasOwnProperty != null) {
-		var $tmp = o.hasOwnProperty(field);
-		$s.pop();
-		return $tmp;
-	}
+	if(o.hasOwnProperty != null) return o.hasOwnProperty(field);
 	var arr = Reflect.fields(o);
 	{ var $it4 = arr.iterator();
 	while( $it4.hasNext() ) { var t = $it4.next();
-	if(t == field) {
-		$s.pop();
-		return true;
-	}
+	if(t == field) return true;
 	}}
-	{
-		$s.pop();
-		return false;
-	}
-	$s.pop();
+	return false;
 }
 Reflect.field = function(o,field) {
-	$s.push("Reflect::field");
-	var $spos = $s.length;
 	var v = null;
 	try {
 		v = o[field];
@@ -1935,44 +1142,19 @@ Reflect.field = function(o,field) {
 	catch( $e5 ) {
 		{
 			var e = $e5;
-			{
-				$e = [];
-				while($s.length >= $spos) $e.unshift($s.pop());
-				$s.push($e[0]);
-				null;
-			}
+			null;
 		}
 	}
-	{
-		$s.pop();
-		return v;
-	}
-	$s.pop();
+	return v;
 }
 Reflect.setField = function(o,field,value) {
-	$s.push("Reflect::setField");
-	var $spos = $s.length;
 	o[field] = value;
-	$s.pop();
 }
 Reflect.callMethod = function(o,func,args) {
-	$s.push("Reflect::callMethod");
-	var $spos = $s.length;
-	{
-		var $tmp = func.apply(o,args);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return func.apply(o,args);
 }
 Reflect.fields = function(o) {
-	$s.push("Reflect::fields");
-	var $spos = $s.length;
-	if(o == null) {
-		var $tmp = new Array();
-		$s.pop();
-		return $tmp;
-	}
+	if(o == null) return new Array();
 	var a = new Array();
 	if(o.hasOwnProperty) {
 		
@@ -1990,9 +1172,6 @@ Reflect.fields = function(o) {
 			{
 				var e = $e6;
 				{
-					$e = [];
-					while($s.length >= $spos) $e.unshift($s.pop());
-					$s.push($e[0]);
 					t = null;
 				}
 			}
@@ -2005,82 +1184,30 @@ Reflect.fields = function(o) {
 				;
 		if(t != null) o.__proto__ = t;
 	}
-	{
-		$s.pop();
-		return a;
-	}
-	$s.pop();
+	return a;
 }
 Reflect.isFunction = function(f) {
-	$s.push("Reflect::isFunction");
-	var $spos = $s.length;
-	{
-		var $tmp = typeof(f) == "function" && f.__name__ == null;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return typeof(f) == "function" && f.__name__ == null;
 }
 Reflect.compare = function(a,b) {
-	$s.push("Reflect::compare");
-	var $spos = $s.length;
-	{
-		var $tmp = ((a == b)?0:((((a) > (b))?1:-1)));
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return ((a == b)?0:((((a) > (b))?1:-1)));
 }
 Reflect.compareMethods = function(f1,f2) {
-	$s.push("Reflect::compareMethods");
-	var $spos = $s.length;
-	if(f1 == f2) {
-		$s.pop();
-		return true;
-	}
-	if(!Reflect.isFunction(f1) || !Reflect.isFunction(f2)) {
-		$s.pop();
-		return false;
-	}
-	{
-		var $tmp = f1.scope == f2.scope && f1.method == f2.method && f1.method != null;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	if(f1 == f2) return true;
+	if(!Reflect.isFunction(f1) || !Reflect.isFunction(f2)) return false;
+	return f1.scope == f2.scope && f1.method == f2.method && f1.method != null;
 }
 Reflect.isObject = function(v) {
-	$s.push("Reflect::isObject");
-	var $spos = $s.length;
-	if(v == null) {
-		$s.pop();
-		return false;
-	}
+	if(v == null) return false;
 	var t = typeof(v);
-	{
-		var $tmp = (t == "string" || (t == "object" && !v.__enum__) || (t == "function" && v.__name__ != null));
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return (t == "string" || (t == "object" && !v.__enum__) || (t == "function" && v.__name__ != null));
 }
 Reflect.deleteField = function(o,f) {
-	$s.push("Reflect::deleteField");
-	var $spos = $s.length;
-	if(!Reflect.hasField(o,f)) {
-		$s.pop();
-		return false;
-	}
+	if(!Reflect.hasField(o,f)) return false;
 	delete(o[f]);
-	{
-		$s.pop();
-		return true;
-	}
-	$s.pop();
+	return true;
 }
 Reflect.copy = function(o) {
-	$s.push("Reflect::copy");
-	var $spos = $s.length;
 	var o2 = { }
 	{
 		var _g = 0, _g1 = Reflect.fields(o);
@@ -2090,665 +1217,417 @@ Reflect.copy = function(o) {
 			o2[f] = Reflect.field(o,f);
 		}
 	}
-	{
-		$s.pop();
-		return o2;
-	}
-	$s.pop();
+	return o2;
 }
 Reflect.makeVarArgs = function(f) {
-	$s.push("Reflect::makeVarArgs");
-	var $spos = $s.length;
-	{
-		var $tmp = function() {
-			$s.push("Reflect::makeVarArgs@345");
-			var $spos = $s.length;
-			var a = new Array();
-			{
-				var _g1 = 0, _g = arguments.length;
-				while(_g1 < _g) {
-					var i = _g1++;
-					a.push(arguments[i]);
-				}
+	return function() {
+		var a = new Array();
+		{
+			var _g1 = 0, _g = arguments.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				a.push(arguments[i]);
 			}
-			{
-				var $tmp = f(a);
-				$s.pop();
-				return $tmp;
-			}
-			$s.pop();
 		}
-		$s.pop();
-		return $tmp;
+		return f(a);
 	}
-	$s.pop();
 }
 Reflect.prototype.__class__ = Reflect;
 processing.parser.Parser = function(p) { if( p === $_ ) return; {
-	$s.push("processing.parser.Parser::new");
-	var $spos = $s.length;
 	this.tokenizer = new processing.parser.Tokenizer();
-	$s.pop();
 }}
 processing.parser.Parser.__name__ = ["processing","parser","Parser"];
 processing.parser.Parser.prototype.isAssignmentOperator = function(operator) {
-	$s.push("processing.parser.Parser::isAssignmentOperator");
-	var $spos = $s.length;
-	{
-		var $tmp = processing.parser.Parser.IS_ASSIGNMENT_OPERATOR.match(operator);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return processing.parser.Parser.IS_ASSIGNMENT_OPERATOR.match(operator);
 }
 processing.parser.Parser.prototype.lookupIncrementType = function(operator) {
-	$s.push("processing.parser.Parser::lookupIncrementType");
-	var $spos = $s.length;
 	switch(operator) {
 	case "++":{
-		{
-			var $tmp = processing.parser.IncrementType.IIncrement;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.IncrementType.IIncrement;
 	}break;
 	case "--":{
-		{
-			var $tmp = processing.parser.IncrementType.IDecrement;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.IncrementType.IDecrement;
 	}break;
 	default:{
 		throw "Unknown increment operator \"" + operator + "\"";
 	}break;
 	}
-	$s.pop();
 }
 processing.parser.Parser.prototype.lookupOperatorPrecedence = function(operator) {
-	$s.push("processing.parser.Parser::lookupOperatorPrecedence");
-	var $spos = $s.length;
-	{
-		var $tmp = function($this) {
-			var $r;
-			var $e = (operator);
-			switch( $e[1] ) {
-			case 0:
-			var operator1 = $e[2];
-			{
-				$r = function($this) {
-					var $r;
-					var $e = (operator1);
-					switch( $e[1] ) {
-					case 4:
-					{
-						$r = 3;
-					}break;
-					case 5:
-					{
-						$r = 4;
-					}break;
-					case 6:
-					{
-						$r = 5;
-					}break;
-					case 7:
-					{
-						$r = 6;
-					}break;
-					case 8:
-					{
-						$r = 7;
-					}break;
-					case 9:
-					case 10:
-					{
-						$r = 8;
-					}break;
-					case 11:
-					case 12:
-					case 13:
-					case 14:
-					case 15:
-					{
-						$r = 9;
-					}break;
-					case 16:
-					case 17:
-					case 18:
-					{
-						$r = 10;
-					}break;
-					case 19:
-					case 20:
-					{
-						$r = 11;
-					}break;
-					case 21:
-					case 22:
-					case 23:
-					{
-						$r = 12;
-					}break;
-					case 0:
-					case 1:
-					case 2:
-					case 3:
-					{
-						$r = 14;
-					}break;
-					default:{
-						$r = null;
-					}break;
-					}
-					return $r;
-				}($this);
-			}break;
-			case 1:
-			{
-				$r = 13;
-			}break;
-			case 2:
-			{
-				$r = 14;
-			}break;
-			case 3:
-			{
-				$r = 15;
-			}break;
-			case 4:
-			{
-				$r = 15;
-			}break;
-			case 5:
-			{
-				$r = 15;
-			}break;
-			case 6:
-			{
-				$r = 15;
-			}break;
-			default:{
-				$r = null;
-			}break;
-			}
-			return $r;
-		}(this);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return function($this) {
+		var $r;
+		var $e = (operator);
+		switch( $e[1] ) {
+		case 0:
+		var operator1 = $e[2];
+		{
+			$r = function($this) {
+				var $r;
+				var $e = (operator1);
+				switch( $e[1] ) {
+				case 4:
+				{
+					$r = 3;
+				}break;
+				case 5:
+				{
+					$r = 4;
+				}break;
+				case 6:
+				{
+					$r = 5;
+				}break;
+				case 7:
+				{
+					$r = 6;
+				}break;
+				case 8:
+				{
+					$r = 7;
+				}break;
+				case 9:
+				case 10:
+				{
+					$r = 8;
+				}break;
+				case 11:
+				case 12:
+				case 13:
+				case 14:
+				case 15:
+				{
+					$r = 9;
+				}break;
+				case 16:
+				case 17:
+				case 18:
+				{
+					$r = 10;
+				}break;
+				case 19:
+				case 20:
+				{
+					$r = 11;
+				}break;
+				case 21:
+				case 22:
+				case 23:
+				{
+					$r = 12;
+				}break;
+				case 0:
+				case 1:
+				case 2:
+				case 3:
+				{
+					$r = 14;
+				}break;
+				default:{
+					$r = null;
+				}break;
+				}
+				return $r;
+			}($this);
+		}break;
+		case 1:
+		{
+			$r = 13;
+		}break;
+		case 2:
+		{
+			$r = 14;
+		}break;
+		case 3:
+		{
+			$r = 15;
+		}break;
+		case 4:
+		{
+			$r = 15;
+		}break;
+		case 5:
+		{
+			$r = 15;
+		}break;
+		case 6:
+		{
+			$r = 15;
+		}break;
+		default:{
+			$r = null;
+		}break;
+		}
+		return $r;
+	}(this);
 }
 processing.parser.Parser.prototype.lookupOperatorType = function(operator,scanOperand) {
-	$s.push("processing.parser.Parser::lookupOperatorType");
-	var $spos = $s.length;
 	if(scanOperand == null) scanOperand = false;
 	switch(operator) {
 	case "!":{
-		{
-			var $tmp = processing.parser.Operator.OpNot;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpNot;
 	}break;
 	case "~":{
-		{
-			var $tmp = processing.parser.Operator.OpBitwiseNot;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpBitwiseNot;
 	}break;
 	case "||":{
-		{
-			var $tmp = processing.parser.Operator.OpOr;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpOr;
 	}break;
 	case "&&":{
-		{
-			var $tmp = processing.parser.Operator.OpAnd;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpAnd;
 	}break;
 	case "|":case "|=":{
-		{
-			var $tmp = processing.parser.Operator.OpBitwiseOr;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpBitwiseOr;
 	}break;
 	case "^":case "^=":{
-		{
-			var $tmp = processing.parser.Operator.OpBitwiseXor;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpBitwiseXor;
 	}break;
 	case "&":case "&=":{
-		{
-			var $tmp = processing.parser.Operator.OpBitwiseAnd;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpBitwiseAnd;
 	}break;
 	case "==":{
-		{
-			var $tmp = processing.parser.Operator.OpEqual;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpEqual;
 	}break;
 	case "!=":{
-		{
-			var $tmp = processing.parser.Operator.OpUnequal;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpUnequal;
 	}break;
 	case "<":{
-		{
-			var $tmp = processing.parser.Operator.OpLessThan;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpLessThan;
 	}break;
 	case "<=":{
-		{
-			var $tmp = processing.parser.Operator.OpLessThanOrEqual;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpLessThanOrEqual;
 	}break;
 	case ">":{
-		{
-			var $tmp = processing.parser.Operator.OpGreaterThan;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpGreaterThan;
 	}break;
 	case ">=":{
-		{
-			var $tmp = processing.parser.Operator.OpGreaterThanOrEqual;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpGreaterThanOrEqual;
 	}break;
 	case "instanceof":{
-		{
-			var $tmp = processing.parser.Operator.OpInstanceOf;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpInstanceOf;
 	}break;
 	case "<<":case "<<=":{
-		{
-			var $tmp = processing.parser.Operator.OpLeftShift;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpLeftShift;
 	}break;
 	case ">>":case ">>=":{
-		{
-			var $tmp = processing.parser.Operator.OpRightShift;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpRightShift;
 	}break;
 	case ">>>":case ">>>=":{
-		{
-			var $tmp = processing.parser.Operator.OpZeroRightShift;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpZeroRightShift;
 	}break;
 	case "+":case "+=":case "++":{
-		{
-			var $tmp = (scanOperand?processing.parser.Operator.OpUnaryPlus:processing.parser.Operator.OpPlus);
-			$s.pop();
-			return $tmp;
-		}
+		return (scanOperand?processing.parser.Operator.OpUnaryPlus:processing.parser.Operator.OpPlus);
 	}break;
 	case "-":case "-=":case "--":{
-		{
-			var $tmp = (scanOperand?processing.parser.Operator.OpUnaryMinus:processing.parser.Operator.OpMinus);
-			$s.pop();
-			return $tmp;
-		}
+		return (scanOperand?processing.parser.Operator.OpUnaryMinus:processing.parser.Operator.OpMinus);
 	}break;
 	case "*":case "*=":{
-		{
-			var $tmp = processing.parser.Operator.OpMultiply;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpMultiply;
 	}break;
 	case "/":case "/=":{
-		{
-			var $tmp = processing.parser.Operator.OpDivide;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpDivide;
 	}break;
 	case "%":case "%=":{
-		{
-			var $tmp = processing.parser.Operator.OpModulus;
-			$s.pop();
-			return $tmp;
-		}
+		return processing.parser.Operator.OpModulus;
 	}break;
 	default:{
 		throw "Unknown operator \"" + operator + "\"";
 	}break;
 	}
-	$s.pop();
 }
 processing.parser.Parser.prototype.parse = function(code) {
-	$s.push("processing.parser.Parser::parse");
-	var $spos = $s.length;
 	this.tokenizer.load(code);
 	var statements = [], definitions = [];
 	while(this.parseDefinition(processing.parser.ParserScope.PScript,statements,definitions) || this.parseStatement(statements,definitions)) continue;
-	if(!this.tokenizer.isDone()) throw new processing.parser.TokenizerSyntaxError("Script unterminated",this.tokenizer);
-	{
-		var $tmp = processing.parser.Statement.SBlock(statements,definitions);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	if(this.tokenizer.hasNext()) throw this.tokenizer.createSyntaxError("Script unterminated");
+	return processing.parser.Statement.SBlock(statements,definitions);
 }
 processing.parser.Parser.prototype.parseClassDefinition = function(definitions) {
-	$s.push("processing.parser.Parser::parseClassDefinition");
-	var $spos = $s.length;
 	var isStatic = this.tokenizer.match(processing.parser.Token.TKeyword("static"));
 	var visibility = this.parseVisibility();
-	this.tokenizer.match(processing.parser.Token.TKeyword("class"),null,true);
-	this.tokenizer.match("TIdentifier",null,true);
-	var identifier = Type.enumParameters(this.tokenizer.currentToken)[0];
-	this.tokenizer.match(processing.parser.Token.TBraceOpen,null,true);
+	this.tokenizer.match(processing.parser.Token.TKeyword("class"),true);
+	this.tokenizer.match("TIdentifier",true);
+	var identifier = Type.enumParameters(this.tokenizer.current())[0];
+	this.tokenizer.match(processing.parser.Token.TBraceOpen,true);
 	var cStatements = [], cDefinitions = [];
 	while(this.parseDefinition(processing.parser.ParserScope.PClass(identifier),cStatements,cDefinitions)) continue;
-	this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
+	this.tokenizer.match(processing.parser.Token.TBraceClose,true);
 	definitions.push(processing.parser.Definition.DClass(identifier,visibility,isStatic,processing.parser.Statement.SBlock(cStatements,cDefinitions)));
-	{
-		$s.pop();
-		return true;
-	}
-	$s.pop();
+	return true;
 }
 processing.parser.Parser.prototype.parseDefinition = function(scope,statements,definitions) {
-	$s.push("processing.parser.Parser::parseDefinition");
-	var $spos = $s.length;
 	var peek = 1;
 	if(scope != processing.parser.ParserScope.PBlock) {
 		if(this.tokenizer.peekMatch(processing.parser.Token.TKeyword("static"),peek)) peek++;
 		if(this.tokenizer.peekMatch(processing.parser.Token.TKeyword("private"),peek) || this.tokenizer.peekMatch(processing.parser.Token.TKeyword("public"),peek)) peek++;
 	}
-	if((scope == processing.parser.ParserScope.PScript) && this.tokenizer.peekMatch(processing.parser.Token.TKeyword("class"),peek)) {
-		var $tmp = this.parseClassDefinition(definitions);
-		$s.pop();
-		return $tmp;
-	}
-	if((Type.enumConstructor(scope) == "PClass") && this.tokenizer.peekMatch(processing.parser.Token.TIdentifier(Type.enumParameters(scope)[0]),peek) && this.tokenizer.peekMatch(processing.parser.Token.TParenOpen,peek + 1)) {
-		var $tmp = this.parseFunctionDefinition(definitions,true);
-		$s.pop();
-		return $tmp;
-	}
+	if((scope == processing.parser.ParserScope.PScript) && this.tokenizer.peekMatch(processing.parser.Token.TKeyword("class"),peek)) return this.parseClassDefinition(definitions);
+	if((Type.enumConstructor(scope) == "PClass") && this.tokenizer.peekMatch(processing.parser.Token.TIdentifier(Type.enumParameters(scope)[0]),peek) && this.tokenizer.peekMatch(processing.parser.Token.TParenOpen,peek + 1)) return this.parseFunctionDefinition(definitions,true);
 	if(this.tokenizer.peekMatch("TType",peek) || this.tokenizer.peekMatch("TIdentifier",peek)) peek++;
-	else {
-		$s.pop();
-		return false;
-	}
+	else return false;
 	while(this.tokenizer.peekMatch(processing.parser.Token.TDimensions,peek)) peek++;
 	if(this.tokenizer.peekMatch("TIdentifier",peek)) {
-		if((scope != processing.parser.ParserScope.PBlock) && this.tokenizer.peekMatch(processing.parser.Token.TParenOpen,peek + 1)) {
-			var $tmp = this.parseFunctionDefinition(definitions);
-			$s.pop();
-			return $tmp;
-		}
-		else if(scope != processing.parser.ParserScope.PScript) {
-			var $tmp = this.parseVariableDefinition(statements,definitions);
-			$s.pop();
-			return $tmp;
-		}
+		if((scope != processing.parser.ParserScope.PBlock) && this.tokenizer.peekMatch(processing.parser.Token.TParenOpen,peek + 1)) return this.parseFunctionDefinition(definitions);
+		else if(scope != processing.parser.ParserScope.PScript) return this.parseVariableDefinition(statements,definitions);
 	}
-	{
-		$s.pop();
-		return false;
-	}
-	$s.pop();
+	return false;
 }
 processing.parser.Parser.prototype.parseExpression = function() {
-	$s.push("processing.parser.Parser::parseExpression");
-	var $spos = $s.length;
 	var operators = [], operands = [];
 	this.scanOperand(operators,operands);
-	if(operands.length == 0) {
-		$s.pop();
-		return null;
-	}
+	if(operands.length == 0) return null;
 	while(this.scanOperator(operators,operands)) this.scanOperand(operators,operands,true);
 	this.recursiveReduceExpression(operators,operands);
-	{
-		var $tmp = operands[0];
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return operands[0];
 }
 processing.parser.Parser.prototype.parseFunctionDefinition = function(definitions,constructor) {
-	$s.push("processing.parser.Parser::parseFunctionDefinition");
-	var $spos = $s.length;
 	if(constructor == null) constructor = false;
 	var isStatic = this.tokenizer.match(processing.parser.Token.TKeyword("static"));
 	var visibility = this.parseVisibility(), fType = null;
 	if(!constructor) fType = this.parseType();
-	this.tokenizer.match("TIdentifier",null,true);
-	var identifier = Type.enumParameters(this.tokenizer.currentToken)[0];
-	this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
+	this.tokenizer.match("TIdentifier",true);
+	var identifier = Type.enumParameters(this.tokenizer.current())[0];
+	this.tokenizer.match(processing.parser.Token.TParenOpen,true);
 	var params = [];
 	while(!this.tokenizer.peekMatch(processing.parser.Token.TParenClose)) {
 		var type = this.parseType();
-		if(type == null) throw new processing.parser.TokenizerSyntaxError("Invalid formal parameter type",this.tokenizer);
-		if(!this.tokenizer.match("TIdentifier")) throw new processing.parser.TokenizerSyntaxError("Invalid formal parameter",this.tokenizer);
-		var name = Type.enumParameters(this.tokenizer.currentToken)[0];
+		if(type == null) throw this.tokenizer.createSyntaxError("Invalid formal parameter type");
+		if(!this.tokenizer.match("TIdentifier")) throw this.tokenizer.createSyntaxError("Invalid formal parameter");
+		var name = Type.enumParameters(this.tokenizer.current())[0];
 		params.push({ name : name, type : type});
-		if(!this.tokenizer.peekMatch(processing.parser.Token.TParenClose)) this.tokenizer.match(processing.parser.Token.TComma,null,true);
+		if(!this.tokenizer.peekMatch(processing.parser.Token.TParenClose)) this.tokenizer.match(processing.parser.Token.TComma,true);
 	}
-	this.tokenizer.match(processing.parser.Token.TParenClose,null,true);
-	this.tokenizer.match(processing.parser.Token.TBraceOpen,null,true);
+	this.tokenizer.match(processing.parser.Token.TParenClose,true);
+	this.tokenizer.match(processing.parser.Token.TBraceOpen,true);
 	var fStatements = [], fDefinitions = [];
 	while(this.parseStatement(fStatements,fDefinitions)) continue;
-	this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
+	this.tokenizer.match(processing.parser.Token.TBraceClose,true);
 	definitions.push(processing.parser.Definition.DFunction(identifier,visibility,isStatic,fType,params,processing.parser.Statement.SBlock(fStatements,fDefinitions)));
-	{
-		$s.pop();
-		return true;
-	}
-	$s.pop();
+	return true;
 }
 processing.parser.Parser.prototype.parseList = function() {
-	$s.push("processing.parser.Parser::parseList");
-	var $spos = $s.length;
 	var list = [], expression;
 	do {
 		expression = this.parseExpression();
-		if(expression == null) if(list.length == 0) {
-			$s.pop();
-			return list;
-		}
-		else throw new processing.parser.TokenizerSyntaxError("Invalid expression in list.",this.tokenizer);
+		if(expression == null) if(list.length == 0) return list;
+		else throw this.tokenizer.createSyntaxError("Invalid expression in list.");
 		list.push(expression);
 	} while(this.tokenizer.match(processing.parser.Token.TComma));
-	{
-		$s.pop();
-		return list;
-	}
-	$s.pop();
+	return list;
 }
 processing.parser.Parser.prototype.parseStatement = function(statements,definitions) {
-	$s.push("processing.parser.Parser::parseStatement");
-	var $spos = $s.length;
-	if(this.parseDefinition(processing.parser.ParserScope.PBlock,statements,definitions)) {
-		$s.pop();
-		return true;
+	if(this.parseDefinition(processing.parser.ParserScope.PBlock,statements,definitions)) return true;
+	if(this.tokenizer.match(processing.parser.Token.TKeyword("if"))) {
+		this.tokenizer.match(processing.parser.Token.TParenOpen,true);
+		var condition = this.parseExpression();
+		if(condition == null) throw this.tokenizer.createSyntaxError("Invalid expression in conditional.");
+		this.tokenizer.match(processing.parser.Token.TParenClose,true);
+		var thenBlock = [];
+		if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
+			while(this.parseStatement(thenBlock,definitions)) continue;
+			this.tokenizer.match(processing.parser.Token.TBraceClose,true);
+		}
+		else if(!this.parseStatement(thenBlock,definitions)) throw this.tokenizer.createSyntaxError("Invalid expression in conditional.");
+		var elseBlock = [];
+		if(this.tokenizer.match(processing.parser.Token.TKeyword("else"))) {
+			if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
+				while(this.parseStatement(elseBlock,definitions)) continue;
+				this.tokenizer.match(processing.parser.Token.TBraceClose,true);
+			}
+			else if(!this.parseStatement(elseBlock,definitions)) throw this.tokenizer.createSyntaxError("Invalid expression in conditional.");
+		}
+		statements.push(processing.parser.Statement.SConditional(condition,thenBlock,elseBlock));
 	}
-	var $e = (this.tokenizer.peek());
-	switch( $e[1] ) {
-	case 1:
-	var keyword = $e[2];
-	{
-		switch(keyword) {
-		case "if":{
-			this.tokenizer.get();
-			this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
-			var condition = this.parseExpression();
-			if(condition == null) throw new processing.parser.TokenizerSyntaxError("Invalid expression in conditional.",this.tokenizer);
-			this.tokenizer.match(processing.parser.Token.TParenClose,null,true);
-			var thenBlock = [];
-			if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
-				while(this.parseStatement(thenBlock,definitions)) continue;
-				this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
-			}
-			else if(!this.parseStatement(thenBlock,definitions)) throw new processing.parser.TokenizerSyntaxError("Invalid expression in conditional.",this.tokenizer);
-			var elseBlock = [];
-			if(this.tokenizer.match(processing.parser.Token.TKeyword("else"))) {
-				if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
-					while(this.parseStatement(elseBlock,definitions)) continue;
-					this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
-				}
-				else if(!this.parseStatement(elseBlock,definitions)) throw new processing.parser.TokenizerSyntaxError("Invalid expression in conditional.",this.tokenizer);
-			}
-			statements.push(processing.parser.Statement.SConditional(condition,thenBlock,elseBlock));
-		}break;
-		case "while":{
-			this.tokenizer.get();
-			this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
-			var condition = this.parseExpression();
-			this.tokenizer.match(processing.parser.Token.TSemicolon,null,true);
-			var body = [];
-			if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
-				while(this.parseStatement(body,definitions)) continue;
-				this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
-			}
-			else if(!this.parseStatement(body,definitions)) throw new processing.parser.TokenizerSyntaxError("Invalid expression in for loop.",this.tokenizer);
-			statements.push(processing.parser.Statement.SLoop(condition,body));
-		}break;
-		case "for":{
-			this.tokenizer.get();
-			this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
-			if(!this.parseDefinition(processing.parser.ParserScope.PBlock,statements,definitions)) {
-				var init = this.parseList();
-				{
-					var _g = 0;
-					while(_g < init.length) {
-						var statement = init[_g];
-						++_g;
-						statements.push(processing.parser.Statement.SExpression(statement));
-					}
-				}
-				this.tokenizer.match(processing.parser.Token.TSemicolon,null,true);
-			}
-			var condition = this.parseExpression();
-			this.tokenizer.match(processing.parser.Token.TSemicolon,null,true);
-			var update = this.parseList();
-			this.tokenizer.match(processing.parser.Token.TParenClose,null,true);
-			var body = [];
-			if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
-				while(this.parseStatement(body,definitions)) continue;
-				this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
-			}
-			else if(!this.parseStatement(body,definitions)) throw new processing.parser.TokenizerSyntaxError("Invalid expression in for loop.",this.tokenizer);
+	else if(this.tokenizer.match(processing.parser.Token.TKeyword("while"))) {
+		this.tokenizer.match(processing.parser.Token.TParenOpen,true);
+		var condition = this.parseExpression();
+		this.tokenizer.match(processing.parser.Token.TSemicolon,true);
+		var body = [];
+		if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
+			while(this.parseStatement(body,definitions)) continue;
+			this.tokenizer.match(processing.parser.Token.TBraceClose,true);
+		}
+		else if(!this.parseStatement(body,definitions)) throw this.tokenizer.createSyntaxError("Invalid expression in for loop.");
+		statements.push(processing.parser.Statement.SLoop(condition,body));
+	}
+	else if(this.tokenizer.match(processing.parser.Token.TKeyword("for"))) {
+		this.tokenizer.match(processing.parser.Token.TParenOpen,true);
+		if(!this.parseDefinition(processing.parser.ParserScope.PBlock,statements,definitions)) {
+			var init = this.parseList();
 			{
 				var _g = 0;
-				while(_g < update.length) {
-					var statement = update[_g];
+				while(_g < init.length) {
+					var statement = init[_g];
 					++_g;
-					body.push(processing.parser.Statement.SExpression(statement));
+					statements.push(processing.parser.Statement.SExpression(statement));
 				}
 			}
-			statements.push(processing.parser.Statement.SLoop(condition,body));
-		}break;
-		case "return":{
-			this.tokenizer.get();
-			statements.push(processing.parser.Statement.SReturn(this.parseExpression()));
-		}break;
-		case "break":{
-			this.tokenizer.get();
-			if(this.tokenizer.match("TIdentifier")) statements.push(processing.parser.Statement.SBreak(Type.enumParameters(this.tokenizer.currentToken)[0]));
-			else statements.push(processing.parser.Statement.SBreak());
-		}break;
-		case "continue":{
-			this.tokenizer.get();
-			if(this.tokenizer.match("TIdentifier")) statements.push(processing.parser.Statement.SContinue(Type.enumParameters(this.tokenizer.currentToken)[0]));
-			else statements.push(processing.parser.Statement.SContinue());
-		}break;
-		default:{
-			var expression = this.parseExpression();
-			if(expression == null) {
-				var $tmp = this.tokenizer.match(processing.parser.Token.TSemicolon);
-				$s.pop();
-				return $tmp;
+			this.tokenizer.match(processing.parser.Token.TSemicolon,true);
+		}
+		var condition = this.parseExpression();
+		this.tokenizer.match(processing.parser.Token.TSemicolon,true);
+		var update = this.parseList();
+		this.tokenizer.match(processing.parser.Token.TParenClose,true);
+		var body = [];
+		if(this.tokenizer.match(processing.parser.Token.TBraceOpen)) {
+			while(this.parseStatement(body,definitions)) continue;
+			this.tokenizer.match(processing.parser.Token.TBraceClose,true);
+		}
+		else if(!this.parseStatement(body,definitions)) throw this.tokenizer.createSyntaxError("Invalid expression in for loop.");
+		{
+			var _g = 0;
+			while(_g < update.length) {
+				var statement = update[_g];
+				++_g;
+				body.push(processing.parser.Statement.SExpression(statement));
 			}
-			this.tokenizer.match(processing.parser.Token.TSemicolon,null,true);
-			statements.push(processing.parser.Statement.SExpression(expression));
-		}break;
 		}
-	}break;
-	default:{
+		statements.push(processing.parser.Statement.SLoop(condition,body));
+	}
+	else if(this.tokenizer.match(processing.parser.Token.TKeyword("return"))) {
+		statements.push(processing.parser.Statement.SReturn(this.parseExpression()));
+	}
+	else if(this.tokenizer.match(processing.parser.Token.TKeyword("break"))) {
+		if(this.tokenizer.match("TIdentifier")) statements.push(processing.parser.Statement.SBreak(Type.enumParameters(this.tokenizer.current())[0]));
+		else statements.push(processing.parser.Statement.SBreak());
+	}
+	else if(this.tokenizer.match(processing.parser.Token.TKeyword("continue"))) {
+		if(this.tokenizer.match("TIdentifier")) statements.push(processing.parser.Statement.SContinue(Type.enumParameters(this.tokenizer.current())[0]));
+		else statements.push(processing.parser.Statement.SContinue());
+	}
+	else {
 		var expression = this.parseExpression();
-		if(expression == null) {
-			var $tmp = this.tokenizer.match(processing.parser.Token.TSemicolon);
-			$s.pop();
-			return $tmp;
-		}
-		this.tokenizer.match(processing.parser.Token.TSemicolon,null,true);
+		if(expression == null) return this.tokenizer.match(processing.parser.Token.TSemicolon);
+		this.tokenizer.match(processing.parser.Token.TSemicolon,true);
 		statements.push(processing.parser.Statement.SExpression(expression));
-	}break;
 	}
-	{
-		$s.pop();
-		return true;
-	}
-	$s.pop();
+	return true;
 }
 processing.parser.Parser.prototype.parseType = function() {
-	$s.push("processing.parser.Parser::parseType");
-	var $spos = $s.length;
-	var $e = (this.tokenizer.peek());
+	this.tokenizer.pushState();
+	var $e = (this.tokenizer.next());
 	switch( $e[1] ) {
 	case 2:
 	case 3:
 	var value = $e[2];
 	{
-		this.tokenizer.get();
+		this.tokenizer.clearState();
 		var dimensions = 0;
 		while(this.tokenizer.match(processing.parser.Token.TDimensions)) dimensions++;
-		{
-			var $tmp = { type : value, dimensions : dimensions}
-			$s.pop();
-			return $tmp;
-		}
+		return { type : value, dimensions : dimensions}
 	}break;
 	default:{
-		{
-			$s.pop();
-			return null;
-		}
+		this.tokenizer.popState();
+		return null;
 	}break;
 	}
-	$s.pop();
 }
 processing.parser.Parser.prototype.parseVariableDefinition = function(statements,definitions) {
-	$s.push("processing.parser.Parser::parseVariableDefinition");
-	var $spos = $s.length;
 	var isStatic = this.tokenizer.match(processing.parser.Token.TKeyword("static"));
 	var visibility = this.parseVisibility();
 	var vType = this.parseType();
 	do {
-		this.tokenizer.match("TIdentifier",null,true);
-		var identifier = Type.enumParameters(this.tokenizer.currentToken)[0];
+		this.tokenizer.match("TIdentifier",true);
+		var identifier = Type.enumParameters(this.tokenizer.current())[0];
 		var vTypeDimensions = vType.dimensions;
 		if(vTypeDimensions == 0) {
 			while(this.tokenizer.match(processing.parser.Token.TDimensions)) vTypeDimensions++;
@@ -2756,43 +1635,23 @@ processing.parser.Parser.prototype.parseVariableDefinition = function(statements
 		definitions.push(processing.parser.Definition.DVariable(identifier,visibility,isStatic,{ type : vType.type, dimensions : vTypeDimensions}));
 		if(this.tokenizer.match(processing.parser.Token.TOperator("="))) {
 			var expression = this.parseExpression();
-			if(expression == null) throw new processing.parser.TokenizerSyntaxError("Invalid assignment left-hand side.",this.tokenizer);
+			if(expression == null) throw this.tokenizer.createSyntaxError("Invalid assignment left-hand side.");
 			statements.push(processing.parser.Statement.SExpression(processing.parser.Expression.EAssignment(processing.parser.Expression.EReference(identifier),expression)));
 		}
 	} while(this.tokenizer.match(processing.parser.Token.TComma));
-	this.tokenizer.match(processing.parser.Token.TSemicolon,null,true);
-	{
-		$s.pop();
-		return true;
-	}
-	$s.pop();
+	this.tokenizer.match(processing.parser.Token.TSemicolon,true);
+	return true;
 }
 processing.parser.Parser.prototype.parseVisibility = function() {
-	$s.push("processing.parser.Parser::parseVisibility");
-	var $spos = $s.length;
-	if(this.tokenizer.match(processing.parser.Token.TKeyword("private"))) {
-		var $tmp = processing.parser.Visibility.VPrivate;
-		$s.pop();
-		return $tmp;
-	}
+	if(this.tokenizer.match(processing.parser.Token.TKeyword("private"))) return processing.parser.Visibility.VPrivate;
 	this.tokenizer.match(processing.parser.Token.TKeyword("public"));
-	{
-		var $tmp = processing.parser.Visibility.VPublic;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return processing.parser.Visibility.VPublic;
 }
 processing.parser.Parser.prototype.recursiveReduceExpression = function(operators,operands,precedence) {
-	$s.push("processing.parser.Parser::recursiveReduceExpression");
-	var $spos = $s.length;
 	if(precedence == null) precedence = 0;
 	while(operators.length > 0 && this.lookupOperatorPrecedence(operators[operators.length - 1]) >= precedence) this.reduceExpression(operators,operands);
-	$s.pop();
 }
 processing.parser.Parser.prototype.reduceExpression = function(operators,operands) {
-	$s.push("processing.parser.Parser::reduceExpression");
-	var $spos = $s.length;
 	var $e = (operators.pop());
 	switch( $e[1] ) {
 	case 0:
@@ -2844,14 +1703,14 @@ processing.parser.Parser.prototype.reduceExpression = function(operators,operand
 	var type = $e[2];
 	{
 		var reference = operands.pop();
-		if(Type.enumConstructor(reference) != "EReference") throw new processing.parser.TokenizerSyntaxError("Invalid assignment left-hand side.",this.tokenizer);
+		if(Type.enumConstructor(reference) != "EReference") throw this.tokenizer.createSyntaxError("Invalid assignment left-hand side.");
 		operands.push(processing.parser.Expression.EPrefix(reference,type));
 	}break;
 	case 3:
 	var type = $e[2];
 	{
 		var reference = operands.pop();
-		if(Type.enumConstructor(reference) != "EReference") throw new processing.parser.TokenizerSyntaxError("Invalid assignment left-hand side.",this.tokenizer);
+		if(Type.enumConstructor(reference) != "EReference") throw this.tokenizer.createSyntaxError("Invalid assignment left-hand side.");
 		operands.push(processing.parser.Expression.EPostfix(reference,type));
 	}break;
 	case 4:
@@ -2873,11 +1732,8 @@ processing.parser.Parser.prototype.reduceExpression = function(operators,operand
 		operands.push(processing.parser.Expression.ECall(method,args));
 	}break;
 	}
-	$s.pop();
 }
 processing.parser.Parser.prototype.scanOperand = function(operators,operands,required) {
-	$s.push("processing.parser.Parser::scanOperand");
-	var $spos = $s.length;
 	if(required == null) required = false;
 	var token = this.tokenizer.peek();
 	var $e = (token);
@@ -2885,16 +1741,12 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 	case 4:
 	var opString = $e[2];
 	{
-		this.tokenizer.get();
+		this.tokenizer.next();
 		if(opString == "++" || opString == "--") {
 			var operator = processing.parser.ParserOperator.PPrefix(this.lookupIncrementType(opString));
 			this.recursiveReduceExpression(operators,operands,this.lookupOperatorPrecedence(operator));
 			operators.push(operator);
-			{
-				var $tmp = this.scanOperand(operators,operands,required);
-				$s.pop();
-				return $tmp;
-			}
+			return this.scanOperand(operators,operands,required);
 		}
 		else {
 			var operation = this.lookupOperatorType(opString,true);
@@ -2908,14 +1760,10 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 				var operator = processing.parser.ParserOperator.POperator(operation);
 				this.recursiveReduceExpression(operators,operands,this.lookupOperatorPrecedence(operator));
 				operators.push(operator);
-				{
-					var $tmp = this.scanOperand(operators,operands,required);
-					$s.pop();
-					return $tmp;
-				}
+				return this.scanOperand(operators,operands,required);
 			}break;
 			default:{
-				throw new processing.parser.TokenizerSyntaxError("Invalid operator.",this.tokenizer);
+				throw this.tokenizer.createSyntaxError("Invalid operator.");
 			}break;
 			}
 		}
@@ -2925,16 +1773,16 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 	{
 		var type = this.parseType();
 		operators.push(processing.parser.ParserOperator.PCast(type));
-		this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
+		this.tokenizer.match(processing.parser.Token.TParenOpen,true);
 		var expression = this.parseExpression();
-		if(expression == null) throw new processing.parser.TokenizerSyntaxError("Invalid expression in cast.",this.tokenizer);
-		this.tokenizer.match(processing.parser.Token.TParenClose,null,true);
+		if(expression == null) throw this.tokenizer.createSyntaxError("Invalid expression in cast.");
+		this.tokenizer.match(processing.parser.Token.TParenClose,true);
 		operands.push(expression);
 	}break;
 	case 3:
 	var value = $e[2];
 	{
-		this.tokenizer.get();
+		this.tokenizer.next();
 		operands.push(processing.parser.Expression.EReference(value));
 	}break;
 	case 1:
@@ -2942,37 +1790,37 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 	{
 		switch(keyword) {
 		case "this":{
-			this.tokenizer.get();
+			this.tokenizer.next();
 			operands.push(processing.parser.Expression.EThisReference);
 		}break;
 		case "null":{
-			this.tokenizer.get();
+			this.tokenizer.next();
 			operands.push(processing.parser.Expression.ELiteral(null));
 		}break;
 		case "true":{
-			this.tokenizer.get();
+			this.tokenizer.next();
 			operands.push(processing.parser.Expression.ELiteral(true));
 		}break;
 		case "false":{
-			this.tokenizer.get();
+			this.tokenizer.next();
 			operands.push(processing.parser.Expression.ELiteral(false));
 		}break;
 		case "new":{
-			this.tokenizer.get();
+			this.tokenizer.next();
 			if((this.tokenizer.peekMatch("TIdentifier") || this.tokenizer.peekMatch("TType")) && this.tokenizer.peekMatch(processing.parser.Token.TBracketOpen,2)) {
 				var type = this.parseType();
 				var sizes = [];
 				while(this.tokenizer.match(processing.parser.Token.TBracketOpen)) {
 					var expression = this.parseExpression();
-					if(expression == null) throw new processing.parser.TokenizerSyntaxError("Invalid array dimension.",this.tokenizer);
+					if(expression == null) throw this.tokenizer.createSyntaxError("Invalid array dimension.");
 					sizes.push(expression);
-					this.tokenizer.match(processing.parser.Token.TBracketClose,null,true);
+					this.tokenizer.match(processing.parser.Token.TBracketClose,true);
 				}
 				operands.push(processing.parser.Expression.EArrayInstantiation(type,sizes));
 			}
 			else {
-				this.tokenizer.match("TIdentifier",null,true);
-				var reference = Type.enumParameters(this.tokenizer.currentToken)[0];
+				this.tokenizer.match("TIdentifier",true);
+				var reference = Type.enumParameters(this.tokenizer.current())[0];
 				var args = null;
 				if(this.tokenizer.match(processing.parser.Token.TParenOpen)) {
 					args = this.parseList();
@@ -2983,47 +1831,44 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 			}
 		}break;
 		default:{
-			if(required) throw new processing.parser.TokenizerSyntaxError("Missing operand",this.tokenizer);
-			{
-				$s.pop();
-				return false;
-			}
+			if(required) throw this.tokenizer.createSyntaxError("Missing operand");
+			return false;
 		}break;
 		}
 	}break;
 	case 5:
 	var value = $e[2];
 	{
-		this.tokenizer.get();
+		this.tokenizer.next();
 		operands.push(processing.parser.Expression.ELiteral(value));
 	}break;
 	case 6:
 	var value = $e[2];
 	{
-		this.tokenizer.get();
+		this.tokenizer.next();
 		operands.push(processing.parser.Expression.ELiteral(value));
 	}break;
 	case 7:
 	var value = $e[2];
 	{
-		this.tokenizer.get();
+		this.tokenizer.next();
 		operands.push(processing.parser.Expression.ELiteral(value));
 	}break;
 	case 8:
 	var value = $e[2];
 	{
-		this.tokenizer.get();
+		this.tokenizer.next();
 		operands.push(processing.parser.Expression.ELiteral(value));
 	}break;
 	case 17:
 	{
-		this.tokenizer.get();
+		this.tokenizer.next();
 		operands.push(processing.parser.Expression.EArrayLiteral(this.parseList()));
-		this.tokenizer.match(processing.parser.Token.TBraceClose,null,true);
+		this.tokenizer.match(processing.parser.Token.TBraceClose,true);
 	}break;
 	case 10:
 	{
-		this.tokenizer.get();
+		this.tokenizer.next();
 		this.tokenizer.pushState();
 		var isPrimitive = this.tokenizer.peekMatch("TType");
 		var type = this.parseType();
@@ -3031,36 +1876,24 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 			operators.push(processing.parser.ParserOperator.PCast(type));
 			if((isPrimitive || !(this.tokenizer.peekMatch(processing.parser.Token.TOperator("+")) && !this.tokenizer.peekMatch(processing.parser.Token.TOperator("-")))) && this.scanOperand(operators,operands)) {
 				this.tokenizer.clearState();
-				{
-					$s.pop();
-					return true;
-				}
+				return true;
 			}
 			operators.pop();
 		}
 		this.tokenizer.popState();
 		var expression = this.parseExpression();
-		if(expression == null) throw new processing.parser.TokenizerSyntaxError("Invalid parenthetical expression.",this.tokenizer);
+		if(expression == null) throw this.tokenizer.createSyntaxError("Invalid parenthetical expression.");
 		operands.push(expression);
-		if(!this.tokenizer.match(processing.parser.Token.TParenClose)) throw new processing.parser.TokenizerSyntaxError("Missing ) in parenthetical",this.tokenizer);
+		if(!this.tokenizer.match(processing.parser.Token.TParenClose)) throw this.tokenizer.createSyntaxError("Missing ) in parenthetical");
 	}break;
 	default:{
-		if(required) throw new processing.parser.TokenizerSyntaxError("Missing operand",this.tokenizer);
-		{
-			$s.pop();
-			return false;
-		}
+		if(required) throw this.tokenizer.createSyntaxError("Missing operand");
+		return false;
 	}break;
 	}
-	{
-		$s.pop();
-		return true;
-	}
-	$s.pop();
+	return true;
 }
 processing.parser.Parser.prototype.scanOperator = function(operators,operands,required) {
-	$s.push("processing.parser.Parser::scanOperator");
-	var $spos = $s.length;
 	if(required == null) required = false;
 	var token = this.tokenizer.peek();
 	var $e = (token);
@@ -3068,29 +1901,22 @@ processing.parser.Parser.prototype.scanOperator = function(operators,operands,re
 	case 4:
 	var opToken = $e[2];
 	{
-		this.tokenizer.get();
+		this.tokenizer.next();
 		if(opToken == "++" || opToken == "--") {
 			var operator = processing.parser.ParserOperator.PPostfix(this.lookupIncrementType(opToken));
 			this.recursiveReduceExpression(operators,operands,this.lookupOperatorPrecedence(operator));
 			operators.push(operator);
-			{
-				var $tmp = this.scanOperator(operators,operands,required);
-				$s.pop();
-				return $tmp;
-			}
+			return this.scanOperator(operators,operands,required);
 		}
 		else if(this.isAssignmentOperator(opToken)) {
 			this.recursiveReduceExpression(operators,operands);
 			var reference = operands.pop();
-			if((Type.enumConstructor(reference) != "EReference") && (Type.enumConstructor(reference) != "EArrayAccess")) throw new processing.parser.TokenizerSyntaxError("Invalid assignment left-hand side.",this.tokenizer);
+			if((Type.enumConstructor(reference) != "EReference") && (Type.enumConstructor(reference) != "EArrayAccess")) throw this.tokenizer.createSyntaxError("Invalid assignment left-hand side.");
 			var value = this.parseExpression();
-			if(value == null) throw new processing.parser.TokenizerSyntaxError("Invalid assignment right-hand side.",this.tokenizer);
+			if(value == null) throw this.tokenizer.createSyntaxError("Invalid assignment right-hand side.");
 			if(opToken != "=") value = processing.parser.Expression.EOperation(this.lookupOperatorType(opToken),reference,value);
 			operands.push(processing.parser.Expression.EAssignment(reference,value));
-			{
-				$s.pop();
-				return false;
-			}
+			return false;
 		}
 		else {
 			var operator = processing.parser.ParserOperator.POperator(this.lookupOperatorType(opToken));
@@ -3100,74 +1926,52 @@ processing.parser.Parser.prototype.scanOperator = function(operators,operands,re
 	}break;
 	case 14:
 	{
-		this.tokenizer.get();
-		this.tokenizer.match("TIdentifier",null,true);
-		var operator = processing.parser.ParserOperator.PDot(Type.enumParameters(this.tokenizer.currentToken)[0]);
+		this.tokenizer.next();
+		this.tokenizer.match("TIdentifier",true);
+		var operator = processing.parser.ParserOperator.PDot(Type.enumParameters(this.tokenizer.current())[0]);
 		this.recursiveReduceExpression(operators,operands,this.lookupOperatorPrecedence(operator));
 		operators.push(operator);
-		{
-			var $tmp = this.scanOperator(operators,operands,required);
-			$s.pop();
-			return $tmp;
-		}
+		return this.scanOperator(operators,operands,required);
 	}break;
 	case 12:
 	{
-		this.tokenizer.match(processing.parser.Token.TBracketOpen,null,true);
+		this.tokenizer.match(processing.parser.Token.TBracketOpen,true);
 		var index = this.parseExpression();
-		if(index == null) throw new processing.parser.TokenizerSyntaxError("Invalid array index.",this.tokenizer);
-		this.tokenizer.match(processing.parser.Token.TBracketClose,null,true);
+		if(index == null) throw this.tokenizer.createSyntaxError("Invalid array index.");
+		this.tokenizer.match(processing.parser.Token.TBracketClose,true);
 		var operator = processing.parser.ParserOperator.PArrayAccess(index);
 		this.recursiveReduceExpression(operators,operands,this.lookupOperatorPrecedence(operator));
 		operators.push(operator);
-		{
-			var $tmp = this.scanOperator(operators,operands,required);
-			$s.pop();
-			return $tmp;
-		}
+		return this.scanOperator(operators,operands,required);
 	}break;
 	case 19:
 	{
-		this.tokenizer.get();
+		this.tokenizer.next();
 		this.recursiveReduceExpression(operators,operands);
 		var conditional = operands.pop();
 		var thenExpression = this.parseExpression();
-		this.tokenizer.match(processing.parser.Token.TDoubleDot,null,true);
+		this.tokenizer.match(processing.parser.Token.TDoubleDot,true);
 		var elseExpression = this.parseExpression();
-		if((thenExpression == null) || (elseExpression == null)) throw new processing.parser.TokenizerSyntaxError("Invalid expression in ternary conditional.",this.tokenizer);
+		if((thenExpression == null) || (elseExpression == null)) throw this.tokenizer.createSyntaxError("Invalid expression in ternary conditional.");
 		operands.push(processing.parser.Expression.EConditional(conditional,thenExpression,elseExpression));
-		{
-			$s.pop();
-			return false;
-		}
+		return false;
 	}break;
 	case 10:
 	{
-		this.tokenizer.match(processing.parser.Token.TParenOpen,null,true);
+		this.tokenizer.match(processing.parser.Token.TParenOpen,true);
 		var args = this.parseList();
-		this.tokenizer.match(processing.parser.Token.TParenClose,null,true);
+		this.tokenizer.match(processing.parser.Token.TParenClose,true);
 		var operator = processing.parser.ParserOperator.PCall(args);
 		this.recursiveReduceExpression(operators,operands,this.lookupOperatorPrecedence(operator));
 		operators.push(operator);
-		{
-			var $tmp = this.scanOperator(operators,operands);
-			$s.pop();
-			return $tmp;
-		}
+		return this.scanOperator(operators,operands);
 	}break;
 	default:{
-		if(required) throw new processing.parser.TokenizerSyntaxError("Missing operator",this.tokenizer);
-		{
-			$s.pop();
-			return false;
-		}
+		if(required) throw this.tokenizer.createSyntaxError("Missing operator");
+		return false;
 	}break;
 	}
-	{
-		$s.pop();
-		return true;
-	}
-	$s.pop();
+	return true;
 }
 processing.parser.Parser.prototype.tokenizer = null;
 processing.parser.Parser.prototype.__class__ = processing.parser.Parser;
@@ -3188,40 +1992,21 @@ processing.parser.ParserOperator.POperator = function(operator) { var $x = ["POp
 processing.parser.ParserOperator.PPostfix = function(type) { var $x = ["PPostfix",3,type]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
 processing.parser.ParserOperator.PPrefix = function(type) { var $x = ["PPrefix",2,type]; $x.__enum__ = processing.parser.ParserOperator; $x.toString = $estr; return $x; }
 StringBuf = function(p) { if( p === $_ ) return; {
-	$s.push("StringBuf::new");
-	var $spos = $s.length;
-	this.b = new Array();
-	$s.pop();
+	this.b = "";
 }}
 StringBuf.__name__ = ["StringBuf"];
 StringBuf.prototype.add = function(x) {
-	$s.push("StringBuf::add");
-	var $spos = $s.length;
-	this.b[this.b.length] = x;
-	$s.pop();
+	this.b += x;
 }
 StringBuf.prototype.addChar = function(c) {
-	$s.push("StringBuf::addChar");
-	var $spos = $s.length;
-	this.b[this.b.length] = String.fromCharCode(c);
-	$s.pop();
+	this.b += String.fromCharCode(c);
 }
 StringBuf.prototype.addSub = function(s,pos,len) {
-	$s.push("StringBuf::addSub");
-	var $spos = $s.length;
-	this.b[this.b.length] = s.substr(pos,len);
-	$s.pop();
+	this.b += s.substr(pos,len);
 }
 StringBuf.prototype.b = null;
 StringBuf.prototype.toString = function() {
-	$s.push("StringBuf::toString");
-	var $spos = $s.length;
-	{
-		var $tmp = this.b.join("");
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return this.b;
 }
 StringBuf.prototype.__class__ = StringBuf;
 processing.parser.Statement = { __ename__ : ["processing","parser","Statement"], __constructs__ : ["SBlock","SBreak","SConditional","SContinue","SExpression","SLoop","SReturn"] }
@@ -3341,57 +2126,30 @@ processing.parser.IncrementType.IIncrement = ["IIncrement",0];
 processing.parser.IncrementType.IIncrement.toString = $estr;
 processing.parser.IncrementType.IIncrement.__enum__ = processing.parser.IncrementType;
 IntIter = function(min,max) { if( min === $_ ) return; {
-	$s.push("IntIter::new");
-	var $spos = $s.length;
 	this.min = min;
 	this.max = max;
-	$s.pop();
 }}
 IntIter.__name__ = ["IntIter"];
 IntIter.prototype.hasNext = function() {
-	$s.push("IntIter::hasNext");
-	var $spos = $s.length;
-	{
-		var $tmp = this.min < this.max;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return this.min < this.max;
 }
 IntIter.prototype.max = null;
 IntIter.prototype.min = null;
 IntIter.prototype.next = function() {
-	$s.push("IntIter::next");
-	var $spos = $s.length;
-	{
-		var $tmp = this.min++;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
+	return this.min++;
 }
 IntIter.prototype.__class__ = IntIter;
 $_ = {}
 js.Boot.__res = {}
-$s = [];
-$e = [];
 js.Boot.__init();
 {
 	js.Lib.document = document;
 	js.Lib.window = window;
 	onerror = function(msg,url,line) {
-		var stack = $s.copy();
 		var f = js.Lib.onerror;
-		$s.splice(0,$s.length);
-		if( f == null ) {
-			var i = stack.length;
-			var s = "";
-			while( --i >= 0 )
-				s += "Called from "+stack[i]+"\n";
-			alert(msg+"\n\n"+s);
+		if( f == null )
 			return false;
-		}
-		return f(msg,stack);
+		return f(msg,[url+":"+line]);
 	}
 }
 {
@@ -3413,24 +2171,10 @@ js.Boot.__init();
 	Math.NEGATIVE_INFINITY = Number["NEGATIVE_INFINITY"];
 	Math.POSITIVE_INFINITY = Number["POSITIVE_INFINITY"];
 	Math.isFinite = function(i) {
-		$s.push("IntIter::next");
-		var $spos = $s.length;
-		{
-			var $tmp = isFinite(i);
-			$s.pop();
-			return $tmp;
-		}
-		$s.pop();
+		return isFinite(i);
 	}
 	Math.isNaN = function(i) {
-		$s.push("IntIter::next");
-		var $spos = $s.length;
-		{
-			var $tmp = isNaN(i);
-			$s.pop();
-			return $tmp;
-		}
-		$s.pop();
+		return isNaN(i);
 	}
 	Math.__name__ = ["Math"];
 }

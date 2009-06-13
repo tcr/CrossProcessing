@@ -27,20 +27,18 @@ enum Token {
 }
 
 //[TODO] might want to take cues from a real Tokenizer class....
-class Tokenizer {
-	public var source(default, null):String;
-	public var cursor(default, null):Int;
-	public var done(isDone, null):Bool;
-	public var line(getCurrentLineNumber, null):Int;
-	public var currentToken(default, null):Token;
+class Tokenizer
+{
+	// private state
+	private var source:String;
+	private var cursor:Int;
+	private var currentToken:Token;
+	private var states:Array<Dynamic>;
 	
 	public function new():Void
-	{
-		// reset source/cursor
-		load('');
-		
+	{		
 		// initialize states
-		states = [];
+		load('');
 	}
 	
 //[TODO] argument to start tokenizing /from line/?
@@ -49,12 +47,16 @@ class Tokenizer {
 		// load source and reset location
 		source = s;
 		cursor = 0;
+		currentToken = null;
+		states = [];
 	}
 	
-	// static regexes
-	public static var regexes = TokenizerRegexList;
+	public function current():Token
+	{
+		return currentToken;
+	}
 	
-	public function get():Token
+	public function next():Token
 	{
 		// init variables
 		var regex:EReg, input:String = '';
@@ -142,7 +144,7 @@ class Tokenizer {
 		}
 		else 
 		{
-			throw new TokenizerSyntaxError('Illegal token ' + input, this);
+			throw createSyntaxError('Illegal token ' + input);
 		}
 			
 		// move cursor
@@ -150,6 +152,37 @@ class Tokenizer {
 		// return current token		
 		return currentToken;
 	}
+
+	public function match(to:Dynamic, ?mustMatch:Bool = false):Bool {
+		// preserve state
+		pushState();
+		// compare next token
+		var token:Token = next();		
+		if (compareTokens(token, to))
+			return true;
+		else if (mustMatch)
+			throw createSyntaxError('Tokenizer: Must match ' + to + ', found ' + token);
+		// didn't match
+		popState();
+		return false;
+	}
+	
+	public function hasNext():Bool
+	{
+		return !match(TEof);
+	}
+	
+	public function getCurrentLineNumber():Int
+	{
+		return regexes.NEWLINES.split(source.substr(0, cursor)).length + 1;
+	}
+	
+	/*
+	 * utilities
+	 */
+	
+	// static regexes
+	public static var regexes = TokenizerRegexList;
 	
 	private function parseStringLiteral(str:String):String {
 		str = regexes.CHAR_BACKSPACE.replace(str, '$1\x08');
@@ -167,66 +200,34 @@ class Tokenizer {
 			});
 		return str;
 	}
-
-//[TODO] pushState, popState, clearState, instead of peek
-	public function peek(?lookAhead:Int = 1):Token {
-		// peek ahead x tokens, retaining state
-		pushState();
-		var token:Token = currentToken;
-		for (i in 0...lookAhead)
-			token = get();
-		popState();
-		return token;
-	}
 	
-	public function peekMatch(to:Dynamic, ?lookAhead:Int = 1):Bool {
-		return Tokenizer.matchToken(peek(lookAhead), to);
-	}
-	
-	public function match(to:Dynamic, ?lookAhead:Int = 0, ?mustMatch:Bool = false):Bool {
-		// peek to find a match
-		var origCursor:Int = cursor, origToken:Token = currentToken, token:Token = get();
-		for (i in 0...lookAhead)
-			token = get();
-		
-		// check type of match
-		if (Tokenizer.matchToken(token, to))
-			return true;
-		else if (mustMatch)
-			throw new TokenizerSyntaxError('Tokenizer: Must match ' + to + ', found ' + token, this);
-		
-		// didn't match
-		cursor = origCursor;
-		currentToken = origToken;
-		return false;
-	}
-	
-	static public function matchToken(from:Token, to:Dynamic):Bool
+	private function compareTokens(from:Token, to:Dynamic):Bool
 	{
 //[TODO] is this matching technique even correct?
 		return (Type.enumEq(from, to) || (Type.enumConstructor(from) == to));
 	}
 	
-	private function isDone():Bool
-	{
-		return match(TEof);
+	/*
+	 * [deprecated] peek functions
+	 */
+	
+	public function peek(?lookAhead:Int = 1):Token {
+		// peek ahead x tokens, retaining state
+		pushState();
+		var token:Token = currentToken;
+		for (i in 0...lookAhead)
+			token = next();
+		popState();
+		return token;
 	}
 	
-	private function getCurrentLineNumber():Int
-	{
-		return getLineNumber(cursor);
-	}
-	
-	private function getLineNumber(searchCursor:Int):Int
-	{
-		return regexes.NEWLINES.split(source.substr(0, searchCursor)).length + 1;
+	public function peekMatch(to:Dynamic, ?lookAhead:Int = 1):Bool {
+		return compareTokens(peek(lookAhead), to);
 	}
 	
 	/*
 	 * tokenizer stack
 	 */
-	
-	private var states:Array<Dynamic>;
 	
 	public function pushState():Void
 	{
@@ -243,6 +244,19 @@ class Tokenizer {
 	public function clearState():Void 
 	{
 		states.pop();
+	}
+	
+	/*
+	 * errors
+	 */
+	
+	public function createSyntaxError(message):TokenizerSyntaxError
+	{
+		var error:TokenizerSyntaxError = new TokenizerSyntaxError(message);
+		error.source = source;
+		error.cursor = cursor;
+		error.line = getCurrentLineNumber();
+		return error;
 	}
 }
 
@@ -288,10 +302,8 @@ class TokenizerSyntaxError {
 	public var cursor:Int;
 	public var message:String;
 	
-	public function new(message:String, tokenizer:Tokenizer) {
-		this.source = tokenizer.source;
-		this.line = tokenizer.line;
-		this.cursor = tokenizer.cursor;
+	public function new(message:String)
+	{
 		this.message = message;
 	}
 	

@@ -9,7 +9,7 @@
 
 (function(){
 
-this.Processing = function Processing( aElement, aCode ) {
+this.CrossProcessing = function CrossProcessing( aElement, aCode ) {
   if ( typeof aElement == "string" )
     aElement = document.getElementById( aElement );
 
@@ -29,10 +29,6 @@ function log() {
       opera.postError.apply( opera, arguments );
     } catch(e){}
   }
-}
-
-var parse = Processing.parse = function (c) {
-	return (new ProcessingParser()).parse(c).serialize();
 }
 
 function buildProcessing( curElement ){

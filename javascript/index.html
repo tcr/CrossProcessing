@@ -40,17 +40,15 @@ function compile() {
 
 function runOutput() {
 	// create processing object
-	var p = Processing(document.getElementById('processing'));
+	var p = CrossProcessing(document.getElementById('processing'));
 
 	// parse code
 	var script = document.getElementById('input').value;
-//	try {
-		var evaluator = new processing.evaluator.Evaluator([p]);
-		evaluator.evaluate(script);
+	var evaluator = new processing.evaluator.Evaluator([p]);
+	evaluator.evaluate(script);
 
-		// start processing
-		p.init();
-//	} catch (e) { console.log(e); }
+	// start processing
+	p.init();
 }
     
     </script>

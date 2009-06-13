@@ -25,9 +25,9 @@ class Parser {
 			continue;
 
 		// check that we've finished parsing
-		if (!tokenizer.done)
+		if (tokenizer.hasNext())
 //[TODO] ParserSyntaxError?
-			throw new TokenizerSyntaxError('Script unterminated', tokenizer);
+			throw tokenizer.createSyntaxError('Script unterminated');
 		// return parsed global block
 		return SBlock(statements, definitions);
 	}
@@ -39,150 +39,126 @@ class Parser {
 		if (parseDefinition(PBlock, statements, definitions))
 			return true;
 		
-		// peek to see what kind of statement this is
-		switch (tokenizer.peek())
+		// if 
+		if (tokenizer.match(TKeyword('if')))
 		{
-		    // keywords
-		    case TKeyword(keyword):
-			switch (keyword) {
-
-			    // if block
-			    case 'if':
-				// condition
-				tokenizer.get();
-				tokenizer.match(TParenOpen, true);
-				var condition:Expression = parseExpression();
-				if (condition == null)
-					throw new TokenizerSyntaxError('Invalid expression in conditional.', tokenizer);
-				tokenizer.match(TParenClose, true);
-				// then block
-				var thenBlock:Array<Statement> = [];
-				if (tokenizer.match(TBraceOpen))
-				{
-					while (parseStatement(thenBlock, definitions))
-						continue;
-					tokenizer.match(TBraceClose, true);
-				}
-				else if (!parseStatement(thenBlock, definitions))
-					throw new TokenizerSyntaxError('Invalid expression in conditional.', tokenizer);
-				// else block
-				var elseBlock:Array<Statement> = [];
-				if (tokenizer.match(TKeyword('else')))
-				{
-					if (tokenizer.match(TBraceOpen))
-					{
-						while (parseStatement(elseBlock, definitions))
-							continue;
-						tokenizer.match(TBraceClose, true);
-					}
-					else if (!parseStatement(elseBlock, definitions))
-						throw new TokenizerSyntaxError('Invalid expression in conditional.', tokenizer);
-				}
-				
-				// add conditional
-				statements.push(SConditional(condition, thenBlock, elseBlock));
-				
-//[TODO] handle loop labels!
-
-			    // while statement
-			    case 'while':
-				// match opening 'while'
-				tokenizer.get();
-
-				// match condition
-				tokenizer.match(TParenOpen, true);
-				var condition:Expression = parseExpression();
-				tokenizer.match(TSemicolon, true);
-				
-				// parse body
-				var body:Array<Statement> = [];
-				if (tokenizer.match(TBraceOpen))
-				{
-					while (parseStatement(body, definitions))
-						continue;
-					tokenizer.match(TBraceClose, true);
-				}
-				else if (!parseStatement(body, definitions))
-					throw new TokenizerSyntaxError('Invalid expression in for loop.', tokenizer);
-				
-				// add loop
-				statements.push(SLoop(condition, body));
-
-			    // for statement
-			    case 'for':
-				// match opening 'for' and '('
-				tokenizer.get();
-				tokenizer.match(TParenOpen, true);
-
-				// variable definition/initialization
-				if (!parseDefinition(PBlock, statements, definitions))
-				{
-					// match expression initialization
-					var init:Array<Expression> = parseList();
-					for (statement in init)
-						statements.push(SExpression(statement));
-					tokenizer.match(TSemicolon, true);
-				}
-				// match condition
-				var condition:Expression = parseExpression();
-				tokenizer.match(TSemicolon, true);
-				// match update
-				var update:Array<Expression> = parseList();
-				tokenizer.match(TParenClose, true);
-				
-				// parse body
-				var body:Array<Statement> = [];
-				if (tokenizer.match(TBraceOpen))
-				{
-					while (parseStatement(body, definitions))
-						continue;
-					tokenizer.match(TBraceClose, true);
-				}
-				else if (!parseStatement(body, definitions))
-					throw new TokenizerSyntaxError('Invalid expression in for loop.', tokenizer);
-				// append update to body
-				for (statement in update)
-					body.push(SExpression(statement));
-				
-				// add loop
-				statements.push(SLoop(condition, body));
-
-			    // returns
-			    case 'return':
-				tokenizer.get();
-				// push return statement
-				statements.push(SReturn(parseExpression()));
-			
-			    // break
-			    case 'break':
-				tokenizer.get();		
-				// match break and optional level
-				tokenizer.match('TIdentifier') ?
-				    statements.push(SBreak(Type.enumParameters(tokenizer.currentToken)[0])) :
-				    statements.push(SBreak());
-				
-			    // continue
-			    case 'continue' :
-				tokenizer.get();			
-				// match continue and optional level
-				tokenizer.match('TIdentifier') ?
-				    statements.push(SContinue(Type.enumParameters(tokenizer.currentToken)[0])) :
-				    statements.push(SContinue());
-
-			    default:
-//[TODO] is this right?
-				// match expression or semicolon
-				var expression:Expression = parseExpression();
-				if (expression == null)
-					return tokenizer.match(TSemicolon);
-				tokenizer.match(TSemicolon, true);
-				
-				// push expression
-				statements.push(SExpression(expression));
+			// condition
+			tokenizer.match(TParenOpen, true);
+			var condition:Expression = parseExpression();
+			if (condition == null)
+				throw tokenizer.createSyntaxError('Invalid expression in conditional.');
+			tokenizer.match(TParenClose, true);
+			// then block
+			var thenBlock:Array<Statement> = [];
+			if (tokenizer.match(TBraceOpen))
+			{
+				while (parseStatement(thenBlock, definitions))
+					continue;
+				tokenizer.match(TBraceClose, true);
 			}
-		
-		    // expression
-		    default:
+			else if (!parseStatement(thenBlock, definitions))
+				throw tokenizer.createSyntaxError('Invalid expression in conditional.');
+			// else block
+			var elseBlock:Array<Statement> = [];
+			if (tokenizer.match(TKeyword('else')))
+			{
+				if (tokenizer.match(TBraceOpen))
+				{
+					while (parseStatement(elseBlock, definitions))
+						continue;
+					tokenizer.match(TBraceClose, true);
+				}
+				else if (!parseStatement(elseBlock, definitions))
+					throw tokenizer.createSyntaxError('Invalid expression in conditional.');
+			}
+			
+			// add conditional
+			statements.push(SConditional(condition, thenBlock, elseBlock));
+		}
+		// while 
+		else if (tokenizer.match(TKeyword('while')))
+		{
+			// match condition
+			tokenizer.match(TParenOpen, true);
+			var condition:Expression = parseExpression();
+			tokenizer.match(TSemicolon, true);
+			
+			// parse body
+			var body:Array<Statement> = [];
+			if (tokenizer.match(TBraceOpen))
+			{
+				while (parseStatement(body, definitions))
+					continue;
+				tokenizer.match(TBraceClose, true);
+			}
+			else if (!parseStatement(body, definitions))
+				throw tokenizer.createSyntaxError('Invalid expression in for loop.');
+			
+			// add loop
+			statements.push(SLoop(condition, body));
+		}
+		// for
+		else if (tokenizer.match(TKeyword('for')))
+		{
+			// variable definition/initialization
+			tokenizer.match(TParenOpen, true);
+			if (!parseDefinition(PBlock, statements, definitions))
+			{
+				// match expression initialization
+				var init:Array<Expression> = parseList();
+				for (statement in init)
+					statements.push(SExpression(statement));
+				tokenizer.match(TSemicolon, true);
+			}
+			// match condition
+			var condition:Expression = parseExpression();
+			tokenizer.match(TSemicolon, true);
+			// match update
+			var update:Array<Expression> = parseList();
+			tokenizer.match(TParenClose, true);
+			
+			// parse body
+			var body:Array<Statement> = [];
+			if (tokenizer.match(TBraceOpen))
+			{
+				while (parseStatement(body, definitions))
+					continue;
+				tokenizer.match(TBraceClose, true);
+			}
+			else if (!parseStatement(body, definitions))
+				throw tokenizer.createSyntaxError('Invalid expression in for loop.');
+			// append update to body
+			for (statement in update)
+				body.push(SExpression(statement));
+			
+			// add loop
+			statements.push(SLoop(condition, body));
+		}
+		// return
+		else if (tokenizer.match(TKeyword('return')))
+		{
+			// push return statement
+			statements.push(SReturn(parseExpression()));
+		}
+		// break
+		else if (tokenizer.match(TKeyword('break')))
+		{
+			// match break and optional level
+			tokenizer.match('TIdentifier') ?
+			    statements.push(SBreak(Type.enumParameters(tokenizer.current())[0])) :
+			    statements.push(SBreak());
+		}
+		// continue
+		else if (tokenizer.match(TKeyword('continue')))
+		{
+			// match continue and optional level
+			tokenizer.match('TIdentifier') ?
+			    statements.push(SContinue(Type.enumParameters(tokenizer.current())[0])) :
+			    statements.push(SContinue());
+		}
+		// expression
+		else
+		{
 			// match expression or semicolon
 			var expression:Expression = parseExpression();
 			if (expression == null)
@@ -193,6 +169,7 @@ class Parser {
 			statements.push(SExpression(expression));
 		}
 
+		// statement matched
 		return true;
 	}
 	
@@ -251,11 +228,12 @@ class Parser {
 	private function parseType():VariableType
 	{
 		// match a type declaration
-		switch (tokenizer.peek())
+		tokenizer.pushState();
+		switch (tokenizer.next())
 		{
 		    case TType(value), TIdentifier(value):
 			// return type declaration
-			tokenizer.get();
+			tokenizer.clearState();
 			var dimensions:Int = 0;
 			while (tokenizer.match(TDimensions))
 				dimensions++;
@@ -263,6 +241,7 @@ class Parser {
 		
 		    default:
 			// no match
+			tokenizer.popState();
 			return null;
 		}
 	}
@@ -278,7 +257,7 @@ class Parser {
 		do {
 			// get identifier
 			tokenizer.match('TIdentifier', true);
-			var identifier:String = Type.enumParameters(tokenizer.currentToken)[0];
+			var identifier:String = Type.enumParameters(tokenizer.current())[0];
 			// check for per-variable array brackets
 			var vTypeDimensions:Int = vType.dimensions;
 			if (vTypeDimensions == 0) {
@@ -293,7 +272,7 @@ class Parser {
 			{
 				var expression:Expression = parseExpression();
 				if (expression == null)
-					throw new TokenizerSyntaxError('Invalid assignment left-hand side.', tokenizer);
+					throw tokenizer.createSyntaxError('Invalid assignment left-hand side.');
 				statements.push(SExpression(EAssignment(EReference(identifier), expression)));
 			}
 		} while (tokenizer.match(TComma));
@@ -313,7 +292,7 @@ class Parser {
 		if (!constructor)
 			fType = parseType();
 		tokenizer.match('TIdentifier', true);
-		var identifier:String = Type.enumParameters(tokenizer.currentToken)[0];
+		var identifier:String = Type.enumParameters(tokenizer.current())[0];
 		
 		// parse parameters
 		tokenizer.match(TParenOpen, true);
@@ -323,11 +302,11 @@ class Parser {
 			// get type
 			var type:VariableType = parseType();
 			if (type == null)
-				throw new TokenizerSyntaxError('Invalid formal parameter type', tokenizer);
+				throw tokenizer.createSyntaxError('Invalid formal parameter type');
 			// get identifier
 			if (!tokenizer.match('TIdentifier'))
-				throw new TokenizerSyntaxError('Invalid formal parameter', tokenizer);
-			var name:String = Type.enumParameters(tokenizer.currentToken)[0];
+				throw tokenizer.createSyntaxError('Invalid formal parameter');
+			var name:String = Type.enumParameters(tokenizer.current())[0];
 			
 			// add parameter
 			params.push({name: name, type: type});
@@ -357,7 +336,7 @@ class Parser {
 		var visibility:Visibility = parseVisibility();
 		tokenizer.match(TKeyword('class'), true);
 		tokenizer.match('TIdentifier', true);
-		var identifier:String = Type.enumParameters(tokenizer.currentToken)[0];
+		var identifier:String = Type.enumParameters(tokenizer.current())[0];
 		
 		// parse body
 		tokenizer.match(TBraceOpen, true);
@@ -382,7 +361,7 @@ class Parser {
 				if (list.length == 0)
 					return list;
 				else
-					throw new TokenizerSyntaxError('Invalid expression in list.', tokenizer);
+					throw tokenizer.createSyntaxError('Invalid expression in list.');
 			list.push(expression);
 		} while (tokenizer.match(TComma));
 		return list;
@@ -416,7 +395,7 @@ class Parser {
 		    // unary operators
 		    case TOperator(opString):
 			// knock off token
-			tokenizer.get();
+			tokenizer.next();
 			
 			// prefix operators
 			if (opString == '++' || opString == '--') {
@@ -444,7 +423,7 @@ class Parser {
 					return scanOperand(operators, operands, required);
 				
 				    default:
-					throw new TokenizerSyntaxError('Invalid operator.', tokenizer);
+					throw tokenizer.createSyntaxError('Invalid operator.');
 				}
 			}
 
@@ -458,29 +437,29 @@ class Parser {
 			tokenizer.match(TParenOpen, true);
 			var expression:Expression = parseExpression();
 			if (expression == null)
-				throw new TokenizerSyntaxError('Invalid expression in cast.', tokenizer);
+				throw tokenizer.createSyntaxError('Invalid expression in cast.');
 			tokenizer.match(TParenClose, true);
 			operands.push(expression);
 
 		    // identifier
 		    case TIdentifier(value):
 			// push reference
-			tokenizer.get();
+			tokenizer.next();
 			operands.push(EReference(value));
 
 		    // keywords
 		    case TKeyword(keyword):
 			switch (keyword) {
 			    // literals
-			    case 'this': tokenizer.get(); operands.push(EThisReference);
-			    case 'null': tokenizer.get(); operands.push(ELiteral(null));
-			    case 'true': tokenizer.get(); operands.push(ELiteral(true));
-			    case 'false': tokenizer.get(); operands.push(ELiteral(false));
+			    case 'this': tokenizer.next(); operands.push(EThisReference);
+			    case 'null': tokenizer.next(); operands.push(ELiteral(null));
+			    case 'true': tokenizer.next(); operands.push(ELiteral(true));
+			    case 'false': tokenizer.next(); operands.push(ELiteral(false));
 
 			    // unary operators
 			    case 'new':
 				// knock off token
-				tokenizer.get();
+				tokenizer.next();
 				
 				// array instantiation
 				if ((tokenizer.peekMatch('TIdentifier') || tokenizer.peekMatch('TType')) &&
@@ -494,7 +473,7 @@ class Parser {
 					{
 						var expression:Expression = parseExpression();
 						if (expression == null)
-							throw new TokenizerSyntaxError('Invalid array dimension.', tokenizer);
+							throw tokenizer.createSyntaxError('Invalid array dimension.');
 						sizes.push(expression);
 						tokenizer.match(TBracketClose, true);
 					}
@@ -507,7 +486,7 @@ class Parser {
 				{
 					// match class
 					tokenizer.match('TIdentifier', true);
-					var reference:String = Type.enumParameters(tokenizer.currentToken)[0];
+					var reference:String = Type.enumParameters(tokenizer.current())[0];
 					// match optional arguments
 					var args:Array<Expression> = null;
 					if (tokenizer.match(TParenOpen))
@@ -525,35 +504,35 @@ class Parser {
 			    default:
 				// invalid keyword; missing operand
 				if (required)
-					throw new TokenizerSyntaxError('Missing operand', tokenizer);
+					throw tokenizer.createSyntaxError('Missing operand');
 				return false;
 			}
 			
 		    // literals
 //[TODO] simplify?
 		    case TString(value):
-			tokenizer.get();
+			tokenizer.next();
 			operands.push(ELiteral(value));
 		    case TInteger(value):
-			tokenizer.get();
+			tokenizer.next();
 			operands.push(ELiteral(value));
 		    case TFloat(value):
-			tokenizer.get();
+			tokenizer.next();
 			operands.push(ELiteral(value));
 		    case TChar(value):
-			tokenizer.get();
+			tokenizer.next();
 			operands.push(ELiteral(value));
 
 		    // array literal
 		    case TBraceOpen:
-			tokenizer.get();
+			tokenizer.next();
 			operands.push(EArrayLiteral(parseList()));
 			tokenizer.match(TBraceClose, true);
 		
 		    // cast/group
 		    case TParenOpen:
 			// knock off token
-			tokenizer.get();
+			tokenizer.next();
 			
 			// check for cast or parenthetical
 			tokenizer.pushState();
@@ -582,15 +561,15 @@ class Parser {
 			// parse parenthetical
 			var expression:Expression = parseExpression();
 			if (expression == null)
-				throw new TokenizerSyntaxError('Invalid parenthetical expression.', tokenizer);
+				throw tokenizer.createSyntaxError('Invalid parenthetical expression.');
 			operands.push(expression);
 			if (!tokenizer.match(TParenClose))
-				throw new TokenizerSyntaxError('Missing ) in parenthetical', tokenizer);
+				throw tokenizer.createSyntaxError('Missing ) in parenthetical');
 
 		    // missing operand
 		    default:
 			if (required)
-				throw new TokenizerSyntaxError('Missing operand', tokenizer);
+				throw tokenizer.createSyntaxError('Missing operand');
 			return false;
 		}
 
@@ -608,7 +587,7 @@ class Parser {
 		    // operators
 		    case TOperator(opToken):
 			// knock off token
-			tokenizer.get();
+			tokenizer.next();
 			
 			// postfix operators
 			if (opToken == '++' || opToken == '--')
@@ -630,12 +609,12 @@ class Parser {
 				var reference:Expression = operands.pop();
 				if ((Type.enumConstructor(reference) != 'EReference') &&
 				    (Type.enumConstructor(reference) != 'EArrayAccess'))
-					throw new TokenizerSyntaxError('Invalid assignment left-hand side.', tokenizer);
+					throw tokenizer.createSyntaxError('Invalid assignment left-hand side.');
 				
 				// get value
 				var value:Expression = parseExpression();
 				if (value == null)
-					throw new TokenizerSyntaxError('Invalid assignment right-hand side.', tokenizer);
+					throw tokenizer.createSyntaxError('Invalid assignment right-hand side.');
 				if (opToken != '=')
 					value = EOperation(lookupOperatorType(opToken), reference, value);
 					
@@ -656,12 +635,12 @@ class Parser {
 		    // dot operator
 		    case TDot:
 			// knock off token
-			tokenizer.get();
+			tokenizer.next();
 			
 			// match and push required identifier as string
 			tokenizer.match('TIdentifier', true);
 			// reduce and push operator
-			var operator:ParserOperator = PDot(Type.enumParameters(tokenizer.currentToken)[0]);
+			var operator:ParserOperator = PDot(Type.enumParameters(tokenizer.current())[0]);
 			recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
 			operators.push(operator);
 
@@ -674,7 +653,7 @@ class Parser {
 			tokenizer.match(TBracketOpen, true);
 			var index:Expression = parseExpression();
 			if (index == null)
-				throw new TokenizerSyntaxError('Invalid array index.', tokenizer);
+				throw tokenizer.createSyntaxError('Invalid array index.');
 			tokenizer.match(TBracketClose, true);
 			
 			// reduce and push operator
@@ -688,7 +667,7 @@ class Parser {
 		    // hook/colon operator
 		    case TQuestion:
 			// knock off token
-			tokenizer.get();
+			tokenizer.next();
 			
 			// reduce left-hand conditional
 			recursiveReduceExpression(operators, operands);
@@ -700,7 +679,7 @@ class Parser {
 			
 			// validate expressions
 			if ((thenExpression == null) || (elseExpression == null))
-				throw new TokenizerSyntaxError('Invalid expression in ternary conditional.', tokenizer);
+				throw tokenizer.createSyntaxError('Invalid expression in ternary conditional.');
 			// add conditional
 			operands.push(EConditional(conditional, thenExpression, elseExpression));
 			
@@ -725,7 +704,7 @@ class Parser {
 		    // missing operator
 		    default:
 			if (required)
-				throw new TokenizerSyntaxError('Missing operator', tokenizer);
+				throw tokenizer.createSyntaxError('Missing operator');
 			return false;
 		}
 	
@@ -784,7 +763,7 @@ class Parser {
 		        var reference:Expression = operands.pop();
 			// we can only assign to a reference
 			if (Type.enumConstructor(reference) != 'EReference')
-				throw new TokenizerSyntaxError('Invalid assignment left-hand side.', tokenizer);
+				throw tokenizer.createSyntaxError('Invalid assignment left-hand side.');
 				
 			// compound prefix operation
 			operands.push(EPrefix(reference, type));
@@ -794,7 +773,7 @@ class Parser {
 		        var reference:Expression = operands.pop();
 			// we can only assign to a reference
 			if (Type.enumConstructor(reference) != 'EReference')
-				throw new TokenizerSyntaxError('Invalid assignment left-hand side.', tokenizer);
+				throw tokenizer.createSyntaxError('Invalid assignment left-hand side.');
 				
 			// compound postfix operation
 			operands.push(EPostfix(reference, type));
