@@ -164,7 +164,7 @@ class Tokenizer
 			return true;
 		}
 		else if (mustMatch)
-			throw createSyntaxError('Tokenizer: Must match ' + to + ', found ' + token);
+			throw createSyntaxError('Must match ' + to + ', found ' + token);
 		// didn't match
 		popState();
 		return false;
