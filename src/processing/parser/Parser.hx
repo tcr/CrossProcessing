@@ -433,7 +433,9 @@ class Parser {
 					return scanOperand(operators, operands, required);
 				
 				    default:
-					throw tokenizer.createSyntaxError('Invalid operator.');
+				        if (required)
+						throw tokenizer.createSyntaxError('Invalid unary operator.');
+					return false;
 				}
 			}
 
@@ -743,7 +745,8 @@ class Parser {
 			// get reference
 		        var reference:Expression = operands.pop();
 			// we can only assign to a reference
-			if (Type.enumConstructor(reference) != 'EReference')
+			if ((Type.enumConstructor(reference) != 'EReference') &&
+			    (Type.enumConstructor(reference) != 'EArrayAccess'))
 				throw tokenizer.createSyntaxError('Invalid assignment left-hand side.');
 				
 			// compound prefix operation
@@ -753,7 +756,8 @@ class Parser {
 			// get reference
 		        var reference:Expression = operands.pop();
 			// we can only assign to a reference
-			if (Type.enumConstructor(reference) != 'EReference')
+			if ((Type.enumConstructor(reference) != 'EReference') &&
+			    (Type.enumConstructor(reference) != 'EArrayAccess'))
 				throw tokenizer.createSyntaxError('Invalid assignment left-hand side.');
 				
 			// compound postfix operation

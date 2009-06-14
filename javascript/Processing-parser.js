@@ -1759,14 +1759,14 @@ processing.parser.Parser.prototype.reduceExpression = function(operators,operand
 	var type = $e[2];
 	{
 		var reference = operands.pop();
-		if(Type.enumConstructor(reference) != "EReference") throw this.tokenizer.createSyntaxError("Invalid assignment left-hand side.");
+		if((Type.enumConstructor(reference) != "EReference") && (Type.enumConstructor(reference) != "EArrayAccess")) throw this.tokenizer.createSyntaxError("Invalid assignment left-hand side.");
 		operands.push(processing.parser.Expression.EPrefix(reference,type));
 	}break;
 	case 3:
 	var type = $e[2];
 	{
 		var reference = operands.pop();
-		if(Type.enumConstructor(reference) != "EReference") throw this.tokenizer.createSyntaxError("Invalid assignment left-hand side.");
+		if((Type.enumConstructor(reference) != "EReference") && (Type.enumConstructor(reference) != "EArrayAccess")) throw this.tokenizer.createSyntaxError("Invalid assignment left-hand side.");
 		operands.push(processing.parser.Expression.EPostfix(reference,type));
 	}break;
 	case 4:
@@ -1819,7 +1819,8 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 				return this.scanOperand(operators,operands,required);
 			}break;
 			default:{
-				throw this.tokenizer.createSyntaxError("Invalid operator.");
+				if(required) throw this.tokenizer.createSyntaxError("Invalid unary operator.");
+				return false;
 			}break;
 			}
 		}
