@@ -1819,7 +1819,8 @@ processing.parser.Parser.prototype.scanOperand = function(operators,operands,req
 				return this.scanOperand(operators,operands,required);
 			}break;
 			default:{
-				throw this.tokenizer.createSyntaxError("Invalid operator.");
+				if(required) throw this.tokenizer.createSyntaxError("Invalid unary operator.");
+				return false;
 			}break;
 			}
 		}
