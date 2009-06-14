@@ -11,10 +11,10 @@ class JavaScriptCompiler implements ICompiler
 {	
 	public function new() { }
 
-	public function compile(code:Statement):Dynamic
+	public function compile(script:Definition):Dynamic
 	{		
 		// serialize code to JavaScript
-		return serializeStatement(code);
+		return serializeDefinition(script);
 	}
 	
 	private function serializeStatement(statement:Statement, ?scope:CompilerScope):String
@@ -150,7 +150,7 @@ class JavaScriptCompiler implements ICompiler
 				return ((scope != null) && Type.enumConstructor(scope) == 'SClass' ? 'this.' : 'var ') +
 				    identifier + ' = 0;';
 			
-			case DFunction(identifier, visibility, isStatic, type, params, body):
+			case DFunction(identifier, visibility, isStatic, type, params, definitions, statements):
 				// format params
 				var paramKeys:Array<String> = new Array();
 				for (param in params)

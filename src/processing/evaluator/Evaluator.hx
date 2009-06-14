@@ -11,6 +11,9 @@ import processing.parser.Syntax;
 #if js
 import processing.compiler.JavaScriptCompiler;
 #elseif flash
+import flash.display.Loader;
+import format.abc.Data;
+import format.swf.Data;
 import processing.compiler.FlashCompiler;
 #else
 import processing.interpreter.Interpreter;
@@ -28,7 +31,7 @@ class Evaluator {
 	public function evaluate(code) {
 		// create parser
 		var parser:Parser = new Parser();
-		var script:Statement = parser.parse(code);
+		var script:Definition = parser.parse(code);
 
 #if js
 		// compile script
@@ -72,14 +75,16 @@ class Evaluator {
 		var swfBytes:haxe.io.Bytes = swfOutput.getBytes();
 
 		// load locally
-		loader = new flash.display.Loader();
-		loader.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE, function (e) {
-			// get the Main class
-			var m = loader.contentLoaderInfo.applicationDomain.getDefinition("Main");
+		var loader:Loader = new Loader();
+		loader.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE, function (e)
+		{
+			// get the main class
+			var Sketch = loader.contentLoaderInfo.applicationDomain.getDefinition('ProcessingSketch');
+			trace(Sketch);
 			// create an instance of it
-			var inst : Dynamic = Type.createInstance(m,[]);
-			// call the 'test' method
-			trace(inst.test());
+			var sketch:Dynamic = Type.createInstance(Sketch, []);
+			// call initialization method
+			trace(sketch.test());
 		});
 		loader.loadBytes(swfBytes.getData());
 #else

@@ -1,6 +1,4 @@
 package processing.parser;
-import js.Boot;
-import processing.compiler.JavaScriptCompiler;
 
 enum Token {
 	TEof;

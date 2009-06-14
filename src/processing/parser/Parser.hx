@@ -11,7 +11,7 @@ class Parser {
 		tokenizer = new Tokenizer();
 	}
 	
-	public function parse(code:String):Statement
+	public function parse(code:String):Definition
 	{
 		// initialize tokenizer
 		tokenizer.load(code);
@@ -29,7 +29,7 @@ class Parser {
 //[TODO] ParserSyntaxError?
 			throw tokenizer.createSyntaxError('Script unterminated');
 		// return parsed global block
-		return SBlock(statements, definitions);
+		return DScript(definitions, statements);
 	}
 
 // required flag?
@@ -111,7 +111,7 @@ class Parser {
 			// match condition (null expression evaluates as true)
 			var condition:Expression = parseExpression(false);
 			if (condition == null)
-				condition = ELiteral(true);
+				condition = EBooleanLiteral(true);
 			tokenizer.match(TSemicolon, true);
 			// match update
 			var update:Array<Expression> = parseList();
@@ -337,7 +337,7 @@ class Parser {
 			continue;
 		tokenizer.match(TBraceClose, true);
 		// return function declaration statement
-		definitions.push(DFunction(identifier, visibility, isStatic, fType, params, SBlock(fStatements, fDefinitions)));
+		definitions.push(DFunction(identifier, visibility, isStatic, fType, params, fDefinitions, fStatements));
 		return true;
 	}
 
@@ -358,7 +358,7 @@ class Parser {
 		tokenizer.match(TBraceClose, true);
 
 		// return function declaration statement
-		definitions.push(DClass(identifier, visibility, isStatic, SBlock(cStatements, cDefinitions)));
+		definitions.push(DClass(identifier, visibility, isStatic, cDefinitions, cStatements));
 		return true;
 	}
 	
@@ -462,9 +462,9 @@ class Parser {
 			switch (keyword) {
 			    // literals
 			    case 'this': tokenizer.next(); operands.push(EThisReference);
-			    case 'null': tokenizer.next(); operands.push(ELiteral(null));
-			    case 'true': tokenizer.next(); operands.push(ELiteral(true));
-			    case 'false': tokenizer.next(); operands.push(ELiteral(false));
+			    case 'null': tokenizer.next(); operands.push(ENull);
+			    case 'true': tokenizer.next(); operands.push(EBooleanLiteral(true));
+			    case 'false': tokenizer.next(); operands.push(EBooleanLiteral(false));
 
 			    // unary operators
 			    case 'new':
@@ -472,6 +472,7 @@ class Parser {
 				tokenizer.next();
 				
 				// array instantiation
+//[TODO] match "new (Array)()"-style syntax!
 				if ((tokenizer.peekMatch('TIdentifier') || tokenizer.peekMatch('TType')) &&
 				    tokenizer.peekMatch(TBracketOpen, 2))
 				{
@@ -516,19 +517,21 @@ class Parser {
 			}
 			
 		    // literals
-//[TODO] simplify?
 		    case TString(value):
 			tokenizer.next();
-			operands.push(ELiteral(value));
+			operands.push(EStringLiteral(value));
+			
 		    case TInteger(value):
 			tokenizer.next();
-			operands.push(ELiteral(value));
+			operands.push(EIntegerLiteral(value));
+			
 		    case TFloat(value):
 			tokenizer.next();
-			operands.push(ELiteral(value));
+			operands.push(EFloatLiteral(value));
+			
 		    case TChar(value):
 			tokenizer.next();
-			operands.push(ELiteral(value));
+			operands.push(ECharLiteral(value));
 
 		    // array literal
 		    case TBraceOpen:
@@ -692,7 +695,17 @@ class Parser {
 			// reduce and push operator
 			var operator:ParserOperator = PCall(args);
 			recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
-			operators.push(operator);
+			// function or method call
+			if (Type.enumConstructor(operands[operands.length - 1]) == 'EReference')
+			{
+				switch (operands.pop()) {
+				    case EReference(identifier, base):
+				        operands.push(ECallMethod(identifier, base, args));
+				    default:
+				}
+			}
+			else
+				operators.push(operator);
 
 			// operand already found; find next operator
 			return scanOperator(operators, operands);

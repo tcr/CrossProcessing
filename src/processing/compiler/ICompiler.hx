@@ -9,5 +9,5 @@ import processing.parser.Syntax;
 
 interface ICompiler
 {
-	public function compile(code:Statement):Dynamic;
+	public function compile(script:Definition):Dynamic;
 }

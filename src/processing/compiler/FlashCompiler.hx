@@ -14,14 +14,11 @@ class FlashCompiler implements ICompiler
 {
 	public function new() { }
 
-	public function compile(code:String):Bytes
+	public function compile(script:Definition):Dynamic
 	{
-		// parse the code
-		var parser = new Parser();
-		var script:Statement = parser.parse(code);
 		// create a context and compile the code
 		var context = new format.abc.Context();
-		serialize(script, context);
+		serializeDefinition(script, context);
 		context.finalize();
 		
 		// compile ActionScript bytecode
@@ -37,23 +34,21 @@ class FlashCompiler implements ICompiler
 	{
 		switch (statement)
 		{
-		    case SBlock(statements):
-			for (statement in statements)
-				serialize(statement, context);
-		
 		    case SBreak(level):
 //[TODO]
 
 		    case SConditional(condition, thenBlock, elseBlock):
 			//[TODO] if condition is an operation, we could roll it into jump style
-			serialize(condition, context);
+			serializeExpression(condition, context);
 			var j = context.jump(JFalse);
-			serialize(thenBlock, context);
-			if (elseBlock)
+			for (statement in thenBlock)
+				serializeStatement(statement, context);
+			if (elseBlock.length > 0)
 			{
 				var k = context.jump(JAlways);
 				j();
-				serialize(elseBlock, context);
+				for (statement in elseBlock)
+					serializeStatement(statement, context);
 				k();
 			}
 			else
@@ -64,19 +59,22 @@ class FlashCompiler implements ICompiler
 		    case SContinue(level):
 //[TODO]
 
+		    case SExpression(expression):
+			serializeExpression(expression, context);
+
 		    case SLoop(condition, body):
-			//[TODO] if condition is an operation, we could roll it into jump style
+/*			//[TODO] if condition is an operation, we could roll it into jump style
 			var l = context.backwardJump();
-			serialize(condition, context);
+			serializeExpression(condition, context);
 			var j = context.jump(JFalse);
 			serialize(body, context);
 			l(JAlways);
-			j();
+			j();*/
 		
 		    case SReturn(value):
-			if (value)
+			if (value != null)
 			{
-				serialize(value, context);
+				serializeExpression(value, context);
 				context.ops([ORet]);
 			}
 			else
@@ -88,21 +86,25 @@ class FlashCompiler implements ICompiler
 	
 	private function serializeExpression(expression:Expression, context:format.abc.Context):Dynamic
 	{
-		switch (statement)
+		switch (expression)
 		{
-		    case EArrayInstantiation(type, size1, size2, size3):
+		    case EArrayAccess(reference, index):
 //[TODO]
-
-		    case EArrayLiteral(value):
+			
+		    case EArrayInstantiation(type, sizes):
 //[TODO]
 
 		    case EAssignment(reference, value):
-			context.op(OGetScope);
-			serialize(identifier, context);
-			serialize(value, context);
-			context.op(OSetProperty);
+/*			context.op(OGetScope);
+			serializeExpression(identifier, context);
+			serializeExpression(value, context);
+			context.op(OSetProperty);*/
 		
 		    case ECall(method, args):
+//[TODO]
+
+		    case ECallMethod(identifier, base, args):
+			trace('hi');
 //[TODO]
 
 		    case ECast(type, expression):
@@ -110,89 +112,119 @@ class FlashCompiler implements ICompiler
 
 		    case EConditional(condition, thenStatement, elseStatement):
 			//[TODO] if condition is an operation, we could roll it into jump style
-			serialize(condition, context);
+			serializeExpression(condition, context);
 			var j = context.jump(JFalse);
-			serialize(thenBlock, context);
-			if (elseBlock)
+			serializeExpression(thenStatement, context);
+			if (elseStatement != null)
 			{
 				var k = context.jump(JAlways);
 				j();
-				serialize(elseBlock, context);
+				serializeExpression(elseStatement, context);
 				k();
 			}
 			else
 			{
 				j();
-			}				
-
-		    case EDecrement(reference):
-
-		    case EIncrement(reference):
-		
-		    case ELiteral(value):
+			}
 		
 		    case EObjectInstantiation(method, args):
 //[TODO]
 		
 		    case EOperation(type, leftOperand, rightOperand):
-			// handle && and || operators first
+/*			// handle && and || operators first
 			switch (type)
 			{
 			    case OR:
-				serialize(leftOperand, context);
+				serializeExpression(leftOperand, context);
 				context.ops([ODup]);
 				var j = context.jump(JTrue);
 				context.ops([OPop]);
-				serialize(rightOperand, context);
+				serializeExpression(rightOperand, context);
 				j();
 			    case AND:
-				serialize(leftOperand, context);
+				serializeExpression(leftOperand, context);
 				context.ops([ODup]);
 				var j = context.jump(JFalse);
 				context.ops([OPop]);
-				serialize(rightOperand, context);
+				serializeExpression(rightOperand, context);
 				j();
 			    default: // disregard
-			}
+			}*/
 			
 			// handle arithmetic operators
-			serialize(leftOperand, context);
-			if (rightOperand)
-				serialize(rightOperand, context);
-			switch (type) {
-			    case BITWISE_OR: 	context.ops([OpOr]);
-			    case BITWISE_XOR: 	context.ops([OpAnd]);
-			    case BITWISE_AND: 	context.ops([OpXor]);
+			serializeExpression(leftOperand, context);
+			if (rightOperand != null)
+				serializeExpression(rightOperand, context);
+			switch (type)
+			{
+			    // unary operators
+			    case Operator.OpNot:		context.ops([OOp(Operation.OpNot)]);
+			    case Operator.OpBitwiseNot:		context.ops([OOp(Operation.OpBitNot)]);
+			    case Operator.OpUnaryPlus:		context.ops([OToNumber]);
+			    case Operator.OpUnaryMinus:		context.ops([OOp(Operation.OpNeg)]);
+	
+			    // binary operators
+			    case Operator.OpOr:			// a || b
+			    case Operator.OpAnd:		// a && b
+			    case Operator.OpBitwiseOr:		context.ops([OOp(Operation.OpOr)]);
+			    case Operator.OpBitwiseXor:		context.ops([OOp(Operation.OpXor)]);
+			    case Operator.OpBitwiseAnd:		context.ops([OOp(Operation.OpAnd)]);
+			    case Operator.OpEqual:		context.ops([OOp(Operation.OpEq)]);
+			    case Operator.OpUnequal:		context.ops([OOp(Operation.OpEq), OOp(Operation.OpNeg)]);
+			    case Operator.OpLessThan:		context.ops([OOp(Operation.OpLt)]);
+			    case Operator.OpLessThanOrEqual:	context.ops([OOp(Operation.OpLte)]);
+			    case Operator.OpGreaterThan:	context.ops([OOp(Operation.OpGt)]);
+			    case Operator.OpGreaterThanOrEqual:	context.ops([OOp(Operation.OpGte)]);
+			    case Operator.OpInstanceOf:		// a instanceof b
+			    case Operator.OpLeftShift:		context.ops([OOp(Operation.OpShl)]);
+			    case Operator.OpRightShift:		context.ops([OOp(Operation.OpShr)]);
+			    case Operator.OpZeroRightShift:	context.ops([OOp(Operation.OpUShr)]);
+			    case Operator.OpPlus:		context.ops([OOp(Operation.OpAdd)]);
+			    case Operator.OpMinus:		context.ops([OOp(Operation.OpSub)]);
+			    case Operator.OpMultiply:		context.ops([OOp(Operation.OpMul)]);
+			    case Operator.OpDivide:		context.ops([OOp(Operation.OpDiv)]);
+			    case Operator.OpModulus:		context.ops([OOp(format.abc.Operation.OpMod)]);
 //			    case STRICT_EQ: 	context.ops([OpPhysEq]);
-			    case EQ: 		context.ops([OpEq]);
 //			    case STRICT_NE: 	context.ops([OpPhysEq, OpNeg]);
-			    case NE: 		context.ops([OpEq, OpNeg]);
-			    case LSH: 		context.ops([OpShl]);
-			    case LE: 		context.ops([OpLte]);
-			    case LT: 		context.ops([OpLt]);
-			    case URSH: 		context.ops([OpUShr]);
-			    case RSH: 		context.ops([OpShr]);
-			    case GE: 		context.ops([OpGte]);
-			    case GT: 		context.ops([OpGt]);
-			    case PLUS: 		context.ops([OpAdd]);
-			    case MINUS: 	context.ops([OpSub]);
-			    case MUL: 		context.ops([OpMul]);
-			    case DIV: 		context.ops([OpDiv]);
-			    case MOD: 		context.ops([OpMod]);
-			    case NOT: 		context.ops([OpNot]);
-			    case BITWISE_NOT: 	context.ops([OpBitNot]);
-			    case UNARY_PLUS: 	context.ops([OToNumber]);
-			    case UNARY_MINUS: 	context.ops([OpNeg]);
-//			    case OR, AND: // disregard
 			}
 			
+		    case EPrefix(reference, type):
+//[TODO]
+
+		    case EPostfix(reference, type):
+//[TODO]
+			
 		    case EReference(identifier, base):
-			serialize(base, context);
-			serialize(identifier, context);
-			context.op(OGetProp(context.nsPublic));
+//			context.op(OGetLex(context.property('constructor')));
+			context.op(ONull);
+			context.op(OGetLex(context.property('ProcessingSketch')));
+//			serializeExpression(base, context);
+//			context.op(OString(context.string(identifier)));
+//			context.op(OGetProp(context.nsPublic));
 	
 		    case EThisReference:
-			context.ops([OThis]);
+			context.op(OThis);
+
+		    case EArrayLiteral(values):
+//[TODO]
+
+		    case EStringLiteral(value):
+			context.op(OString(context.string(value)));
+
+		    case EIntegerLiteral(value):
+			context.op(OInt(value));
+
+		    case EFloatLiteral(value):
+//[TODO]
+
+		    case ECharLiteral(value):
+//[TODO]
+
+		    case EBooleanLiteral(value):
+//[TODO]
+
+		    case ENull:
+//[TODO]
 		}
 	}
 	
@@ -200,17 +232,49 @@ class FlashCompiler implements ICompiler
 	{
 		switch (definition)
 		{
-		    case DClass(identifier, constructorBody, publicBody, privateBody):
+		    case DScript(definitions, statements):
+		        // define classes
+			for (definition in definitions)
+				if (Type.enumConstructor(definition) == 'DClass')
+					serializeDefinition(definition, context);
+			// begin main class
+			context.beginClass('ProcessingSketch');
+			// define methods
+			context.defineField('a', null);
+			for (definition in definitions)
+				if (Type.enumConstructor(definition) == 'DFunction')
+					serializeDefinition(definition, context);
+			// main function
+/*			var variables:Array<Definition> = [];
+			for (definition in definitions)
+				if (Type.enumConstructor(definition) == 'DVariable')
+					variables.push(definition);
+			serializeDefinition(DFunction('__init__', VPublic, false, { type: 'void', dimensions: 0 }, [], variables, statements), context);*/
+			// finalize class
+			context.endClass();
+		
+		    case DClass(identifier, visibility, isStatic, definitions, statements):
 //[TODO]
 
-		    case DFunction(identifier, type, params, body):
-//[TODO]
+		    case DFunction(identifier, visibility, isStatic, type, params, definitions, statements):
+			// create a member method with defined type
+			var method = context.beginMethod(identifier, [], null/*context.type(type.type)*/);
+			// set maximum size of the stack
+//[TODO] what to do with this!?
+			method.maxStack = 10;
+			// write bytecode into the current method
+//			for (definition in definitions)
+//				serializeDefinition(definition, context);
+			for (statement in statements)
+				serializeStatement(statement, context);
+			// finalize method
+			context.endMethod();
 
-		    case DVariable(identifier, type):
-			context.op(OGetScope);
-			serialize(identifier, context);
-			context.op(OSmallInt(0));
-			context.op(OSetProperty);
+		    case DVariable(identifier, visibility, isStatic, type):
+//			context.op(OGetScope);
+//			serialize(identifier, context);
+//			context.op(OSmallInt(0));
+//			context.op(OSetProperty);
 		}
 	}
 }

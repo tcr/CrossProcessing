@@ -9,8 +9,6 @@ package processing.parser;
 
 enum Statement 
 {
-//[TODO] change SBlock to DScript or something. move statements, definitions into respective definitions
-	SBlock(statements:Array<Statement>, definitions:Array<Definition>);
 	SBreak(?label:String);
 	SConditional(condition:Expression, thenBlock:Array<Statement>, ?elseBlock:Array<Statement>);
 	SContinue(?label:String);
@@ -21,28 +19,37 @@ enum Statement
 
 enum Expression
 {
+	// expressions
 	EArrayAccess(reference:Expression, index:Expression);
 	EArrayInstantiation(type:VariableType, sizes:Array<Expression>);
-	EArrayLiteral(values:Array<Expression>);
 	EAssignment(reference:Expression, value:Expression);
-	ECall(method:Expression, ?args:Array<Expression>);
+	ECall(method:Expression, args:Array<Expression>);
+	ECallMethod(identifier:String, base:Expression, args:Array<Expression>);
 	ECast(type:VariableType, expression:Expression);
 	EConditional(condition:Expression, thenExpression:Expression, elseExpression:Expression);
-	ELiteral(value:Dynamic);
 	EObjectInstantiation(method:Expression, ?args:Array<Expression>);
 	EOperation(type:Operator, leftOperand:Expression, ?rightOperand:Expression);
 	EPrefix(reference:Expression, type:IncrementType);
 	EPostfix(reference:Expression, type:IncrementType);
 	EReference(identifier:String, ?base:Expression);
-	EThisReference();
+	EThisReference;
+	
+	// literals
+	EArrayLiteral(values:Array<Expression>);
+	EStringLiteral(value:String);
+	EIntegerLiteral(value:Int);
+	EFloatLiteral(value:Float);
+	ECharLiteral(value:Int);
+	EBooleanLiteral(value:Bool);
+	ENull;
 }
 
 enum Definition
 {
 	DVariable(identifier:String, visibility:Visibility, isStatic:Bool, type:VariableType);
-	DFunction(identifier:String, visibility:Visibility, isStatic:Bool, type:VariableType, params:Array<FunctionParam>, body:Statement);
-	DClass(identifier:String, visibility:Visibility, isStatic:Bool, body:Statement);
-//	DScript(statements:Array<Statement>, definitions:Array<Definition>);
+	DFunction(identifier:String, visibility:Visibility, isStatic:Bool, type:VariableType, params:Array<FunctionParam>, definitions:Array<Definition>, statements:Array<Statement>);
+	DClass(identifier:String, visibility:Visibility, isStatic:Bool, definitions:Array<Definition>, statements:Array<Statement>);
+	DScript(definitions:Array<Definition>, statements:Array<Statement>);
 }
 
 enum Visibility
