@@ -27,38 +27,38 @@ Coco/R itself) does not fall under the GNU General Public License.
 ------------------------------------------------------------------------*/
 -->begin
 
-public class Parser {
+class Parser {
 -->constants
-	static final boolean T = true;
-	static final boolean x = false;
-	static final int minErrDist = 2;
+	static var T:Bool = true;
+	static var x:Bool = false;
+	static var minErrDist:Int = 2;
 
-	public Token t;    // last recognized token
-	public Token la;   // lookahead token
-	int errDist = minErrDist;
+	public var t:Token;    // last recognized token
+	public var la:Token;   // lookahead token
+	var errDist:Int = minErrDist;
 	
-	public Scanner scanner;
-	public Errors errors;
+	public var scanner:Scanner;
+	public var errors:Errors;
 
 	-->declarations
 
-	public Parser(Scanner scanner) {
+	public function new(scanner:Scanner) {
 		this.scanner = scanner;
 		errors = new Errors();
 	}
 
-	void SynErr (int n) {
+	function SynErr (n:Int):Void {
 		if (errDist >= minErrDist) errors.SynErr(la.line, la.col, n);
 		errDist = 0;
 	}
 
-	public void SemErr (String msg) {
+	public function SemErr (msg:String):Void {
 		if (errDist >= minErrDist) errors.SemErr(t.line, t.col, msg);
 		errDist = 0;
 	}
 	
-	void Get () {
-		for (;;) {
+	function Get ():Void {
+		while (true) {
 			t = la;
 			la = scanner.Scan();
 			if (la.kind <= maxT) {
@@ -70,15 +70,15 @@ public class Parser {
 		}
 	}
 	
-	void Expect (int n) {
+	function Expect (n:Int):Void {
 		if (la.kind==n) Get(); else { SynErr(n); }
 	}
 	
-	boolean StartOf (int s) {
+	function StartOf (s:Int):Bool {
 		return set[s][la.kind];
 	}
 	
-	void ExpectWeak (int n, int follow) {
+	function ExpectWeak (n:Int, follow:Int):Void {
 		if (la.kind == n) Get();
 		else {
 			SynErr(n);
@@ -86,7 +86,7 @@ public class Parser {
 		}
 	}
 	
-	boolean WeakSeparator (int n, int syFol, int repFol) {
+	function WeakSeparator (n:Int, syFol:Int, repFol:Int):Bool {
 		int kind = la.kind;
 		if (kind == n) { Get(); return true; }
 		else if (StartOf(repFol)) return false;
@@ -102,7 +102,7 @@ public class Parser {
 	
 -->productions
 
-	public void Parse() {
+	public Parse():Void {
 		la = new Token();
 		la.val = "";		
 		Get();
@@ -110,18 +110,18 @@ public class Parser {
 		Expect(0);
 	}
 
-	private static final boolean[][] set = {
+	private static var set:Array<Array<Bool>> = {
 -->initialization
 	};
 } // end Parser
 
 
 class Errors {
-	public int count = 0;                                    // number of errors detected
+	public var count:Int = 0;                                    // number of errors detected
 	public java.io.PrintStream errorStream = System.out;     // error messages go to this stream
-	public String errMsgFormat = "-- line {0} col {1}: {2}"; // 0=line, 1=column, 2=text
+	public var errMsgFormat:String = "-- line {0} col {1}: {2}"; // 0=line, 1=column, 2=text
 	
-	protected void printMsg(int line, int column, String msg) {
+	protected function printMsg(line:Int, column:Int, msg:String):Void {
 		StringBuffer b = new StringBuffer(errMsgFormat);
 		int pos = b.indexOf("{0}");
 		if (pos >= 0) { b.delete(pos, pos+3); b.insert(pos, line); }
@@ -132,7 +132,7 @@ class Errors {
 		errorStream.println(b.toString());
 	}
 	
-	public void SynErr (int line, int col, int n) {
+	public function SynErr (line:Int, col:Int, n:Int):Void {
 		String s;
 		switch (n) {-->errors
 			default: s = "error " + n; break;
@@ -141,29 +141,29 @@ class Errors {
 		count++;
 	}
 
-	public void SemErr (int line, int col, String s) {	
+	public function SemErr (line:Int, col:Int, s:String):Void {	
 		printMsg(line, col, s);
 		count++;
 	}
 	
-	public void SemErr (String s) {
+	public function SemErr (s:String):Void {
 		errorStream.println(s);
 		count++;
 	}
 	
-	public void Warning (int line, int col, String s) {	
+	public function Warning (line:Int, col:Int, s:String):Void {	
 		printMsg(line, col, s);
 	}
 	
-	public void Warning (String s) {
+	public function Warning (s:String):Void {
 		errorStream.println(s);
 	}
 } // Errors
 
 
 class FatalError extends RuntimeException {
-	public static final long serialVersionUID = 1L;
-	public FatalError(String s) { super(s); }
+	public static var serialVersionUID:Float = 1.0;
+	public function FatalError(s:String) { super(s); }
 }
 
 $$$
