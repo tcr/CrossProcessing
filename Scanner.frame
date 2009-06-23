@@ -50,7 +50,7 @@ class Token {
 //-----------------------------------------------------------------------------------
 
 class Buffer {
-	public static var EOF:String = String.fromCharCode(0xFFFF);
+	public static var EOF:Int = 0xFFFF;
 
 	private var stream:Input;
 	
@@ -71,7 +71,7 @@ class Buffer {
 	
 	private var bufChar:Int;
 	
-	public function Read():String
+	public function Read():Int
 	{
 		pos++;
 		var ret:Int = bufChar;
@@ -80,12 +80,12 @@ class Buffer {
 		} catch (e:Eof) {
 			return EOF;
 		}
-		return String.fromCharCode(ret);
+		return ret;
 	}
 	
-	public function Peek():String
+	public function Peek():Int
 	{
-		return String.fromCharCode(bufChar);
+		return bufChar;
 	}
 
 /*
@@ -325,14 +325,14 @@ class Elem {
 //-----------------------------------------------------------------------------------
 
 class Scanner {
-	static var EOL:String = '\n';
+	static var EOL:Int = '\n'.charCodeAt(0);
 	static var eofSym:Int = 0;
 -->declarations
 
 	public var buffer:Buffer; // scanner buffer
 
 	var t:Token;           // current token
-	var ch:String;            // current input character
+	var ch:Int;            // current input character
 	var pos:Int;           // byte position of current character
 	var col:Int;           // column number of current character
 	var line:Int;          // line number of current character
@@ -341,7 +341,7 @@ class Scanner {
 	var tokens:Token;      // list of tokens already peeked (first token is a dummy)
 	var pt:Token;          // current peek token
 	
-	var tval:Array<String>; // token text used in NextToken(), dynamically enlarged
+	var tval:StringBuf; // token text used in NextToken(), dynamically enlarged
 	var tlen:Int;          // length of current token
 
 
@@ -355,7 +355,7 @@ class Scanner {
 	})();
 	
 	public function new (s:Input) {
-		tval = []; // new char[16]
+		tval = new StringBuf();
 		buffer = new Buffer(s);
 		Init();
 	}
@@ -383,7 +383,7 @@ class Scanner {
 			ch = buffer.Read(); col++;
 			// replace isolated '\r' by '\n' in order to make
 			// eol handling uniform across Windows, Unix and Mac
-			if (ch == '\r' && buffer.Peek() != '\n') ch = EOL;
+			if (ch == '\r'.charCodeAt(0) && buffer.Peek() != '\n'.charCodeAt(0)) ch = EOL;
 			if (ch == EOL) { line++; col = 0; }
 		}
 -->casing
@@ -415,13 +415,13 @@ class Scanner {
 	}
 
 	function NextToken():Token {
-		while (ch == ' ' ||
+		while (ch == ' '.charCodeAt(0) ||
 -->scan1
 		) NextCh();
 -->scan2
 		t = new Token();
 		t.pos = pos; t.col = col; t.line = line; 
-		var state:Int = start.state(ch.charCodeAt(0));
+		var state:Int = start.state(ch);
 		tlen = 0; AddCh();
 
 		while (true) {
@@ -431,8 +431,8 @@ class Scanner {
 -->scan3
 			}
 		}
-		t.val = tval.join('');
-		tval = [];
+		t.val = tval.toString();
+		tval = new StringBuf();
 		return t;
 	}
 	
