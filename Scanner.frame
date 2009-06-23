@@ -140,15 +140,12 @@ class Scanner {
 	var tval:StringBuf; // token text used in NextToken(), dynamically enlarged
 	var tlen:Int;          // length of current token
 
-
-//	static var start:StartStates; // maps initial token character to start state
-//	static var literals:Hash<Int>;      // maps literal strings to literal kinds
-	static var start = new StartStates();
-	static var literals = (function () {
+	static var start = new StartStates();	// maps initial token character to start state
+	static var literals = {			// maps literal strings to literal kinds
 		var literals = new Hash<Int>();
 -->initialization
-		return literals;
-	})();
+		literals;
+	};
 	
 	public function new (s:Input) {
 		tval = new StringBuf();
