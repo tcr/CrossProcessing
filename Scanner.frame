@@ -74,7 +74,7 @@ class Buffer
 		try {
 			bufChar = stream.readByte();
 		} catch (e:Eof) {
-			return EOF;
+			bufChar = EOF;
 		}
 		return ret;
 	}
@@ -121,7 +121,7 @@ class Elem {
 //-----------------------------------------------------------------------------------
 
 class Scanner {
-	static var EOL:Int = '\n'.charCodeAt(0);
+	static var EOL:Int = 10; // \n
 	static var eofSym:Int = 0;
 -->declarations
 
@@ -179,19 +179,13 @@ class Scanner {
 			ch = buffer.Read(); col++;
 			// replace isolated '\r' by '\n' in order to make
 			// eol handling uniform across Windows, Unix and Mac
-			if (ch == '\r'.charCodeAt(0) && buffer.Peek() != '\n'.charCodeAt(0)) ch = EOL;
+			if (ch == 13 && buffer.Peek() != 10) ch = EOL; // \r, \n
 			if (ch == EOL) { line++; col = 0; }
 		}
 -->casing
 	}
 	
 	function AddCh():Void {
-/*		if (tlen >= tval.length) {
-			var newBuf:Array<String> = [];
-			char[] newBuf = new char[2 * tval.length];
-			System.arraycopy(tval, 0, newBuf, 0, tval.length);
-			tval = newBuf;
-		}*/
 		if (ch != Buffer.EOF) {
 -->casing2
 			NextCh();
@@ -211,7 +205,7 @@ class Scanner {
 	}
 
 	function NextToken():Token {
-		while (ch == ' '.charCodeAt(0) ||
+		while (ch == 32 || // ' '
 -->scan1
 		) NextCh();
 -->scan2

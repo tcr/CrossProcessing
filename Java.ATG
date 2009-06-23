@@ -1,5 +1,4 @@
-import BitSet;
-import Scanner;
+import xpde.parser.Scanner;
 
 COMPILER CompilationUnit
   

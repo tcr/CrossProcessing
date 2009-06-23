@@ -286,5 +286,35 @@ class FatalError {
         parser.error("not a statement" + " (" + kind + ")");
     }
   }
+  
+/*-------------------- bit array ----------------------------------*/
+
+class BitSet 
+{
+	private var bitset:Array < Bool >;
+
+	public function new(nbits:Int) 
+	{
+		bitset = [];
+		for (i in 0...nbits)
+			bitset.push(false);
+	}
+	
+	inline public function get(bitIndex:Int):Bool
+	{
+		return bitset[bitIndex];
+	}
+	
+	inline public function set(bitIndex:Int)
+	{
+		bitset[bitIndex] = true;
+	}
+	
+	public function or(bitset2:BitSet)
+	{
+		for (i in 0...bitset.length)
+			bitset[i] = bitset[i] || bitset2.get(i);
+	}
+}
 
 $$$
