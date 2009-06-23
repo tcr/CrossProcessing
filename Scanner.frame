@@ -426,12 +426,13 @@ class Scanner {
 
 		while (true) {
 			switch (state) {
-				case -1: t.kind = eofSym; // NextCh already done 
-				case 0: t.kind = noSym;   // NextCh already done
+				case -1: t.kind = eofSym; break; // NextCh already done 
+				case 0: t.kind = noSym; break;  // NextCh already done
 -->scan3
 			}
 		}
 		t.val = tval.join('');
+		tval = [];
 		return t;
 	}
 	

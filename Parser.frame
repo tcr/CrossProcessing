@@ -29,8 +29,8 @@ Coco/R itself) does not fall under the GNU General Public License.
 
 class Parser {
 -->constants
-	static var T:Bool = true;
-	static var x:Bool = false;
+	inline static var T:Bool = true;
+	inline static var x:Bool = false;
 	static var minErrDist:Int = 2;
 
 	public var t:Token;    // last recognized token
@@ -128,8 +128,8 @@ class Errors {
 	
 	public function printMsg(line:Int, column:Int, msg:String):Void {
 		var b:String = errMsgFormat;
-		b = StringTools.replace(b, '{0}', cast(line, String));
-		b = StringTools.replace(b, '{1}', cast(column, String));
+		b = StringTools.replace(b, '{0}', Std.string(line));
+		b = StringTools.replace(b, '{1}', Std.string(column));
 		b = StringTools.replace(b, '{2}', msg);
 		trace(b);
 	}
@@ -141,11 +141,13 @@ class Errors {
 		}
 		printMsg(line, col, s);
 		count++;
+		throw new FatalError(s);
 	}
 
 	public function SemErr (?line:Int, ?col:Int, s:String):Void {
 		line == null ? printMsg(line, col, s) : trace(s);
 		count++;
+		throw new FatalError(s);
 	}
 	
 	public function Warning (?line:Int, ?col:Int, s:String):Void {	
