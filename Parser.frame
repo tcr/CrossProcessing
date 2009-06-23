@@ -35,7 +35,7 @@ class Parser {
 
 	public var t:Token;    // last recognized token
 	public var la:Token;   // lookahead token
-	var errDist:Int = minErrDist;
+	var errDist:Int;
 	
 	public var scanner:Scanner;
 	public var errors:Errors;
@@ -43,6 +43,7 @@ class Parser {
 	-->declarations
 
 	public function new(scanner:Scanner) {
+		errDist = minErrDist;
 		this.scanner = scanner;
 		errors = new Errors();
 	}
@@ -87,7 +88,7 @@ class Parser {
 	}
 	
 	function WeakSeparator (n:Int, syFol:Int, repFol:Int):Bool {
-		int kind = la.kind;
+		var kind:Int = la.kind;
 		if (kind == n) { Get(); return true; }
 		else if (StartOf(repFol)) return false;
 		else {
@@ -102,7 +103,7 @@ class Parser {
 	
 -->productions
 
-	public Parse():Void {
+	public function Parse():Void {
 		la = new Token();
 		la.val = "";		
 		Get();
@@ -110,60 +111,178 @@ class Parser {
 		Expect(0);
 	}
 
-	private static var set:Array<Array<Bool>> = {
+	private static var set:Array<Array<Bool>> = [
 -->initialization
-	};
+	];
 } // end Parser
 
 
 class Errors {
-	public var count:Int = 0;                                    // number of errors detected
-	public java.io.PrintStream errorStream = System.out;     // error messages go to this stream
-	public var errMsgFormat:String = "-- line {0} col {1}: {2}"; // 0=line, 1=column, 2=text
+	public var count:Int;                                    // number of errors detected
+//	public java.io.PrintStream errorStream = System.out;     // error messages go to this stream
+	static var errMsgFormat:String = "-- line {0} col {1}: {2}"; // 0=line, 1=column, 2=text
 	
-	protected function printMsg(line:Int, column:Int, msg:String):Void {
-		StringBuffer b = new StringBuffer(errMsgFormat);
-		int pos = b.indexOf("{0}");
-		if (pos >= 0) { b.delete(pos, pos+3); b.insert(pos, line); }
-		pos = b.indexOf("{1}");
-		if (pos >= 0) { b.delete(pos, pos+3); b.insert(pos, column); }
-		pos = b.indexOf("{2}");
-		if (pos >= 0) b.replace(pos, pos+3, msg);
-		errorStream.println(b.toString());
+	public function new() {
+		count = 0;
+	}
+	
+	public function printMsg(line:Int, column:Int, msg:String):Void {
+		var b:String = errMsgFormat;
+		b = StringTools.replace(b, '{0}', cast(line, String));
+		b = StringTools.replace(b, '{1}', cast(column, String));
+		b = StringTools.replace(b, '{2}', msg);
+		trace(b);
 	}
 	
 	public function SynErr (line:Int, col:Int, n:Int):Void {
-		String s;
+		var s:String;
 		switch (n) {-->errors
-			default: s = "error " + n; break;
+			default: s = "error " + n;
 		}
 		printMsg(line, col, s);
 		count++;
 	}
 
-	public function SemErr (line:Int, col:Int, s:String):Void {	
-		printMsg(line, col, s);
+	public function SemErr (?line:Int, ?col:Int, s:String):Void {
+		line == null ? printMsg(line, col, s) : trace(s);
 		count++;
 	}
 	
-	public function SemErr (s:String):Void {
-		errorStream.println(s);
-		count++;
-	}
-	
-	public function Warning (line:Int, col:Int, s:String):Void {	
-		printMsg(line, col, s);
-	}
-	
-	public function Warning (s:String):Void {
-		errorStream.println(s);
+	public function Warning (?line:Int, ?col:Int, s:String):Void {	
+		line == null ? printMsg(line, col, s): trace(s);
 	}
 } // Errors
 
-
-class FatalError extends RuntimeException {
+class FatalError {
+	public var message:String;
 	public static var serialVersionUID:Float = 1.0;
-	public function FatalError(s:String) { super(s); }
+	public function new(s:String) { this.message = s; }
 }
+
+/*------------------------- modifier handling -----------------------------*/
+
+  class Modifier {
+    static public var _public:Int       = 0x0001;
+    static public var _private:Int      = 0x0002;
+    static public var _protected:Int    = 0x0004;
+    static public var _static:Int       = 0x0008;
+    static public var _final:Int        = 0x0010;
+    static public var _synchronized:Int = 0x0020;
+    static public var _volatile:Int     = 0x0040;
+    static public var _transient:Int    = 0x0080;
+    static public var _native:Int       = 0x0100;
+    static public var _abstract:Int     = 0x0400;
+    static public var _strictfp:Int     = 0x0800;
+
+  /* sets of modifiers that can be attached to certain program elements    *
+   * e.g., "constants" marks all modifiers that may be used with constants */
+    static public var none:Int         = 0x0000;
+    static public var access:Int       = _public | _protected | _private;    // 0x0007
+    static public var classes:Int      = access | _abstract | _static | _final | _strictfp;    // 0x0c1f
+    static public var fields:Int       = access | _static | _final | _transient | _volatile;  // 0x00df
+    static public var methods:Int      = access | _abstract | _static | _final | _synchronized | _native | _strictfp; // 0x0d3f
+    static public var constructors:Int = access; // 0x0007
+    static public var interfaces:Int   = access | _abstract | _static | _strictfp; // 0x0c0f
+    static public var constants:Int    = _public | _static | _final; // 0x0019
+    static public var all:Int          = 0x0dff;
+  }
+  
+  class Modifiers {
+    private var cur:Int;
+    private var parser:Parser;
+
+ 	public function new(parser:Parser) {
+		cur = 0;
+ 		this.parser = parser;
+        }
+
+    public function add (m:Int):Void {
+      if ((cur & m) == 0) cur |= m;
+      else parser.error("repeated modifier");
+    }
+    
+    public function check(allowed:Int):Void {
+      var wrong:Int = cur & (allowed ^ Modifier.all);
+      if (wrong != Modifier.none)
+        parser.error("modifier(s) " + toString(wrong) + "not allowed here");
+      else
+        checkAccess();
+    }
+    
+    private function checkAccess():Void {
+      var access:Int = cur & Modifier.access;
+      if (access != Modifier.none && access != Modifier._public && 
+          access != Modifier._protected && access != Modifier._private)
+          parser.error("illegal combination of modifiers: " + toString(access));
+    }
+    
+    private function toString(m:Int):String {
+      var s:String = "";
+      if ((m & Modifier._public) != 0) s += "public ";
+      if ((m & Modifier._private) != 0) s += "private ";
+      if ((m & Modifier._protected) != 0) s += "protected ";
+      if ((m & Modifier._static) != 0) s += "static ";
+      if ((m & Modifier._final) != 0) s += "final ";
+      if ((m & Modifier._synchronized) != 0) s += "synchronized ";
+      if ((m & Modifier._volatile) != 0) s += "volatile ";
+      if ((m & Modifier._transient) != 0) s += "transient ";
+      if ((m & Modifier._native) != 0) s += "native ";
+      if ((m & Modifier._abstract) != 0) s += "abstract ";
+      if ((m & Modifier._strictfp) != 0) s += "strictfp ";
+      return s;
+    }
+  }
+
+/*-------------------- expression handling ----------------------------------*/
+  
+  class ExprKind {
+    static public var NONE:Int     =  0;
+    static public var CONDEXPR:Int = 17;
+    static public var APPLY:Int    = 25;
+    static public var NEWCLASS:Int = 26;
+    static public var NEWARRAY:Int = 27;
+    static public var PARENS:Int   = 28;
+    static public var ASSIGN:Int   = 29;
+    static public var TYPECAST:Int = 30;
+    static public var TYPETEST:Int = 31;
+    static public var SELECT:Int   = 33;
+    static public var IDENT:Int    = 34;
+    static public var LITERAL:Int  = 35;
+    static public var POS:Int      = 41;
+    static public var NEG:Int      = 42;
+    static public var NOT:Int      = 43;
+    static public var COMPL:Int    = 44;
+    static public var PREINC:Int   = 45;
+    static public var PREDEC:Int   = 46;
+    static public var POSTINC:Int  = 47;
+    static public var POSTDEC:Int  = 48;
+    static public var BINARY:Int   = 50;
+  }
+
+  class ExprInfo {
+    private var kind:Int;
+	  private var parser:Parser;
+	
+  	public function new(parser:Parser) {
+		kind = ExprKind.NONE;
+  		this.parser = parser;
+  	}
+    
+    public function getKind():Int {
+      return kind;
+    }
+    
+    public function setKind(k:Int):Void {
+      kind = k;
+    }
+    
+    public function checkExprStat():Void {
+      if ( kind != ExprKind.APPLY &&  kind != ExprKind.NEWCLASS && 
+           kind != ExprKind.ASSIGN && kind != ExprKind.PREINC &&
+           kind != ExprKind.PREDEC && kind != ExprKind.POSTINC &&
+           kind != ExprKind.POSTDEC)
+        parser.error("not a statement" + " (" + kind + ")");
+    }
+  }
 
 $$$

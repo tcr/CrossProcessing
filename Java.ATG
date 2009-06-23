@@ -1,133 +1,7 @@
-import java.util.BitSet;
-
-
+import BitSet;
+import Scanner;
 
 COMPILER CompilationUnit
-
-/*------------------------- modifier handling -----------------------------*/
-
-  class Modifier {
-    static var _public:Int       = 0x0001;
-    static var _private:Int      = 0x0002;
-    static var _protected:Int    = 0x0004;
-    static var _static:Int       = 0x0008;
-    static var _final:Int        = 0x0010;
-    static var _synchronized:Int = 0x0020;
-    static var _volatile:Int     = 0x0040;
-    static var _transient:Int    = 0x0080;
-    static var _native:Int       = 0x0100;
-    static var _abstract:Int     = 0x0400;
-    static var _strictfp:Int     = 0x0800;
-
-  /* sets of modifiers that can be attached to certain program elements    *
-   * e.g., "constants" marks all modifiers that may be used with constants */
-    static var
-      none:Int         = 0x0000,
-      access:Int       = _public | _protected | _private,    // 0x0007
-      classes:Int      = access | _abstract | _static | _final | _strictfp,    // 0x0c1f
-      fields:Int       = access | _static | _final | _transient | _volatile,  // 0x00df
-      methods:Int      = access | _abstract | _static | _final | _synchronized | _native | _strictfp, // 0x0d3f
-      constructors:Int = access, // 0x0007
-      interfaces:Int   = access | _abstract | _static | _strictfp, // 0x0c0f
-      constants:Int    = _public | _static | _final, // 0x0019
-      all:Int          = 0x0dff;
-  }
-  
-  class Modifiers {
-    private var cur:Float = 0.0;
-    private parser:Parser;
-
- 	public function new(parser:Parser) {
- 		this.parser = parser;
-        }
-
-    public add (m:Float):Void {
-      if ((cur & m) == 0) cur |= m;
-      else error("repeated modifier");
-    }
-    
-    public check(allowed:Float):Void {
-      var wrong:Float = cur & (allowed ^ Modifier.all);
-      if (wrong != Modifier.none)
-        parser.error("modifier(s) " + toString(wrong) + "not allowed here");
-      else
-        checkAccess();
-    }
-    
-    private function checkAccess():Void {
-      var access:Float = cur & Modifier.access;
-      if (access != Modifier.none && access != Modifier._public && 
-          access != Modifier._protected && access != Modifier._private)
-          parser.error("illegal combination of modifiers: " + toString(access));
-    }
-    
-    private toString(m:Float):String {
-      String s = "";
-      if ((m & Modifier._public) != 0) s += "public ";
-      if ((m & Modifier._private) != 0) s += "private ";
-      if ((m & Modifier._protected) != 0) s += "protected ";
-      if ((m & Modifier._static) != 0) s += "static ";
-      if ((m & Modifier._final) != 0) s += "final ";
-      if ((m & Modifier._synchronized) != 0) s += "synchronized ";
-      if ((m & Modifier._volatile) != 0) s += "volatile ";
-      if ((m & Modifier._transient) != 0) s += "transient ";
-      if ((m & Modifier._native) != 0) s += "native ";
-      if ((m & Modifier._abstract) != 0) s += "abstract ";
-      if ((m & Modifier._strictfp) != 0) s += "strictfp ";
-      return s;
-    }
-  }
-
-/*-------------------- expression handling ----------------------------------*/
-  
-  class ExprKind {
-    static var NONE:Int     =  0;
-    static var CONDEXPR:Int = 17;
-    static var APPLY:Int    = 25;
-    static var NEWCLASS:Int = 26;
-    static var NEWARRAY:Int = 27;
-    static var PARENS:Int   = 28;
-    static var ASSIGN:Int   = 29;
-    static var TYPECAST:Int = 30;
-    static var TYPETEST:Int = 31;
-    static var SELECT:Int   = 33;
-    static var IDENT:Int    = 34;
-    static var LITERAL:Int  = 35;
-    static var POS:Int      = 41;
-    static var NEG:Int      = 42;
-    static var NOT:Int      = 43;
-    static var COMPL:Int    = 44;
-    static var PREINC:Int   = 45;
-    static var PREDEC:Int   = 46;
-    static var POSTINC:Int  = 47;
-    static var POSTDEC:Int  = 48;
-    static var BINARY:Int   = 50;
-  }
-
-  class ExprInfo {
-    private var kind:Int = ExprKind.NONE;
-	  private var parser:Parser;
-	
-  	public function new(parser:Parser) {
-  		this.parser = parser;
-  	}
-    
-    public getKind():Int {
-      return kind;
-    }
-    
-    public function setKind(k:Int):Void {
-      kind = k;
-    }
-    
-    public function checkExprStat():Void {
-      if ( kind != ExprKind.APPLY &&  kind != ExprKind.NEWCLASS && 
-           kind != ExprKind.ASSIGN && kind != ExprKind.PREINC &&
-           kind != ExprKind.PREDEC && kind != ExprKind.POSTINC &&
-           kind != ExprKind.POSTDEC)
-        parser.error("not a statement" + " (" + kind + ")");
-    }
-  }
   
 /*---------------------------- token sets -----------------------------------*/
 
@@ -144,21 +18,20 @@ static function or(s1:BitSet, s2:BitSet):BitSet {
   return s1;
 }
 
-static var typeKWarr:Array<Int> = {_byte, _short, _char, _int, _long, _float, _double, 
-                          _boolean};
-static var castFollowerArr:Array<Int> = {_ident, _new, _super, _this, _void, _intLit,
+static var typeKWarr:Array<Int> = [_byte, _short, _char, _int, _long, _float, _double, 
+                          _boolean];
+static var castFollowerArr:Array<Int> = [_ident, _new, _super, _this, _void, _intLit,
                                 _floatLit, _charLit, _stringLit, _true, _false,
-                                _null, _lpar, _not, _tilde};
-static var prefixArr:Array<Int> = {_inc, _dec, _not, _tilde, _plus, _minus};                                
+                                _null, _lpar, _not, _tilde];
+static var prefixArr:Array<Int> = [_inc, _dec, _not, _tilde, _plus, _minus];                                
 
-static var
-  typeKW:BitSet       = newSet(typeKWarr),
-  castFollower:BitSet = or(newSet(castFollowerArr), typeKW),
-  prefix:BitSet       = newSet(prefixArr);
+static var typeKW:BitSet       = newSet(typeKWarr);
+static var castFollower:BitSet = or(newSet(castFollowerArr), typeKW);
+static var prefix:BitSet       = newSet(prefixArr);
 
 /*---------------------------- auxiliary methods ----------------------------*/
 
-function error (s:String):Void {
+public function error (s:String):Void {
   if (errDist >= minErrDist) errors.SemErr(la.line, la.col, s);
   errDist = 0;
 }
@@ -462,7 +335,7 @@ ClassOrInterfaceDeclaration           (. var m:Modifiers = new Modifiers(this); 
 
 /*---------------------------------------------------------------------------*/
 
-ClassModifier<Modifiers m>
+ClassModifier<m:Modifiers>
 = "public"                                   (. m.add(Modifier._public);    .)
 | "protected"                                (. m.add(Modifier._protected); .)
 | "private"                                  (. m.add(Modifier._private);   .)
@@ -474,14 +347,14 @@ ClassModifier<Modifiers m>
 
 /*---------------------------------------------------------------------------*/
 
-Modifier<Modifiers m>
+Modifier0<m:Modifiers>
 = "static"                                   (. m.add(Modifier._static);    .)
 |  Modifier1<m>
 .
 
 /*---------------------------------------------------------------------------*/
 
-Modifier1<Modifiers m>
+Modifier1<m:Modifiers>
 = "public"                                  (. m.add(Modifier._public);      .)
 | "protected"                               (. m.add(Modifier._protected);   .)
 | "private"                                 (. m.add(Modifier._private);     .)
@@ -568,7 +441,7 @@ VariableInitializer                 (. var dummy:ExprInfo = new ExprInfo(this); 
  *---------------------------- Classes --------------------------------------*
  *---------------------------------------------------------------------------*/
 
-ClassDeclaration<Modifiers m>
+ClassDeclaration<m:Modifiers>
 =                                              (. m.check(Modifier.classes); .)
   "class" ident [ "extends" Type ] [ "implements" TypeList] ClassBody
 .
@@ -586,13 +459,13 @@ ClassBodyDeclaration
 |                                     (. var m:Modifiers = new Modifiers(this); .)
   ["static"                           (. m.add(Modifier._static);           .)
   ] ( Block
-    | [ Modifier1<m> { Modifier<m> } ] MemberDecl<m>
+    | [ Modifier1<m> { Modifier0<m> } ] MemberDecl<m>
     )
 .
 
 /*---------------------------------------------------------------------------*/
 
-MemberDecl<Modifiers m>
+MemberDecl<m:Modifiers>
 = IF (identAndLPar()) ident ConstructorDeclaratorRest<m>
 | MethodOrFieldDecl<m>
 |                                             (. m.check(Modifier.methods); .)
@@ -603,13 +476,13 @@ MemberDecl<Modifiers m>
 
 /*---------------------------------------------------------------------------*/
 
-MethodOrFieldDecl<Modifiers m>
+MethodOrFieldDecl<m:Modifiers>
 = Type ident MethodOrFieldRest<m>
 .
 
 /*---------------------------------------------------------------------------*/
 
-MethodOrFieldRest<Modifiers m>
+MethodOrFieldRest<m:Modifiers>
 =                                              (. m.check(Modifier.fields);  .) 
   VariableDeclaratorsRest ';'
 |                                              (. m.check(Modifier.methods); .)
@@ -648,7 +521,7 @@ VoidMethodDeclaratorRest
 
 /*---------------------------------------------------------------------------*/
 
-ConstructorDeclaratorRest<Modifiers m>
+ConstructorDeclaratorRest<m:Modifiers>
 =                                         (. m.check(Modifier.constructors); .)
   FormalParameters [ "throws" QualidentList ] Block
 .
@@ -663,7 +536,7 @@ FormalParameters
  *---------------------------- Interfaces -----------------------------------*
  *---------------------------------------------------------------------------*/
 
-InterfaceDeclaration<Modifiers m>
+InterfaceDeclaration<m:Modifiers>
 =                                          (. m.check(Modifier.interfaces); .)
   "interface" ident [ "extends" TypeList ] InterfaceBody
 .
@@ -678,12 +551,12 @@ InterfaceBody
 
 InterfaceBodyDeclaration              (. var m:Modifiers = new Modifiers(this); .) 
 = ";"
-| { Modifier<m> } InterfaceMemberDecl<m>
+| { Modifier0<m> } InterfaceMemberDecl<m>
 .
 
 /*---------------------------------------------------------------------------*/
 
-InterfaceMemberDecl<Modifiers m>
+InterfaceMemberDecl<m:Modifiers>
 = InterfaceMethodOrFieldDecl<m>
 |                                          (. m.check(Modifier.interfaces); .)
   "void" ident VoidInterfaceMethodDeclaratorRest
@@ -693,13 +566,13 @@ InterfaceMemberDecl<Modifiers m>
 
 /*---------------------------------------------------------------------------*/
 
-InterfaceMethodOrFieldDecl<Modifiers m>
+InterfaceMethodOrFieldDecl<m:Modifiers>
 = Type ident InterfaceMethodOrFieldRest<m>
 .
 
 /*---------------------------------------------------------------------------*/
 
-InterfaceMethodOrFieldRest<Modifiers m>
+InterfaceMethodOrFieldRest<m:Modifiers>
 =                                          (. m.check(Modifier.constants);  .) 
   ConstantDeclaratorsRest ";"
 |                                          (. m.check(Modifier.interfaces); .) 
@@ -847,7 +720,7 @@ SwitchLabel
  *---------------------------- Expressions ----------------------------------*
  *---------------------------------------------------------------------------*/
 
-Expression<ExprInfo info>
+Expression<info:ExprInfo>
 = Expression1<info> 
   {                                    (. var dummy:ExprInfo = new ExprInfo(this); 
                                           info.setKind(ExprKind.ASSIGN);    .)
@@ -857,7 +730,7 @@ Expression<ExprInfo info>
 
 /*---------------------------------------------------------------------------*/
 
-Expression1<ExprInfo info>
+Expression1<info:ExprInfo>
 = Expression2<info> [                   (. info.setKind(ExprKind.CONDEXPR); .) 
   ConditionalExpr ]
 .
@@ -870,13 +743,13 @@ ConditionalExpr                      (. var dummy:ExprInfo = new ExprInfo(this);
 
 /*---------------------------------------------------------------------------*/
 
-Expression2<ExprInfo info>
+Expression2<info:ExprInfo>
 = Expression3<info> [ Expression2Rest<info> ]
 .
 
 /*---------------------------------------------------------------------------*/
 
-Expression2Rest<ExprInfo info>      (. var dummy:ExprInfo = new ExprInfo(this); .) 
+Expression2Rest<info:ExprInfo>      (. var dummy:ExprInfo = new ExprInfo(this); .) 
 = Infixop Expression3<dummy> { Infixop Expression3<dummy> }
                                     (. info.setKind(ExprKind.BINARY);       .) 
 | "instanceof" Type                 (. info.setKind(ExprKind.TYPETEST);     .)
@@ -884,7 +757,7 @@ Expression2Rest<ExprInfo info>      (. var dummy:ExprInfo = new ExprInfo(this); 
 
 /*---------------------------------------------------------------------------*/
 
-Expression3<ExprInfo info>               (. var pre:Int = ExprKind.NONE;        .)
+Expression3<info:ExprInfo>               (. var pre:Int = ExprKind.NONE;        .)
 = { IF(prefix.get(la.kind) || isTypeCast())
     ( PrefixOp<info>      (. if(pre == ExprKind.NONE) pre = info.getKind(); .)
     | "(" Type ")"                       (. info.setKind(ExprKind.TYPECAST);.)
@@ -896,7 +769,7 @@ Expression3<ExprInfo info>               (. var pre:Int = ExprKind.NONE;        
 
 /*---------------------------------------------------------------------------*/
 
-Primary<ExprInfo info>
+Primary<info:ExprInfo>
 = "(" Expression<info> ")"               (. info.setKind(ExprKind.PARENS);  .)
 | "this"                                 (. info.setKind(ExprKind.IDENT);   .)
   ArgumentsOpt<info>
@@ -911,7 +784,7 @@ Primary<ExprInfo info>
 
 /*---------------------------------------------------------------------------*/
 
-ArgumentsOpt<ExprInfo info>
+ArgumentsOpt<info:ExprInfo>
 = [                                       (. info.setKind(ExprKind.APPLY);  .)
     Arguments ]
 .
@@ -924,7 +797,7 @@ Arguments                           (. var dummy:ExprInfo = new ExprInfo(this); 
 
 /*---------------------------------------------------------------------------*/
 
-SuperSuffix<ExprInfo info>
+SuperSuffix<info:ExprInfo>
 = Arguments                                (. info.setKind(ExprKind.APPLY); .)
 | '.' ident                                (. info.setKind(ExprKind.IDENT); .)
   ArgumentsOpt<info>  
@@ -943,7 +816,7 @@ Literal
 
 /*---------------------------------------------------------------------------*/
 
-Creator<ExprInfo info>
+Creator<info:ExprInfo>
 = BasicType ArrayCreatorRest            (. info.setKind(ExprKind.NEWARRAY); .)
 | Qualident 
   ( ArrayCreatorRest                    (. info.setKind(ExprKind.NEWARRAY); .)
@@ -970,7 +843,7 @@ ClassCreatorRest
 
 /*---------------------------------------------------------------------------*/
 
-IdentifierSuffix<ExprInfo info>
+IdentifierSuffix<info:ExprInfo>
 = '[' ']' BracketsOpt "." "class"           (. info.setKind(ExprKind.SELECT); .)
 |  Arguments                                (. info.setKind(ExprKind.APPLY);  .)
 |  "." ( "class" | "this" | "super" '.' ident ArgumentsOpt<info>)
@@ -978,7 +851,7 @@ IdentifierSuffix<ExprInfo info>
 
 /*---------------------------------------------------------------------------*/
 
-Selector<ExprInfo info>             (. var dummy:ExprInfo = new ExprInfo(this); .) 
+Selector<info:ExprInfo>             (. var dummy:ExprInfo = new ExprInfo(this); .) 
 = "." ( ident ArgumentsOpt<info>
       | "super" Arguments
       | "new" InnerCreator
@@ -1041,7 +914,7 @@ Infixop
 
 /*---------------------------------------------------------------------------*/
 
-PrefixOp<ExprInfo info>
+PrefixOp<info:ExprInfo>
 = "++"                                    (. info.setKind(ExprKind.PREINC); .)
 | "--"                                    (. info.setKind(ExprKind.PREDEC); .)
 | "!"                                     (. info.setKind(ExprKind.NOT);    .)
@@ -1052,7 +925,7 @@ PrefixOp<ExprInfo info>
 
 /*---------------------------------------------------------------------------*/
 
-PostfixOp<ExprInfo info>
+PostfixOp<info:ExprInfo>
 = "++"                                   (. info.setKind(ExprKind.POSTINC); .)
 | "--"                                   (. info.setKind(ExprKind.POSTDEC); .)  
 .

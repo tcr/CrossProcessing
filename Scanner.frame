@@ -29,9 +29,8 @@ Coco/R itself) does not fall under the GNU General Public License.
 import haxe.io.Input;
 import haxe.io.Eof;
 
-import java.util.Map;
-import java.util.HashMap;
-
+//import java.util.Map;
+//import java.util.HashMap;
 //import java.io.InputStream;
 //import java.io.IOException;
 //import java.io.RandomAccessFile;
@@ -43,6 +42,7 @@ class Token {
 	public var line:Int;    // token line (starting at 1)
 	public var val:String;  // token value
 	public var next:Token;  // ML 2005-03-11 Peek tokens are kept in linked list
+	public function new() {}
 }
 
 //-----------------------------------------------------------------------------------
@@ -50,26 +50,28 @@ class Token {
 //-----------------------------------------------------------------------------------
 
 class Buffer {
-	public static var EOF:Int = 0xFFFF;
+	public static var EOF:String = String.fromCharCode(0xFFFF);
 
 	private var stream:Input;
 	
 	public function new(s:Input)
 	{
+		pos = 0;
+		bufChar = 0;
 		stream = s;
 		Read();
 	}
 	
-	private var pos:Int = 0;
+	private var pos:Int;
 	
 	public function getPos():Int
 	{
 		return pos;
 	}
 	
-	private var bufChar:Int = 0;
+	private var bufChar:Int;
 	
-	public function Read():Int
+	public function Read():String
 	{
 		pos++;
 		var ret:Int = bufChar;
@@ -78,12 +80,12 @@ class Buffer {
 		} catch (e:Eof) {
 			return EOF;
 		}
-		return ret;
+		return String.fromCharCode(ret);
 	}
 	
-	public function Peek():Int
+	public function Peek():String
 	{
-		return bufChar;
+		return String.fromCharCode(bufChar);
 	}
 
 /*
@@ -290,31 +292,38 @@ class UTF8Buffer extends Buffer {
 //-----------------------------------------------------------------------------------
 // StartStates  -- maps characters to start states of tokens
 //-----------------------------------------------------------------------------------
+
 class StartStates {
-	private static class Elem {
-		public int key, val;
-		public Elem next;
-		public Elem(int key, int val) { this.key = key; this.val = val; }
+	private var tab:Array<Elem>;
+	
+	public function new() {
+		tab = []; //new Elem[128]
 	}
 
-	private Elem[] tab = new Elem[128];
-
-	public void set(int key, int val) {
-		Elem e = new Elem(key, val);
-		int k = key % 128;
+	public function set(key:Int, val:Int):Void {
+		var e:Elem = new Elem(key, val);
+		var k:Int = key % 128;
 		e.next = tab[k]; tab[k] = e;
 	}
 
-	public int state(int key) {
-		Elem e = tab[key % 128];
+	public function state(key:Int):Int {
+		var e:Elem = tab[key % 128];
 		while (e != null && e.key != key) e = e.next;
 		return e == null ? 0: e.val;
 	}
 }
 
+class Elem {
+	public var key:Int;
+	public var val:Int;
+	public var next:Elem;
+	public function new(key:Int, val:Int) { this.key = key; this.val = val; }
+}
+
 //-----------------------------------------------------------------------------------
 // Scanner
 //-----------------------------------------------------------------------------------
+
 class Scanner {
 	static var EOL:String = '\n';
 	static var eofSym:Int = 0;
@@ -323,28 +332,30 @@ class Scanner {
 	public var buffer:Buffer; // scanner buffer
 
 	var t:Token;           // current token
-	var ch:Int;            // current input character
+	var ch:String;            // current input character
 	var pos:Int;           // byte position of current character
 	var col:Int;           // column number of current character
 	var line:Int;          // line number of current character
 	var oldEols:Int;       // EOLs that appeared in a comment;
-	static var start:StartStates; // maps initial token character to start state
-	static var literals:Map;      // maps literal strings to literal kinds
 
 	var tokens:Token;      // list of tokens already peeked (first token is a dummy)
 	var pt:Token;          // current peek token
 	
-	var tval:Array<String> = new Array<String>(16); // token text used in NextToken(), dynamically enlarged
+	var tval:Array<String>; // token text used in NextToken(), dynamically enlarged
 	var tlen:Int;          // length of current token
 
 
-	static {
-		start = new StartStates();
-		literals = new HashMap();
+//	static var start:StartStates; // maps initial token character to start state
+//	static var literals:Hash<Int>;      // maps literal strings to literal kinds
+	static var start = new StartStates();
+	static var literals = (function () {
+		var literals = new Hash<Int>();
 -->initialization
-	}
+		return literals;
+	})();
 	
 	public function new (s:Input) {
+		tval = []; // new char[16]
 		buffer = new Buffer(s);
 		Init();
 	}
@@ -379,11 +390,12 @@ class Scanner {
 	}
 	
 	function AddCh():Void {
-		if (tlen >= tval.length) {
+/*		if (tlen >= tval.length) {
+			var newBuf:Array<String> = [];
 			char[] newBuf = new char[2 * tval.length];
 			System.arraycopy(tval, 0, newBuf, 0, tval.length);
 			tval = newBuf;
-		}
+		}*/
 		if (ch != Buffer.EOF) {
 -->casing2
 			NextCh();
@@ -396,9 +408,9 @@ class Scanner {
 	function CheckLiteral():Void {
 		var val:String = t.val;
 -->casing3
-		Object kind = literals.get(val);
+		var kind:Int = literals.get(val);
 		if (kind != null) {
-			t.kind = ((Integer) kind).intValue();
+			t.kind = kind;
 		}
 	}
 
@@ -409,17 +421,17 @@ class Scanner {
 -->scan2
 		t = new Token();
 		t.pos = pos; t.col = col; t.line = line; 
-		var state:Int = start.state(ch);
+		var state:Int = start.state(ch.charCodeAt(0));
 		tlen = 0; AddCh();
 
-		loop: for (;;) {
+		while (true) {
 			switch (state) {
-				case -1: { t.kind = eofSym; break loop; } // NextCh already done 
-				case 0: { t.kind = noSym; break loop; }   // NextCh already done
+				case -1: t.kind = eofSym; // NextCh already done 
+				case 0: t.kind = noSym;   // NextCh already done
 -->scan3
 			}
 		}
-		t.val = new String(tval, 0, tlen);
+		t.val = tval.join('');
 		return t;
 	}
 	
