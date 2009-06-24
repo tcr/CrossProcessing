@@ -370,21 +370,21 @@ Modifier1<m:Modifiers>
 
 Type
 = ( Qualident
-  | BasicType
+  | BasicType<out type:PrimitiveType>
   ) BracketsOpt
 .
 
 /*---------------------------------------------------------------------------*/
 
-BasicType
-= "byte"
-| "short"
-| "char"
-| "int"
-| "long"
-| "float"
-| "double"
-| "boolean"
+BasicType<out type:PrimitiveType>
+= "byte"					(. type = PTByte; .)
+| "short"					(. type = PTShort; .)
+| "char"					(. type = PTChar; .)
+| "int"						(. type = PTInt; .)
+| "long"					(. type = PTLong; .)
+| "float"					(. type = PTFloat; .)
+| "double"					(. type = PTDouble; .)
+| "boolean"					(. type = PTBoolean; .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -777,7 +777,7 @@ Primary<info:ExprInfo>
 | "new" Creator<info>
 | ident { IF(dotAndIdent()) '.' ident}   (. info.setKind(ExprKind.IDENT);   .)
   [ IF(isIdentSuffix()) IdentifierSuffix<info> ]
-| BasicType BracketsOpt '.' "class"      (. info.setKind(ExprKind.SELECT);  .)
+| BasicType<out type:PrimitiveType> BracketsOpt '.' "class"      (. info.setKind(ExprKind.SELECT);  .)
 | "void" '.' "class"                     (. info.setKind(ExprKind.SELECT);  .)
 .
 
@@ -816,7 +816,7 @@ Literal
 /*---------------------------------------------------------------------------*/
 
 Creator<info:ExprInfo>
-= BasicType ArrayCreatorRest            (. info.setKind(ExprKind.NEWARRAY); .)
+= BasicType<out type:PrimitiveType> ArrayCreatorRest            (. info.setKind(ExprKind.NEWARRAY); .)
 | Qualident 
   ( ArrayCreatorRest                    (. info.setKind(ExprKind.NEWARRAY); .)
   | ClassCreatorRest                    (. info.setKind(ExprKind.NEWCLASS); .)
@@ -872,8 +872,8 @@ ParExpression                        (. var dummy:ExprInfo = new ExprInfo(this);
 
 /*---------------------------------------------------------------------------*/
 
-AssignmentOperator
-= "="
+AssignmentOperator			
+= "="					
 | "+="
 | "-="
 | "*="

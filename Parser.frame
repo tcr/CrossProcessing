@@ -237,55 +237,57 @@ class FatalError {
 
 /*-------------------- expression handling ----------------------------------*/
   
-  class ExprKind {
-    static public var NONE:Int     =  0;
-    static public var CONDEXPR:Int = 17;
-    static public var APPLY:Int    = 25;
-    static public var NEWCLASS:Int = 26;
-    static public var NEWARRAY:Int = 27;
-    static public var PARENS:Int   = 28;
-    static public var ASSIGN:Int   = 29;
-    static public var TYPECAST:Int = 30;
-    static public var TYPETEST:Int = 31;
-    static public var SELECT:Int   = 33;
-    static public var IDENT:Int    = 34;
-    static public var LITERAL:Int  = 35;
-    static public var POS:Int      = 41;
-    static public var NEG:Int      = 42;
-    static public var NOT:Int      = 43;
-    static public var COMPL:Int    = 44;
-    static public var PREINC:Int   = 45;
-    static public var PREDEC:Int   = 46;
-    static public var POSTINC:Int  = 47;
-    static public var POSTDEC:Int  = 48;
-    static public var BINARY:Int   = 50;
-  }
+class ExprKind
+{
+	static public var NONE:Int     =  0;
+	static public var CONDEXPR:Int = 17;
+	static public var APPLY:Int    = 25;
+	static public var NEWCLASS:Int = 26;
+	static public var NEWARRAY:Int = 27;
+	static public var PARENS:Int   = 28;
+	static public var ASSIGN:Int   = 29;
+	static public var TYPECAST:Int = 30;
+	static public var TYPETEST:Int = 31;
+	static public var SELECT:Int   = 33;
+	static public var IDENT:Int    = 34;
+	static public var LITERAL:Int  = 35;
+	static public var POS:Int      = 41;
+	static public var NEG:Int      = 42;
+	static public var NOT:Int      = 43;
+	static public var COMPL:Int    = 44;
+	static public var PREINC:Int   = 45;
+	static public var PREDEC:Int   = 46;
+	static public var POSTINC:Int  = 47;
+	static public var POSTDEC:Int  = 48;
+	static public var BINARY:Int   = 50;
+}
 
-  class ExprInfo {
-    private var kind:Int;
-	  private var parser:Parser;
+class ExprInfo
+{
+	private var kind:Int;
+	private var parser:Parser;
 	
-  	public function new(parser:Parser) {
+	public function new(parser:Parser) {
 		kind = ExprKind.NONE;
   		this.parser = parser;
-  	}
+	}
     
-    public function getKind():Int {
-      return kind;
-    }
+	public function getKind():Int {
+		return kind;
+	}
     
-    public function setKind(k:Int):Void {
-      kind = k;
-    }
+	public function setKind(k:Int):Void {
+		kind = k;
+	}
     
-    public function checkExprStat():Void {
-      if ( kind != ExprKind.APPLY &&  kind != ExprKind.NEWCLASS && 
-           kind != ExprKind.ASSIGN && kind != ExprKind.PREINC &&
-           kind != ExprKind.PREDEC && kind != ExprKind.POSTINC &&
-           kind != ExprKind.POSTDEC)
-        parser.error("not a statement" + " (" + kind + ")");
-    }
-  }
+	public function checkExprStat():Void {
+		if ( kind != ExprKind.APPLY &&  kind != ExprKind.NEWCLASS && 
+		   kind != ExprKind.ASSIGN && kind != ExprKind.PREINC &&
+		   kind != ExprKind.PREDEC && kind != ExprKind.POSTINC &&
+		   kind != ExprKind.POSTDEC)
+		parser.error("not a statement" + " (" + kind + ")");
+	}
+}
   
 /*-------------------- bit array ----------------------------------*/
 

@@ -137,8 +137,8 @@ class Scanner {
 	var tokens:Token;      // list of tokens already peeked (first token is a dummy)
 	var pt:Token;          // current peek token
 	
-	var tval:StringBuf; // token text used in NextToken(), dynamically enlarged
-	var tlen:Int;          // length of current token
+	var tval:StringBuf;	// token text used in NextToken(), dynamically enlarged
+	var tlen:Int;		// length of current token
 
 	static var start = new StartStates();	// maps initial token character to start state
 	static var literals = {			// maps literal strings to literal kinds
