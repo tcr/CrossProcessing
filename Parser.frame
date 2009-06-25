@@ -236,246 +236,73 @@ class FatalError {
   }
 
 /*-------------------- expression handling ----------------------------------*/
-  
-class ExprKind
-{
-	static public var NONE:Int     =  0;
-	static public var CONDEXPR:Int = 17;
-	static public var APPLY:Int    = 25;
-	static public var NEWCLASS:Int = 26;
-	static public var NEWARRAY:Int = 27;
-	static public var PARENS:Int   = 28;
-	static public var ASSIGN:Int   = 29;
-	static public var TYPECAST:Int = 30;
-	static public var TYPETEST:Int = 31;
-	static public var SELECT:Int   = 33;
-	static public var IDENT:Int    = 34;
-	static public var LITERAL:Int  = 35;
-	static public var POS:Int      = 41;
-	static public var NEG:Int      = 42;
-	static public var NOT:Int      = 43;
-	static public var COMPL:Int    = 44;
-	static public var PREINC:Int   = 45;
-	static public var PREDEC:Int   = 46;
-	static public var POSTINC:Int  = 47;
-	static public var POSTDEC:Int  = 48;
-	static public var BINARY:Int   = 50;
-}
 
-class ExprInfo
+class OperationBuilder
 {
-	private var kind:Int;
-	private var parser:Parser;
-	
-	public function new(parser:Parser) {
-		kind = ExprKind.NONE;
-  		this.parser = parser;
-	}
-    
-	public function getKind():Int {
-		return kind;
-	}
-    
-	public function setKind(k:Int):Void {
-		kind = k;
-	}
-    
-	public function checkExprStat():Void {
-		if ( kind != ExprKind.APPLY &&  kind != ExprKind.NEWCLASS && 
-		   kind != ExprKind.ASSIGN && kind != ExprKind.PREINC &&
-		   kind != ExprKind.PREDEC && kind != ExprKind.POSTINC &&
-		   kind != ExprKind.POSTDEC)
-		parser.error("not a statement" + " (" + kind + ")");
-	}
-}
-
-class ExpressionBuilder
-{
-	private var parser:Parser;
-	private var operators:Array<ParserOperator>;
+	private var operators:Array<Operator>;
 	private var operands:Array<Expression>;
 	
-	public function new(parser:Parser) {
-  		this.parser = parser;
+	public function new() {
 		operators = [];
 		operands = [];
 	}
-    
-	public function generate():Expression {
-		recursiveReduceExpression();
-		return operands[0];
-	}
 	
-	public function pushOperator(operator:ParserOperator)
+	public function operator(operator:Operator)
 	{
-		recursiveReduceExpression(lookupOperatorPrecedence(operator));
+		reduce(lookupOperatorPrecedence(operator));
 		operators.push(operator);
 	}
 	
-	public function pushOperand(operand:Expression)
+	public function operand(operand:Expression)
 	{
-		operands.push(operator);
+		operands.push(operand);
 	}
-    
-	public function checkExpressionStatement():Void {
-		var expression:Expression = generate();
-		switch (generate())
+	
+	public function reduce(?precedence:Int = 0):Expression
+	{
+		while (operators.length > 0 && lookupOperatorPrecedence(operators[operators.length - 1]) >= precedence)
+			reduceOperator(operators.pop());
+		return operands[0];
+	}
+
+	private function reduceOperator(operator:Operator):Void
+	{
+		switch (operator)
 		{
-		    case ECallMethod():
-		    case EClassInstantiation():
-		    case EAssignment:
-		    case EPrefix:
-		    case EPostfix:
-		    default:
-			parser.error("not a statement" + " (" + generate() + ")");
+		    // arity: 1
+		    case OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus:
+			var a:Expression = operands.pop();
+			operands.push(EOperation(operator, a));
+
+		    // arity: 2
+		    case OpOr, OpAnd, OpBitwiseOr, OpBitwiseXor, OpBitwiseAnd, OpEqual,
+		      OpUnequal, OpLessThan, OpLessThanOrEqual, OpGreaterThan, OpGreaterThanOrEqual,
+		      OpLeftShift, OpRightShift, OpZeroRightShift, OpAdd, OpSubtract,
+		      OpMultiply, OpDivide, OpModulus:
+			var b:Expression = operands.pop(), a:Expression = operands.pop();
+			operands.push(EOperation(operator, a, b));
 		}
 	}
 	
-	private function recursiveReduceExpression(?precedence:Int = 0):Void
-	{
-		while (operators.length > 0 && lookupOperatorPrecedence(operators[operators.length - 1]) >= precedence)
-			reduceExpression();
-	}
-
-	private function reduceExpression():Void
-	{
-		// reduce topmost operator
-		switch (operators.pop())
-		{
-		    case PConditional(thenExpression, elseExpression):
-			// get conditional
-			var conditional:Expression = operands.pop();
-			operands.push(EConditional(conditional, thenExpression, elseExpression));
-		
-		    case PAssignment(operator):
-			// get reference
-			var value:Expression = operands.pop(), reference:Expression = operands.pop();
-			// we can only assign to a reference
-//[TODO] these might be redundant
-//			if ((Type.enumConstructor(reference) != 'EReference') &&
-//			    (Type.enumConstructor(reference) != 'EArrayAccess'))
-//				throw tokenizer.createSyntaxError('Invalid assignment left-hand side.');
-
-			// rewrite assignment operators as expressions
-			if (operator != null)
-				value = EOperation(operator, reference, value);
-			// extract reference type
-			switch (reference) {
-			    case EReference(identifier, base): operands.push(EAssignment(identifier, base, value));
-			    case EReference(index, base): operands.push(EArrayAssignment(index, base, value));
-			    default: parser.error('invalid assignment left-hand side');
-			}
-		
-		    case POperator(operator):
-			switch (operator)
-			{
-			    // arity: 1
-			    case OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus:
-				var a:Expression = operands.pop();
-				operands.push(EOperation(operator, a));
-
-			    // arity: 2
-			    case OpOr, OpAnd, OpBitwiseOr, OpBitwiseXor, OpBitwiseAnd, OpEqual,
-			      OpUnequal, OpLessThan, OpLessThanOrEqual, OpGreaterThan, OpGreaterThanOrEqual,
-			      OpInstanceOf, OpLeftShift, OpRightShift, OpZeroRightShift, OpPlus, OpMinus,
-			      OpMultiply, OpDivide, OpModulus:
-				var b:Expression = operands.pop(), a:Expression = operands.pop();
-				operands.push(EOperation(operator, a, b));
-			}
-	    
-		    case PCast(type):
-			// expression cast
-			var expression:Expression = operands.pop();
-			operands.push(ECast(type, expression));
-		    
-		    case PPrefix(type):
-			// get reference
-		        var reference:Expression = operands.pop();
-			// we can only assign to a reference
-//[TODO] these might be redundant
-//			if ((Type.enumConstructor(reference) != 'EReference') &&
-//			    (Type.enumConstructor(reference) != 'EArrayAccess'))
-//				throw tokenizer.createSyntaxError('Invalid assignment left-hand side.');
-				
-			// compound prefix operation
-			operands.push(EPrefix(reference, type));
-		    
-		    case PPostfix(type):
-			// get reference
-		        var reference:Expression = operands.pop();
-			// we can only assign to a reference
-//[TODO] these might be redundant
-//			if ((Type.enumConstructor(reference) != 'EReference') &&
-//			    (Type.enumConstructor(reference) != 'EArrayAccess'))
-//				throw tokenizer.createSyntaxError('Invalid assignment left-hand side.');
-				
-			// compound postfix operation
-			operands.push(EPostfix(reference, type));
-		    
-		    case PDot(identifier):
-			// get property and base
-		        var base:Expression = operands.pop();
-			// compound reference
-			operands.push(EReference(identifier, base));
-		    
-		    case PArrayAccess(index):
-			// array access
-			var reference:Expression = operands.pop();
-			operands.push(EArrayAccess(reference, index));
-		    
-		    case PCall(args):
-			// method call
-			var method:Expression = operands.pop();
-			operands.push(ECall(method, args));
-		}
-	}
-
 // http://www.particle.kth.se/~lindsey/JavaCourse/Book/Part1/Java/Chapter02/operators.html
 
-	private function lookupOperatorPrecedence(operator:ParserOperator)
+	private function lookupOperatorPrecedence(operator:Operator):Int
 	{
 		return switch (operator)
 		{
-		    case PAssignment(_): 1;
-		    case PConditional(_, _): 2;
-		    case POperator(operator):
-			switch (operator)
-			{
-			    case OpOr: 3;
-			    case OpAnd: 4;
-			    case OpBitwiseOr: 5;
-			    case OpBitwiseXor: 6;
-			    case OpBitwiseAnd: 7;
-			    case OpEqual, OpUnequal: 8;
-			    case OpLessThan, OpLessThanOrEqual, OpGreaterThan, OpGreaterThanOrEqual, OpInstanceOf: 9;
-			    case OpLeftShift, OpRightShift, OpZeroRightShift: 10;
-			    case OpPlus, OpMinus: 11;
-			    case OpMultiply, OpDivide, OpModulus: 12;
-			    case OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus: 14;
-			}
-		    case PCast(_): 13;
-		    case PPrefix(_): 14;
-		    case PPostfix(_): 15;
-		    case PDot(_): 15;
-		    case PArrayAccess(_): 15;
-		    case PCall(_): 15;
+		    case OpOr: 3;
+		    case OpAnd: 4;
+		    case OpBitwiseOr: 5;
+		    case OpBitwiseXor: 6;
+		    case OpBitwiseAnd: 7;
+		    case OpEqual, OpUnequal: 8;
+		    case OpLessThan, OpLessThanOrEqual, OpGreaterThan, OpGreaterThanOrEqual: 9;
+		    case OpLeftShift, OpRightShift, OpZeroRightShift: 10;
+		    case OpAdd, OpSubtract: 11;
+		    case OpMultiply, OpDivide, OpModulus: 12;
+		    case OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus: 14;
 		}
 	}
-}
-
-enum ParserOperator
-{
-	PConditional(thenExpression:Expression, elseExpression:Expression);
-	PAssignment(?operator:Operator);
-	POperator(operator:Operator);
-	PCast(type:VariableType);
-	PPrefix(type:IncrementType);
-	
-	// highest precedence (could be eliminated)
-	PPostfix(type:IncrementType);
-	PDot(identifier:String);
-	PArrayAccess(index:Expression);
-	PCall(args:Array<Expression>);
 }
   
 /*-------------------- bit array ----------------------------------*/

@@ -1,4 +1,5 @@
 import xpde.parser.Scanner;
+import xpde.parser.Syntax;
 
 COMPILER CompilationUnit
   
@@ -103,6 +104,19 @@ function peek(n:Int):Token {
   var x:Token = la;
   while (n > 0) { x = scanner.Peek(); n--; }
   return x;
+}
+
+
+function checkExprStat(expression:Expression):Void {
+/*	switch (expression)
+	{
+	    case ECall(_, _, _):
+	    case EObjectInstantiation(_, _):
+	    case EAssignment(_, _, _):
+	    case EPrefix(_, _):
+	    case EPostfix(_, _):
+	    default: error("not a statement" + " (" + expression + ")");
+	}*/
 }
 
 /*-----------------------------------------------------------------*
@@ -292,7 +306,7 @@ IGNORE lf + cr + tab
 PRODUCTIONS
 
 CompilationUnit
-= [ "package" Qualident<out qualident:Array<String>> ';' ]
+= [ "package" Qualident<.out qualident:Array<String>.> ';' ]
   { ImportDeclaration }
   { TypeDeclaration }
            (. if (la.kind != _EOF) error("'class' or 'interface' expected"); .)
@@ -300,7 +314,7 @@ CompilationUnit
 
 /*---------------------------------------------------------------------------*/
 
-Qualident<out qualident:Array<String>>		(. qualident = []; .)
+Qualident<.out qualident:Array<String>.>	(. qualident = []; .)
 = ident						(. qualident.push(t.val); .)
   { '.' ident					(. qualident.push(t.val); .)
     }
@@ -327,7 +341,7 @@ TypeDeclaration
 
 /*---------------------------------------------------------------------------*/
 
-ClassOrInterfaceDeclaration           (. var m:Modifiers = new Modifiers(this); .) 
+ClassOrInterfaceDeclaration			(. var m:Modifiers = new Modifiers(this); .) 
 = { ClassModifier<m> } 
   ( ClassDeclaration<m>
   |  InterfaceDeclaration<m>
@@ -370,9 +384,9 @@ Modifier1<m:Modifiers>
 
 /*---------------------------------------------------------------------------*/
 
-Type<out dataType:DataType>
-= ( Qualident<out qualident:Array<String>	(. type = DTReference(qualident); .)
-  | BasicType<out type:PrimitiveType>		(. type = DTPrimitive(type); .) 
+Type<out type:DataType>
+= ( Qualident<.out qualident:Array<String>.>	(. type = DTReference(qualident); .)
+  | BasicType<out primitive:PrimitiveType>	(. type = DTPrimitive(primitive); .) 
   ) BracketsOpt					(. /* TODO */ .)
 .
 
@@ -398,19 +412,19 @@ BracketsOpt
 /*---------------------------------------------------------------------------*/
 
 TypeList
-= Type { "," Type }
+= Type<out type:DataType> { "," Type<out type:DataType> }
 .
 
 /*---------------------------------------------------------------------------*/
 
 FormalParameter
-= [ "final" ] Type VariableDeclaratorId
+= [ "final" ] Type<out type:DataType> VariableDeclaratorId
 .
 
 /*---------------------------------------------------------------------------*/
 
 QualidentList
-= Qualident { "," Qualident }
+= Qualident<.out qualident:Array<String>.> { "," Qualident<.out qualident:Array<String>.> }
 .
 
 /*---------------------------------------------------------------------------*/
@@ -433,9 +447,9 @@ VariableDeclaratorRest
 
 /*---------------------------------------------------------------------------*/
 
-VariableInitializer                 (. var dummy:ExprInfo = new ExprInfo(this); .) 
+VariableInitializer
 = ArrayInitializer
-| Expression<dummy>
+| Expression0<out dummy:Expression>
 .
 
 /*---------------------------------------------------------------------------*
@@ -444,7 +458,7 @@ VariableInitializer                 (. var dummy:ExprInfo = new ExprInfo(this); 
 
 ClassDeclaration<m:Modifiers>
 =                                              (. m.check(Modifier.classes); .)
-  "class" ident [ "extends" Type ] [ "implements" TypeList] ClassBody
+  "class" ident [ "extends" Type<out type:DataType> ] [ "implements" TypeList] ClassBody
 .
 
 /*---------------------------------------------------------------------------*/
@@ -478,7 +492,7 @@ MemberDecl<m:Modifiers>
 /*---------------------------------------------------------------------------*/
 
 MethodOrFieldDecl<m:Modifiers>
-= Type ident MethodOrFieldRest<m>
+= Type<out type:DataType> ident MethodOrFieldRest<m>
 .
 
 /*---------------------------------------------------------------------------*/
@@ -568,7 +582,7 @@ InterfaceMemberDecl<m:Modifiers>
 /*---------------------------------------------------------------------------*/
 
 InterfaceMethodOrFieldDecl<m:Modifiers>
-= Type ident InterfaceMethodOrFieldRest<m>
+= Type<out type:DataType> ident InterfaceMethodOrFieldRest<m>
 .
 
 /*---------------------------------------------------------------------------*/
@@ -621,20 +635,21 @@ Statement
 | "if" ParExpression<out condition:Expression>
    Statement
    [ "else" Statement ]
-| "for" "(" [ ForInit ] ";" [ Expression<out expression:Expression> ] ";" [ ForUpdate ] ")" Statement
+| "for" "(" [ ForInit ] ";" [ Expression0<out expression:Expression> ] ";" [ ForUpdate ] ")" Statement
 | "while" ParExpression<out condition:Expression>
    Statement
 | "do" Statement "while" ParExpression<out expression:Expression> ";"
 | "try" Block ( Catches [ "finally" Block ] | "finally" Block )
 | "switch" ParExpression<out expression:Expression> '{' SwitchBlockStatementGroups '}'
 | "synchronized" ParExpression<out expression:Expression> Block
-| "return" [ Expression<out expression:Expression> ] ";"
-| "throw" Expression<out expression:Expression> ";"
+| "return" [ Expression0<out expression:Expression> ] ";"
+| "throw" Expression0<out expression:Expression> ";"
 | "break" [ ident ] ';'
 | "continue" [ ident ] ';'
 | ";"
-| IF (isLabel()) ident ":" Statement
-| StatementExpression<out expression:Expression> ';'
+| IF (isLabel()) ident
+  ":" Statement
+| StatementExpression ';'
 .
 
 /*---------------------------------------------------------------------------*/
@@ -654,7 +669,7 @@ BlockStatement
 /*---------------------------------------------------------------------------*/
 
 LocalVariableDeclaration
-= [ "final" ] Type VariableDeclarators  
+= [ "final" ] Type<out type:DataType> VariableDeclarators  
 .
 
 /*---------------------------------------------------------------------------*/
@@ -679,7 +694,7 @@ ForUpdate
 /*---------------------------------------------------------------------------*/
 
 StatementExpression
-= Expression<out expression:Expression>			(. /* info.checkExprStat(); */ .) 
+= Expression0<out expression:Expression>		(. checkExprStat(expression); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -715,7 +730,7 @@ SwitchBlockStatementGroup
 /*---------------------------------------------------------------------------*/
 
 SwitchLabel
-= "case" Expression<out expression:Expression> ':'
+= "case" Expression0<out expression:Expression> ':'
 | "default" ':'
 .
 
@@ -723,47 +738,63 @@ SwitchLabel
  *---------------------------- Expressions ----------------------------------*
  *---------------------------------------------------------------------------*/
 
-Expression<out expression:Expression>		(. var builder:ExpressionBuilder = new ExpressionBuilder(this); .)
-= Expression1<builder>
+Expression0<out expression:Expression>
+= Expression1<out expression:Expression>
   {
-    AssignmentOperator<builder>
-    Expression1<builder>
-  }						(. expression = builder.generate(); .)
+    AssignmentOperator<out operator:Operator>
+    Expression1<out value:Expression>			(.
+							// rewrite assignment operators as expressions
+							if (operator != null)
+								value = EOperation(operator, expression, value);
+							// extract reference type
+							switch (expression) {
+							    case EReference(identifier, base): expression = EAssignment(identifier, base, value);
+							    case EArrayAccess(index, base): expression = EArrayAssignment(index, base, value);
+							    default: error('invalid assignment left-hand side');
+							}
+							.)
+  }							(. trace(expression); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-Expression1<builder:ExpressionBuilder>
-= Expression2<builder>
-  [ ConditionalExpr<builder> ]
+Expression1<out expression:Expression>
+= Expression2<out expression:Expression>
+  [ ConditionalExpr<out rest:Expression, expression>	(. expression = rest; .)
+    ]
 .
 
 /*---------------------------------------------------------------------------*/
 
-ConditionalExpr<builder:ExpressionBuilder>	(. var elseBuilder:ExpressionBuilder = new ExpressionBuilder(this) .) 
-= "?" Expression<out thenExpression:Expression>
-  ":" Expression1<elseBuilder>			(. var elseExpression:Expression = elseBuilder.generate();
-						   builder.pushOperator(PConditional(thenExpression, elseExpression)); .)
+ConditionalExpr<out expression:Expression, conditional:Expression>
+= "?" Expression0<out thenExpression:Expression>
+  ":" Expression1<out elseExpression:Expression>	(. expression = EConditional(conditional, thenExpression, elseExpression); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-Expression2<builder:ExpressionBuilder>
-= Expression3<builder>
-  [ Expression2Rest<builder> ]
+Expression2<out expression:Expression>
+= Expression3<out expression:Expression>
+  [ Expression2Rest<out rest:Expression, expression>	(. expression = rest; .)
+    ]
 .
 
 /*---------------------------------------------------------------------------*/
 
-Expression2Rest<builder:ExpressionBuilder>
-= Infixop<builder> Expression3<builder>
-  { Infixop<builder> Expression3<builder> }
-| "instanceof" Type<out type:DataType>		(. /* builder.pushOperator(P(OpInstanceOf)); */ .)
+Expression2Rest<out expression:Expression, operand:Expression>
+=							(. var builder = new OperationBuilder(); builder.operand(operand); .)
+  Infixop<out operator:Operator>			(. builder.operator(operator); .)
+  Expression3<out operand:Expression>			(. builder.operand(operand); .)
+  { Infixop<out operator:Operator>			(. builder.operator(operator); .)
+    Expression3<out operand:Expression>			(. builder.operand(operand); .)
+    }							(. expression = builder.reduce(); .)
+| "instanceof" Type<out type:DataType>			(. expression = EInstanceOf(expression, type); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-Expression3<builder:ExpressionBuilder>               (. var pre:Int = ExprKind.NONE;        .)
+/*
+Expression3<out expression:Expression>               (. var pre:Int = ExprKind.NONE;        .)
 = { IF(prefix.get(la.kind) || isTypeCast())
     ( PrefixOp<info>      (. if(pre == ExprKind.NONE) pre = info.getKind(); .)
     | "(" Type ")"                       (. info.setKind(ExprKind.TYPECAST);.)
@@ -771,179 +802,202 @@ Expression3<builder:ExpressionBuilder>               (. var pre:Int = ExprKind.N
   }
   Primary<info> { Selector<info> } { PostfixOp<info> }
                             (. if (pre != ExprKind.NONE) info.setKind(pre); .)
-.
+.*/
 
-/*---------------------------------------------------------------------------*/
-
-Primary<builder:ExpressionBuilder>
-= "(" Expression<expression:Expression> ")"	(. builder.pushOperand(expression); .)
-| "this"					(. builder.pushOperand(EThisReference); .)
-  ArgumentsOpt<builder>
-| "super"					(. builder.pushOperand(ESuperReference); .)
-  SuperSuffix<builder>
-| Literal<builder>
-| "new"	Creator<builder>
-| ident						(. builder.pushOperand(EReference(t.val)); .)
-  { IF(dotAndIdent()) '.' ident			(. builder.pushOperator(PDot(t.val)); .)
+Expression3<out expression:Expression>
+= ( Increment<out type:IncrementType>
+    Expression3<out rest:Expression>			(. expression = EPrefix(type, rest); .)
+    | PrefixOp<out operator:Operator>
+      Expression3<out rest:Expression>			(. expression = EOperation(operator, rest); .)
+  )
+| IF(isTypeCast()) "(" Type<out type:DataType> ")"
+  Expression3<out rest:Expression>			(. expression = ECast(type, rest); .)
+| Primary<out rest:Expression>				(. expression = rest; .)
+  { Selector<out rest:Expression, expression>		(. expression = rest; .)
     }
-  [ IF(isIdentSuffix()) IdentifierSuffix<buildDataTypeer> ]
-| BasicType<out type:PrimitiveType>
-  BracketsOpt '.' "class"			(. info.setKind(ExprKind.SELECT);  .)
-| "void" '.' "class"				(. info.setKind(ExprKind.SELECT);  .)
+  { Increment<out type:IncrementType>			(. expression = EPostfix(type, expression); .)
+    }
 .
 
 /*---------------------------------------------------------------------------*/
 
-ArgumentsOpt<builder:ExpressionBuilder>
-= [ Arguments<out arguments:Array<Expression>>	(. builder.pushOperator(PCall(arguments)); .)
+Primary<out expression:Expression>	
+= "(" Expression0<out rest:Expression> ")" 		(. expression = rest; .)
+| "this" ArgumentsOpt<out rest:Expression, EThisReference, null> 		(. expression = rest; .)
+| "super" SuperSuffix<out rest:Expression> 		(. expression = rest; .)
+| Literal<out rest:Expression> 				(. expression = rest; .)
+| "new"	Creator<out rest:Expression> 			(. expression = rest; .)
+| ident							(. expression = EReference(t.val); var base:Expression = null; .)
+  { IF(dotAndIdent()) '.' ident				(. base = expression; expression = EReference(t.val, expression); .)
+    }
+  [ IF(isIdentSuffix())IdentifierSuffix<out rest:Expression, expression, base> 	(. expression = rest; .)
     ]
+| BasicType<out type:PrimitiveType>
+  BracketsOpt '.' "class"				/* (. info.setKind(ExprKind.SELECT);  .) */
+| "void" '.' "class"					/* (. info.setKind(ExprKind.SELECT);  .) */
 .
 
 /*---------------------------------------------------------------------------*/
 
 Arguments<out arguments:Array<Expression>>		(. arguments = []; .) 
-= "(" [ Expression<out expression:Expression>		(. arguments.push(expression); .)
-        { "," Expression<out expression:Expression> 	(. arguments.push(expression); .)
+= "(" [ Expression0<out expression:Expression>		(. arguments.push(expression); .)
+        { "," Expression0<out expression:Expression> 	(. arguments.push(expression); .)
 	  } ] ")"
 .
 
 /*---------------------------------------------------------------------------*/
 
-SuperSuffix<info:ExprInfo>
-= Arguments<out arguments:Array<Expression>>	(. builder.pushOperator(PCall(arguments)); .)
-| '.' ident					(. builder.pushOperator(PDot(t.val)); .)
-  ArgumentsOpt<builder>
+ArgumentsOpt<out expression:Expression, method:Expression, base:Expression>
+=							(. expression = method; .)
+  [ Arguments<.out arguments:Array<Expression>.>	(. expression = ECall(method, base, arguments); .)
+    ]
 .
 
 /*---------------------------------------------------------------------------*/
 
-Literal<builder:ExpressionBuilder>
-= intLit					(. builder.pushOperand(EIntegerLiteral(Std.parseInt(t.val))); .)
-| floatLit					(. builder.pushOperand(EFloatLiteral(Std.parseFloat(t.val))); .)
-| charLit					(. builder.pushOperand(ECharLiteral(t.val.charCodeAt(0))); .)
-| stringLit					(. builder.pushOperand(EStringLiteral(t.val)); .)
-| "true"					(. builder.pushOperand(EBooleanLiteral(true)); .)
-| "false"					(. builder.pushOperand(EBooleanLiteral(false); .)
-| "null"					(. builder.pushOperand(ENull); .)
+SuperSuffix<out expression:Expression>
+= Arguments<.out arguments:Array<Expression>.>		(. expression = ECall(ESuperReference, null, arguments); .)
+| '.' ident						(. var method:Expression = EReference(t.val, ESuperReference); .)
+  ArgumentsOpt<out expression:Expression, method, ESuperReference>
 .
 
 /*---------------------------------------------------------------------------*/
 
-Creator<builder:ExpressionBuilder>
+Literal<out expression:Expression>
+= intLit						(. expression = EIntegerLiteral(Std.parseInt(t.val)); .)
+| floatLit						(. expression = EFloatLiteral(Std.parseFloat(t.val)); .)
+| charLit						(. expression = ECharLiteral(t.val.charCodeAt(0)); .)
+| stringLit						(. expression = EStringLiteral(t.val); .)
+| "true"						(. expression = EBooleanLiteral(true); .)
+| "false"						(. expression = EBooleanLiteral(false); .)
+| "null"						(. expression = ENull; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Creator<out expression:Expression>
 = BasicType<out type:PrimitiveType>
-  ArrayCreatorRest<builder, DTPrimitive(type)>
-| Qualident<out qualifier:Array<String>> 
-  ( ArrayCreatorRest<builder, DTReference(qualifier)>
-  | ClassCreatorRest<builder, qualifier>
+  ArrayCreatorRest<out expression:Expression, DTPrimitive(type)>
+| Qualident<.out qualifier:Array<String>.> 
+  ( ArrayCreatorRest<out expression:Expression, DTReference(qualifier)>
+  | ClassCreatorRest<out expression:Expression, qualifier>
   )
 .
 
 /*---------------------------------------------------------------------------*/
 
-ArrayCreatorRest				(. var dummy:ExprInfo = new ExprInfo(this); .) 
+ArrayCreatorRest<out expression:Expression, type:DataType>
 = "["
   ( "]" BracketsOpt ArrayInitializer
-    | Expression<dummy> "]" 
-      { IF (nonEmptyBracket()) "[" Expression<dummy> "]" } 
+    | Expression0<out dummy:Expression> "]" 
+      { IF (nonEmptyBracket()) "[" Expression0<out dummy:Expression> "]" } 
       { IF (emptyBracket()) "[" "]" }
   )
 .
 
 /*---------------------------------------------------------------------------*/
 
-ClassCreatorRest<builder:ExpressionBuilder, qualifier:Array<String>>
-= Arguments<out arguments:Array<Expression>>	(. builder.pushOperand(EObjectInstantiation(qualifier, arguments)); .)
-  [ ClassBody ]					/* TODO */
+ClassCreatorRest<.out expression:Expression, qualifier:Array<String>.>
+= Arguments<.out arguments:Array<Expression>.>		(. expression = EObjectInstantiation(qualifier, arguments); .)
+  [ ClassBody ]						/* TODO */
 .
 
 /*---------------------------------------------------------------------------*/
 
-IdentifierSuffix<info:ExprInfo>
-= '[' ']' BracketsOpt "." "class"           (. info.setKind(ExprKind.SELECT); .)
-|  Arguments                                (. info.setKind(ExprKind.APPLY);  .)
-|  "." ( "class" | "this" | "super" '.' ident ArgumentsOpt<info>)
+IdentifierSuffix<out expression:Expression, reference:Expression, base:Expression>
+= '[' ']' BracketsOpt "." "class"			(. /* info.setKind(ExprKind.SELECT); */ .)
+|  Arguments<.out arguments:Array<Expression>.>	(. expression = ECall(reference, base, arguments); .)
+|  "." ( "class" | "this" | "super" '.' ident ArgumentsOpt<out dummy:Expression, null, null>)	/*[TODO]*/
 .
 
 /*---------------------------------------------------------------------------*/
 
-Selector<info:ExprInfo>             (. var dummy:ExprInfo = new ExprInfo(this); .) 
-= "." ( ident ArgumentsOpt<info>
-      | "super" Arguments
+Selector<out expression:Expression, reference:Expression>
+= "." ( ident						(. var base:Expression = reference; reference = EReference(t.val, base); .)
+	ArgumentsOpt<out expression:Expression, reference, base>
+      | "super" Arguments<.out arguments:Array<Expression>.>
       | "new" InnerCreator
       )
-| '[' Expression<dummy> ']'
+| '[' Expression0<out index:Expression> ']'		(. expression = EArrayAccess(index, reference); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-InnerCreator
-= ident ClassCreatorRest
+InnerCreator						(. var qualifier:Array<String> = []; .)
+= ident ClassCreatorRest<out expression:Expression, qualifier>
 .
 
 /*---------------------------------------------------------------------------*/
 
-ParExpression<out parExpression:Expression>
-= "(" Expression<out expression:Expression> ")"		(. parExpression = expression; .)
+ParExpression<out expression:Expression>
+= "(" Expression0<out expression:Expression> ")"
 .
 
 /*---------------------------------------------------------------------------*/
 
-AssignmentOperator<builder:ExpressionBuilder>			
-= "="						(. builder.pushOperator(PAssignment()); .)
-| "+="						(. builder.pushOperator(PAssignment(OpAdd)); .)
-| "-="						(. builder.pushOperator(PAssignment(OpSubtract)); .)
-| "*="						(. builder.pushOperator(PAssignment(OpMultiply)); .)
-| "/="						(. builder.pushOperator(PAssignment(OpDivide)); .)
-| "&="						(. builder.pushOperator(PAssignment(OpBitwiseAnd)); .)
-| "|="						(. builder.pushOperator(PAssignment(OpBitwiseOr)); .)
-| "^="						(. builder.pushOperator(PAssignment(OpBitwiseXor)); .)
-| "%="						(. builder.pushOperator(PAssignment(OpModulus)); .)
-| "<<="						(. builder.pushOperator(PAssignment(OpLeftShift)); .)
-| ">>="						(. builder.pushOperator(PAssignment(OpRightShift)); .)
-| ">>>="					(. builder.pushOperator(PAssignment(OpZeroRightShift)); .)
+AssignmentOperator<out operator:Operator>			
+= "="						(. operator = null; .)
+| "+="						(. operator = OpAdd; .)
+| "-="						(. operator = OpSubtract; .)
+| "*="						(. operator = OpMultiply; .)
+| "/="						(. operator = OpDivide; .)
+| "&="						(. operator = OpBitwiseAnd; .)
+| "|="						(. operator = OpBitwiseOr; .)
+| "^="						(. operator = OpBitwiseXor; .)
+| "%="						(. operator = OpModulus; .)
+| "<<="						(. operator = OpLeftShift; .)
+| ">>="						(. operator = OpRightShift; .)
+| ">>>="					(. operator = OpZeroRightShift; .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-Infixop<builder:ExpressionBuilder>
-= "||"						(. builder.pushOperator(POperator(OpOr)); .)
-| "&&"						(. builder.pushOperator(POperator(OpAnd)); .)
-| "|"						(. builder.pushOperator(POperator(OpBitwiseOr)); .)
-| "^"						(. builder.pushOperator(POperator(OpBitwiseXor)); .)
-| "&"						(. builder.pushOperator(POperator(OpBitwiseAnd)); .)
-| "=="						(. builder.pushOperator(POperator(OpEqual)); .)
-| "!="						(. builder.pushOperator(POperator(OpUnequal)); .)
-| "<"						(. builder.pushOperator(POperator(OpLessThan)); .)
-| ">"						(. builder.pushOperator(POperator(OpGreaterThan)); .)
-| "<="						(. builder.pushOperator(POperator(OpLessThanOrEqual)); .)
-| ">="						(. builder.pushOperator(POperator(OpGreaterThanOrEqual)); .)
-| "<<"						(. builder.pushOperator(POperator(OpLeftShift)); .)
-| ">>"						(. builder.pushOperator(POperator(OpRightShift)); .)
-| ">>>"						(. builder.pushOperator(POperator(OpZeroRightShift)); .)
-| "+"						(. builder.pushOperator(POperator(OpAdd)); .)
-| "-"						(. builder.pushOperator(POperator(OpSubtract)); .)
-| "*"						(. builder.pushOperator(POperator(OpMultiply)); .)
-| "/"						(. builder.pushOperator(POperator(OpDivide)); .)
-| "%"						(. builder.pushOperator(POperator(OpModulus)); .)
+Infixop<out operator:Operator>
+= "||"						(. operator = OpOr; .)
+| "&&"						(. operator = OpAnd; .)
+| "|"						(. operator = OpBitwiseOr; .)
+| "^"						(. operator = OpBitwiseXor; .)
+| "&"						(. operator = OpBitwiseAnd; .)
+| "=="						(. operator = OpEqual; .)
+| "!="						(. operator = OpUnequal; .)
+| "<"						(. operator = OpLessThan; .)
+| ">"						(. operator = OpGreaterThan; .)
+| "<="						(. operator = OpLessThanOrEqual; .)
+| ">="						(. operator = OpGreaterThanOrEqual; .)
+| "<<"						(. operator = OpLeftShift; .)
+| ">>"						(. operator = OpRightShift; .)
+| ">>>"						(. operator = OpZeroRightShift; .)
+| "+"						(. operator = OpAdd; .)
+| "-"						(. operator = OpSubtract; .)
+| "*"						(. operator = OpMultiply; .)
+| "/"						(. operator = OpDivide; .)
+| "%"						(. operator = OpModulus; .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-PrefixOp<builder:ExpressionBuilder>
-= "++"						(. builder.pushOperator(PPrefix(IIncrement)); .)
-| "--"						(. builder.pushOperator(PPrefix(IDecrement)); .)
-| "!"						(. builder.pushOperator(POperator(OpNot)); .)
-| "~"						(. builder.pushOperator(POperator(OpBitwiseNot)); .)
-| "+"						(. builder.pushOperator(POperator(OpUnaryPlus)); .)
-| "-"						(. builder.pushOperator(POperator(OpUnaryMinus)); .)
+PrefixOp<out operator:Operator>
+/*= "++"
+| "--"*/
+= "!"						(. operator = OpNot; .)
+| "~"						(. operator = OpBitwiseNot; .)
+| "+"						(. operator = OpUnaryPlus; .)
+| "-"						(. operator = OpUnaryMinus; .)
 .
 
 /*---------------------------------------------------------------------------*/
 
+Increment<out type:IncrementType>
+= "++"						(. type = IIncrement; .)
+| "--"						(. type = IDecrement; .)
+.
+
+/*---------------------------------------------------------------------------*/
+/*
 PostfixOp<builder:ExpressionBuilder>
 = "++"						(. builder.pushOperator(PPostfix(IIncrement)); .)
 | "--"						(. builder.pushOperator(PPostfix(IDecrement)); .)  
-.
+.*/
 
 /*---------------------------------------------------------------------------*/
 
