@@ -292,7 +292,7 @@ IGNORE lf + cr + tab
 PRODUCTIONS
 
 CompilationUnit
-= [ "package" Qualident ';' ]
+= [ "package" Qualident<out qualident:Array<String>> ';' ]
   { ImportDeclaration }
   { TypeDeclaration }
            (. if (la.kind != _EOF) error("'class' or 'interface' expected"); .)
@@ -300,8 +300,10 @@ CompilationUnit
 
 /*---------------------------------------------------------------------------*/
 
-Qualident
-= ident { '.' ident }
+Qualident<out qualident:Array<String>>		(. qualident = []; .)
+= ident						(. qualident.push(t.val); .)
+  { '.' ident					(. qualident.push(t.val); .)
+    }
 .
 
 /*---------------------------------------------------------------------------*/
@@ -368,10 +370,10 @@ Modifier1<m:Modifiers>
 
 /*---------------------------------------------------------------------------*/
 
-Type
-= ( Qualident
-  | BasicType<out type:PrimitiveType>
-  ) BracketsOpt
+Type<out dataType:DataType>
+= ( Qualident<out qualident:Array<String>	(. type = DTReference(qualident); .)
+  | BasicType<out type:PrimitiveType>		(. type = DTPrimitive(type); .) 
+  ) BracketsOpt					(. /* TODO */ .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -614,22 +616,25 @@ VoidInterfaceMethodDeclaratorRest
 
 /*---------------------------------------------------------------------------*/
 
-Statement                           (. var dummy:ExprInfo = new ExprInfo(this); .) 
+Statement
 = Block
-| "if" ParExpression Statement [ "else" Statement ]
-| "for" "(" [ ForInit ] ";" [ Expression<dummy> ] ";" [ ForUpdate ] ")" Statement
-| "while" ParExpression Statement
-| "do" Statement "while" ParExpression ";"
+| "if" ParExpression<out condition:Expression>
+   Statement
+   [ "else" Statement ]
+| "for" "(" [ ForInit ] ";" [ Expression<out expression:Expression> ] ";" [ ForUpdate ] ")" Statement
+| "while" ParExpression<out condition:Expression>
+   Statement
+| "do" Statement "while" ParExpression<out expression:Expression> ";"
 | "try" Block ( Catches [ "finally" Block ] | "finally" Block )
-| "switch" ParExpression '{' SwitchBlockStatementGroups '}'
-| "synchronized" ParExpression Block
-| "return" [ Expression<dummy> ] ";"
-| "throw" Expression<dummy> ";"
+| "switch" ParExpression<out expression:Expression> '{' SwitchBlockStatementGroups '}'
+| "synchronized" ParExpression<out expression:Expression> Block
+| "return" [ Expression<out expression:Expression> ] ";"
+| "throw" Expression<out expression:Expression> ";"
 | "break" [ ident ] ';'
 | "continue" [ ident ] ';'
 | ";"
 | IF (isLabel()) ident ":" Statement
-| StatementExpression ';'
+| StatementExpression<out expression:Expression> ';'
 .
 
 /*---------------------------------------------------------------------------*/
@@ -673,8 +678,8 @@ ForUpdate
 
 /*---------------------------------------------------------------------------*/
 
-StatementExpression                   (. var info:ExprInfo = new ExprInfo(this); .)
-= Expression<info>                    (. info.checkExprStat();               .) 
+StatementExpression
+= Expression<out expression:Expression>			(. /* info.checkExprStat(); */ .) 
 .
 
 /*---------------------------------------------------------------------------*/
@@ -710,8 +715,7 @@ SwitchBlockStatementGroup
 /*---------------------------------------------------------------------------*/
 
 SwitchLabel
-=                                   (. var dummy:ExprInfo = new ExprInfo(this); .)
-  "case" Expression<dummy> ':'
+= "case" Expression<out expression:Expression> ':'
 | "default" ':'
 .
 
@@ -719,44 +723,47 @@ SwitchLabel
  *---------------------------- Expressions ----------------------------------*
  *---------------------------------------------------------------------------*/
 
-Expression<info:ExprInfo>
-= Expression1<info> 
-  {                                    (. var dummy:ExprInfo = new ExprInfo(this); 
-                                          info.setKind(ExprKind.ASSIGN);    .)
-    AssignmentOperator Expression1<dummy> 
-  }
+Expression<out expression:Expression>		(. var builder:ExpressionBuilder = new ExpressionBuilder(this); .)
+= Expression1<builder>
+  {
+    AssignmentOperator<builder>
+    Expression1<builder>
+  }						(. expression = builder.generate(); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-Expression1<info:ExprInfo>
-= Expression2<info> [                   (. info.setKind(ExprKind.CONDEXPR); .) 
-  ConditionalExpr ]
+Expression1<builder:ExpressionBuilder>
+= Expression2<builder>
+  [ ConditionalExpr<builder> ]
 .
 
 /*---------------------------------------------------------------------------*/
 
-ConditionalExpr                      (. var dummy:ExprInfo = new ExprInfo(this); .) 
-= "?" Expression<dummy> ":" Expression1<dummy>
+ConditionalExpr<builder:ExpressionBuilder>	(. var elseBuilder:ExpressionBuilder = new ExpressionBuilder(this) .) 
+= "?" Expression<out thenExpression:Expression>
+  ":" Expression1<elseBuilder>			(. var elseExpression:Expression = elseBuilder.generate();
+						   builder.pushOperator(PConditional(thenExpression, elseExpression)); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-Expression2<info:ExprInfo>
-= Expression3<info> [ Expression2Rest<info> ]
+Expression2<builder:ExpressionBuilder>
+= Expression3<builder>
+  [ Expression2Rest<builder> ]
 .
 
 /*---------------------------------------------------------------------------*/
 
-Expression2Rest<info:ExprInfo>      (. var dummy:ExprInfo = new ExprInfo(this); .) 
-= Infixop Expression3<dummy> { Infixop Expression3<dummy> }
-                                    (. info.setKind(ExprKind.BINARY);       .) 
-| "instanceof" Type                 (. info.setKind(ExprKind.TYPETEST);     .)
+Expression2Rest<builder:ExpressionBuilder>
+= Infixop<builder> Expression3<builder>
+  { Infixop<builder> Expression3<builder> }
+| "instanceof" Type<out type:DataType>		(. /* builder.pushOperator(P(OpInstanceOf)); */ .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-Expression3<info:ExprInfo>               (. var pre:Int = ExprKind.NONE;        .)
+Expression3<builder:ExpressionBuilder>               (. var pre:Int = ExprKind.NONE;        .)
 = { IF(prefix.get(la.kind) || isTypeCast())
     ( PrefixOp<info>      (. if(pre == ExprKind.NONE) pre = info.getKind(); .)
     | "(" Type ")"                       (. info.setKind(ExprKind.TYPECAST);.)
@@ -768,76 +775,85 @@ Expression3<info:ExprInfo>               (. var pre:Int = ExprKind.NONE;        
 
 /*---------------------------------------------------------------------------*/
 
-Primary<info:ExprInfo>
-= "(" Expression<info> ")"               (. info.setKind(ExprKind.PARENS);  .)
-| "this"                                 (. info.setKind(ExprKind.IDENT);   .)
-  ArgumentsOpt<info>
-| "super" SuperSuffix<info>
-| Literal                                (. info.setKind(ExprKind.LITERAL); .)
-| "new" Creator<info>
-| ident { IF(dotAndIdent()) '.' ident}   (. info.setKind(ExprKind.IDENT);   .)
-  [ IF(isIdentSuffix()) IdentifierSuffix<info> ]
-| BasicType<out type:PrimitiveType> BracketsOpt '.' "class"      (. info.setKind(ExprKind.SELECT);  .)
-| "void" '.' "class"                     (. info.setKind(ExprKind.SELECT);  .)
+Primary<builder:ExpressionBuilder>
+= "(" Expression<expression:Expression> ")"	(. builder.pushOperand(expression); .)
+| "this"					(. builder.pushOperand(EThisReference); .)
+  ArgumentsOpt<builder>
+| "super"					(. builder.pushOperand(ESuperReference); .)
+  SuperSuffix<builder>
+| Literal<builder>
+| "new"	Creator<builder>
+| ident						(. builder.pushOperand(EReference(t.val)); .)
+  { IF(dotAndIdent()) '.' ident			(. builder.pushOperator(PDot(t.val)); .)
+    }
+  [ IF(isIdentSuffix()) IdentifierSuffix<buildDataTypeer> ]
+| BasicType<out type:PrimitiveType>
+  BracketsOpt '.' "class"			(. info.setKind(ExprKind.SELECT);  .)
+| "void" '.' "class"				(. info.setKind(ExprKind.SELECT);  .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-ArgumentsOpt<info:ExprInfo>
-= [                                       (. info.setKind(ExprKind.APPLY);  .)
-    Arguments ]
+ArgumentsOpt<builder:ExpressionBuilder>
+= [ Arguments<out arguments:Array<Expression>>	(. builder.pushOperator(PCall(arguments)); .)
+    ]
 .
 
 /*---------------------------------------------------------------------------*/
 
-Arguments                           (. var dummy:ExprInfo = new ExprInfo(this); .) 
-= "(" [ Expression<dummy> { "," Expression<dummy> } ] ")"
+Arguments<out arguments:Array<Expression>>		(. arguments = []; .) 
+= "(" [ Expression<out expression:Expression>		(. arguments.push(expression); .)
+        { "," Expression<out expression:Expression> 	(. arguments.push(expression); .)
+	  } ] ")"
 .
 
 /*---------------------------------------------------------------------------*/
 
 SuperSuffix<info:ExprInfo>
-= Arguments                                (. info.setKind(ExprKind.APPLY); .)
-| '.' ident                                (. info.setKind(ExprKind.IDENT); .)
-  ArgumentsOpt<info>  
+= Arguments<out arguments:Array<Expression>>	(. builder.pushOperator(PCall(arguments)); .)
+| '.' ident					(. builder.pushOperator(PDot(t.val)); .)
+  ArgumentsOpt<builder>
 .
 
 /*---------------------------------------------------------------------------*/
 
-Literal
-= intLit
-| floatLit
-| charLit
-| stringLit
-| "true" | "false"
-| "null"
+Literal<builder:ExpressionBuilder>
+= intLit					(. builder.pushOperand(EIntegerLiteral(Std.parseInt(t.val))); .)
+| floatLit					(. builder.pushOperand(EFloatLiteral(Std.parseFloat(t.val))); .)
+| charLit					(. builder.pushOperand(ECharLiteral(t.val.charCodeAt(0))); .)
+| stringLit					(. builder.pushOperand(EStringLiteral(t.val)); .)
+| "true"					(. builder.pushOperand(EBooleanLiteral(true)); .)
+| "false"					(. builder.pushOperand(EBooleanLiteral(false); .)
+| "null"					(. builder.pushOperand(ENull); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-Creator<info:ExprInfo>
-= BasicType<out type:PrimitiveType> ArrayCreatorRest            (. info.setKind(ExprKind.NEWARRAY); .)
-| Qualident 
-  ( ArrayCreatorRest                    (. info.setKind(ExprKind.NEWARRAY); .)
-  | ClassCreatorRest                    (. info.setKind(ExprKind.NEWCLASS); .)
+Creator<builder:ExpressionBuilder>
+= BasicType<out type:PrimitiveType>
+  ArrayCreatorRest<builder, DTPrimitive(type)>
+| Qualident<out qualifier:Array<String>> 
+  ( ArrayCreatorRest<builder, DTReference(qualifier)>
+  | ClassCreatorRest<builder, qualifier>
   )
 .
 
 /*---------------------------------------------------------------------------*/
 
-ArrayCreatorRest                    (. var dummy:ExprInfo = new ExprInfo(this); .) 
-= "[" 
+ArrayCreatorRest				(. var dummy:ExprInfo = new ExprInfo(this); .) 
+= "["
   ( "]" BracketsOpt ArrayInitializer
-  | Expression<dummy> "]" 
-    { IF (nonEmptyBracket()) "[" Expression<dummy> "]" } 
-    { IF (emptyBracket()) "[" "]" }
+    | Expression<dummy> "]" 
+      { IF (nonEmptyBracket()) "[" Expression<dummy> "]" } 
+      { IF (emptyBracket()) "[" "]" }
   )
 .
 
 /*---------------------------------------------------------------------------*/
 
-ClassCreatorRest
-= Arguments [ ClassBody ]
+ClassCreatorRest<builder:ExpressionBuilder, qualifier:Array<String>>
+= Arguments<out arguments:Array<Expression>>	(. builder.pushOperand(EObjectInstantiation(qualifier, arguments)); .)
+  [ ClassBody ]					/* TODO */
 .
 
 /*---------------------------------------------------------------------------*/
@@ -866,67 +882,67 @@ InnerCreator
 
 /*---------------------------------------------------------------------------*/
 
-ParExpression                        (. var dummy:ExprInfo = new ExprInfo(this); .) 
-= "(" Expression<dummy> ")"
+ParExpression<out parExpression:Expression>
+= "(" Expression<out expression:Expression> ")"		(. parExpression = expression; .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-AssignmentOperator			
-= "="					
-| "+="
-| "-="
-| "*="
-| "/="
-| "&="
-| "|="
-| "^="
-| "%="
-| "<<="
-| ">>="
-| ">>>="
+AssignmentOperator<builder:ExpressionBuilder>			
+= "="						(. builder.pushOperator(PAssignment()); .)
+| "+="						(. builder.pushOperator(PAssignment(OpAdd)); .)
+| "-="						(. builder.pushOperator(PAssignment(OpSubtract)); .)
+| "*="						(. builder.pushOperator(PAssignment(OpMultiply)); .)
+| "/="						(. builder.pushOperator(PAssignment(OpDivide)); .)
+| "&="						(. builder.pushOperator(PAssignment(OpBitwiseAnd)); .)
+| "|="						(. builder.pushOperator(PAssignment(OpBitwiseOr)); .)
+| "^="						(. builder.pushOperator(PAssignment(OpBitwiseXor)); .)
+| "%="						(. builder.pushOperator(PAssignment(OpModulus)); .)
+| "<<="						(. builder.pushOperator(PAssignment(OpLeftShift)); .)
+| ">>="						(. builder.pushOperator(PAssignment(OpRightShift)); .)
+| ">>>="					(. builder.pushOperator(PAssignment(OpZeroRightShift)); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-Infixop
-= "||"
-| "&&"
-| "|"
-| "^"
-| "&"
-| "=="
-| "!="
-| "<"
-| ">"
-| "<="
-| ">="
-| "<<"
-| ">>"
-| ">>>"
-| "+"
-| "-"
-| "*"
-| "/"
-| "%"
+Infixop<builder:ExpressionBuilder>
+= "||"						(. builder.pushOperator(POperator(OpOr)); .)
+| "&&"						(. builder.pushOperator(POperator(OpAnd)); .)
+| "|"						(. builder.pushOperator(POperator(OpBitwiseOr)); .)
+| "^"						(. builder.pushOperator(POperator(OpBitwiseXor)); .)
+| "&"						(. builder.pushOperator(POperator(OpBitwiseAnd)); .)
+| "=="						(. builder.pushOperator(POperator(OpEqual)); .)
+| "!="						(. builder.pushOperator(POperator(OpUnequal)); .)
+| "<"						(. builder.pushOperator(POperator(OpLessThan)); .)
+| ">"						(. builder.pushOperator(POperator(OpGreaterThan)); .)
+| "<="						(. builder.pushOperator(POperator(OpLessThanOrEqual)); .)
+| ">="						(. builder.pushOperator(POperator(OpGreaterThanOrEqual)); .)
+| "<<"						(. builder.pushOperator(POperator(OpLeftShift)); .)
+| ">>"						(. builder.pushOperator(POperator(OpRightShift)); .)
+| ">>>"						(. builder.pushOperator(POperator(OpZeroRightShift)); .)
+| "+"						(. builder.pushOperator(POperator(OpAdd)); .)
+| "-"						(. builder.pushOperator(POperator(OpSubtract)); .)
+| "*"						(. builder.pushOperator(POperator(OpMultiply)); .)
+| "/"						(. builder.pushOperator(POperator(OpDivide)); .)
+| "%"						(. builder.pushOperator(POperator(OpModulus)); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-PrefixOp<info:ExprInfo>
-= "++"                                    (. info.setKind(ExprKind.PREINC); .)
-| "--"                                    (. info.setKind(ExprKind.PREDEC); .)
-| "!"                                     (. info.setKind(ExprKind.NOT);    .)
-| "~"                                     (. info.setKind(ExprKind.COMPL);  .)
-| "+"                                     (. info.setKind(ExprKind.POS);    .)
-| "-"                                     (. info.setKind(ExprKind.NEG);    .)
+PrefixOp<builder:ExpressionBuilder>
+= "++"						(. builder.pushOperator(PPrefix(IIncrement)); .)
+| "--"						(. builder.pushOperator(PPrefix(IDecrement)); .)
+| "!"						(. builder.pushOperator(POperator(OpNot)); .)
+| "~"						(. builder.pushOperator(POperator(OpBitwiseNot)); .)
+| "+"						(. builder.pushOperator(POperator(OpUnaryPlus)); .)
+| "-"						(. builder.pushOperator(POperator(OpUnaryMinus)); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-PostfixOp<info:ExprInfo>
-= "++"                                   (. info.setKind(ExprKind.POSTINC); .)
-| "--"                                   (. info.setKind(ExprKind.POSTDEC); .)  
+PostfixOp<builder:ExpressionBuilder>
+= "++"						(. builder.pushOperator(PPostfix(IIncrement)); .)
+| "--"						(. builder.pushOperator(PPostfix(IDecrement)); .)  
 .
 
 /*---------------------------------------------------------------------------*/
