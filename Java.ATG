@@ -1,10 +1,8 @@
 import xpde.parser.Scanner;
-import xpde.parser.Syntax;
+import xpde.parser.AST;
 import xpde.parser.EnumSet;
 
-COMPILER CompilationUnit
-
-public var compilationUnit:CompilationUnit;
+COMPILER PdeProgram
   
 /*---------------------------- token sets -----------------------------------*/
 
@@ -241,6 +239,21 @@ function isIdentSuffix():Bool {
   return (la.kind == _lpar || emptyBracket());
 }
 
+/*--------------------------- program type -------------------------*/
+
+/* http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/app/preproc/pde.g?view=markup */
+
+function isJavaProgram():Bool {
+	return (la.kind == _public && peek(1).kind == _class) || (la.kind == _import_);
+}
+
+function isActiveProgram():Bool {
+	return (la.kind == _void && peek(1).kind == _ident && peek(2).kind == _lpar);
+}
+
+/*[NOTE] pde vs. java changes are available here:
+http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/app/preproc/pde.g?view=markup */
+
 /*-------------------------------------------------------------------------*/
 
 CHARACTERS
@@ -311,10 +324,12 @@ TOKENS
   false   = "false".
   final   = "final".
   float   = "float".
+  import_ = "import".
   int     = "int".
   long    = "long".
   new     = "new".
   null    = "null".
+  public  = "public".
   short   = "short".
   static  = "static".
   super   = "super".
@@ -349,21 +364,26 @@ IGNORE lf + cr + tab
 
 PRODUCTIONS
 
-CompilationUnit<out script:ScriptScope>			(.
-							// create compilation unit
-							compilationUnit = {
-							    packageIdent: [],
-							    importIdents: [],
-							    definitions: new Hash<Definition>()
-							};
-							// script scope
-							script = new ScriptScope();
-							.)
-= [ "package" Qualident<.out qualident:Array<String>.> (. compilationUnit.packageIdent = qualident; .)
+PdeProgram<out program:PdeProgram>
+= IF (isJavaProgram())					(. program = new JavaProgram(); .)
+  CompilationUnit<cast(program, CompilationUnitScope)>
+|							(. var tempScope:BlockScope = new BlockScope(); .)
+  { (IF (isLocalVarDecl(false)) LocalVariableDeclaration<tempScope>) ";" }
+  ( IF (isActiveProgram())				(. program = new ActiveProgram(); (cast(program, Scope)).concat(tempScope); .)
+    ClassBodyDeclaration<cast(program, ClassScope)> { ClassBodyDeclaration<cast(program, ClassScope)> }
+    |							(. program = new StaticProgram(); (cast(program, Scope)).concat(tempScope); .)
+      BlockStatement<cast(program, BlockScope)> { BlockStatement<cast(program, BlockScope)> }
+    )							(. if (la.kind != _EOF) error("unexpected script termination"); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+CompilationUnit<scope:CompilationUnitScope>
+= [ "package" Qualident<.out qualident:Array<String>.> (. scope.setPackage(qualident); .)
     ';' ]
-  { ImportDeclaration<.out importIdent:Array<String>.>	(. compilationUnit.importIdents.push(importIdent); .)
+  { ImportDeclaration<.out importIdent:Array<String>.>	(. scope.pushImport(importIdent); .)
     }
-  { TypeDeclaration<script>				(. compilationUnit.definitions = script.getDefinitions(); .)
+  { TypeDeclaration<scope>
     }							(. if (la.kind != _EOF) error("'class' or 'interface' expected"); .)
 .
 
@@ -379,15 +399,15 @@ Qualident<.out qualident:Array<String>.>		(. qualident = []; .)
 
 ImportDeclaration<.out importIdent:Array<String>.>
 = "import" ident					(. importIdent = [t.val]; .)
-  QualifiedImport<.out idents:Array<String>.> ';'	(. importIdent = importIdent.concat(idents); .)
+  QualifiedImport<.out arg:Array<String>.> ';'		(. importIdent = importIdent.concat(arg); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-QualifiedImport<.out idents:Array<String>.>
-= "." (ident						(. idents = [t.val]; .)
-        [QualifiedImport<. out idents_:Array<String>.>	(. idents = idents.concat(idents_); .)
-	  ] | "*"					(. idents = ['*']; .) 
+QualifiedImport<.out importIdent:Array<String>.>
+= "." (ident						(. importIdent = [t.val]; .)
+        [QualifiedImport<. out arg:Array<String>.>	(. importIdent = importIdent.concat(arg); .)
+	  ] | "*"					(. importIdent = ['*']; .) 
           )
 .
 
@@ -523,6 +543,8 @@ VariableDeclaratorRest<.scope:Scope, modifiers:EnumSet<Modifier>, type:DataType,
 .
 
 /*---------------------------------------------------------------------------*/
+
+/*[TODO] this should not be an init expression in a block scope!!!! */
 
 VariableInitializer<out expression:Expression>
 = ArrayInitializer<out arg:Expression>			(. expression = arg; .)
@@ -1146,4 +1168,4 @@ PostfixOp<builder:ExpressionBuilder>
 
 /*---------------------------------------------------------------------------*/
 
-END CompilationUnit.
+END PdeProgram.

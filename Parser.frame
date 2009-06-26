@@ -103,12 +103,14 @@ class Parser {
 	
 -->productions
 
-	public function Parse():Void {
+	public function Parse():PdeProgram {
 		la = new Token();
 		la.val = "";		
 		Get();
--->parseRoot
+		
+		var ret:PdeProgram = -->parseRoot
 		Expect(0);
+		return ret;
 	}
 
 	private static var set:Array<Array<Bool>> = [
@@ -260,10 +262,29 @@ class Scope
 	public function getDefinitions():Hash<Definition> {
 		return definitions;
 	}
+	
+	public function concat(block:Scope) {
+		for (identifier in block.definitions.keys())
+			define(identifier, block.definitions.get(identifier));
+	}
 }
 
-class ScriptScope extends Scope
+class CompilationUnitScope extends Scope
 {
+	public var _package:Array<String>;
+	public var _imports:Array<Array<String>>;
+	
+	public function new() {
+		super();
+		_package = [];
+		_imports = [];
+	}
+	
+	public function setPackage(ident:Array<String>) { _package = ident; }	
+	public function getPackage():Array<String> { return _package; }
+	
+	public function pushImport(ident:Array<String>) { _imports.push(ident); }
+	public function getImports():Array<Array<String>> { return _imports; }
 }
 
 class ClassScope extends Scope
@@ -283,15 +304,80 @@ class BlockScope extends Scope
 		statements.push(statement);
 	}
 	
-	public function concat(block:BlockScope) {
-		for (identifier in block.definitions.keys())
-			define(identifier, block.definitions.get(identifier));
+	override public function concat(block:Scope) {
+		super.concat(block);
+		var block:BlockScope = cast(block, BlockScope);
 		for (statement in block.statements)
 			pushStatement(statement);
 	}
 	
 	public function getStatement():Statement {
 		return SBlock(definitions, statements);
+	}
+}
+
+/*-------------------- PdeProgram ----------------------------------*/
+
+interface PdeProgram
+{
+	public function getCompilationUnit(identifier:String):CompilationUnit;
+}
+
+//[TODO] writeImports: http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/app/preproc/PdePreprocessor.java?view=markup
+
+class JavaProgram extends CompilationUnitScope, implements PdeProgram
+{
+	public function getCompilationUnit(identifier:String):CompilationUnit
+	{
+		// create straight compilation unit
+		return {
+		    packageIdent: _package,
+		    importIdents: _imports,
+		    definitions: definitions
+		};
+	}
+}
+
+class ActiveProgram extends ClassScope, implements PdeProgram
+{
+	public function getCompilationUnit(identifier:String):CompilationUnit
+	{
+		// create class extension
+		var classDefinition = DClass(identifier, new EnumSet<Modifier>([MPublic]), definitions, DTReference(['PApplet']));
+
+		// definitions
+		var unitDefinitions = new Hash<Definition>();
+		unitDefinitions.set(identifier, classDefinition);
+		// create compilation unit
+		return {
+		    packageIdent: [],
+		    importIdents: [],
+		    definitions: unitDefinitions
+		};
+	}
+}
+
+class StaticProgram extends BlockScope, implements PdeProgram
+{
+	public function getCompilationUnit(identifier:String):CompilationUnit
+	{
+		// create setup function
+		var setupDefinition = DMethod('setup', null, new EnumSet<Modifier>(), [], getStatement());
+	
+		// create class extension
+		var classDefinitions = new Hash<Definition>();
+		classDefinitions.set('setup', setupDefinition);
+		var classDefinition = DClass(identifier, new EnumSet<Modifier>([MPublic]), classDefinitions, DTReference(['PApplet']));
+
+		// definitions
+		var unitDefinitions = new Hash<Definition>();
+		unitDefinitions.set(identifier, classDefinition);
+		// create compilation unit
+		return {
+		    packageIdent: [],
+		    importIdents: [],
+		    definitions: unitDefinitions
+		};
 	}
 }
   
