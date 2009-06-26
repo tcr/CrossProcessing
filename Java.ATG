@@ -1,5 +1,6 @@
 import xpde.parser.Scanner;
 import xpde.parser.Syntax;
+import xpde.parser.EnumSet;
 
 COMPILER CompilationUnit
 
@@ -119,6 +120,35 @@ function checkExprStat(expression:Expression):Void {
 	    case EPostfix(_, _):
 	    default: error("not a statement" + " (" + expression + ")");
 	}
+}
+
+/*---------------------------- modifiers ----------------------------*/
+
+public function addModifier(set:EnumSet<Modifier>, modifier:Modifier):Void {
+	if (set.contains(modifier))
+		error("repeated modifier " + modifier);
+	else
+		set.add(modifier);
+}
+
+public function checkModifierPermission(set:EnumSet<Modifier>, permission:EnumSet<Modifier>):Void {
+	for (modifier in set)
+		if (!permission.contains(modifier))
+			error("modifier(s) " + set + "not allowed here");
+	else
+		checkModifierAccess(set);
+}
+
+private function checkModifierAccess(set:EnumSet<Modifier>):Void {
+	var access:Int = 0;
+	if (set.contains(MPublic))
+		access++;
+	if (set.contains(MPrivate))
+		access++;
+	if (set.contains(MProtected))
+		access++;
+	if (access > 1)
+		error("illegal combination of modifiers: " + set);
 }
 
 /*-----------------------------------------------------------------*
@@ -358,7 +388,7 @@ TypeDeclaration<scope:Scope>
 
 /*---------------------------------------------------------------------------*/
 
-ClassOrInterfaceDeclaration<scope:Scope>		(. var m:Modifiers = new Modifiers(this); .) 
+ClassOrInterfaceDeclaration<scope:Scope>		(. var m = new EnumSet<Modifier>(); .) 
 = { ClassModifier<m> } 
   ( ClassDeclaration<scope, m>
   |  InterfaceDeclaration<scope, m>
@@ -367,36 +397,36 @@ ClassOrInterfaceDeclaration<scope:Scope>		(. var m:Modifiers = new Modifiers(thi
 
 /*---------------------------------------------------------------------------*/
 
-ClassModifier<m:Modifiers>
-= "public"						(. m.add(Modifier._public);    .)
-| "protected"						(. m.add(Modifier._protected); .)
-| "private"						(. m.add(Modifier._private);   .)
-| "abstract"						(. m.add(Modifier._abstract);  .)
-| "static"						(. m.add(Modifier._static);    .)
-| "final"						(. m.add(Modifier._final);     .)
-| "strictfp"						(. m.add(Modifier._strictfp);  .)
+ClassModifier<.m:EnumSet<Modifier>.>
+= "public"						(. addModifier(m, MPublic); .)
+| "protected"						(. addModifier(m, MProtected); .)
+| "private"						(. addModifier(m, MPrivate); .)
+| "abstract"						(. addModifier(m, MAbstract); .)
+| "static"						(. addModifier(m, MStatic); .)
+| "final"						(. addModifier(m, MFinal); .)
+| "strictfp"						(. addModifier(m, MStrictfp); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-Modifier0<m:Modifiers>
-= "static"						(. m.add(Modifier._static);    .)
+Modifier0<.m:EnumSet<Modifier>.>
+= "static"						(. addModifier(m, MStatic); .)
 |  Modifier1<m>
 .
 
 /*---------------------------------------------------------------------------*/
 
-Modifier1<m:Modifiers>
-= "public"						(. m.add(Modifier._public);      .)
-| "protected"						(. m.add(Modifier._protected);   .)
-| "private"						(. m.add(Modifier._private);     .)
-| "abstract"						(. m.add(Modifier._abstract);    .)
-| "final"						(. m.add(Modifier._final);       .)
-| "native"						(. m.add(Modifier._native);      .)
-| "synchronized"					(. m.add(Modifier._synchronized);.)
-| "transient"						(. m.add(Modifier._transient);   .)
-| "volatile"						(. m.add(Modifier._volatile);    .)
-| "strictfp"						(. m.add(Modifier._strictfp);    .)
+Modifier1<.m:EnumSet<Modifier>.>
+= "public"						(. addModifier(m, MPublic); .)
+| "protected"						(. addModifier(m, MProtected); .)
+| "private"						(. addModifier(m, MPrivate); .)
+| "abstract"						(. addModifier(m, MAbstract); .)
+| "final"						(. addModifier(m, MFinal); .)
+| "native"						(. addModifier(m, MNative); .)
+| "synchronized"					(. addModifier(m, MSynchronized); .)
+| "transient"						(. addModifier(m, MTransient); .)
+| "volatile"						(. addModifier(m, MVolatile); .)
+| "strictfp"						(. addModifier(m, MStrictfp); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -477,8 +507,8 @@ VariableInitializer
  *---------------------------- Classes --------------------------------------*
  *---------------------------------------------------------------------------*/
 
-ClassDeclaration<scope:Scope, m:Modifiers>
-= 							(. m.check(Modifier.classes); .)
+ClassDeclaration<.scope:Scope, m:EnumSet<Modifier>.>
+= 							(. checkModifierPermission(m, ModifierSet.classes); .)
   "class" ident						(. var identifier:String = t.val, extend:DataType = null, implement:Array<DataType> = null; .)
   [ "extends" Type<out arg:DataType> 			(. extend = arg; .)
     ]
@@ -498,8 +528,8 @@ ClassBody<.out definitions:Hash<Definition>.>		(. var classScope:ClassScope = ne
 
 ClassBodyDeclaration<scope:ClassScope>
 = ";"
-|							(. var m:Modifiers = new Modifiers(this); .)
-  ["static"						(. m.add(Modifier._static);           .)
+|							(. var m = new EnumSet<Modifier>(); .)
+  ["static"						(. addModifier(m, MStatic); .)
   ] ( Block<out block:Statement, null>			(. /* TODO */ .)
     | [ Modifier1<m> { Modifier0<m> } ] MemberDecl<scope, m>
     )
@@ -507,11 +537,11 @@ ClassBodyDeclaration<scope:ClassScope>
 
 /*---------------------------------------------------------------------------*/
 
-MemberDecl<scope:ClassScope, m:Modifiers>
+MemberDecl<.scope:ClassScope, m:EnumSet<Modifier>.>
 = IF (identAndLPar()) ident				(. var identifier:String = t.val; .) /* TODO: check constructor name == ident name */
   ConstructorDeclaratorRest<scope, m, identifier>
 | MethodOrFieldDecl<scope, m>
-|							(. m.check(Modifier.methods); .)
+|							(. checkModifierPermission(m, ModifierSet.methods); .)
   "void" ident						(. var identifier:String = t.val; .)
   VoidMethodDeclaratorRest<scope, m, identifier>
 | ClassDeclaration<scope, m>
@@ -520,17 +550,17 @@ MemberDecl<scope:ClassScope, m:Modifiers>
 
 /*---------------------------------------------------------------------------*/
 
-MethodOrFieldDecl<scope:ClassScope, m:Modifiers>
+MethodOrFieldDecl<.scope:ClassScope, m:EnumSet<Modifier>.>
 = Type<out type:DataType> ident				(. var identifier:String = t.val; .)
   MethodOrFieldRest<scope, m, identifier, type>
 .
 
 /*---------------------------------------------------------------------------*/
 
-MethodOrFieldRest<scope:ClassScope, m:Modifiers, identifier:String, type:DataType>
-=							(. m.check(Modifier.fields);  .) 
+MethodOrFieldRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String, type:DataType.>
+=							(. checkModifierPermission(m, ModifierSet.fields);  .) 
   VariableDeclaratorsRest ';'
-|							(. m.check(Modifier.methods); .)
+|							(. checkModifierPermission(m, ModifierSet.methods); .)
   MethodDeclaratorRest<scope, m, identifier, type>
 .
 
@@ -551,7 +581,7 @@ ArrayInitializer
 
 /*---------------------------------------------------------------------------*/
 
-MethodDeclaratorRest<scope:ClassScope, m:Modifiers, identifier:String, type:DataType>
+MethodDeclaratorRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String, type:DataType.>
 =							(. var body:Statement = null; .)
   FormalParameters<.out parameters:Array<FormalParameter>.>
   BracketsOpt [ "throws" QualidentList]
@@ -562,7 +592,7 @@ MethodDeclaratorRest<scope:ClassScope, m:Modifiers, identifier:String, type:Data
 
 /*---------------------------------------------------------------------------*/
 
-VoidMethodDeclaratorRest<scope:ClassScope, m:Modifiers, identifier:String>
+VoidMethodDeclaratorRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String.>
 =							(. var body:Statement = null; .)
   FormalParameters<.out parameters:Array<FormalParameter>.>
   ["throws" QualidentList]
@@ -572,8 +602,8 @@ VoidMethodDeclaratorRest<scope:ClassScope, m:Modifiers, identifier:String>
 
 /*---------------------------------------------------------------------------*/
 
-ConstructorDeclaratorRest<scope:ClassScope, m:Modifiers, identifier:String>
-=							(. m.check(Modifier.constructors);
+ConstructorDeclaratorRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String.>
+=							(. checkModifierPermission(m, ModifierSet.constructors);
 							   var throwsList:Array<Array<String>> = []; .)
   FormalParameters<.out parameters:Array<FormalParameter>.>
   [ "throws" QualidentList ]
@@ -592,8 +622,8 @@ FormalParameters<.out parameters:Array<FormalParameter>.>	(. parameters = []; .)
  *---------------------------- Interfaces -----------------------------------*
  *---------------------------------------------------------------------------*/
 
-InterfaceDeclaration<scope:Scope, m:Modifiers>
-=							(. m.check(Modifier.interfaces); .)
+InterfaceDeclaration<.scope:Scope, m:EnumSet<Modifier>.>
+=							(. checkModifierPermission(m, ModifierSet.interfaces); .)
   "interface" ident [ "extends" TypeList<.out extend:Array<DataType>.> ] InterfaceBody
 .
 
@@ -605,16 +635,16 @@ InterfaceBody
 
 /*---------------------------------------------------------------------------*/
 
-InterfaceBodyDeclaration				(. var m:Modifiers = new Modifiers(this); .) 
+InterfaceBodyDeclaration				(. var m = new EnumSet<Modifier>(); .) 
 = ";"
 | { Modifier0<m> } InterfaceMemberDecl<m>
 .
 
 /*---------------------------------------------------------------------------*/
 
-InterfaceMemberDecl<m:Modifiers>
+InterfaceMemberDecl<.m:EnumSet<Modifier>.>
 = InterfaceMethodOrFieldDecl<m>
-|							(. m.check(Modifier.interfaces); .)
+|							(. checkModifierPermission(m, ModifierSet.interfaces); .)
   "void" ident VoidInterfaceMethodDeclaratorRest
 | ClassDeclaration<null, m>
 | InterfaceDeclaration<null, m>
@@ -622,16 +652,16 @@ InterfaceMemberDecl<m:Modifiers>
 
 /*---------------------------------------------------------------------------*/
 
-InterfaceMethodOrFieldDecl<m:Modifiers>
+InterfaceMethodOrFieldDecl<.m:EnumSet<Modifier>.>
 = Type<out type:DataType> ident InterfaceMethodOrFieldRest<m>
 .
 
 /*---------------------------------------------------------------------------*/
 
-InterfaceMethodOrFieldRest<m:Modifiers>
-=							(. m.check(Modifier.constants);  .) 
+InterfaceMethodOrFieldRest<.m:EnumSet<Modifier>.>
+=							(. checkModifierPermission(m, ModifierSet.constants);  .) 
   ConstantDeclaratorsRest ";"
-|							(. m.check(Modifier.interfaces); .) 
+|							(. checkModifierPermission(m, ModifierSet.interfaces); .) 
   InterfaceMethodDeclaratorRest
 .
 

@@ -163,89 +163,18 @@ class FatalError {
 
 /*------------------------- modifier handling -----------------------------*/
 
-class ModifierSets {
-	static public var none:EnumSet<Modifier> = EnumSet.noneOf(Modifier);
-	static public var access:EnumSet<Modifier> = EnumSet.of([MPublic, MProtected, MPrivate]);
-	static public var classes:EnumSet<Modifier> = EnumSet.of([MPublic, MProtected, MPrivate, MAbstract, MStatic, MFinal, MStrictfp]);
-	static public var fields:EnumSet<Modifier> = EnumSet.of([MPublic, MProtected, MPrivate, MStatic, MFinal, MTransient, MVolatile]);
-	static public var methods:EnumSet<Modifier> = EnumSet.of([MPublic, MProtected, MPrivate, MAbstract, MSynchronized, MNative, MStatic, MFinal, MStrictfp]);
-	static public var constructors:EnumSet<Modifier> = EnumSet.of([MPublic, MProtected, MPrivate]);
-	static public var interfaces:EnumSet<Modifier> = EnumSet.of([MPublic, MProtected, MPrivate, MAbstract, MStatic, MStrictfp]);
-	static public var constants:EnumSet<Modifier> = EnumSet.of([MPublic, MStatic, MFinal]);
-	static public var all:EnumSet<Modifier> = EnumSet.allOf(Modifier);
+class ModifierSet
+{
+	static public var none		= new EnumSet<Modifier>([]);
+	static public var access	= new EnumSet<Modifier>([MPublic, MProtected, MPrivate]);
+	static public var classes	= new EnumSet<Modifier>([MPublic, MProtected, MPrivate, MAbstract, MStatic, MFinal, MStrictfp]);
+	static public var fields	= new EnumSet<Modifier>([MPublic, MProtected, MPrivate, MStatic, MFinal, MTransient, MVolatile]);
+	static public var methods	= new EnumSet<Modifier>([MPublic, MProtected, MPrivate, MAbstract, MSynchronized, MNative, MStatic, MFinal, MStrictfp]);
+	static public var constructors	= new EnumSet<Modifier>([MPublic, MProtected, MPrivate]);
+	static public var interfaces	= new EnumSet<Modifier>([MPublic, MProtected, MPrivate, MAbstract, MStatic, MStrictfp]);
+	static public var constants	= new EnumSet<Modifier>([MPublic, MStatic, MFinal]);
+	static public var all		= new EnumSet<Modifier>([MPublic, MProtected, MPrivate, MAbstract, MVolatile, MTransient, MSynchronized, MNative, MStatic, MFinal, MStrictfp]);
 }
-
-  class ModifierBit {
-    static public var _public:Int       = 0x0001;
-    static public var _private:Int      = 0x0002;
-    static public var _protected:Int    = 0x0004;
-    static public var _static:Int       = 0x0008;
-    static public var _final:Int        = 0x0010;
-    static public var _synchronized:Int = 0x0020;
-    static public var _volatile:Int     = 0x0040;
-    static public var _transient:Int    = 0x0080;
-    static public var _native:Int       = 0x0100;
-    static public var _abstract:Int     = 0x0400;
-    static public var _strictfp:Int     = 0x0800;
-
-  /* sets of modifiers that can be attached to certain program elements    *
-   * e.g., "constants" marks all modifiers that may be used with constants */
-    static public var none:Int         = 0x0000;
-    static public var access:Int       = _public | _protected | _private;    // 0x0007
-    static public var classes:Int      = access | _abstract | _static | _final | _strictfp;    // 0x0c1f
-    static public var fields:Int       = access | _static | _final | _transient | _volatile;  // 0x00df
-    static public var methods:Int      = access | _abstract | _static | _final | _synchronized | _native | _strictfp; // 0x0d3f
-    static public var constructors:Int = access; // 0x0007
-    static public var interfaces:Int   = access | _abstract | _static | _strictfp; // 0x0c0f
-    static public var constants:Int    = _public | _static | _final; // 0x0019
-    static public var all:Int          = 0x0dff;
-  }
-  
-  class Modifiers {
-    private var cur:Int;
-    private var parser:Parser;
-
- 	public function new(parser:Parser) {
-		cur = 0;
- 		this.parser = parser;
-        }
-
-    public function add (m:Int):Void {
-      if ((cur & m) == 0) cur |= m;
-      else parser.error("repeated modifier");
-    }
-    
-    public function check(allowed:Int):Void {
-      var wrong:Int = cur & (allowed ^ ModifierBit.all);
-      if (wrong != ModifierBit.none)
-        parser.error("modifier(s) " + toString(wrong) + "not allowed here");
-      else
-        checkAccess();
-    }
-    
-    private function checkAccess():Void {
-      var access:Int = cur & ModifierBit.access;
-      if (access != ModifierBit.none && access != ModifierBit._public && 
-          access != ModifierBit._protected && access != ModifierBit._private)
-          parser.error("illegal combination of modifiers: " + toString(access));
-    }
-    
-    private function toString(m:Int):String {
-      var s:String = "";
-      if ((m & ModifierBit._public) != 0) s += "public ";
-      if ((m & ModifierBit._private) != 0) s += "private ";
-      if ((m & ModifierBit._protected) != 0) s += "protected ";
-      if ((m & ModifierBit._static) != 0) s += "static ";
-      if ((m & ModifierBit._final) != 0) s += "final ";
-      if ((m & ModifierBit._synchronized) != 0) s += "synchronized ";
-      if ((m & ModifierBit._volatile) != 0) s += "volatile ";
-      if ((m & ModifierBit._transient) != 0) s += "transient ";
-      if ((m & ModifierBit._native) != 0) s += "native ";
-      if ((m & ModifierBit._abstract) != 0) s += "abstract ";
-      if ((m & ModifierBit._strictfp) != 0) s += "strictfp ";
-      return s;
-    }
-  }
 
 /*-------------------- expression building ----------------------------------*/
 
