@@ -180,7 +180,7 @@ class ModifierSet
 
 class OperationBuilder
 {
-	private var operators:Array<Operator>;
+	private var operators:Array<InfixOperator>;
 	private var operands:Array<Expression>;
 	
 	public function new() {
@@ -188,7 +188,7 @@ class OperationBuilder
 		operands = [];
 	}
 	
-	public function operator(operator:Operator)
+	public function operator(operator:InfixOperator)
 	{
 		reduce(lookupOperatorPrecedence(operator));
 		operators.push(operator);
@@ -206,28 +206,15 @@ class OperationBuilder
 		return operands[0];
 	}
 
-	private function reduceOperator(operator:Operator):Void
+	private function reduceOperator(operator:InfixOperator):Void
 	{
-		switch (operator)
-		{
-		    // arity: 1
-		    case OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus:
-			var a:Expression = operands.pop();
-			operands.push(EOperation(operator, a));
-
-		    // arity: 2
-		    case OpOr, OpAnd, OpBitwiseOr, OpBitwiseXor, OpBitwiseAnd, OpEqual,
-		      OpUnequal, OpLessThan, OpLessThanOrEqual, OpGreaterThan, OpGreaterThanOrEqual,
-		      OpLeftShift, OpRightShift, OpZeroRightShift, OpAdd, OpSubtract,
-		      OpMultiply, OpDivide, OpModulus:
-			var b:Expression = operands.pop(), a:Expression = operands.pop();
-			operands.push(EOperation(operator, a, b));
-		}
+		var b:Expression = operands.pop(), a:Expression = operands.pop();
+		operands.push(EInfixOperation(operator, a, b));
 	}
 	
 // http://www.particle.kth.se/~lindsey/JavaCourse/Book/Part1/Java/Chapter02/operators.html
 
-	private function lookupOperatorPrecedence(operator:Operator):Int
+	private function lookupOperatorPrecedence(operator:InfixOperator):Int
 	{
 		return switch (operator)
 		{
@@ -241,7 +228,7 @@ class OperationBuilder
 		    case OpLeftShift, OpRightShift, OpZeroRightShift: 10;
 		    case OpAdd, OpSubtract: 11;
 		    case OpMultiply, OpDivide, OpModulus: 12;
-		    case OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus: 14;
+//		    case OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus: 14;
 		}
 	}
 }

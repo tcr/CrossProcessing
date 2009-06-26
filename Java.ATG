@@ -837,11 +837,11 @@ SwitchLabel
 Expression0<out expression:Expression>
 = Expression1<out expression:Expression>
   {
-    AssignmentOperator<out operator:Operator>
+    AssignmentOperator<out operator:InfixOperator>
     Expression1<out value:Expression>			(.
 							// rewrite assignment operators as expressions
 							if (operator != null)
-								value = EOperation(operator, expression, value);
+								value = EInfixOperation(operator, expression, value);
 							// extract reference type
 							switch (expression) {
 							    case EReference(identifier, base): expression = EAssignment(identifier, base, value);
@@ -879,9 +879,9 @@ Expression2<out expression:Expression>
 
 Expression2Rest<out expression:Expression, operand:Expression>
 =							(. var builder = new OperationBuilder(); builder.operand(operand); .)
-  Infixop<out operator:Operator>			(. builder.operator(operator); .)
+  Infixop<out operator:InfixOperator>			(. builder.operator(operator); .)
   Expression3<out operand:Expression>			(. builder.operand(operand); .)
-  { Infixop<out operator:Operator>			(. builder.operator(operator); .)
+  { Infixop<out operator:InfixOperator>			(. builder.operator(operator); .)
     Expression3<out operand:Expression>			(. builder.operand(operand); .)
     }							(. expression = builder.reduce(); .)
 | "instanceof" Type<out type:DataType>			(. expression = EInstanceOf(expression, type); .)
@@ -903,8 +903,8 @@ Expression3<out expression:Expression>               (. var pre:Int = ExprKind.N
 Expression3<out expression:Expression>
 = ( Increment<out type:IncrementType>
     Expression3<out rest:Expression>			(. expression = EPrefix(type, rest); .)
-    | PrefixOp<out operator:Operator>
-      Expression3<out rest:Expression>			(. expression = EOperation(operator, rest); .)
+    | PrefixOp<out operator:PrefixOperator>
+      Expression3<out rest:Expression>			(. expression = EPrefixOperation(operator, rest); .)
   )
 | IF(isTypeCast()) "(" Type<out type:DataType> ")"
   Expression3<out rest:Expression>			(. expression = ECast(type, rest); .)
@@ -1031,7 +1031,7 @@ ParExpression<out expression:Expression>
 
 /*---------------------------------------------------------------------------*/
 
-AssignmentOperator<out operator:Operator>			
+AssignmentOperator<out operator:InfixOperator>			
 = "="						(. operator = null; .)
 | "+="						(. operator = OpAdd; .)
 | "-="						(. operator = OpSubtract; .)
@@ -1048,7 +1048,7 @@ AssignmentOperator<out operator:Operator>
 
 /*---------------------------------------------------------------------------*/
 
-Infixop<out operator:Operator>
+Infixop<out operator:InfixOperator>
 = "||"						(. operator = OpOr; .)
 | "&&"						(. operator = OpAnd; .)
 | "|"						(. operator = OpBitwiseOr; .)
@@ -1072,7 +1072,7 @@ Infixop<out operator:Operator>
 
 /*---------------------------------------------------------------------------*/
 
-PrefixOp<out operator:Operator>
+PrefixOp<out operator:PrefixOperator>
 /*= "++"
 | "--"*/
 = "!"						(. operator = OpNot; .)
