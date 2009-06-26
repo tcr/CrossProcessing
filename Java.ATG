@@ -2,6 +2,8 @@ import xpde.parser.Scanner;
 import xpde.parser.Syntax;
 
 COMPILER CompilationUnit
+
+public var compilationUnit:CompilationUnit;
   
 /*---------------------------- token sets -----------------------------------*/
 
@@ -108,7 +110,7 @@ function peek(n:Int):Token {
 
 
 function checkExprStat(expression:Expression):Void {
-/*	switch (expression)
+	switch (expression)
 	{
 	    case ECall(_, _, _):
 	    case EObjectInstantiation(_, _):
@@ -116,7 +118,7 @@ function checkExprStat(expression:Expression):Void {
 	    case EPrefix(_, _):
 	    case EPostfix(_, _):
 	    default: error("not a statement" + " (" + expression + ")");
-	}*/
+	}
 }
 
 /*-----------------------------------------------------------------*
@@ -305,102 +307,117 @@ IGNORE lf + cr + tab
 
 PRODUCTIONS
 
-CompilationUnit
-= [ "package" Qualident<.out qualident:Array<String>.> ';' ]
-  { ImportDeclaration }
-  { TypeDeclaration }
-           (. if (la.kind != _EOF) error("'class' or 'interface' expected"); .)
+CompilationUnit<out script:ScriptScope>			(.
+							// create compilation unit
+							compilationUnit = {
+							    packageIdent: [],
+							    importIdents: [],
+							    definitions: new Hash<Definition>()
+							};
+							// script scope
+							script = new ScriptScope();
+							.)
+= [ "package" Qualident<.out qualident:Array<String>.> (. compilationUnit.packageIdent = qualident; .)
+    ';' ]
+  { ImportDeclaration<.out importIdent:Array<String>.>	(. compilationUnit.importIdents.push(importIdent); .)
+    }
+  { TypeDeclaration<script>				(. compilationUnit.definitions = script.getDefinitions(); .)
+    }							(. if (la.kind != _EOF) error("'class' or 'interface' expected"); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-Qualident<.out qualident:Array<String>.>	(. qualident = []; .)
-= ident						(. qualident.push(t.val); .)
-  { '.' ident					(. qualident.push(t.val); .)
+Qualident<.out qualident:Array<String>.>		(. qualident = []; .)
+= ident							(. qualident.push(t.val); .)
+  { '.' ident						(. qualident.push(t.val); .)
     }
 .
 
 /*---------------------------------------------------------------------------*/
 
-ImportDeclaration
-= "import" ident QualifiedImport ';'
+ImportDeclaration<.out importIdent:Array<String>.>
+= "import" ident					(. importIdent = [t.val]; .)
+  QualifiedImport<.out idents:Array<String>.> ';'	(. importIdent = importIdent.concat(idents); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-QualifiedImport
-= "." (ident [QualifiedImport] | "*")
+QualifiedImport<.out idents:Array<String>.>
+= "." (ident						(. idents = [t.val]; .)
+        [QualifiedImport<. out idents_:Array<String>.>	(. idents = idents.concat(idents_); .)
+	  ] | "*"					(. idents = ['*']; .) 
+          )
 .
 
 /*---------------------------------------------------------------------------*/
 
-TypeDeclaration
-= ClassOrInterfaceDeclaration 
+TypeDeclaration<scope:Scope>
+= ClassOrInterfaceDeclaration<scope>
 | ";"
 .
 
 /*---------------------------------------------------------------------------*/
 
-ClassOrInterfaceDeclaration			(. var m:Modifiers = new Modifiers(this); .) 
+ClassOrInterfaceDeclaration<scope:Scope>		(. var m:Modifiers = new Modifiers(this); .) 
 = { ClassModifier<m> } 
-  ( ClassDeclaration<m>
-  |  InterfaceDeclaration<m>
+  ( ClassDeclaration<scope, m>
+  |  InterfaceDeclaration<scope, m>
   )
 .
 
 /*---------------------------------------------------------------------------*/
 
 ClassModifier<m:Modifiers>
-= "public"                                   (. m.add(Modifier._public);    .)
-| "protected"                                (. m.add(Modifier._protected); .)
-| "private"                                  (. m.add(Modifier._private);   .)
-| "abstract"                                 (. m.add(Modifier._abstract);  .)
-| "static"                                   (. m.add(Modifier._static);    .)
-| "final"                                    (. m.add(Modifier._final);     .)
-| "strictfp"                                 (. m.add(Modifier._strictfp);  .)
+= "public"						(. m.add(Modifier._public);    .)
+| "protected"						(. m.add(Modifier._protected); .)
+| "private"						(. m.add(Modifier._private);   .)
+| "abstract"						(. m.add(Modifier._abstract);  .)
+| "static"						(. m.add(Modifier._static);    .)
+| "final"						(. m.add(Modifier._final);     .)
+| "strictfp"						(. m.add(Modifier._strictfp);  .)
 .
 
 /*---------------------------------------------------------------------------*/
 
 Modifier0<m:Modifiers>
-= "static"                                   (. m.add(Modifier._static);    .)
+= "static"						(. m.add(Modifier._static);    .)
 |  Modifier1<m>
 .
 
 /*---------------------------------------------------------------------------*/
 
 Modifier1<m:Modifiers>
-= "public"                                  (. m.add(Modifier._public);      .)
-| "protected"                               (. m.add(Modifier._protected);   .)
-| "private"                                 (. m.add(Modifier._private);     .)
-| "abstract"                                (. m.add(Modifier._abstract);    .)
-| "final"                                   (. m.add(Modifier._final);       .)
-| "native"                                  (. m.add(Modifier._native);      .)
-| "synchronized"                            (. m.add(Modifier._synchronized);.)
-| "transient"                               (. m.add(Modifier._transient);   .)
-| "volatile"                                (. m.add(Modifier._volatile);    .)
-| "strictfp"                                (. m.add(Modifier._strictfp);    .)
+= "public"						(. m.add(Modifier._public);      .)
+| "protected"						(. m.add(Modifier._protected);   .)
+| "private"						(. m.add(Modifier._private);     .)
+| "abstract"						(. m.add(Modifier._abstract);    .)
+| "final"						(. m.add(Modifier._final);       .)
+| "native"						(. m.add(Modifier._native);      .)
+| "synchronized"					(. m.add(Modifier._synchronized);.)
+| "transient"						(. m.add(Modifier._transient);   .)
+| "volatile"						(. m.add(Modifier._volatile);    .)
+| "strictfp"						(. m.add(Modifier._strictfp);    .)
 .
 
 /*---------------------------------------------------------------------------*/
 
 Type<out type:DataType>
-= ( Qualident<.out qualident:Array<String>.>	(. type = DTReference(qualident); .)
-  | BasicType<out primitive:PrimitiveType>	(. type = DTPrimitive(primitive); .) 
-  ) BracketsOpt					(. /* TODO */ .)
+= ( Qualident<.out qualident:Array<String>.>		(. type = DTReference(qualident); .)
+  | BasicType<out primitive:PrimitiveType>		(. type = DTPrimitive(primitive); .) 
+  ) BracketsOpt						(. /* TODO */ .)
 .
 
 /*---------------------------------------------------------------------------*/
 
 BasicType<out type:PrimitiveType>
-= "byte"					(. type = PTByte; .)
-| "short"					(. type = PTShort; .)
-| "char"					(. type = PTChar; .)
-| "int"						(. type = PTInt; .)
-| "long"					(. type = PTLong; .)
-| "float"					(. type = PTFloat; .)
-| "double"					(. type = PTDouble; .)
-| "boolean"					(. type = PTBoolean; .)
+= "byte"						(. type = PTByte; .)
+| "short"						(. type = PTShort; .)
+| "char"						(. type = PTChar; .)
+| "int"							(. type = PTInt; .)
+| "long"						(. type = PTLong; .)
+| "float"						(. type = PTFloat; .)
+| "double"						(. type = PTDouble; .)
+| "boolean"						(. type = PTBoolean; .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -411,20 +428,24 @@ BracketsOpt
 
 /*---------------------------------------------------------------------------*/
 
-TypeList
-= Type<out type:DataType> { "," Type<out type:DataType> }
+TypeList<.out list:Array<DataType>.>			(. list = []; .)	
+= Type<out type:DataType>				(. list.push(type); .)
+  { "," Type<out type:DataType>				(. list.push(type); .)
+    }
 .
 
 /*---------------------------------------------------------------------------*/
 
-FormalParameter
+FormalParameter0<out parameter:FormalParameter>
 = [ "final" ] Type<out type:DataType> VariableDeclaratorId
 .
 
 /*---------------------------------------------------------------------------*/
 
-QualidentList
-= Qualident<.out qualident:Array<String>.> { "," Qualident<.out qualident:Array<String>.> }
+QualidentList						(. var list:Array<Array<String>> = []; .)
+= Qualident<.out qualident:Array<String>.>		(. list.push(qualident); .)
+  { "," Qualident<.out qualident:Array<String>.>	(. list.push(qualident); .)
+    }
 .
 
 /*---------------------------------------------------------------------------*/
@@ -456,52 +477,61 @@ VariableInitializer
  *---------------------------- Classes --------------------------------------*
  *---------------------------------------------------------------------------*/
 
-ClassDeclaration<m:Modifiers>
-=                                              (. m.check(Modifier.classes); .)
-  "class" ident [ "extends" Type<out type:DataType> ] [ "implements" TypeList] ClassBody
+ClassDeclaration<scope:Scope, m:Modifiers>
+= 							(. m.check(Modifier.classes); .)
+  "class" ident						(. var identifier:String = t.val, extend:DataType = null, implement:Array<DataType> = null; .)
+  [ "extends" Type<out arg:DataType> 			(. extend = arg; .)
+    ]
+  [ "implements" TypeList<.out arg:Array<DataType>.>	(. implement = arg; .)
+    ]
+  ClassBody<.out definitions:Hash<Definition>.>	(. scope.define(identifier, DClass(identifier, m, definitions, extend, implement)); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-ClassBody
-= "{" { ClassBodyDeclaration } "}"
+ClassBody<.out definitions:Hash<Definition>.>		(. var classScope:ClassScope = new ClassScope(); .)
+= "{" { ClassBodyDeclaration<classScope>	
+        } "}"						(. definitions = classScope.getDefinitions(); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-ClassBodyDeclaration
+ClassBodyDeclaration<scope:ClassScope>
 = ";"
-|                                     (. var m:Modifiers = new Modifiers(this); .)
-  ["static"                           (. m.add(Modifier._static);           .)
-  ] ( Block
-    | [ Modifier1<m> { Modifier0<m> } ] MemberDecl<m>
+|							(. var m:Modifiers = new Modifiers(this); .)
+  ["static"						(. m.add(Modifier._static);           .)
+  ] ( Block<out block:Statement, null>			(. /* TODO */ .)
+    | [ Modifier1<m> { Modifier0<m> } ] MemberDecl<scope, m>
     )
 .
 
 /*---------------------------------------------------------------------------*/
 
-MemberDecl<m:Modifiers>
-= IF (identAndLPar()) ident ConstructorDeclaratorRest<m>
-| MethodOrFieldDecl<m>
-|                                             (. m.check(Modifier.methods); .)
-  "void" ident VoidMethodDeclaratorRest
-| ClassDeclaration<m>
-| InterfaceDeclaration<m>
+MemberDecl<scope:ClassScope, m:Modifiers>
+= IF (identAndLPar()) ident				(. var identifier:String = t.val; .) /* TODO: check constructor name == ident name */
+  ConstructorDeclaratorRest<scope, m, identifier>
+| MethodOrFieldDecl<scope, m>
+|							(. m.check(Modifier.methods); .)
+  "void" ident						(. var identifier:String = t.val; .)
+  VoidMethodDeclaratorRest<scope, m, identifier>
+| ClassDeclaration<scope, m>
+| InterfaceDeclaration<scope, m>
 .
 
 /*---------------------------------------------------------------------------*/
 
-MethodOrFieldDecl<m:Modifiers>
-= Type<out type:DataType> ident MethodOrFieldRest<m>
+MethodOrFieldDecl<scope:ClassScope, m:Modifiers>
+= Type<out type:DataType> ident				(. var identifier:String = t.val; .)
+  MethodOrFieldRest<scope, m, identifier, type>
 .
 
 /*---------------------------------------------------------------------------*/
 
-MethodOrFieldRest<m:Modifiers>
-=                                              (. m.check(Modifier.fields);  .) 
+MethodOrFieldRest<scope:ClassScope, m:Modifiers, identifier:String, type:DataType>
+=							(. m.check(Modifier.fields);  .) 
   VariableDeclaratorsRest ';'
-|                                              (. m.check(Modifier.methods); .)
-  MethodDeclaratorRest  
+|							(. m.check(Modifier.methods); .)
+  MethodDeclaratorRest<scope, m, identifier, type>
 .
 
 /*---------------------------------------------------------------------------*/
@@ -521,39 +551,50 @@ ArrayInitializer
 
 /*---------------------------------------------------------------------------*/
 
-MethodDeclaratorRest
-= FormalParameters BracketsOpt [ "throws" QualidentList]
-  ( Block
+MethodDeclaratorRest<scope:ClassScope, m:Modifiers, identifier:String, type:DataType>
+=							(. var body:Statement = null; .)
+  FormalParameters<.out parameters:Array<FormalParameter>.>
+  BracketsOpt [ "throws" QualidentList]
+  ( Block<out block:Statement, null>			(. body = block; .)
   | ";"
-  )
+  )							(. scope.define(identifier, DMethod(identifier, type, m, parameters, body)); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-VoidMethodDeclaratorRest
-= FormalParameters ["throws" QualidentList] (Block | ';')
+VoidMethodDeclaratorRest<scope:ClassScope, m:Modifiers, identifier:String>
+=							(. var body:Statement = null; .)
+  FormalParameters<.out parameters:Array<FormalParameter>.>
+  ["throws" QualidentList]
+  (Block<out block:Statement, null>			(. body = block; .)
+    | ';')						(. scope.define(identifier, DMethod(identifier, null, m, parameters, body)); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-ConstructorDeclaratorRest<m:Modifiers>
-=                                         (. m.check(Modifier.constructors); .)
-  FormalParameters [ "throws" QualidentList ] Block
+ConstructorDeclaratorRest<scope:ClassScope, m:Modifiers, identifier:String>
+=							(. m.check(Modifier.constructors);
+							   var throwsList:Array<Array<String>> = []; .)
+  FormalParameters<.out parameters:Array<FormalParameter>.>
+  [ "throws" QualidentList ]
+  Block<out body:Statement, null>			(. scope.define(identifier, DMethod(identifier, null, m, parameters, body)); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-FormalParameters
-= "(" [ FormalParameter { "," FormalParameter } ] ")"
+FormalParameters<.out parameters:Array<FormalParameter>.>	(. parameters = []; .)
+= "(" [ FormalParameter0<out parameter:FormalParameter>		(. parameters.push(parameter); .)
+        { "," FormalParameter0<out parameter:FormalParameter>	(. parameters.push(parameter); .)
+	  } ] ")"
 .
 
 /*---------------------------------------------------------------------------*
  *---------------------------- Interfaces -----------------------------------*
  *---------------------------------------------------------------------------*/
 
-InterfaceDeclaration<m:Modifiers>
-=                                          (. m.check(Modifier.interfaces); .)
-  "interface" ident [ "extends" TypeList ] InterfaceBody
+InterfaceDeclaration<scope:Scope, m:Modifiers>
+=							(. m.check(Modifier.interfaces); .)
+  "interface" ident [ "extends" TypeList<.out extend:Array<DataType>.> ] InterfaceBody
 .
 
 /*---------------------------------------------------------------------------*/
@@ -564,7 +605,7 @@ InterfaceBody
 
 /*---------------------------------------------------------------------------*/
 
-InterfaceBodyDeclaration              (. var m:Modifiers = new Modifiers(this); .) 
+InterfaceBodyDeclaration				(. var m:Modifiers = new Modifiers(this); .) 
 = ";"
 | { Modifier0<m> } InterfaceMemberDecl<m>
 .
@@ -573,10 +614,10 @@ InterfaceBodyDeclaration              (. var m:Modifiers = new Modifiers(this); 
 
 InterfaceMemberDecl<m:Modifiers>
 = InterfaceMethodOrFieldDecl<m>
-|                                          (. m.check(Modifier.interfaces); .)
+|							(. m.check(Modifier.interfaces); .)
   "void" ident VoidInterfaceMethodDeclaratorRest
-| ClassDeclaration<m>
-| InterfaceDeclaration<m>
+| ClassDeclaration<null, m>
+| InterfaceDeclaration<null, m>
 .
 
 /*---------------------------------------------------------------------------*/
@@ -588,9 +629,9 @@ InterfaceMethodOrFieldDecl<m:Modifiers>
 /*---------------------------------------------------------------------------*/
 
 InterfaceMethodOrFieldRest<m:Modifiers>
-=                                          (. m.check(Modifier.constants);  .) 
+=							(. m.check(Modifier.constants);  .) 
   ConstantDeclaratorsRest ";"
-|                                          (. m.check(Modifier.interfaces); .) 
+|							(. m.check(Modifier.interfaces); .) 
   InterfaceMethodDeclaratorRest
 .
 
@@ -615,13 +656,13 @@ ConstantDeclarator
 /*---------------------------------------------------------------------------*/
 
 InterfaceMethodDeclaratorRest
-= FormalParameters BracketsOpt [ "throws" QualidentList] ";"
+= FormalParameters<.out parameters:Array<FormalParameter>.> BracketsOpt [ "throws" QualidentList] ";"
 .
 
 /*---------------------------------------------------------------------------*/
 
 VoidInterfaceMethodDeclaratorRest
-= FormalParameters [ "throws" QualidentList] ";"
+= FormalParameters<.out parameters:Array<FormalParameter>.> [ "throws" QualidentList] ";"
 .
 
 /*---------------------------------------------------------------------------*
@@ -630,45 +671,66 @@ VoidInterfaceMethodDeclaratorRest
 
 /*---------------------------------------------------------------------------*/
 
-Statement
-= Block
+Statement0<out statement:Statement, scope:BlockScope>
+= Block<out block:Statement, scope>			(. statement = block; .)
 | "if" ParExpression<out condition:Expression>
-   Statement
-   [ "else" Statement ]
-| "for" "(" [ ForInit ] ";" [ Expression0<out expression:Expression> ] ";" [ ForUpdate ] ")" Statement
+   Statement0<out thenStatement:Statement, scope>	(. var elseStatement:Statement = null; .)
+   [ "else" Statement0<out body:Statement, scope>	(. elseStatement = body; .)
+     ]							(. statement = SConditional(condition, thenStatement, elseStatement); .)
+| "for" "("						(. var forScope:BlockScope = new BlockScope(scope); .)
+  [ ForInit<forScope> ] ";"				(. var conditional:Expression = EBooleanLiteral(true); .)
+  [ Expression0<out expression:Expression>		(. conditional = expression; .)
+    ] ";"						(. var updateScope:BlockScope = new BlockScope(scope); .)
+  [ ForUpdate<updateScope> ] ")"
+  Statement0<out body:Statement, scope>			(. forScope.pushStatement(SLoop(conditional, body, false));
+							   forScope.concat(updateScope);
+							   statement = forScope.getStatement(); .)
 | "while" ParExpression<out condition:Expression>
-   Statement
-| "do" Statement "while" ParExpression<out expression:Expression> ";"
-| "try" Block ( Catches [ "finally" Block ] | "finally" Block )
-| "switch" ParExpression<out expression:Expression> '{' SwitchBlockStatementGroups '}'
-| "synchronized" ParExpression<out expression:Expression> Block
-| "return" [ Expression0<out expression:Expression> ] ";"
-| "throw" Expression0<out expression:Expression> ";"
-| "break" [ ident ] ';'
-| "continue" [ ident ] ';'
+  Statement0<out body:Statement, scope>			(. statement = SLoop(condition, body, false); .)
+| "do" Statement0<out body:Statement, scope>
+  "while" ParExpression<out condition:Expression> ";"	(. statement = SLoop(condition, body, true); .)
+| "try" Block<out body:Statement, scope>		(. var catches:Array<Catch> = [], finallyBody:Statement = null; .)
+  ( Catches<.out _catches:Array<Catch>, scope.>	(. catches = _catches; .)
+    [ "finally" Block<out block:Statement, scope>	(. finallyBody = block; .)
+      ]
+    | "finally" Block<out block:Statement, scope>	(. finallyBody = block; .)
+      )							(. statement = STry(body, catches, finallyBody); .)
+| "switch" ParExpression<out expression:Expression> '{' SwitchBlockStatementGroups '}' /* TODO */
+| "synchronized" ParExpression<out expression:Expression>
+  Block<out block:Statement, null>			/* TODO */
+| "return"						(. var value:Expression = null; .)
+  [ Expression0<out expression:Expression>		(. value = expression; .)
+    ] ";"						(. statement = SReturn(value); .)
+| "throw" Expression0<out expression:Expression> ";"	/* TODO */
+| "break"						(. var label:String = null; .)
+  [ ident						(. label = t.val; .)
+    ] ';'						(. statement = SBreak(label); .)
+| "continue"						(. var label:String = null; .)
+  [ ident						(. label = t.val; .)
+    ] ';'						(. statement = SContinue(label); .)
 | ";"
-| IF (isLabel()) ident
-  ":" Statement
-| StatementExpression ';'
+| IF (isLabel()) ident					(. var label:String = t.val; .)
+  ":" Statement0<out body:Statement, scope>		(. statement = SLabel(label, body); .)
+| StatementExpression<scope> ';'
 .
 
 /*---------------------------------------------------------------------------*/
 
-Block
-= "{" { BlockStatement } "}"
+Block<out statement:Statement, parent:BlockScope>	(. var scope:BlockScope = new BlockScope(parent); .)
+= "{" { BlockStatement<scope> } "}"			(. statement = scope.getStatement(); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-BlockStatement
-= IF(isLocalVarDecl(false)) LocalVariableDeclaration ";"
-| ClassOrInterfaceDeclaration
-| Statement
+BlockStatement<scope:BlockScope>
+= IF(isLocalVarDecl(false)) LocalVariableDeclaration<scope> ";"
+| ClassOrInterfaceDeclaration<scope>
+| Statement0<out statement:Statement, scope>		(. scope.pushStatement(statement); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-LocalVariableDeclaration
+LocalVariableDeclaration<scope:BlockScope>
 = [ "final" ] Type<out type:DataType> VariableDeclarators  
 .
 
@@ -680,39 +742,43 @@ VariableDeclarators
 
 /*---------------------------------------------------------------------------*/
 
-ForInit
-= IF (isLocalVarDecl(true)) LocalVariableDeclaration
-| StatementExpression MoreStatementExpressions
+ForInit<scope:BlockScope>
+= IF (isLocalVarDecl(true)) LocalVariableDeclaration<scope>
+| StatementExpression<scope> MoreStatementExpressions<scope>
 .
 
 /*---------------------------------------------------------------------------*/
 
-ForUpdate
-= StatementExpression MoreStatementExpressions
+ForUpdate<scope:BlockScope>
+= StatementExpression<scope> MoreStatementExpressions<scope>
 .
 
 /*---------------------------------------------------------------------------*/
 
-StatementExpression
-= Expression0<out expression:Expression>		(. checkExprStat(expression); .)
+StatementExpression<scope:BlockScope>
+= Expression0<out expression:Expression>		(. checkExprStat(expression);
+							   scope.pushStatement(SExpression(expression)); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-MoreStatementExpressions
-= { "," StatementExpression }
+MoreStatementExpressions<scope:BlockScope>
+= { "," StatementExpression<scope> }
 .
 
 /*---------------------------------------------------------------------------*/
 
-Catches
-= CatchClause { CatchClause }
+Catches<.out catches:Array<Catch>, scope:BlockScope.>	(. catches = []; .)
+= CatchClause<out catchBlock:Catch, scope>		(. catches.push(catchBlock); .)
+  { CatchClause<out catchBlock:Catch, scope>		(. catches.push(catchBlock); .)
+    }
 .
 
 /*---------------------------------------------------------------------------*/
 
-CatchClause
-= "catch" "(" FormalParameter ")" Block
+CatchClause<out _catch:Catch, scope:BlockScope>
+= "catch" "(" FormalParameter0<out parameter:FormalParameter> ")"
+  Block<out block:Statement, scope>			(. _catch = {parameter: parameter, body: block}; .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -724,7 +790,7 @@ SwitchBlockStatementGroups
 /*---------------------------------------------------------------------------*/
 
 SwitchBlockStatementGroup
-= SwitchLabel { BlockStatement }
+= SwitchLabel { BlockStatement<null> }
 .
 
 /*---------------------------------------------------------------------------*/
@@ -753,7 +819,7 @@ Expression0<out expression:Expression>
 							    default: error('invalid assignment left-hand side');
 							}
 							.)
-  }							(. trace(expression); .)
+  }
 .
 
 /*---------------------------------------------------------------------------*/
@@ -899,7 +965,7 @@ ArrayCreatorRest<out expression:Expression, type:DataType>
 
 ClassCreatorRest<.out expression:Expression, qualifier:Array<String>.>
 = Arguments<.out arguments:Array<Expression>.>		(. expression = EObjectInstantiation(qualifier, arguments); .)
-  [ ClassBody ]						/* TODO */
+  [ ClassBody<.out definitions:Hash<Definition>.> ]	(. /* TODO */ .)
 .
 
 /*---------------------------------------------------------------------------*/

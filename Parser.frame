@@ -163,7 +163,19 @@ class FatalError {
 
 /*------------------------- modifier handling -----------------------------*/
 
-  class Modifier {
+class ModifierSets {
+	static public var none:EnumSet<Modifier> = EnumSet.noneOf(Modifier);
+	static public var access:EnumSet<Modifier> = EnumSet.of([MPublic, MProtected, MPrivate]);
+	static public var classes:EnumSet<Modifier> = EnumSet.of([MPublic, MProtected, MPrivate, MAbstract, MStatic, MFinal, MStrictfp]);
+	static public var fields:EnumSet<Modifier> = EnumSet.of([MPublic, MProtected, MPrivate, MStatic, MFinal, MTransient, MVolatile]);
+	static public var methods:EnumSet<Modifier> = EnumSet.of([MPublic, MProtected, MPrivate, MAbstract, MSynchronized, MNative, MStatic, MFinal, MStrictfp]);
+	static public var constructors:EnumSet<Modifier> = EnumSet.of([MPublic, MProtected, MPrivate]);
+	static public var interfaces:EnumSet<Modifier> = EnumSet.of([MPublic, MProtected, MPrivate, MAbstract, MStatic, MStrictfp]);
+	static public var constants:EnumSet<Modifier> = EnumSet.of([MPublic, MStatic, MFinal]);
+	static public var all:EnumSet<Modifier> = EnumSet.allOf(Modifier);
+}
+
+  class ModifierBit {
     static public var _public:Int       = 0x0001;
     static public var _private:Int      = 0x0002;
     static public var _protected:Int    = 0x0004;
@@ -204,38 +216,38 @@ class FatalError {
     }
     
     public function check(allowed:Int):Void {
-      var wrong:Int = cur & (allowed ^ Modifier.all);
-      if (wrong != Modifier.none)
+      var wrong:Int = cur & (allowed ^ ModifierBit.all);
+      if (wrong != ModifierBit.none)
         parser.error("modifier(s) " + toString(wrong) + "not allowed here");
       else
         checkAccess();
     }
     
     private function checkAccess():Void {
-      var access:Int = cur & Modifier.access;
-      if (access != Modifier.none && access != Modifier._public && 
-          access != Modifier._protected && access != Modifier._private)
+      var access:Int = cur & ModifierBit.access;
+      if (access != ModifierBit.none && access != ModifierBit._public && 
+          access != ModifierBit._protected && access != ModifierBit._private)
           parser.error("illegal combination of modifiers: " + toString(access));
     }
     
     private function toString(m:Int):String {
       var s:String = "";
-      if ((m & Modifier._public) != 0) s += "public ";
-      if ((m & Modifier._private) != 0) s += "private ";
-      if ((m & Modifier._protected) != 0) s += "protected ";
-      if ((m & Modifier._static) != 0) s += "static ";
-      if ((m & Modifier._final) != 0) s += "final ";
-      if ((m & Modifier._synchronized) != 0) s += "synchronized ";
-      if ((m & Modifier._volatile) != 0) s += "volatile ";
-      if ((m & Modifier._transient) != 0) s += "transient ";
-      if ((m & Modifier._native) != 0) s += "native ";
-      if ((m & Modifier._abstract) != 0) s += "abstract ";
-      if ((m & Modifier._strictfp) != 0) s += "strictfp ";
+      if ((m & ModifierBit._public) != 0) s += "public ";
+      if ((m & ModifierBit._private) != 0) s += "private ";
+      if ((m & ModifierBit._protected) != 0) s += "protected ";
+      if ((m & ModifierBit._static) != 0) s += "static ";
+      if ((m & ModifierBit._final) != 0) s += "final ";
+      if ((m & ModifierBit._synchronized) != 0) s += "synchronized ";
+      if ((m & ModifierBit._volatile) != 0) s += "volatile ";
+      if ((m & ModifierBit._transient) != 0) s += "transient ";
+      if ((m & ModifierBit._native) != 0) s += "native ";
+      if ((m & ModifierBit._abstract) != 0) s += "abstract ";
+      if ((m & ModifierBit._strictfp) != 0) s += "strictfp ";
       return s;
     }
   }
 
-/*-------------------- expression handling ----------------------------------*/
+/*-------------------- expression building ----------------------------------*/
 
 class OperationBuilder
 {
@@ -302,6 +314,68 @@ class OperationBuilder
 		    case OpMultiply, OpDivide, OpModulus: 12;
 		    case OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus: 14;
 		}
+	}
+}
+
+/*-------------------- block scope ----------------------------------*/
+
+class Scope
+{
+	var parent:Scope;
+	var definitions:Hash<Definition>;
+	
+	public function new(?parent:Scope) {
+		if (parent != null)
+			this.parent = parent;
+		definitions = new Hash<Definition>();
+	}
+	
+	public function define(identifier:String, definition:Definition) {
+//[TODO] use parser.error
+		if (isDefined(identifier))
+			throw "redeclaration of " + identifier + " in block scope.";
+		definitions.set(identifier, definition);
+	}
+	
+	public function isDefined(identifier:String) {
+		return definitions.exists(identifier) || (parent != null && parent.isDefined(identifier));
+	}
+	
+	public function getDefinitions():Hash<Definition> {
+		return definitions;
+	}
+}
+
+class ScriptScope extends Scope
+{
+}
+
+class ClassScope extends Scope
+{
+}
+
+class BlockScope extends Scope
+{
+	var statements:Array<Statement>;
+	
+	public function new(?parent:Scope) {
+		super(parent);
+		statements = [];
+	}
+		
+	public function pushStatement(statement:Statement) {
+		statements.push(statement);
+	}
+	
+	public function concat(block:BlockScope) {
+		for (identifier in block.definitions.keys())
+			define(identifier, block.definitions.get(identifier));
+		for (statement in block.statements)
+			pushStatement(statement);
+	}
+	
+	public function getStatement():Statement {
+		return SBlock(definitions, statements);
 	}
 }
   
