@@ -113,7 +113,8 @@ function peek(n:Int):Token {
 function checkExprStat(expression:Expression):Void {
 	switch (expression)
 	{
-	    case ECall(_, _, _):
+	    case ECall(_, _):
+	    case ECallMethod(_, _, _):
 	    case EObjectInstantiation(_, _):
 	    case EAssignment(_, _, _):
 	    case EPrefix(_, _):
@@ -122,16 +123,27 @@ function checkExprStat(expression:Expression):Void {
 	}
 }
 
+/*---------------------------- type ----------------------------*/
+
+function compoundBrackets(type:DataType, bCount:Int):DataType {
+	if (bCount == 0)
+		return type;
+	switch (type) {
+	    case DTArray(type, dimensions): return DTArray(type, dimensions + bCount);
+	    default: return DTArray(type, bCount);
+	}
+}
+
 /*---------------------------- modifiers ----------------------------*/
 
-public function addModifier(set:EnumSet<Modifier>, modifier:Modifier):Void {
+function addModifier(set:EnumSet<Modifier>, modifier:Modifier):Void {
 	if (set.contains(modifier))
 		error("repeated modifier " + modifier);
 	else
 		set.add(modifier);
 }
 
-public function checkModifierPermission(set:EnumSet<Modifier>, permission:EnumSet<Modifier>):Void {
+function checkModifierPermission(set:EnumSet<Modifier>, permission:EnumSet<Modifier>):Void {
 	for (modifier in set)
 		if (!permission.contains(modifier))
 			error("modifier(s) " + set + "not allowed here");
@@ -139,7 +151,7 @@ public function checkModifierPermission(set:EnumSet<Modifier>, permission:EnumSe
 		checkModifierAccess(set);
 }
 
-private function checkModifierAccess(set:EnumSet<Modifier>):Void {
+function checkModifierAccess(set:EnumSet<Modifier>):Void {
 	var access:Int = 0;
 	if (set.contains(MPublic))
 		access++;
@@ -434,7 +446,7 @@ Modifier1<.m:EnumSet<Modifier>.>
 Type<out type:DataType>
 = ( Qualident<.out qualident:Array<String>.>		(. type = DTReference(qualident); .)
   | BasicType<out primitive:PrimitiveType>		(. type = DTPrimitive(primitive); .) 
-  ) BracketsOpt						(. /* TODO */ .)
+  ) BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -452,8 +464,9 @@ BasicType<out type:PrimitiveType>
 
 /*---------------------------------------------------------------------------*/
 
-BracketsOpt
-= { "[" "]" }
+BracketsOpt<out bCount:Int>				(. bCount = 0; .)
+= { "[" "]"						(. bCount++; .)
+    }
 .
 
 /*---------------------------------------------------------------------------*/
@@ -466,8 +479,16 @@ TypeList<.out list:Array<DataType>.>			(. list = []; .)
 
 /*---------------------------------------------------------------------------*/
 
+/*
 FormalParameter0<out parameter:FormalParameter>
 = [ "final" ] Type<out type:DataType> VariableDeclaratorId
+.*/
+
+FormalParameter0<out parameter:FormalParameter>		(. var modifiers = new EnumSet<Modifier>(); .)
+= [ "final"						(. modifiers.add(MFinal); .)
+    ] Type<out type:DataType> ident			(. var identifier:String = t.val; .)
+  BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
+							(. parameter = {identifier: identifier, type: type, modifiers: modifiers}; .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -480,27 +501,32 @@ QualidentList						(. var list:Array<Array<String>> = []; .)
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclarator
-= ident VariableDeclaratorRest
+VariableDeclarator<.scope:Scope, modifiers:EnumSet<Modifier>, type:DataType.>
+= ident							(. var identifier:String = t.val; .)
+  VariableDeclaratorRest<scope, modifiers, type, identifier>
 .
 
 /*---------------------------------------------------------------------------*/
 
+/*
 VariableDeclaratorId
 = ident BracketsOpt
+.*/
+
+/*---------------------------------------------------------------------------*/
+
+VariableDeclaratorRest<.scope:Scope, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
+= BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
+							(. var init:Expression = null; .)
+  [ "=" VariableInitializer<out expression:Expression>	(. init = expression; .)
+    ]							(. scope.define(identifier, DField(identifier, type, modifiers, init)); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclaratorRest
-= BracketsOpt [ "=" VariableInitializer ]
-.
-
-/*---------------------------------------------------------------------------*/
-
-VariableInitializer
-= ArrayInitializer
-| Expression0<out dummy:Expression>
+VariableInitializer<out expression:Expression>
+= ArrayInitializer<out arg:Expression>			(. expression = arg; .)
+| Expression0<out arg:Expression>			(. expression = arg; .)
 .
 
 /*---------------------------------------------------------------------------*
@@ -559,22 +585,25 @@ MethodOrFieldDecl<.scope:ClassScope, m:EnumSet<Modifier>.>
 
 MethodOrFieldRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String, type:DataType.>
 =							(. checkModifierPermission(m, ModifierSet.fields);  .) 
-  VariableDeclaratorsRest ';'
+  VariableDeclaratorsRest<scope, m, type, identifier> ';'
 |							(. checkModifierPermission(m, ModifierSet.methods); .)
   MethodDeclaratorRest<scope, m, identifier, type>
 .
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclaratorsRest
-= VariableDeclaratorRest {',' VariableDeclarator}
+VariableDeclaratorsRest<.scope:ClassScope, m:EnumSet<Modifier>, type:DataType, identifier:String.>
+= VariableDeclaratorRest<scope, m, type, identifier>
+  {',' VariableDeclarator<scope, m, type>}
 .
 
 /*---------------------------------------------------------------------------*/
 
-ArrayInitializer
-= "{" [ VariableInitializer 
-        { IF (commaAndNoRBrace()) "," VariableInitializer }       
+ArrayInitializer<out expression:Expression>		(. var values:Array<Expression> = []; .)
+= "{" [ VariableInitializer<out arg:Expression>		(. values.push(arg); .)
+        { IF (commaAndNoRBrace()) ","
+	  VariableInitializer<out arg:Expression>	(. values.push(arg); .)
+	  }       
       ] [ "," ] 
   "}"
 .
@@ -584,7 +613,7 @@ ArrayInitializer
 MethodDeclaratorRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String, type:DataType.>
 =							(. var body:Statement = null; .)
   FormalParameters<.out parameters:Array<FormalParameter>.>
-  BracketsOpt [ "throws" QualidentList]
+  BracketsOpt<out bCount:Int> [ "throws" QualidentList]
   ( Block<out block:Statement, null>			(. body = block; .)
   | ";"
   )							(. scope.define(identifier, DMethod(identifier, type, m, parameters, body)); .)
@@ -674,7 +703,7 @@ ConstantDeclaratorsRest
 /*---------------------------------------------------------------------------*/
 
 ConstantDeclaratorRest
-= BracketsOpt "=" VariableInitializer
+= BracketsOpt<out bCount:Int> "=" VariableInitializer<out expression:Expression>
 .
 
 /*---------------------------------------------------------------------------*/
@@ -686,7 +715,7 @@ ConstantDeclarator
 /*---------------------------------------------------------------------------*/
 
 InterfaceMethodDeclaratorRest
-= FormalParameters<.out parameters:Array<FormalParameter>.> BracketsOpt [ "throws" QualidentList] ";"
+= FormalParameters<.out parameters:Array<FormalParameter>.> BracketsOpt<out bCount:Int> [ "throws" QualidentList] ";"
 .
 
 /*---------------------------------------------------------------------------*/
@@ -741,7 +770,7 @@ Statement0<out statement:Statement, scope:BlockScope>
 | ";"
 | IF (isLabel()) ident					(. var label:String = t.val; .)
   ":" Statement0<out body:Statement, scope>		(. statement = SLabel(label, body); .)
-| StatementExpression<scope> ';'
+| StatementExpression<out arg:Statement> ';'		(. statement = arg; .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -760,40 +789,52 @@ BlockStatement<scope:BlockScope>
 
 /*---------------------------------------------------------------------------*/
 
-LocalVariableDeclaration<scope:BlockScope>
-= [ "final" ] Type<out type:DataType> VariableDeclarators  
+LocalVariableDeclaration<scope:BlockScope>		(. var modifiers = new EnumSet<Modifier>(); .)
+= [ "final"						(. modifiers.add(MFinal); .)
+    ] Type<out type:DataType> VariableDeclarators<scope, modifiers, type>
 .
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclarators
-= VariableDeclarator { "," VariableDeclarator }
+VariableDeclarators<scope, modifiers, type>
+= VariableDeclarator<scope, modifiers, type>
+  { "," VariableDeclarator<scope, modifiers, type> }
 .
 
 /*---------------------------------------------------------------------------*/
 
 ForInit<scope:BlockScope>
 = IF (isLocalVarDecl(true)) LocalVariableDeclaration<scope>
-| StatementExpression<scope> MoreStatementExpressions<scope>
+| StatementExpression<out statement:Statement>			(. scope.pushStatement(statement); .)
+  MoreStatementExpressions<.out statements:Array<Statement>.>	(.
+								for (statement in statements)
+									scope.pushStatement(statement);
+								.)
 .
 
 /*---------------------------------------------------------------------------*/
 
 ForUpdate<scope:BlockScope>
-= StatementExpression<scope> MoreStatementExpressions<scope>
+= StatementExpression<out statement:Statement>			(. scope.pushStatement(statement); .)
+  MoreStatementExpressions<.out statements:Array<Statement>.>	(.
+								for (statement in statements)
+									scope.pushStatement(statement);
+								.)
 .
 
 /*---------------------------------------------------------------------------*/
 
-StatementExpression<scope:BlockScope>
+StatementExpression<out statement:Statement>
 = Expression0<out expression:Expression>		(. checkExprStat(expression);
-							   scope.pushStatement(SExpression(expression)); .)
+							   statement = SExpression(expression); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-MoreStatementExpressions<scope:BlockScope>
-= { "," StatementExpression<scope> }
+MoreStatementExpressions<.out statements:Array<Statement>.>
+=							(. statements = []; .)
+  { "," StatementExpression<out statement:Statement>	(. statements.push(statement); .)
+    }
 .
 
 /*---------------------------------------------------------------------------*/
@@ -918,18 +959,18 @@ Expression3<out expression:Expression>
 /*---------------------------------------------------------------------------*/
 
 Primary<out expression:Expression>	
-= "(" Expression0<out rest:Expression> ")" 		(. expression = rest; .)
-| "this" ArgumentsOpt<out rest:Expression, EThisReference, null> 		(. expression = rest; .)
-| "super" SuperSuffix<out rest:Expression> 		(. expression = rest; .)
-| Literal<out rest:Expression> 				(. expression = rest; .)
-| "new"	Creator<out rest:Expression> 			(. expression = rest; .)
-| ident							(. expression = EReference(t.val); var base:Expression = null; .)
-  { IF(dotAndIdent()) '.' ident				(. base = expression; expression = EReference(t.val, expression); .)
-    }
-  [ IF(isIdentSuffix())IdentifierSuffix<out rest:Expression, expression, base> 	(. expression = rest; .)
+= "(" Expression0<out arg:Expression> ")" 		(. expression = arg; .)
+| "this" ArgumentsOpt<out arg:Expression, EThisReference> 	(. expression = arg; .)
+| "super" SuperSuffix<out arg:Expression> 		(. expression = arg; .)
+| Literal<out arg:Expression> 				(. expression = arg; .)
+| "new"	Creator<out arg:Expression> 			(. expression = arg; .)
+| ident							(. var identifier:String = t.val, base:Expression = null; .)
+  { IF(dotAndIdent()) '.' ident				(. base = EReference(identifier, base); identifier = t.val; .)
+    }							(. expression = EReference(identifier, base); .)
+  [ IF(isIdentSuffix()) IdentifierSuffix<out arg:Expression, identifier, base> 	(. expression = arg; .)
     ]
 | BasicType<out type:PrimitiveType>
-  BracketsOpt '.' "class"				/* (. info.setKind(ExprKind.SELECT);  .) */
+  BracketsOpt<out bCount:Int> '.' "class"		/* (. info.setKind(ExprKind.SELECT);  .) */
 | "void" '.' "class"					/* (. info.setKind(ExprKind.SELECT);  .) */
 .
 
@@ -943,18 +984,24 @@ Arguments<out arguments:Array<Expression>>		(. arguments = []; .)
 
 /*---------------------------------------------------------------------------*/
 
-ArgumentsOpt<out expression:Expression, method:Expression, base:Expression>
+ArgumentsOpt<out expression:Expression, method:Expression>
 =							(. expression = method; .)
-  [ Arguments<.out arguments:Array<Expression>.>	(. expression = ECall(method, base, arguments); .)
+  [ Arguments<.out arguments:Array<Expression>.>	(. expression = ECall(method, arguments); .)
+    ]
+.
+
+ArgumentsMethodOpt<out expression:Expression, identifier:String, base:Expression>
+=							(. expression = EReference(identifier, base); .)
+  [ Arguments<.out arguments:Array<Expression>.>	(. expression = ECallMethod(identifier, base, arguments); .)
     ]
 .
 
 /*---------------------------------------------------------------------------*/
 
 SuperSuffix<out expression:Expression>
-= Arguments<.out arguments:Array<Expression>.>		(. expression = ECall(ESuperReference, null, arguments); .)
-| '.' ident						(. var method:Expression = EReference(t.val, ESuperReference); .)
-  ArgumentsOpt<out expression:Expression, method, ESuperReference>
+= Arguments<.out arguments:Array<Expression>.>		(. expression = ECall(ESuperReference, arguments); .)
+| '.' ident						(. var identifier:String = t.val; .)
+  ArgumentsMethodOpt<out arg:Expression, identifier, ESuperReference>	(. expression = arg; .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -973,10 +1020,10 @@ Literal<out expression:Expression>
 
 Creator<out expression:Expression>
 = BasicType<out type:PrimitiveType>
-  ArrayCreatorRest<out expression:Expression, DTPrimitive(type)>
+  ArrayCreatorRest<out arg:Expression, DTPrimitive(type)>		(. expression = arg; .)
 | Qualident<.out qualifier:Array<String>.> 
-  ( ArrayCreatorRest<out expression:Expression, DTReference(qualifier)>
-  | ClassCreatorRest<out expression:Expression, qualifier>
+  ( ArrayCreatorRest<out arg:Expression, DTReference(qualifier)>	(. expression = arg; .)
+  | ClassCreatorRest<out arg:Expression, qualifier>			(. expression = arg; .)
   )
 .
 
@@ -984,7 +1031,7 @@ Creator<out expression:Expression>
 
 ArrayCreatorRest<out expression:Expression, type:DataType>
 = "["
-  ( "]" BracketsOpt ArrayInitializer
+  ( "]" BracketsOpt<out bCount:Int> ArrayInitializer<out expression:Expression>
     | Expression0<out dummy:Expression> "]" 
       { IF (nonEmptyBracket()) "[" Expression0<out dummy:Expression> "]" } 
       { IF (emptyBracket()) "[" "]" }
@@ -1000,21 +1047,23 @@ ClassCreatorRest<.out expression:Expression, qualifier:Array<String>.>
 
 /*---------------------------------------------------------------------------*/
 
-IdentifierSuffix<out expression:Expression, reference:Expression, base:Expression>
-= '[' ']' BracketsOpt "." "class"			(. /* info.setKind(ExprKind.SELECT); */ .)
-|  Arguments<.out arguments:Array<Expression>.>	(. expression = ECall(reference, base, arguments); .)
-|  "." ( "class" | "this" | "super" '.' ident ArgumentsOpt<out dummy:Expression, null, null>)	/*[TODO]*/
+IdentifierSuffix<out expression:Expression, identifier:String, base:Expression>
+= '[' ']' BracketsOpt<out bCount:Int> "." "class"	(. /* info.setKind(ExprKind.SELECT); */ .)
+|  Arguments<.out arguments:Array<Expression>.>	(. expression = base == null ? ECall(EReference(identifier), arguments) : ECallMethod(identifier, base, arguments); .)
+|  "." ( "class" | "this" |
+         "super" '.' ident
+	 ArgumentsMethodOpt<out dummy:Expression, null, null>)	(. /* TODO */ .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-Selector<out expression:Expression, reference:Expression>
-= "." ( ident						(. var base:Expression = reference; reference = EReference(t.val, base); .)
-	ArgumentsOpt<out expression:Expression, reference, base>
-      | "super" Arguments<.out arguments:Array<Expression>.>
+Selector<out expression:Expression, base:Expression>
+= "." ( ident							(. var identifier:String = t.val; .)
+	ArgumentsMethodOpt<out arg:Expression, identifier, base>	(. expression = arg; .)
+      | "super" Arguments<.out arguments:Array<Expression>.>	(. /* TODO */ .)
       | "new" InnerCreator
       )
-| '[' Expression0<out index:Expression> ']'		(. expression = EArrayAccess(index, reference); .)
+| '[' Expression0<out index:Expression> ']'			(. expression = EArrayAccess(index, base); .)
 .
 
 /*---------------------------------------------------------------------------*/
