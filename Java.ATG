@@ -539,7 +539,7 @@ VariableDeclaratorRest<.scope:Scope, modifiers:EnumSet<Modifier>, type:DataType,
 = BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
 							(. var init:Expression = null; .)
   [ "=" VariableInitializer<out expression:Expression>	(. init = expression; .)
-    ]							(. scope.define(identifier, DField(identifier, type, modifiers, init)); .)
+    ]							(. scope.pushDefinition(DField(identifier, type, modifiers, init)); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -562,12 +562,12 @@ ClassDeclaration<.scope:Scope, m:EnumSet<Modifier>.>
     ]
   [ "implements" TypeList<.out arg:Array<DataType>.>	(. implement = arg; .)
     ]
-  ClassBody<.out definitions:Hash<Definition>.>	(. scope.define(identifier, DClass(identifier, m, definitions, extend, implement)); .)
+  ClassBody<.out definitions:Array<Definition>.>	(. scope.pushDefinition(DClass(identifier, m, definitions, extend, implement)); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-ClassBody<.out definitions:Hash<Definition>.>		(. var classScope:ClassScope = new ClassScope(); .)
+ClassBody<.out definitions:Array<Definition>.>		(. var classScope:ClassScope = new ClassScope(); .)
 = "{" { ClassBodyDeclaration<classScope>	
         } "}"						(. definitions = classScope.getDefinitions(); .)
 .
@@ -638,7 +638,7 @@ MethodDeclaratorRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String, 
   BracketsOpt<out bCount:Int> [ "throws" QualidentList]
   ( Block<out block:Statement, null>			(. body = block; .)
   | ";"
-  )							(. scope.define(identifier, DMethod(identifier, type, m, parameters, body)); .)
+  )							(. scope.pushDefinition(DMethod(identifier, type, m, parameters, body)); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -648,7 +648,7 @@ VoidMethodDeclaratorRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:Stri
   FormalParameters<.out parameters:Array<FormalParameter>.>
   ["throws" QualidentList]
   (Block<out block:Statement, null>			(. body = block; .)
-    | ';')						(. scope.define(identifier, DMethod(identifier, null, m, parameters, body)); .)
+    | ';')						(. scope.pushDefinition(DMethod(identifier, null, m, parameters, body)); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -658,7 +658,7 @@ ConstructorDeclaratorRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:Str
 							   var throwsList:Array<Array<String>> = []; .)
   FormalParameters<.out parameters:Array<FormalParameter>.>
   [ "throws" QualidentList ]
-  Block<out body:Statement, null>			(. scope.define(identifier, DMethod(identifier, null, m, parameters, body)); .)
+  Block<out body:Statement, null>			(. scope.pushDefinition(DMethod(identifier, null, m, parameters, body)); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -758,10 +758,10 @@ Statement0<out statement:Statement, scope:BlockScope>
    Statement0<out thenStatement:Statement, scope>	(. var elseStatement:Statement = null; .)
    [ "else" Statement0<out body:Statement, scope>	(. elseStatement = body; .)
      ]							(. statement = SConditional(condition, thenStatement, elseStatement); .)
-| "for" "("						(. var forScope:BlockScope = new BlockScope(scope); .)
+| "for" "("						(. var forScope:BlockScope = new BlockScope(); .)
   [ ForInit<forScope> ] ";"				(. var conditional:Expression = EBooleanLiteral(true); .)
   [ Expression0<out expression:Expression>		(. conditional = expression; .)
-    ] ";"						(. var updateScope:BlockScope = new BlockScope(scope); .)
+    ] ";"						(. var updateScope:BlockScope = new BlockScope(); .)
   [ ForUpdate<updateScope> ] ")"
   Statement0<out body:Statement, scope>			(. forScope.pushStatement(SLoop(conditional, body, false));
 							   forScope.concat(updateScope);
@@ -797,7 +797,7 @@ Statement0<out statement:Statement, scope:BlockScope>
 
 /*---------------------------------------------------------------------------*/
 
-Block<out statement:Statement, parent:BlockScope>	(. var scope:BlockScope = new BlockScope(parent); .)
+Block<out statement:Statement, parent:BlockScope>	(. var scope:BlockScope = new BlockScope(); .)
 = "{" { BlockStatement<scope> } "}"			(. statement = scope.getStatement(); .)
 .
 
@@ -980,7 +980,7 @@ Expression3<out expression:Expression>
 
 /*---------------------------------------------------------------------------*/
 
-Primary<out expression:Expression>	
+Primary<out expression:Expression>
 = "(" Expression0<out arg:Expression> ")" 		(. expression = arg; .)
 | "this" ArgumentsOpt<out arg:Expression, EThisReference> 	(. expression = arg; .)
 | "super" SuperSuffix<out arg:Expression> 		(. expression = arg; .)
@@ -1064,7 +1064,7 @@ ArrayCreatorRest<out expression:Expression, type:DataType>
 
 ClassCreatorRest<.out expression:Expression, qualifier:Array<String>.>
 = Arguments<.out arguments:Array<Expression>.>		(. expression = EObjectInstantiation(qualifier, arguments); .)
-  [ ClassBody<.out definitions:Hash<Definition>.> ]	(. /* TODO */ .)
+  [ ClassBody<.out definitions:Array<Definition>.> ]	(. /* TODO */ .)
 .
 
 /*---------------------------------------------------------------------------*/

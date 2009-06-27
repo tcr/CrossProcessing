@@ -240,32 +240,23 @@ class OperationBuilder
 class Scope
 {
 	var parent:Scope;
-	var definitions:Hash<Definition>;
+	var definitions:Array<Definition>;
 	
-	public function new(?parent:Scope) {
-		if (parent != null)
-			this.parent = parent;
-		definitions = new Hash<Definition>();
+	public function new() {
+		definitions = [];
 	}
 	
-	public function define(identifier:String, definition:Definition) {
-//[TODO] use parser.error
-		if (isDefined(identifier))
-			throw "redeclaration of " + identifier + " in block scope.";
-		definitions.set(identifier, definition);
+	public function pushDefinition(definition:Definition) {
+		definitions.push(definition);
 	}
 	
-	public function isDefined(identifier:String) {
-		return definitions.exists(identifier) || (parent != null && parent.isDefined(identifier));
-	}
-	
-	public function getDefinitions():Hash<Definition> {
+	public function getDefinitions():Array<Definition> {
 		return definitions;
 	}
 	
 	public function concat(block:Scope) {
-		for (identifier in block.definitions.keys())
-			define(identifier, block.definitions.get(identifier));
+		for (definition in block.definitions)
+			pushDefinition(definition);
 	}
 }
 
@@ -295,8 +286,8 @@ class BlockScope extends Scope
 {
 	var statements:Array<Statement>;
 	
-	public function new(?parent:Scope) {
-		super(parent);
+	public function new() {
+		super();
 		statements = [];
 	}
 		
@@ -345,14 +336,11 @@ class ActiveProgram extends ClassScope, implements PdeProgram
 		// create class extension
 		var classDefinition = DClass(identifier, new EnumSet<Modifier>([MPublic]), definitions, DTReference(['PApplet']));
 
-		// definitions
-		var unitDefinitions = new Hash<Definition>();
-		unitDefinitions.set(identifier, classDefinition);
 		// create compilation unit
 		return {
 		    packageIdent: [],
 		    importIdents: [],
-		    definitions: unitDefinitions
+		    definitions: [classDefinition]
 		};
 	}
 }
@@ -365,18 +353,13 @@ class StaticProgram extends BlockScope, implements PdeProgram
 		var setupDefinition = DMethod('setup', null, new EnumSet<Modifier>(), [], getStatement());
 	
 		// create class extension
-		var classDefinitions = new Hash<Definition>();
-		classDefinitions.set('setup', setupDefinition);
-		var classDefinition = DClass(identifier, new EnumSet<Modifier>([MPublic]), classDefinitions, DTReference(['PApplet']));
+		var classDefinition = DClass(identifier, new EnumSet<Modifier>([MPublic]), [setupDefinition], DTReference(['PApplet']));
 
-		// definitions
-		var unitDefinitions = new Hash<Definition>();
-		unitDefinitions.set(identifier, classDefinition);
 		// create compilation unit
 		return {
 		    packageIdent: [],
 		    importIdents: [],
-		    definitions: unitDefinitions
+		    definitions: [classDefinition]
 		};
 	}
 }
