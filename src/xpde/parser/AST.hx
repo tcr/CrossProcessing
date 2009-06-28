@@ -132,12 +132,20 @@ enum PrimitiveType
 	PTBoolean;
 }
 
-enum Definition
+enum TopLevelDefinition
 {
-//	DVariable(identifier:String, type:DataType);
+	DClass(identifier:String, modifiers:EnumSet<Modifier>, definitions:Array<Definition>, ?extend:DataType, ?implement:Array<DataType>, ?clinit:Statement, ?init:Statement);
+//	DInterface(identifier:String, modifiers:EnumSet<Modifier>, definitions:Array<Definition>, ?extend:DataType, ?implement:Array<DataType>, ?clinit:Statement, ?init:Statement);
+}
+
+enum ClassDefinition
+{
 	DMethod(identifier:String, type:DataType, modifiers:EnumSet<Modifier>, params:Array<FormalParameter>, body:Statement);
 	DField(identifier:String, type:DataType, modifiers:EnumSet<Modifier>);
-	DClass(identifier:String, modifiers:EnumSet<Modifier>, definitions:Array<Definition>, ?extend:DataType, ?implement:Array<DataType>, ?clinit:Statement, ?init:Statement);
+}
+
+enum BlockDefinition {
+	DVariable(identifier:String, type:DataType, modifiers:EnumSet<Modifier>);
 }
 
 enum Modifier {
@@ -158,12 +166,4 @@ typedef FormalParameter = {
 	var identifier:String;
 	var type:DataType;
 	var modifiers:EnumSet<Modifier>;
-}
-
-/* compilation unit */
-
-typedef CompilationUnit = {
-	var packageIdent:Array<String>;
-	var importIdents:Array < Array < String >> ;
-	var definitions:Array<Definition>;
 }
