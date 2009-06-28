@@ -312,9 +312,20 @@ class ClassScope extends BlockScope
 
 /*-------------------- PdeProgram ----------------------------------*/
 
-interface PdeProgram
+interface CompilationUnit
 {
-	public function getCompilationUnit(identifier:String):CompilationUnit;
+	public function setPackage();
+	public function getDefinitions():Array<TopLevelDefinition>;
+//[TODO] get name?
+}
+//[TODO] also, PDE doesn't really respect compilation units (doesn't allow package definitions, requires a name for each unit)
+
+/* compilation unit */
+
+typedef CompilationUnit = {
+	var packageIdent:Array<String>;
+	var importIdents:Array < Array < String >> ;
+	var definitions:Array<Definition>;
 }
 
 //[TODO] writeImports: http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/app/preproc/PdePreprocessor.java?view=markup
