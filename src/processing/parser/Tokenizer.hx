@@ -151,7 +151,7 @@ class Tokenizer
 		return currentToken;
 	}
 
-	public function match(to:Dynamic, ?mustMatch:Bool = false):Bool {
+	public function match(to:Dynamic):Bool {
 		// preserve state
 		pushState();
 		// compare next token
@@ -161,11 +161,14 @@ class Tokenizer
 			clearState();
 			return true;
 		}
-		else if (mustMatch)
-			throw createSyntaxError('Must match ' + to + ', found ' + token);
 		// didn't match
 		popState();
 		return false;
+	}
+	
+	public function require(to:Dynamic):Void {
+		if (!match(to))
+			throw createSyntaxError('Must match ' + to + ', found ' + current());
 	}
 	
 	public function hasNext():Bool

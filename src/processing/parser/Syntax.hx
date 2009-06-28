@@ -3,17 +3,18 @@
  * @author ...
  */
 
-//[TODO] can we typecast for specific enums? SReference is better than Statement
+//[TODO] can we typecast for specific enums? EReference is better than Expression
 
 package processing.parser;
 
 enum Statement 
 {
+	SBlock(definitions:Hash<BlockDefinition>, statements:Array<Statement>);
 	SBreak(?label:String);
-	SConditional(condition:Expression, thenBlock:Array<Statement>, ?elseBlock:Array<Statement>);
+	SConditional(condition:Expression, thenBlock:Statement, ?elseBlock:Statement);
 	SContinue(?label:String);
 	SExpression(expression:Expression);
-	SLoop(condition:Expression, body:Array<Statement>);
+	SLoop(condition:Expression, body:Statement);
 	SReturn(?value:Expression);
 }
 
@@ -42,20 +43,6 @@ enum Expression
 	ECharLiteral(value:Int);
 	EBooleanLiteral(value:Bool);
 	ENull;
-}
-
-enum Definition
-{
-	DVariable(identifier:String, visibility:Visibility, isStatic:Bool, type:VariableType);
-	DFunction(identifier:String, visibility:Visibility, isStatic:Bool, type:VariableType, params:Array<FunctionParam>, definitions:Array<Definition>, statements:Array<Statement>);
-	DClass(identifier:String, visibility:Visibility, isStatic:Bool, definitions:Array<Definition>, statements:Array<Statement>);
-	DScript(definitions:Array<Definition>, statements:Array<Statement>);
-}
-
-enum Visibility
-{
-	VPublic;
-	VPrivate;
 }
 
 enum Operator {
@@ -93,12 +80,44 @@ enum IncrementType {
 	IDecrement;
 }
 
-typedef VariableType = {
-	var type:Dynamic;
-	var dimensions:Int;
+enum ClassDefinition
+{
+	DProperty(identifier:String, visibility:Visibility, isStatic:Bool, type:DataType, ?init:Expression);
+	DMethod(identifier:String, visibility:Visibility, isStatic:Bool, type:DataType, params:Array<FunctionParam>, body:Statement);
+	DClass(identifier:String, visibility:Visibility, isStatic:Bool, definitions:Hash<ClassDefinition>);
+}
+
+enum BlockDefinition
+{
+	DVariable(identifier:String, type:VariableType);
+}
+
+enum DataType
+{
+	DTPrimitive(type:PrimitiveType, dimensions:Int);
+	//[TODO] identifier be a reference?
+	DTReference(identifier:String, dimensions:Int);
+}
+
+enum PrimitiveType
+{
+	PTByte;
+	PTShort;
+	PTInt;
+	PTLong;
+	PTFloat;
+	PTDouble;
+	PTChar;
+	PTBoolean;
 }
 
 typedef FunctionParam = {
-	var name:String;
-	var type:VariableType;
+	var identifier:String;
+	var type:DataType;
+}
+
+enum Visibility
+{
+	VPublic;
+	VPrivate;
 }

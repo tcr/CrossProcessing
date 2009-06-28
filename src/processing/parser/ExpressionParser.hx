@@ -1,193 +1,34 @@
+﻿/**
+ * ...
+ * @author ...
+ */
+
 package processing.parser;
 
-import processing.parser.Syntax;
-import processing.parser.Tokenizer;
-
-class Parser {
-	public var tokenizer:Tokenizer;
-
-	public function new() {
-		// create tokenizer
-		tokenizer = new Tokenizer();
-	}
-	
-	public function parse(code:String):Definition
-	{
-		// initialize tokenizer
-		tokenizer.load(code);
-
-		// parse global block
-//[TODO] should definitions be a map?
-		var statements:Array<Statement> = [], definitions:Array<Definition> = [];
-		//[NOTE] function order is important here
-		while (parseDefinition(PScript, statements, definitions) ||
-		    parseStatement(statements, definitions))
-			continue;
-
-		// check that we've finished parsing
-		if (tokenizer.hasNext())
-//[TODO] ParserSyntaxError?
-			throw tokenizer.createSyntaxError('Script unterminated');
-		// return parsed global block
-		return DScript(definitions, statements);
-	}
-	
-	public function match(identifier:String):Bool {
-		return parsers[identifier]();
-	}
-	
-	public function require(identifier:String):Void {
-		if (!parsers[identifier]())
-			error('Expected ' + identifier);
-	}
-	
-	public function error(message:String) {
-		throw tokenizer.createSyntaxError(message);
-	}
-	
-	var blocks:Array<Statement> = [];
-	
-	public function pushBlock(block) {
-		blocks.push(block);
-	}
-	public function popBlock() {
-		return blocks.pop();
-	}
-	
-	public function blockDefinition(definition:BlockDefinition) {
-		
-	}
-	public function classDefinition(definition:ClassDefinition) {
-		
-	}
-}
-
-class ParserRules
+class ExpressionParser extends Parser
 {
-	public function RStatement(parser, tokenizer)
-	{
-		// parse variable definitions first
-		if (parser.match(RVariableDefinition))
-			return true;
-		
-		// if 
-		if (tokenizer.match(TKeyword('if')))
-		{
-			// condition
-			parser.require(RParExpression);
-			var condition:Expression = parser.expression;
-			// then block
-			parser.require(RStatement);
-			var thenBlock:Statement = parser.statement;
-			// else block
-			var elseBlock:Statement = null;
-			if (tokenizer.match(TKeyword('else')))
-			{
-				parser.require(RStatement);
-				elseBlock = parser.statement;
-			}
-			
-			// add conditional
-			statements.push(SConditional(condition, thenBlock, elseBlock));
-		}
-		// while 
-		else if (tokenizer.match(TKeyword('while')))
-		{
-			// match condition
-			parser.require(RParExpression);
-			var condition:Expression = parser.expression;
-			// parse body
-			parser.require(RStatement);
-			var body:Statement = parser.statement;
-			
-			// add loop
-			statements.push(SLoop(condition, body));
-		}
-		// for
-		else if (tokenizer.match(TKeyword('for')))
-		{
-			// variable definition/initialization
-			tokenizer.match(TParenOpen, true);
-			if (!parseDefinition(PBlock, statements, definitions))
-			{
-				// match expression initialization
-				var init:Array<Expression> = parseList();
-				for (statement in init)
-					statements.push(SExpression(statement));
-				tokenizer.match(TSemicolon, true);
-			}
-			// match condition (null expression evaluates as true)
-			var condition:Expression = parseExpression(false);
-			if (condition == null)
-				condition = EBooleanLiteral(true);
-			tokenizer.match(TSemicolon, true);
-			// match update
-			var update:Array<Expression> = parseList();
-			tokenizer.match(TParenClose, true);
-			
-			// parse body
-			var body:Array<Statement> = [];
-			if (tokenizer.match(TBraceOpen))
-			{
-				while (parseStatement(body, definitions))
-					continue;
-				tokenizer.match(TBraceClose, true);
-			}
-			else if (!parseStatement(body, definitions))
-				throw tokenizer.createSyntaxError('Invalid expression in for loop.');
-			// append update to body
-			for (statement in update)
-				body.push(SExpression(statement));
-			
-			// add loop
-			statements.push(SLoop(condition, body));
-		}
-		// return
-		else if (tokenizer.match(TKeyword('return')))
-		{
-			// push return statement
-			statements.push(SReturn(parseExpression(false)));
-		}
-		// break
-		else if (tokenizer.match(TKeyword('break')))
-		{
-			// match break and optional level
-			tokenizer.match('TIdentifier') ?
-			    statements.push(SBreak(Type.enumParameters(tokenizer.current())[0])) :
-			    statements.push(SBreak());
-		}
-		// continue
-		else if (tokenizer.match(TKeyword('continue')))
-		{
-			// match continue and optional level
-			tokenizer.match('TIdentifier') ?
-			    statements.push(SContinue(Type.enumParameters(tokenizer.current())[0])) :
-			    statements.push(SContinue());
-		}
-//[TODO] switch, try/catch/finally, do loop, 
-		// expression
-		else
-		{
-			// match expression or semicolon
-			var expression:Expression = parseExpression(false);
-			if (expression == null)
-				return tokenizer.match(TSemicolon);
-			tokenizer.match(TSemicolon, true);
-			
-			// push expression
-			statements.push(SExpression(expression));
-		}
-
-		// statement matched
-		return true;
-	}
+	private var operators:Array<ParserOperator>;
+	private var operands:Array<Expression>;
 	
-	private function parseVisibility():Visibility
+	private function parseExpression(?required:Bool = false):Expression
 	{
-		if (tokenizer.match(TKeyword('private')))
-			return VPrivate;
-		tokenizer.match(TKeyword('public'));
-		return VPublic;
+		// initialize arrays
+		operators = [];
+		operands = [];
+	
+		// main loop
+		scanOperand();
+		if (operands.length == 0)
+			if (required)
+				throw tokenizer.createSyntaxError('Expected expression.');
+			else
+				return null;
+		while (scanOperator())
+			scanOperand(true);
+			
+		// reduce to a single operand
+		recursiveReduceExpression();
+		return operands[0];
 	}
 	
 	private function parseType():VariableType
@@ -211,107 +52,6 @@ class ParserRules
 		}
 	}
 	
-	private function parseVariableDefinition(statements:Array<Statement>, definitions:Array<Definition>):Bool
-	{
-		// get variable definition
-		var isStatic:Bool = tokenizer.match(TKeyword('static'));
-		var visibility:Visibility = parseVisibility();
-		var vType:VariableType = parseType();
-
-		// get variable definitions
-		do {
-			// get identifier
-			tokenizer.match('TIdentifier', true);
-			var identifier:String = Type.enumParameters(tokenizer.current())[0];
-			// check for per-variable array brackets
-			var vTypeDimensions:Int = vType.dimensions;
-			if (vTypeDimensions == 0) {
-				while (tokenizer.match(TDimensions))
-					vTypeDimensions++;
-			}
-			// add definition
-			definitions.push(DVariable(identifier, visibility, isStatic, {type: vType.type, dimensions: vTypeDimensions}));
-			
-			// check for assignment operation
-			if (tokenizer.match(TOperator('=')))
-			{
-				var expression:Expression = parseExpression(true);
-				statements.push(SExpression(EAssignment(EReference(identifier), expression)));
-			}
-		} while (tokenizer.match(TComma));
-		
-		// closing semicolon
-		tokenizer.match(TSemicolon, true);
-
-		// definition matched
-		return true;
-	}
-
-	private function parseFunctionDefinition(definitions:Array<Definition>, ?constructor:Bool = false):Bool
-	{
-		// get function definition
-		var isStatic:Bool = tokenizer.match(TKeyword('static'));
-		var visibility:Visibility = parseVisibility(), fType:VariableType = null;
-		if (!constructor)
-			fType = parseType();
-		tokenizer.match('TIdentifier', true);
-		var identifier:String = Type.enumParameters(tokenizer.current())[0];
-		
-		// parse parameters
-		tokenizer.match(TParenOpen, true);
-		var params:Array<FunctionParam> = [];
-		while (!tokenizer.peekMatch(TParenClose))
-		{
-			// get type
-			var type:VariableType = parseType();
-			if (type == null)
-				throw tokenizer.createSyntaxError('Invalid formal parameter type');
-			// get identifier
-			if (!tokenizer.match('TIdentifier'))
-				throw tokenizer.createSyntaxError('Invalid formal parameter');
-			var name:String = Type.enumParameters(tokenizer.current())[0];
-			
-			// add parameter
-			params.push({name: name, type: type});
-			
-			// check for comma
-			if (!tokenizer.peekMatch(TParenClose))
-				tokenizer.match(TComma, true);
-		}
-		tokenizer.match(TParenClose, true);
-		
-		// parse body
-		tokenizer.match(TBraceOpen, true);
-		var fStatements:Array<Statement> = [], fDefinitions:Array<Definition> = [];
-		while (parseStatement(fStatements, fDefinitions))
-			continue;
-		tokenizer.match(TBraceClose, true);
-		// return function declaration statement
-		definitions.push(DFunction(identifier, visibility, isStatic, fType, params, fDefinitions, fStatements));
-		return true;
-	}
-
-	private function parseClassDefinition(definitions:Array<Definition>):Bool
-	{
-		// get class definition
-		var isStatic:Bool = tokenizer.match(TKeyword('static'));
-		var visibility:Visibility = parseVisibility();
-		tokenizer.match(TKeyword('class'), true);
-		tokenizer.match('TIdentifier', true);
-		var identifier:String = Type.enumParameters(tokenizer.current())[0];
-		
-		// parse body
-		tokenizer.match(TBraceOpen, true);
-		var cStatements:Array<Statement> = [], cDefinitions:Array<Definition> = [];
-		while (parseDefinition(PClass(identifier), cStatements, cDefinitions))
-			continue;
-		tokenizer.match(TBraceClose, true);
-
-		// return function declaration statement
-		definitions.push(DClass(identifier, visibility, isStatic, cDefinitions, cStatements));
-		return true;
-	}
-	
 	private function parseList():Array<Expression>
 	{
 		// parse a comma-delimited list of expressions (array initializer, function call, &c.)
@@ -325,33 +65,8 @@ class ParserRules
 		} while (tokenizer.match(TComma));
 		return list;
 	}
-	
-	public function RParExpression(parser, tokenizer)
-	{
-		return tokenizer.match(TParenOpen) && parser.match(RExpression) && tokenizer.match(TParenClose);
-	}
 
-	private function parseExpression(required:Bool):Expression
-	{
-		// variable definitions
-		var operators:Array<ParserOperator> = [], operands:Array<Expression> = [];
-	
-		// main loop
-		scanOperand(operators, operands);
-		if (operands.length == 0)
-			if (required)
-				throw tokenizer.createSyntaxError('Expected expression.');
-			else
-				return null;
-		while (scanOperator(operators, operands))
-			scanOperand(operators, operands, true);
-			
-		// reduce to a single operand
-		recursiveReduceExpression(operators, operands);
-		return operands[0];
-	}
-
-	private function scanOperand(operators:Array<ParserOperator>, operands:Array<Expression>, ?required:Bool = false):Bool
+	private function scanOperand(?required:Bool = false):Bool
 	{
 		// switch based on next token
 		var token:Token = tokenizer.peek();
@@ -366,7 +81,7 @@ class ParserRules
 			if (opString == '++' || opString == '--') {
 				// reduce and push operator
 				var operator:ParserOperator = PPrefix(lookupIncrementType(opString));
-				recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
+				recursiveReduceExpression(lookupOperatorPrecedence(operator));
 				operators.push(operator);
 
 				// already matched operator, find operand
@@ -381,7 +96,7 @@ class ParserRules
 				    case OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus:
 					// reduce and push operator
 					var operator:ParserOperator = POperator(operation);
-					recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
+					recursiveReduceExpression(lookupOperatorPrecedence(operator));
 					operators.push(operator);
 					
 					// matched operator, find next operand
@@ -539,7 +254,7 @@ class ParserRules
 		return true;
 	}
 
-	private function scanOperator(operators:Array<ParserOperator>, operands:Array<Expression>, ?required:Bool = false):Bool
+	private function scanOperator(?required:Bool = false):Bool
 	{		
 		// get next token
 		var token:Token = tokenizer.peek();
@@ -556,7 +271,7 @@ class ParserRules
 			{
 				// reduce and push operator
 				var operator:ParserOperator = PPostfix(lookupIncrementType(opToken));
-				recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
+				recursiveReduceExpression(lookupOperatorPrecedence(operator));
 				operators.push(operator);
 				
 				// matched operand, find next operator
@@ -566,7 +281,7 @@ class ParserRules
 			else if (isAssignmentOperator(opToken))
 			{
 				// reduce left-hand expression
-				recursiveReduceExpression(operators, operands);
+				recursiveReduceExpression();
 				// we can only assign to a reference
 				var reference:Expression = operands.pop();
 				if ((Type.enumConstructor(reference) != 'EReference') &&
@@ -588,7 +303,7 @@ class ParserRules
 			{
 				// combine higher-precedence expressions and push
 				var operator:ParserOperator = POperator(lookupOperatorType(opToken));
-				recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
+				recursiveReduceExpression(lookupOperatorPrecedence(operator));
 				operators.push(operator);
 			}
 
@@ -601,7 +316,7 @@ class ParserRules
 			tokenizer.match('TIdentifier', true);
 			// reduce and push operator
 			var operator:ParserOperator = PDot(Type.enumParameters(tokenizer.current())[0]);
-			recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
+			recursiveReduceExpression(lookupOperatorPrecedence(operator));
 			operators.push(operator);
 
 			// matched operand, find next operator
@@ -616,11 +331,11 @@ class ParserRules
 			
 			// reduce and push operator
 			var operator:ParserOperator = PArrayAccess(index);
-			recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
+			recursiveReduceExpression(lookupOperatorPrecedence(operator));
 			operators.push(operator);
 
 			// matched operand, find next operator
-			return scanOperator(operators, operands, required);
+			return scanOperator(required);
 			
 		    // hook/colon operator
 		    case TQuestion:
@@ -628,7 +343,7 @@ class ParserRules
 			tokenizer.next();
 			
 			// reduce left-hand conditional
-			recursiveReduceExpression(operators, operands);
+			recursiveReduceExpression();
 			var conditional:Expression = operands.pop();
 			// parse statements
 			var thenExpression:Expression = parseExpression(true);
@@ -649,7 +364,7 @@ class ParserRules
 			
 			// reduce and push operator
 			var operator:ParserOperator = PCall(args);
-			recursiveReduceExpression(operators, operands, lookupOperatorPrecedence(operator));
+			recursiveReduceExpression(lookupOperatorPrecedence(operator));
 			// function or method call
 			if (Type.enumConstructor(operands[operands.length - 1]) == 'EReference')
 			{
@@ -676,13 +391,13 @@ class ParserRules
 		return true;
 	}
 	
-	private function recursiveReduceExpression(operators:Array<ParserOperator> , operands:Array<Expression>, ?precedence:Int = 0):Void
+	private function recursiveReduceExpression(?precedence:Int = 0):Void
 	{
 		while (operators.length > 0 && lookupOperatorPrecedence(operators[operators.length - 1]) >= precedence)
-			reduceExpression(operators, operands);
+			reduceExpression();
 	}
 
-	private function reduceExpression(operators:Array<ParserOperator>, operands:Array<Expression>):Void
+	private function reduceExpression():Void
 	{
 		// reduce topmost operator
 		switch (operators.pop())
@@ -826,13 +541,6 @@ class ParserRules
 		    case PCall(_): 15;
 		}
 	}
-}
-
-enum ParserScope
-{
-	PScript;
-	PClass(identifier:String);
-	PBlock;
 }
 
 enum ParserOperator
