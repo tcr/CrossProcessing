@@ -1,21 +1,21 @@
-decompressed swf 3081 -> 4592
+decompressed swf 3063 -> 4555
 size [Rect 0 0 16000 12000]
 frame rate 30
 frame count 1
 FileAttributes 4b 0%
 SetBackgroundColor 3b 0%
-DoABC 4540b 98%
+DoABC 4503b 98%
 magic 2e0010
 Cpool numbers size 5 0 %
-Cpool strings count 143 size 1167 25 %
+Cpool strings count 142 size 1158 25 %
 Cpool namespaces count 10 size 19 0 %
 Cpool nssets count 2 size 3 0 %
-Cpool names count 120 size 371 8 %
-MethodInfo count 56 size 276 6 %
-InstanceInfo size 106 2 %
+Cpool names count 119 size 367 8 %
+MethodInfo count 55 size 272 6 %
+InstanceInfo size 102 2 %
 ClassInfo size 152 3%
 ScriptInfo size 39 0 %
-MethodBodies size 2397 52 %
+MethodBodies size 2381 52 %
   script0
 
   class ProcessingSketch extends Object
@@ -23,17 +23,19 @@ MethodBodies size 2397 52 %
 
     function ProcessingSketch():void	/* disp_id -1*/
     {
-      // local_count=1 max_scope=1 max_stack=1 code_len=12
+      // local_count=1 max_scope=1 max_stack=1 code_len=17
       0     getlocal0     	
       1     pushscope     	
-      2     getlex        	Boot_3eae51
+      2     getlex        	Boot_85569f
       4     getproperty   	skip_constructor
       6     iffalse       	L1
 
       10    returnvoid    	
       
       L1: 
-      11    returnvoid    	
+      11    findproperty  	test
+      13    callpropvoid  	test (0)
+      16    returnvoid    	
     }
 
     function test():int	/* disp_id 0*/
@@ -41,16 +43,6 @@ MethodBodies size 2397 52 %
       // local_count=1 max_scope=0 max_stack=1 code_len=3
       0     pushbyte      	5
       2     returnvalue   	
-    }
-
-    function __init__():Function	/* disp_id 0*/
-    {
-      // local_count=1 max_scope=1 max_stack=1 code_len=7
-      0     getlocal0     	
-      1     pushscope     	
-      2     findproperty  	test
-      4     getproperty   	test
-      6     returnvalue   	
     }
 
     static function ProcessingSketch$cinit():void	/* disp_id 0*/
@@ -68,7 +60,7 @@ MethodBodies size 2397 52 %
       // local_count=1 max_scope=1 max_stack=1 code_len=12
       0     getlocal0     	
       1     pushscope     	
-      2     getlex        	Boot_3eae51
+      2     getlex        	Boot_85569f
       4     getproperty   	skip_constructor
       6     iffalse       	L1
 
@@ -142,7 +134,7 @@ MethodBodies size 2397 52 %
       71    astype        	Error
       73    iffalse       	L4
 
-      77    getlex        	Boot_3eae51
+      77    getlex        	Boot_85569f
       79    getlocal      	6
       81    initproperty  	lastError
       
@@ -335,7 +327,7 @@ MethodBodies size 2397 52 %
     function toString():String	/* disp_id 0*/
     {
       // local_count=1 max_scope=0 max_stack=2 code_len=7
-      0     getlex        	Boot_3eae51
+      0     getlex        	Boot_85569f
       2     getlocal0     	
       3     callproperty  	enum_to_string (1)
       6     returnvalue   	
@@ -358,7 +350,7 @@ MethodBodies size 2397 52 %
       // local_count=1 max_scope=1 max_stack=1 code_len=12
       0     getlocal0     	
       1     pushscope     	
-      2     getlex        	Boot_3eae51
+      2     getlex        	Boot_85569f
       4     getproperty   	skip_constructor
       6     iffalse       	L1
 
@@ -383,7 +375,7 @@ MethodBodies size 2397 52 %
       // local_count=3 max_scope=1 max_stack=2 code_len=22
       0     getlocal0     	
       1     pushscope     	
-      2     getlex        	Boot_3eae51
+      2     getlex        	Boot_85569f
       4     getproperty   	skip_constructor
       6     iffalse       	L1
 
@@ -446,7 +438,7 @@ MethodBodies size 2397 52 %
       // local_count=1 max_scope=1 max_stack=1 code_len=12
       0     getlocal0     	
       1     pushscope     	
-      2     getlex        	Boot_3eae51
+      2     getlex        	Boot_85569f
       4     getproperty   	skip_constructor
       6     iffalse       	L1
 
@@ -459,7 +451,7 @@ MethodBodies size 2397 52 %
     static function is(*,*):Boolean	/* disp_id 1*/
     {
       // local_count=3 max_scope=0 max_stack=3 code_len=9
-      0     getlex        	Boot_3eae51
+      0     getlex        	Boot_85569f
       2     getlocal1     	
       3     getlocal2     	
       4     callproperty  	__instanceof (2)
@@ -470,7 +462,7 @@ MethodBodies size 2397 52 %
     static function string(*):String	/* disp_id 2*/
     {
       // local_count=2 max_scope=0 max_stack=3 code_len=11
-      0     getlex        	Boot_3eae51
+      0     getlex        	Boot_85569f
       2     getlocal1     	
       3     pushstring    	""
       5     callproperty  	__string_rec (2)
@@ -546,7 +538,7 @@ MethodBodies size 2397 52 %
       // local_count=1 max_scope=1 max_stack=1 code_len=12
       0     getlocal0     	
       1     pushscope     	
-      2     getlex        	Boot_3eae51
+      2     getlex        	Boot_85569f
       4     getproperty   	skip_constructor
       6     iffalse       	L1
 
@@ -558,14 +550,12 @@ MethodBodies size 2397 52 %
 
     static function main():void	/* disp_id 1*/
     {
-      // local_count=2 max_scope=0 max_stack=1 code_len=13
+      // local_count=2 max_scope=0 max_stack=1 code_len=9
       0     findpropstrict	ProcessingSketch
       2     constructprop 	ProcessingSketch (0)
       5     coerce        	ProcessingSketch
       7     setlocal1     	
-      8     getlocal1     	
-      9     callpropvoid  	__init__ (0)
-      12    returnvoid    	
+      8     returnvoid    	
     }
 
     static function Main$cinit():void	/* disp_id 0*/
@@ -575,15 +565,15 @@ MethodBodies size 2397 52 %
     }
   }
 
-  dynamic class Boot_3eae51 extends flash.display::MovieClip
+  dynamic class Boot_85569f extends flash.display::MovieClip
   {
 
-    function Boot_3eae51(flash.display::MovieClip):void	/* disp_id -1*/
+    function Boot_85569f(flash.display::MovieClip):void	/* disp_id -1*/
     {
       activation {
         var cca:Object	/* slot_id 1 */
       }
-      // local_count=5 max_scope=4 max_stack=3 code_len=199
+      // local_count=5 max_scope=4 max_stack=3 code_len=198
       0     getlocal0     	
       1     pushscope     	
       2     newactivation 	
@@ -593,7 +583,7 @@ MethodBodies size 2397 52 %
       6     pushnull      	
       7     coerce_a      	
       8     setlocal3     	
-      9     getlex        	Boot_3eae51
+      9     getlex        	Boot_85569f
       11    getproperty   	skip_constructor
       13    iffalse       	L1
 
@@ -628,94 +618,94 @@ MethodBodies size 2397 52 %
       58    callpropvoid  	setPropertyIsEnumerable (2)
       61    getlocal3     	
       62    pushstring    	"remove"
-      65    pushfalse     	
-      66    callpropvoid  	setPropertyIsEnumerable (2)
-      69    getlocal3     	
-      70    pushstring    	"iterator"
-      73    pushfalse     	
-      74    callpropvoid  	setPropertyIsEnumerable (2)
-      77    getscopeobject	1
-      79    getlex        	String
-      81    getproperty   	prototype
-      83    getproperty   	charCodeAt
-      85    coerce_a      	
-      86    setslot       	1
-      88    getlex        	String
-      90    getproperty   	prototype
-      92    newfunction   	var undefined(Object):Object	/* disp_id 0*/
-      94    initproperty  	charCodeAt
-      96    getlex        	Boot_3eae51
-      98    newarray      	[0]
-      100   initproperty  	lines
-      102   getlocal1     	
-      103   pushnull      	
-      104   coerce        	flash.display::MovieClip
-      106   ifne          	L2
+      64    pushfalse     	
+      65    callpropvoid  	setPropertyIsEnumerable (2)
+      68    getlocal3     	
+      69    pushstring    	"iterator"
+      72    pushfalse     	
+      73    callpropvoid  	setPropertyIsEnumerable (2)
+      76    getscopeobject	1
+      78    getlex        	String
+      80    getproperty   	prototype
+      82    getproperty   	charCodeAt
+      84    coerce_a      	
+      85    setslot       	1
+      87    getlex        	String
+      89    getproperty   	prototype
+      91    newfunction   	var undefined(Object):Object	/* disp_id 0*/
+      93    initproperty  	charCodeAt
+      95    getlex        	Boot_85569f
+      97    newarray      	[0]
+      99    initproperty  	lines
+      101   getlocal1     	
+      102   pushnull      	
+      103   coerce        	flash.display::MovieClip
+      105   ifne          	L2
 
-      110   getlocal0     	
-      111   coerce        	flash.display::MovieClip
-      113   jump          	L3
+      109   getlocal0     	
+      110   coerce        	flash.display::MovieClip
+      112   jump          	L3
       
       L2: 
-      117   getlocal1     	
+      116   getlocal1     	
       
       L3: 
-      118   coerce        	flash.display::MovieClip
-      120   setlocal      	4
-      122   getlex        	flash::Lib
-      124   getlocal      	4
-      126   initproperty  	current
-      128   pushfalse     	
-      129   getlocal      	4
-      131   getproperty   	stage
-      133   pushnull      	
-      134   coerce        	flash.display::Stage
-      136   ifeq          	L4
+      117   coerce        	flash.display::MovieClip
+      119   setlocal      	4
+      121   getlex        	flash::Lib
+      123   getlocal      	4
+      125   initproperty  	current
+      127   pushfalse     	
+      128   getlocal      	4
+      130   getproperty   	stage
+      132   pushnull      	
+      133   coerce        	flash.display::Stage
+      135   ifeq          	L4
 
-      140   pop           	
-      141   getlocal      	4
-      143   getproperty   	stage
-      145   getproperty   	align
-      147   pushstring    	""
-      149   equals        	
-      150   convert_b     	
+      139   pop           	
+      140   getlocal      	4
+      142   getproperty   	stage
+      144   getproperty   	align
+      146   pushstring    	""
+      148   equals        	
+      149   convert_b     	
       
       L4: 
-      151   iffalse       	L5
+      150   iffalse       	L5
 
-      155   getlocal      	4
-      157   getproperty   	stage
-      159   pushstring    	"TOP_LEFT"
-      162   initproperty  	align
-      164   jump          	L6
+      154   getlocal      	4
+      156   getproperty   	stage
+      158   pushstring    	"TOP_LEFT"
+      161   initproperty  	align
+      163   jump          	L6
       
       L5: 
-      168   pushnull      	
-      169   coerce        	String
-      171   pop           	
+      167   pushnull      	
+      168   coerce        	String
+      170   pop           	
       
       L6: 
-      172   jump          	L7
+      171   jump          	L7
 
-      176   getlocal0     	
-      177   pushscope     	
-      178   getlocal2     	
-      179   pushscope     	
-      180   coerce_a      	
-      181   setlocal3     	
+      175   getlocal0     	
+      176   pushscope     	
+      177   getlocal2     	
+      178   pushscope     	
+      179   coerce_a      	
+      180   setlocal3     	
       
       L7: 
-      182   getlex        	Boot_3eae51
-      184   getproperty   	init
-      186   pushnull      	
-      187   coerce        	Function
-      189   ifeq          	L8
+      181   getlex        	Boot_85569f
+      183   getproperty   	init
+      185   pushnull      	
+      186   coerce        	Function
+      188   ifeq          	L8
 
-      193   getlex        	Boot_3eae51
-      195   callpropvoid  	init (0)
+      192   getlex        	Boot_85569f
+      194   callpropvoid  	init (0)
       
       L8: 
-      198   returnvoid    	
+      197   returnvoid    	
     }
     static var init:Function	/* slot_id 1 */
     static var tf:flash.text::TextField	/* slot_id 2 */
@@ -802,7 +792,7 @@ MethodBodies size 2397 52 %
     static function __clear_trace():void	/* disp_id 3*/
     {
       // local_count=1 max_scope=0 max_stack=2 code_len=37
-      0     getlex        	Boot_3eae51
+      0     getlex        	Boot_85569f
       2     getproperty   	tf
       4     pushnull      	
       5     coerce        	flash.text::TextField
@@ -813,14 +803,14 @@ MethodBodies size 2397 52 %
       L1: 
       12    getlex        	flash::Lib
       14    getproperty   	current
-      16    getlex        	Boot_3eae51
+      16    getlex        	Boot_85569f
       18    getproperty   	tf
       20    callpropvoid  	removeChild (1)
-      23    getlex        	Boot_3eae51
+      23    getlex        	Boot_85569f
       25    pushnull      	
       26    coerce        	flash.text::TextField
       28    initproperty  	tf
-      30    getlex        	Boot_3eae51
+      30    getlex        	Boot_85569f
       32    newarray      	[0]
       34    initproperty  	lines
       36    returnvoid    	
@@ -829,7 +819,7 @@ MethodBodies size 2397 52 %
     static function __set_trace_color(uint):void	/* disp_id 4*/
     {
       // local_count=2 max_scope=0 max_stack=2 code_len=11
-      0     getlex        	Boot_3eae51
+      0     getlex        	Boot_85569f
       2     callproperty  	getTrace (0)
       5     coerce        	flash.text::TextField
       7     getlocal1     	
@@ -847,17 +837,17 @@ MethodBodies size 2397 52 %
       6     getproperty   	current
       8     coerce        	flash.display::MovieClip
       10    setlocal1     	
-      11    getlex        	Boot_3eae51
+      11    getlex        	Boot_85569f
       13    getproperty   	tf
       15    pushnull      	
       16    coerce        	flash.text::TextField
       18    ifne          	L1
 
-      22    getlex        	Boot_3eae51
+      22    getlex        	Boot_85569f
       24    findpropstrict	flash.text::TextField
       26    constructprop 	flash.text::TextField (0)
       29    initproperty  	tf
-      31    getlex        	Boot_3eae51
+      31    getlex        	Boot_85569f
       33    getproperty   	tf
       35    callproperty  	getTextFormat (0)
       38    coerce        	flash.text::TextFormat
@@ -866,15 +856,15 @@ MethodBodies size 2397 52 %
       43    getlocal2     	
       44    pushstring    	"_sans"
       46    initproperty  	font
-      48    getlex        	Boot_3eae51
+      48    getlex        	Boot_85569f
       50    getproperty   	tf
       52    getlocal2     	
       53    initproperty  	defaultTextFormat
-      55    getlex        	Boot_3eae51
+      55    getlex        	Boot_85569f
       57    getproperty   	tf
       59    pushfalse     	
       60    initproperty  	selectable
-      62    getlex        	Boot_3eae51
+      62    getlex        	Boot_85569f
       64    getproperty   	tf
       66    getlocal1     	
       67    getproperty   	stage
@@ -892,22 +882,22 @@ MethodBodies size 2397 52 %
       
       L3: 
       87    initproperty  	width
-      89    getlex        	Boot_3eae51
+      89    getlex        	Boot_85569f
       91    getproperty   	tf
       93    getlex        	flash.text::TextFieldAutoSize
       95    getproperty   	LEFT
       97    initproperty  	autoSize
-      99    getlex        	Boot_3eae51
+      99    getlex        	Boot_85569f
       101   getproperty   	tf
       103   pushfalse     	
       104   initproperty  	mouseEnabled
       
       L1: 
       106   getlocal1     	
-      107   getlex        	Boot_3eae51
+      107   getlex        	Boot_85569f
       109   getproperty   	tf
       111   callpropvoid  	addChild (1)
-      114   getlex        	Boot_3eae51
+      114   getlex        	Boot_85569f
       116   getproperty   	tf
       118   returnvalue   	
     }
@@ -915,7 +905,7 @@ MethodBodies size 2397 52 %
     static function __trace(*,Object):void	/* disp_id 6*/
     {
       // local_count=6 max_scope=0 max_stack=6 code_len=173
-      0     getlex        	Boot_3eae51
+      0     getlex        	Boot_85569f
       2     callproperty  	getTrace (0)
       5     coerce        	flash.text::TextField
       7     coerce        	flash.text::TextField
@@ -944,14 +934,14 @@ MethodBodies size 2397 52 %
       L2: 
       40    coerce        	String
       42    setlocal      	4
-      44    getlex        	Boot_3eae51
-      46    getlex        	Boot_3eae51
+      44    getlex        	Boot_85569f
+      46    getlex        	Boot_85569f
       48    getproperty   	lines
       50    getlocal      	4
       52    pushstring    	": "
       54    add           	
       55    coerce        	String
-      57    getlex        	Boot_3eae51
+      57    getlex        	Boot_85569f
       59    getlocal1     	
       60    pushstring    	""
       62    callproperty  	__string_rec (2)
@@ -965,7 +955,7 @@ MethodBodies size 2397 52 %
       80    coerce        	Array
       82    initproperty  	lines
       84    getlocal3     	
-      85    getlex        	Boot_3eae51
+      85    getlex        	Boot_85569f
       87    getproperty   	lines
       89    pushstring    	"\n"
       91    callproperty  	http://adobe.com/AS3/2006/builtin::join (1)
@@ -989,11 +979,11 @@ MethodBodies size 2397 52 %
       
       L5: 
       122   label         	
-      123   getlex        	Boot_3eae51
+      123   getlex        	Boot_85569f
       125   getproperty   	lines
       127   callpropvoid  	http://adobe.com/AS3/2006/builtin::shift (0)
       130   getlocal3     	
-      131   getlex        	Boot_3eae51
+      131   getlex        	Boot_85569f
       133   getproperty   	lines
       135   pushstring    	"\n"
       137   callproperty  	http://adobe.com/AS3/2006/builtin::join (1)
@@ -1002,7 +992,7 @@ MethodBodies size 2397 52 %
       
       L4: 
       144   pushfalse     	
-      145   getlex        	Boot_3eae51
+      145   getlex        	Boot_85569f
       147   getproperty   	lines
       149   getproperty   	length
       151   convert_i     	
@@ -1145,7 +1135,7 @@ MethodBodies size 2397 52 %
       190   pushstring    	" : "
       192   add           	
       193   coerce        	String
-      195   getlex        	Boot_3eae51
+      195   getlex        	Boot_85569f
       197   getlocal1     	
       198   getlocal      	13
       200   getproperty   	null
@@ -1236,7 +1226,7 @@ MethodBodies size 2397 52 %
       
       L14: 
       336   getlocal      	9
-      338   getlex        	Boot_3eae51
+      338   getlex        	Boot_85569f
       340   getlocal      	5
       342   getlocal      	12
       344   getproperty   	null
@@ -1288,7 +1278,7 @@ MethodBodies size 2397 52 %
       1     returnvalue   	
     }
 
-    static function Boot_3eae51$cinit():void	/* disp_id 0*/
+    static function Boot_85569f$cinit():void	/* disp_id 0*/
     {
       // local_count=1 max_scope=0 max_stack=0 code_len=1
       0     returnvoid    	
@@ -1303,7 +1293,7 @@ MethodBodies size 2397 52 %
       // local_count=1 max_scope=1 max_stack=1 code_len=12
       0     getlocal0     	
       1     pushscope     	
-      2     getlex        	Boot_3eae51
+      2     getlex        	Boot_85569f
       4     getproperty   	skip_constructor
       6     iffalse       	L1
 
@@ -1384,9 +1374,9 @@ MethodBodies size 2397 52 %
     87      getlex        	flash.display::MovieClip
     89      pushscope     	
     90      getlex        	flash.display::MovieClip
-    92      newclass      	Boot_3eae51
+    92      newclass      	Boot_85569f
     94      popscope      	
-    95      initproperty  	Boot_3eae51
+    95      initproperty  	Boot_85569f
     97      getglobalscope	
     98      getlex        	Object
     100     pushscope     	
@@ -1395,7 +1385,7 @@ MethodBodies size 2397 52 %
     105     popscope      	
     106     initproperty  	@Main
     108     getglobalscope	
-    109     getproperty   	Boot_3eae51
+    109     getproperty   	Boot_85569f
     111     newfunction   	var undefined():void	/* disp_id 0*/
     113     initproperty  	init
     115     returnvoid    	
@@ -1588,7 +1578,7 @@ MethodBodies size 2397 52 %
     54      getlex        	Number
     56      setproperty   	Number
     58      getglobalscope	
-    59      getproperty   	Boot_3eae51
+    59      getproperty   	Boot_85569f
     61      setlocal1     	
     62      getlocal1     	
     63      pushfalse     	
@@ -1621,25 +1611,25 @@ MethodBodies size 2397 52 %
     3       callproperty  	isNaN (1)
     6       returnvalue   	
   }
-OPCODE	SIZE	% OF 1911
+OPCODE	SIZE	% OF 1904
 getlex        	176	9%
 coerce        	160	8%
-getproperty   	146	7%
+getproperty   	144	7%
 getlocal      	106	5%
 setlocal      	104	5%
 callproperty  	102	5%
 jump          	88	4%
 initproperty  	86	4%
-pushstring    	75	3%
+pushstring    	74	3%
 iffalse       	60	3%
 ifne          	60	3%
-getlocal1     	45	2%
-pushscope     	39	2%
+getlocal1     	44	2%
 callpropvoid  	39	2%
+pushscope     	38	1%
 returnvoid    	38	1%
-returnvalue   	38	1%
+returnvalue   	37	1%
 coerce_a      	37	1%
-getlocal0     	33	1%
+getlocal0     	32	1%
 pushnull      	30	1%
 pushbyte      	30	1%
 findpropstrict	30	1%

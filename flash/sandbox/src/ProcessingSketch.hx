@@ -10,16 +10,11 @@ class ProcessingSketch
 
 	public function new() 
 	{
-		
+		test();
 	}
 	
-	public function test()
+	private function test()
 	{
 		return 5;
-	}
-	
-	public function __init__()
-	{
-		return test;
 	}
 }
