@@ -278,10 +278,6 @@ class CompilationUnitScope extends Scope
 	public function getImports():Array<Array<String>> { return _imports; }
 }
 
-class ClassScope extends Scope
-{
-}
-
 class BlockScope extends Scope
 {
 	var statements:Array<Statement>;
@@ -304,6 +300,13 @@ class BlockScope extends Scope
 	
 	public function getStatement():Statement {
 		return SBlock(definitions, statements);
+	}
+}
+
+class ClassScope extends BlockScope
+{
+	override public function getStatement():Statement {
+		return SBlock([], statements);
 	}
 }
 
@@ -339,7 +342,7 @@ class ActiveProgram extends ClassScope, implements PdeProgram
 		// create compilation unit
 		return {
 		    packageIdent: [],
-		    importIdents: [],
+		    importIdents: [['xpde', 'core', '*'], ['xpde', 'xml', '*']],
 		    definitions: [classDefinition]
 		};
 	}

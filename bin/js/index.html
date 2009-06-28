@@ -1,0 +1,52 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+	<title>CocoParser</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="language" content="en" />
+	<meta name="description" content="" />
+	<meta name="keywords" content="" />
+	
+<script src="xpde-parser.js"></script>
+<script src="xpde-applet.js"></script>
+</head>
+<body>
+
+<canvas id="pde" width="200" height="200" style="border: 2px solid black"></canvas><br>
+
+<input type="button" value="Compile" onclick="JSMain.compile()">
+<input type="button" value="Interpret" onclick="JSMain.interpret()">
+<pre id="haxe:trace" style="color: red"></pre>
+<hr>
+
+<textarea id="script" rows="40" style="width: 95%">
+// All Examples Written by Casey Reas and Ben Fry
+// unless otherwise stated.
+void setup() 
+{
+  size(200, 200);
+  noStroke();
+  smooth();
+  noLoop();
+}
+
+void draw() 
+{
+  drawCircle(126, 170, 6);
+}
+
+void drawCircle(int x, int radius, int level) 
+{                    
+  float tt = 126 * level/4.0;
+  fill(tt);
+  ellipse(x, 100, radius*2, radius*2);      
+  if(level &gt; 1) {
+    level = level - 1;
+    drawCircle(x - radius/2, radius/2, level);
+    drawCircle(x + radius/2, radius/2, level);
+  }
+}
+</textarea>
+</body>
+</html>

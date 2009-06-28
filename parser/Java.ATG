@@ -521,7 +521,7 @@ QualidentList						(. var list:Array<Array<String>> = []; .)
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclarator<.scope:Scope, modifiers:EnumSet<Modifier>, type:DataType.>
+VariableDeclarator<.scope:BlockScope, modifiers:EnumSet<Modifier>, type:DataType.>
 = ident							(. var identifier:String = t.val; .)
   VariableDeclaratorRest<scope, modifiers, type, identifier>
 .
@@ -535,11 +535,11 @@ VariableDeclaratorId
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclaratorRest<.scope:Scope, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
+VariableDeclaratorRest<.scope:BlockScope, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
 = BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
 							(. var init:Expression = null; .)
-  [ "=" VariableInitializer<out expression:Expression>	(. init = expression; .)
-    ]							(. scope.pushDefinition(DField(identifier, type, modifiers, init)); .)
+  [ "=" VariableInitializer<out expression:Expression>	(. scope.pushStatement(SExpression(EAssignment(identifier, null, expression))); .)
+    ]							(. scope.pushDefinition(DField(identifier, type, modifiers)); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -562,14 +562,14 @@ ClassDeclaration<.scope:Scope, m:EnumSet<Modifier>.>
     ]
   [ "implements" TypeList<.out arg:Array<DataType>.>	(. implement = arg; .)
     ]
-  ClassBody<.out definitions:Array<Definition>.>	(. scope.pushDefinition(DClass(identifier, m, definitions, extend, implement)); .)
+  ClassBody<.out classScope:ClassScope.>		(. scope.pushDefinition(DClass(identifier, m, classScope.getDefinitions(), extend, implement, null, classScope.getStatement())); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-ClassBody<.out definitions:Array<Definition>.>		(. var classScope:ClassScope = new ClassScope(); .)
+ClassBody<.out classScope:ClassScope.>			(. classScope = new ClassScope(); .)
 = "{" { ClassBodyDeclaration<classScope>	
-        } "}"						(. definitions = classScope.getDefinitions(); .)
+        } "}"
 .
 
 /*---------------------------------------------------------------------------*/
@@ -578,7 +578,7 @@ ClassBodyDeclaration<scope:ClassScope>
 = ";"
 |							(. var m = new EnumSet<Modifier>(); .)
   ["static"						(. addModifier(m, MStatic); .)
-  ] ( Block<out block:Statement, null>			(. /* TODO */ .)
+  ] ( Block<out block:Statement, null>			(. scope.pushStatement(block); .)
     | [ Modifier1<m> { Modifier0<m> } ] MemberDecl<scope, m>
     )
 .
@@ -614,7 +614,7 @@ MethodOrFieldRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String, typ
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclaratorsRest<.scope:ClassScope, m:EnumSet<Modifier>, type:DataType, identifier:String.>
+VariableDeclaratorsRest<.scope:BlockScope, m:EnumSet<Modifier>, type:DataType, identifier:String.>
 = VariableDeclaratorRest<scope, m, type, identifier>
   {',' VariableDeclarator<scope, m, type>}
 .
@@ -761,10 +761,11 @@ Statement0<out statement:Statement, scope:BlockScope>
 | "for" "("						(. var forScope:BlockScope = new BlockScope(); .)
   [ ForInit<forScope> ] ";"				(. var conditional:Expression = EBooleanLiteral(true); .)
   [ Expression0<out expression:Expression>		(. conditional = expression; .)
-    ] ";"						(. var updateScope:BlockScope = new BlockScope(); .)
-  [ ForUpdate<updateScope> ] ")"
-  Statement0<out body:Statement, scope>			(. forScope.pushStatement(SLoop(conditional, body, false));
-							   forScope.concat(updateScope);
+    ] ";"						(. var body:Array<Statement> = []; .)
+  [ ForUpdate<.out updates:Array<Statement>.>		(. body = updates; .)
+    ] ")"
+  Statement0<out arg:Statement, scope>			(. body = [arg].concat(body);
+							   forScope.pushStatement(SLoop(conditional, SBlock([], body), false));
 							   statement = forScope.getStatement(); .)
 | "while" ParExpression<out condition:Expression>
   Statement0<out body:Statement, scope>			(. statement = SLoop(condition, body, false); .)
@@ -782,7 +783,7 @@ Statement0<out statement:Statement, scope:BlockScope>
 | "return"						(. var value:Expression = null; .)
   [ Expression0<out expression:Expression>		(. value = expression; .)
     ] ";"						(. statement = SReturn(value); .)
-| "throw" Expression0<out expression:Expression> ";"	/* TODO */
+| "throw" Expression0<out expression:Expression> ";"	(. statement = SThrow(expression); .)
 | "break"						(. var label:String = null; .)
   [ ident						(. label = t.val; .)
     ] ';'						(. statement = SBreak(label); .)
@@ -818,7 +819,7 @@ LocalVariableDeclaration<scope:BlockScope>		(. var modifiers = new EnumSet<Modif
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclarators<scope, modifiers, type>
+VariableDeclarators<.scope:BlockScope, modifiers:EnumSet<Modifier>, type:DataType.>
 = VariableDeclarator<scope, modifiers, type>
   { "," VariableDeclarator<scope, modifiers, type> }
 .
@@ -836,12 +837,9 @@ ForInit<scope:BlockScope>
 
 /*---------------------------------------------------------------------------*/
 
-ForUpdate<scope:BlockScope>
-= StatementExpression<out statement:Statement>			(. scope.pushStatement(statement); .)
-  MoreStatementExpressions<.out statements:Array<Statement>.>	(.
-								for (statement in statements)
-									scope.pushStatement(statement);
-								.)
+ForUpdate<.out statements:Array<Statement>.>
+= StatementExpression<out statement:Statement>			(. statements = [statement]; .)
+  MoreStatementExpressions<.out arg:Array<Statement>.>		(. statements = statements.concat(arg); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -1064,7 +1062,7 @@ ArrayCreatorRest<out expression:Expression, type:DataType>
 
 ClassCreatorRest<.out expression:Expression, qualifier:Array<String>.>
 = Arguments<.out arguments:Array<Expression>.>		(. expression = EObjectInstantiation(qualifier, arguments); .)
-  [ ClassBody<.out definitions:Array<Definition>.> ]	(. /* TODO */ .)
+  [ ClassBody<.out classScope:ClassScope.> ]		(. /* TODO */ .)
 .
 
 /*---------------------------------------------------------------------------*/
