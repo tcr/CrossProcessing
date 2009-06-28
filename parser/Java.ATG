@@ -1,0 +1,1169 @@
+import xpde.parser.Scanner;
+import xpde.parser.AST;
+import xpde.parser.EnumSet;
+
+COMPILER PdeProgram
+  
+/*---------------------------- token sets -----------------------------------*/
+
+static var maxTerminals:Int = 160;  // set size
+
+static function newSet(values:Array<Int>):BitSet {
+  var s:BitSet = new BitSet(maxTerminals);
+  for (i in 0...values.length) s.set(values[i]);
+  return s;
+}
+
+static function or(s1:BitSet, s2:BitSet):BitSet {
+  s1.or(s2);
+  return s1;
+}
+
+static var typeKWarr:Array<Int> = [_byte, _short, _char, _int, _long, _float, _double, 
+                          _boolean];
+static var castFollowerArr:Array<Int> = [_ident, _new, _super, _this, _void, _intLit,
+                                _floatLit, _charLit, _stringLit, _true, _false,
+                                _null, _lpar, _not, _tilde];
+static var prefixArr:Array<Int> = [_inc, _dec, _not, _tilde, _plus, _minus];                                
+
+static var typeKW:BitSet       = newSet(typeKWarr);
+static var castFollower:BitSet = or(newSet(castFollowerArr), typeKW);
+static var prefix:BitSet       = newSet(prefixArr);
+
+/*---------------------------- auxiliary methods ----------------------------*/
+
+public function error (s:String):Void {
+  if (errDist >= minErrDist) errors.SemErr(la.line, la.col, s);
+  errDist = 0;
+}
+
+// "(" BasicType {"[""]"} ")"
+function isSimpleTypeCast ():Bool {
+  // assert: la.kind == _lpar
+  scanner.ResetPeek();
+  var pt1:Token = scanner.Peek();
+  
+  if (typeKW.get(pt1.kind)) {
+    var pt:Token = scanner.Peek();
+    pt = skipDims(pt);
+    if (pt != null) {
+      return pt.kind == _rpar;
+    }
+  }
+  return false;
+}
+
+// "(" Qualident {"[" "]"} ")" castFollower
+function guessTypeCast ():Bool {
+  // assert: la.kind == _lpar
+  scanner.ResetPeek();
+  var pt:Token = scanner.Peek();
+  pt = rdQualident(pt);
+  if (pt != null) {
+    pt = skipDims(pt);
+    if (pt != null) {
+      var pt1:Token = scanner.Peek();
+      return pt.kind == _rpar && castFollower.get(pt1.kind);
+    }
+  }
+  return false;
+}
+
+// "[" "]"
+function skipDims (pt:Token):Token {
+  if (pt.kind != _lbrack) return pt;
+  do {
+     pt = scanner.Peek();
+    if (pt.kind != _rbrack) return null;
+     pt = scanner.Peek();
+  } while (pt.kind == _lbrack);  
+  return pt;
+}
+
+/* Checks whether the next sequence of tokens is a qualident *
+ * and returns the qualident string                          *
+ * !!! Proceeds from current peek position !!!               */
+function rdQualident (pt:Token):Token {
+  var qualident:String = "";
+  
+  if (pt.kind == _ident) {
+    qualident = pt.val;
+    pt = scanner.Peek();
+    while (pt.kind == _dot) {
+      pt = scanner.Peek();
+      if (pt.kind != _ident) return null;
+      qualident += "." + pt.val;
+      pt = scanner.Peek();
+    }
+    return pt;
+  } else return null;
+}
+
+// Return the n-th token after the current lookahead token
+function peek(n:Int):Token {
+  scanner.ResetPeek();
+  var x:Token = la;
+  while (n > 0) { x = scanner.Peek(); n--; }
+  return x;
+}
+
+
+function checkExprStat(expression:Expression):Void {
+	switch (expression)
+	{
+	    case ECall(_, _):
+	    case ECallMethod(_, _, _):
+	    case EObjectInstantiation(_, _):
+	    case EAssignment(_, _, _):
+	    case EPrefix(_, _):
+	    case EPostfix(_, _):
+	    default: error("not a statement" + " (" + expression + ")");
+	}
+}
+
+/*---------------------------- type ----------------------------*/
+
+function compoundBrackets(type:DataType, bCount:Int):DataType {
+	if (bCount == 0)
+		return type;
+	switch (type) {
+	    case DTArray(type, dimensions): return DTArray(type, dimensions + bCount);
+	    default: return DTArray(type, bCount);
+	}
+}
+
+/*---------------------------- modifiers ----------------------------*/
+
+function addModifier(set:EnumSet<Modifier>, modifier:Modifier):Void {
+	if (set.contains(modifier))
+		error("repeated modifier " + modifier);
+	else
+		set.add(modifier);
+}
+
+function checkModifierPermission(set:EnumSet<Modifier>, permission:EnumSet<Modifier>):Void {
+	for (modifier in set)
+		if (!permission.contains(modifier))
+			error("modifier(s) " + set + "not allowed here");
+	else
+		checkModifierAccess(set);
+}
+
+function checkModifierAccess(set:EnumSet<Modifier>):Void {
+	var access:Int = 0;
+	if (set.contains(MPublic))
+		access++;
+	if (set.contains(MPrivate))
+		access++;
+	if (set.contains(MProtected))
+		access++;
+	if (access > 1)
+		error("illegal combination of modifiers: " + set);
+}
+
+/*-----------------------------------------------------------------*
+ * Resolver routines to resolve LL(1) conflicts:                   *
+ * These routines return a boolean value that indicates            *
+ * whether the alternative at hand shall be choosen or not.        *
+ * They are used in IF ( ... ) expressions.                        *       
+ *-----------------------------------------------------------------*/
+
+// ',' (no '}')
+function commaAndNoRBrace():Bool {
+  return (la.kind == _comma && peek(1).kind != _rbrace);
+}
+
+// '.' ident
+function dotAndIdent():Bool {
+  return la.kind == _dot && peek(1).kind == _ident;
+}
+
+// ident '('
+function identAndLPar ():Bool {
+  return la.kind == _ident && peek(1).kind == _lpar;
+}
+
+// ident ':'
+function isLabel():Bool {
+  return la.kind == _ident && peek(1).kind == _colon;
+}
+
+// '[' (no ']')
+function nonEmptyBracket():Bool {
+  return (la.kind == _lbrack && peek(1).kind != _rbrack);
+}
+
+// '['']'
+function emptyBracket():Bool {
+  return (la.kind == _lbrack && peek(1).kind == _rbrack);
+}
+
+// final or Type ident
+function isLocalVarDecl(finalIsSuccess:Bool):Bool {
+  var pt:Token = la;
+  scanner.ResetPeek();
+  
+  if (la.kind == _final) 
+    if (finalIsSuccess) return true;
+    else pt = scanner.Peek();
+
+  // basicType | ident
+  if (typeKW.get(pt.kind))
+    pt = scanner.Peek();
+  else
+    pt = rdQualident(pt);
+    
+  if (pt != null) {
+    pt = skipDims(pt);
+    if (pt != null) {
+      return pt.kind == _ident;
+    }
+  }
+  return false;
+}
+
+function isTypeCast():Bool {
+  if (la.kind != _lpar) return false;
+  if (isSimpleTypeCast()) return true;
+  return guessTypeCast();
+}
+
+// '.' ("super" '.' | "class" | "this") | '(' | '['']'
+function isIdentSuffix():Bool {
+  if (la.kind == _dot) {
+    scanner.ResetPeek();
+    var pt:Token = scanner.Peek();
+    if (pt.kind == _super) return scanner.Peek().kind == _dot;
+    return (pt.kind == _class || pt.kind == _this);
+  }
+  return (la.kind == _lpar || emptyBracket());
+}
+
+/*--------------------------- program type -------------------------*/
+
+/* http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/app/preproc/pde.g?view=markup */
+
+function isJavaProgram():Bool {
+	return (la.kind == _public && peek(1).kind == _class) || (la.kind == _import_);
+}
+
+function isActiveProgram():Bool {
+	return (la.kind == _void && peek(1).kind == _ident && peek(2).kind == _lpar);
+}
+
+/*[NOTE] pde vs. java changes are available here:
+http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/app/preproc/pde.g?view=markup */
+
+/*-------------------------------------------------------------------------*/
+
+CHARACTERS
+  tab           = '\u0009'. /*  9 = tabulator */
+  lf            = '\u000a'. /* 10 = line feed */
+  cr            = '\u000d'. /* 13 = carriage return */
+
+  zero          = '0'.
+  zeroToThree   = zero + "123" .
+  octalDigit    = zero + "1234567" . 
+  nonZeroDigit  = "123456789".
+  digit         = '0' + nonZeroDigit .
+  hexDigit      = digit + "ABCDEFabcdef" .
+  letter        = 'A' .. 'Z' + 'a' .. 'z' + '_' + '$'.
+
+  char          = ANY - "'" - '\\' - cr - lf.
+  stringChar    = ANY - "\"" - '\\' - cr - lf.
+
+TOKENS
+  ident         = letter { letter | digit }.
+  /*-------------------------------------------------------------------------*/
+  intLit = 
+  (  zero | nonZeroDigit { digit }
+  | ( "0x" | "0X" ) hexDigit { hexDigit }
+  | '0' octalDigit { octalDigit }
+  ) [ "l" | "L" ].
+  /*-------------------------------------------------------------------------*/
+  floatLit =
+    "." digit {digit} 
+    [("e" | "E") ["+" | "-"] digit {digit}] 
+    [ "F" | "f" | "D" | "d" ]
+  | digit {digit} 
+    ( "." {digit} 
+      [("e" | "E" ) ["+" | "-"] digit {digit} ] 
+      [ "F" | "f" | "D" | "d" ]
+    | ("e" | "E") ["+" | "-"] digit {digit}
+      [ "F" | "f" | "D" | "d" ]
+    | "F" | "f" | "D" | "d"
+    ).  
+  /*-------------------------------------------------------------------------*/
+  charLit = 
+    "'" ( char
+        | "\\" ( "b" | "t" | "n" | "f" | "r" | "\"" | "\'" | "\\"
+               | "u" { "u" } hexDigit hexDigit hexDigit hexDigit
+               | zeroToThree [ octalDigit ] [ octalDigit ]
+               | octalDigit [ octalDigit ]
+               )
+        ) 
+    "'".
+  /*-------------------------------------------------------------------------*/
+  stringLit = 
+    "\"" { stringChar
+         | "\\" ( "b" | "t" | "n" | "f" | "r" | "\"" | "\'" | "\\"
+                | "u" { "u" } hexDigit hexDigit hexDigit hexDigit
+                | zeroToThree [ octalDigit ] [ octalDigit ]
+                | octalDigit [ octalDigit ]
+                )
+         } 
+    "\"".
+
+  /*----- keyword names needed in LL(1) resolvers -----*/
+
+  boolean = "boolean".
+  byte    = "byte".
+  char    = "char".
+  class   = "class".
+  double  = "double".
+  false   = "false".
+  final   = "final".
+  float   = "float".
+  import_ = "import".
+  int     = "int".
+  long    = "long".
+  new     = "new".
+  null    = "null".
+  public  = "public".
+  short   = "short".
+  static  = "static".
+  super   = "super".
+  this    = "this".
+  true    = "true".
+  void    = "void".
+  
+  /*----- operators and special characters needed in LL(1) resolvers --------------*/
+
+  colon   = ":".
+  comma   = ",".
+  dec     = "--".
+  dot     = ".".
+  inc     = "++".
+  lbrace  = "{".
+  lbrack  = "[".
+  lpar    = "(".
+  minus   = "-".
+  not     = "!".
+  plus    = "+".
+  rbrace  = "}".
+  rbrack  = "]".
+  rpar    = ")".
+  tilde   = "~".
+
+COMMENTS FROM "/*" TO "*/"
+COMMENTS FROM "//" TO lf
+
+IGNORE lf + cr + tab
+
+/*---------------------------------------------------------------------------*/
+
+PRODUCTIONS
+
+PdeProgram<out program:PdeProgram>
+= IF (isJavaProgram())					(. program = new JavaProgram(); .)
+  CompilationUnit<cast(program, CompilationUnitScope)>
+|							(. var tempScope:BlockScope = new BlockScope(); .)
+  { (IF (isLocalVarDecl(false)) LocalVariableDeclaration<tempScope>) ";" }
+  ( IF (isActiveProgram())				(. program = new ActiveProgram(); (cast(program, Scope)).concat(tempScope); .)
+    ClassBodyDeclaration<cast(program, ClassScope)> { ClassBodyDeclaration<cast(program, ClassScope)> }
+    |							(. program = new StaticProgram(); (cast(program, Scope)).concat(tempScope); .)
+      BlockStatement<cast(program, BlockScope)> { BlockStatement<cast(program, BlockScope)> }
+    )							(. if (la.kind != _EOF) error("unexpected script termination"); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+CompilationUnit<scope:CompilationUnitScope>
+= [ "package" Qualident<.out qualident:Array<String>.> (. scope.setPackage(qualident); .)
+    ';' ]
+  { ImportDeclaration<.out importIdent:Array<String>.>	(. scope.pushImport(importIdent); .)
+    }
+  { TypeDeclaration<scope>
+    }							(. if (la.kind != _EOF) error("'class' or 'interface' expected"); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Qualident<.out qualident:Array<String>.>		(. qualident = []; .)
+= ident							(. qualident.push(t.val); .)
+  { '.' ident						(. qualident.push(t.val); .)
+    }
+.
+
+/*---------------------------------------------------------------------------*/
+
+ImportDeclaration<.out importIdent:Array<String>.>
+= "import" ident					(. importIdent = [t.val]; .)
+  QualifiedImport<.out arg:Array<String>.> ';'		(. importIdent = importIdent.concat(arg); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+QualifiedImport<.out importIdent:Array<String>.>
+= "." (ident						(. importIdent = [t.val]; .)
+        [QualifiedImport<. out arg:Array<String>.>	(. importIdent = importIdent.concat(arg); .)
+	  ] | "*"					(. importIdent = ['*']; .) 
+          )
+.
+
+/*---------------------------------------------------------------------------*/
+
+TypeDeclaration<scope:Scope>
+= ClassOrInterfaceDeclaration<scope>
+| ";"
+.
+
+/*---------------------------------------------------------------------------*/
+
+ClassOrInterfaceDeclaration<scope:Scope>		(. var m = new EnumSet<Modifier>(); .) 
+= { ClassModifier<m> } 
+  ( ClassDeclaration<scope, m>
+  |  InterfaceDeclaration<scope, m>
+  )
+.
+
+/*---------------------------------------------------------------------------*/
+
+ClassModifier<.m:EnumSet<Modifier>.>
+= "public"						(. addModifier(m, MPublic); .)
+| "protected"						(. addModifier(m, MProtected); .)
+| "private"						(. addModifier(m, MPrivate); .)
+| "abstract"						(. addModifier(m, MAbstract); .)
+| "static"						(. addModifier(m, MStatic); .)
+| "final"						(. addModifier(m, MFinal); .)
+| "strictfp"						(. addModifier(m, MStrictfp); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Modifier0<.m:EnumSet<Modifier>.>
+= "static"						(. addModifier(m, MStatic); .)
+|  Modifier1<m>
+.
+
+/*---------------------------------------------------------------------------*/
+
+Modifier1<.m:EnumSet<Modifier>.>
+= "public"						(. addModifier(m, MPublic); .)
+| "protected"						(. addModifier(m, MProtected); .)
+| "private"						(. addModifier(m, MPrivate); .)
+| "abstract"						(. addModifier(m, MAbstract); .)
+| "final"						(. addModifier(m, MFinal); .)
+| "native"						(. addModifier(m, MNative); .)
+| "synchronized"					(. addModifier(m, MSynchronized); .)
+| "transient"						(. addModifier(m, MTransient); .)
+| "volatile"						(. addModifier(m, MVolatile); .)
+| "strictfp"						(. addModifier(m, MStrictfp); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Type<out type:DataType>
+= ( Qualident<.out qualident:Array<String>.>		(. type = DTReference(qualident); .)
+  | BasicType<out primitive:PrimitiveType>		(. type = DTPrimitive(primitive); .) 
+  ) BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+BasicType<out type:PrimitiveType>
+= "byte"						(. type = PTByte; .)
+| "short"						(. type = PTShort; .)
+| "char"						(. type = PTChar; .)
+| "int"							(. type = PTInt; .)
+| "long"						(. type = PTLong; .)
+| "float"						(. type = PTFloat; .)
+| "double"						(. type = PTDouble; .)
+| "boolean"						(. type = PTBoolean; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+BracketsOpt<out bCount:Int>				(. bCount = 0; .)
+= { "[" "]"						(. bCount++; .)
+    }
+.
+
+/*---------------------------------------------------------------------------*/
+
+TypeList<.out list:Array<DataType>.>			(. list = []; .)	
+= Type<out type:DataType>				(. list.push(type); .)
+  { "," Type<out type:DataType>				(. list.push(type); .)
+    }
+.
+
+/*---------------------------------------------------------------------------*/
+
+/*
+FormalParameter0<out parameter:FormalParameter>
+= [ "final" ] Type<out type:DataType> VariableDeclaratorId
+.*/
+
+FormalParameter0<out parameter:FormalParameter>		(. var modifiers = new EnumSet<Modifier>(); .)
+= [ "final"						(. modifiers.add(MFinal); .)
+    ] Type<out type:DataType> ident			(. var identifier:String = t.val; .)
+  BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
+							(. parameter = {identifier: identifier, type: type, modifiers: modifiers}; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+QualidentList						(. var list:Array<Array<String>> = []; .)
+= Qualident<.out qualident:Array<String>.>		(. list.push(qualident); .)
+  { "," Qualident<.out qualident:Array<String>.>	(. list.push(qualident); .)
+    }
+.
+
+/*---------------------------------------------------------------------------*/
+
+VariableDeclarator<.scope:BlockScope, modifiers:EnumSet<Modifier>, type:DataType.>
+= ident							(. var identifier:String = t.val; .)
+  VariableDeclaratorRest<scope, modifiers, type, identifier>
+.
+
+/*---------------------------------------------------------------------------*/
+
+/*
+VariableDeclaratorId
+= ident BracketsOpt
+.*/
+
+/*---------------------------------------------------------------------------*/
+
+VariableDeclaratorRest<.scope:BlockScope, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
+= BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
+							(. var init:Expression = null; .)
+  [ "=" VariableInitializer<out expression:Expression>	(. scope.pushStatement(SExpression(EAssignment(identifier, null, expression))); .)
+    ]							(. scope.pushDefinition(DField(identifier, type, modifiers)); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+/*[TODO] this should not be an init expression in a block scope!!!! */
+
+VariableInitializer<out expression:Expression>
+= ArrayInitializer<out arg:Expression>			(. expression = arg; .)
+| Expression0<out arg:Expression>			(. expression = arg; .)
+.
+
+/*---------------------------------------------------------------------------*
+ *---------------------------- Classes --------------------------------------*
+ *---------------------------------------------------------------------------*/
+
+ClassDeclaration<.scope:Scope, m:EnumSet<Modifier>.>
+= 							(. checkModifierPermission(m, ModifierSet.classes); .)
+  "class" ident						(. var identifier:String = t.val, extend:DataType = null, implement:Array<DataType> = null; .)
+  [ "extends" Type<out arg:DataType> 			(. extend = arg; .)
+    ]
+  [ "implements" TypeList<.out arg:Array<DataType>.>	(. implement = arg; .)
+    ]
+  ClassBody<.out classScope:ClassScope.>		(. scope.pushDefinition(DClass(identifier, m, classScope.getDefinitions(), extend, implement, null, classScope.getStatement())); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+ClassBody<.out classScope:ClassScope.>			(. classScope = new ClassScope(); .)
+= "{" { ClassBodyDeclaration<classScope>	
+        } "}"
+.
+
+/*---------------------------------------------------------------------------*/
+
+ClassBodyDeclaration<scope:ClassScope>
+= ";"
+|							(. var m = new EnumSet<Modifier>(); .)
+  ["static"						(. addModifier(m, MStatic); .)
+  ] ( Block<out block:Statement, null>			(. scope.pushStatement(block); .)
+    | [ Modifier1<m> { Modifier0<m> } ] MemberDecl<scope, m>
+    )
+.
+
+/*---------------------------------------------------------------------------*/
+
+MemberDecl<.scope:ClassScope, m:EnumSet<Modifier>.>
+= IF (identAndLPar()) ident				(. var identifier:String = t.val; .) /* TODO: check constructor name == ident name */
+  ConstructorDeclaratorRest<scope, m, identifier>
+| MethodOrFieldDecl<scope, m>
+|							(. checkModifierPermission(m, ModifierSet.methods); .)
+  "void" ident						(. var identifier:String = t.val; .)
+  VoidMethodDeclaratorRest<scope, m, identifier>
+| ClassDeclaration<scope, m>
+| InterfaceDeclaration<scope, m>
+.
+
+/*---------------------------------------------------------------------------*/
+
+MethodOrFieldDecl<.scope:ClassScope, m:EnumSet<Modifier>.>
+= Type<out type:DataType> ident				(. var identifier:String = t.val; .)
+  MethodOrFieldRest<scope, m, identifier, type>
+.
+
+/*---------------------------------------------------------------------------*/
+
+MethodOrFieldRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String, type:DataType.>
+=							(. checkModifierPermission(m, ModifierSet.fields);  .) 
+  VariableDeclaratorsRest<scope, m, type, identifier> ';'
+|							(. checkModifierPermission(m, ModifierSet.methods); .)
+  MethodDeclaratorRest<scope, m, identifier, type>
+.
+
+/*---------------------------------------------------------------------------*/
+
+VariableDeclaratorsRest<.scope:BlockScope, m:EnumSet<Modifier>, type:DataType, identifier:String.>
+= VariableDeclaratorRest<scope, m, type, identifier>
+  {',' VariableDeclarator<scope, m, type>}
+.
+
+/*---------------------------------------------------------------------------*/
+
+ArrayInitializer<out expression:Expression>		(. var values:Array<Expression> = []; .)
+= "{" [ VariableInitializer<out arg:Expression>		(. values.push(arg); .)
+        { IF (commaAndNoRBrace()) ","
+	  VariableInitializer<out arg:Expression>	(. values.push(arg); .)
+	  }       
+      ] [ "," ] 
+  "}"
+.
+
+/*---------------------------------------------------------------------------*/
+
+MethodDeclaratorRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String, type:DataType.>
+=							(. var body:Statement = null; .)
+  FormalParameters<.out parameters:Array<FormalParameter>.>
+  BracketsOpt<out bCount:Int> [ "throws" QualidentList]
+  ( Block<out block:Statement, null>			(. body = block; .)
+  | ";"
+  )							(. scope.pushDefinition(DMethod(identifier, type, m, parameters, body)); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+VoidMethodDeclaratorRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String.>
+=							(. var body:Statement = null; .)
+  FormalParameters<.out parameters:Array<FormalParameter>.>
+  ["throws" QualidentList]
+  (Block<out block:Statement, null>			(. body = block; .)
+    | ';')						(. scope.pushDefinition(DMethod(identifier, null, m, parameters, body)); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+ConstructorDeclaratorRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String.>
+=							(. checkModifierPermission(m, ModifierSet.constructors);
+							   var throwsList:Array<Array<String>> = []; .)
+  FormalParameters<.out parameters:Array<FormalParameter>.>
+  [ "throws" QualidentList ]
+  Block<out body:Statement, null>			(. scope.pushDefinition(DMethod(identifier, null, m, parameters, body)); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+FormalParameters<.out parameters:Array<FormalParameter>.>	(. parameters = []; .)
+= "(" [ FormalParameter0<out parameter:FormalParameter>		(. parameters.push(parameter); .)
+        { "," FormalParameter0<out parameter:FormalParameter>	(. parameters.push(parameter); .)
+	  } ] ")"
+.
+
+/*---------------------------------------------------------------------------*
+ *---------------------------- Interfaces -----------------------------------*
+ *---------------------------------------------------------------------------*/
+
+InterfaceDeclaration<.scope:Scope, m:EnumSet<Modifier>.>
+=							(. checkModifierPermission(m, ModifierSet.interfaces); .)
+  "interface" ident [ "extends" TypeList<.out extend:Array<DataType>.> ] InterfaceBody
+.
+
+/*---------------------------------------------------------------------------*/
+
+InterfaceBody
+= "{" { InterfaceBodyDeclaration } "}"
+.
+
+/*---------------------------------------------------------------------------*/
+
+InterfaceBodyDeclaration				(. var m = new EnumSet<Modifier>(); .) 
+= ";"
+| { Modifier0<m> } InterfaceMemberDecl<m>
+.
+
+/*---------------------------------------------------------------------------*/
+
+InterfaceMemberDecl<.m:EnumSet<Modifier>.>
+= InterfaceMethodOrFieldDecl<m>
+|							(. checkModifierPermission(m, ModifierSet.interfaces); .)
+  "void" ident VoidInterfaceMethodDeclaratorRest
+| ClassDeclaration<null, m>
+| InterfaceDeclaration<null, m>
+.
+
+/*---------------------------------------------------------------------------*/
+
+InterfaceMethodOrFieldDecl<.m:EnumSet<Modifier>.>
+= Type<out type:DataType> ident InterfaceMethodOrFieldRest<m>
+.
+
+/*---------------------------------------------------------------------------*/
+
+InterfaceMethodOrFieldRest<.m:EnumSet<Modifier>.>
+=							(. checkModifierPermission(m, ModifierSet.constants);  .) 
+  ConstantDeclaratorsRest ";"
+|							(. checkModifierPermission(m, ModifierSet.interfaces); .) 
+  InterfaceMethodDeclaratorRest
+.
+
+/*---------------------------------------------------------------------------*/
+
+ConstantDeclaratorsRest
+= ConstantDeclaratorRest { "," ConstantDeclarator }
+.
+
+/*---------------------------------------------------------------------------*/
+
+ConstantDeclaratorRest
+= BracketsOpt<out bCount:Int> "=" VariableInitializer<out expression:Expression>
+.
+
+/*---------------------------------------------------------------------------*/
+
+ConstantDeclarator
+= ident ConstantDeclaratorRest
+.
+
+/*---------------------------------------------------------------------------*/
+
+InterfaceMethodDeclaratorRest
+= FormalParameters<.out parameters:Array<FormalParameter>.> BracketsOpt<out bCount:Int> [ "throws" QualidentList] ";"
+.
+
+/*---------------------------------------------------------------------------*/
+
+VoidInterfaceMethodDeclaratorRest
+= FormalParameters<.out parameters:Array<FormalParameter>.> [ "throws" QualidentList] ";"
+.
+
+/*---------------------------------------------------------------------------*
+ *---------------------------- Statements -----------------------------------*
+ *---------------------------------------------------------------------------*/
+
+/*---------------------------------------------------------------------------*/
+
+Statement0<out statement:Statement, scope:BlockScope>
+= Block<out block:Statement, scope>			(. statement = block; .)
+| "if" ParExpression<out condition:Expression>
+   Statement0<out thenStatement:Statement, scope>	(. var elseStatement:Statement = null; .)
+   [ "else" Statement0<out body:Statement, scope>	(. elseStatement = body; .)
+     ]							(. statement = SConditional(condition, thenStatement, elseStatement); .)
+| "for" "("						(. var forScope:BlockScope = new BlockScope(); .)
+  [ ForInit<forScope> ] ";"				(. var conditional:Expression = EBooleanLiteral(true); .)
+  [ Expression0<out expression:Expression>		(. conditional = expression; .)
+    ] ";"						(. var body:Array<Statement> = []; .)
+  [ ForUpdate<.out updates:Array<Statement>.>		(. body = updates; .)
+    ] ")"
+  Statement0<out arg:Statement, scope>			(. body = [arg].concat(body);
+							   forScope.pushStatement(SLoop(conditional, SBlock([], body), false));
+							   statement = forScope.getStatement(); .)
+| "while" ParExpression<out condition:Expression>
+  Statement0<out body:Statement, scope>			(. statement = SLoop(condition, body, false); .)
+| "do" Statement0<out body:Statement, scope>
+  "while" ParExpression<out condition:Expression> ";"	(. statement = SLoop(condition, body, true); .)
+| "try" Block<out body:Statement, scope>		(. var catches:Array<Catch> = [], finallyBody:Statement = null; .)
+  ( Catches<.out _catches:Array<Catch>, scope.>	(. catches = _catches; .)
+    [ "finally" Block<out block:Statement, scope>	(. finallyBody = block; .)
+      ]
+    | "finally" Block<out block:Statement, scope>	(. finallyBody = block; .)
+      )							(. statement = STry(body, catches, finallyBody); .)
+| "switch" ParExpression<out expression:Expression> '{' SwitchBlockStatementGroups '}' /* TODO */
+| "synchronized" ParExpression<out expression:Expression>
+  Block<out block:Statement, null>			/* TODO */
+| "return"						(. var value:Expression = null; .)
+  [ Expression0<out expression:Expression>		(. value = expression; .)
+    ] ";"						(. statement = SReturn(value); .)
+| "throw" Expression0<out expression:Expression> ";"	(. statement = SThrow(expression); .)
+| "break"						(. var label:String = null; .)
+  [ ident						(. label = t.val; .)
+    ] ';'						(. statement = SBreak(label); .)
+| "continue"						(. var label:String = null; .)
+  [ ident						(. label = t.val; .)
+    ] ';'						(. statement = SContinue(label); .)
+| ";"
+| IF (isLabel()) ident					(. var label:String = t.val; .)
+  ":" Statement0<out body:Statement, scope>		(. statement = SLabel(label, body); .)
+| StatementExpression<out arg:Statement> ';'		(. statement = arg; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Block<out statement:Statement, parent:BlockScope>	(. var scope:BlockScope = new BlockScope(); .)
+= "{" { BlockStatement<scope> } "}"			(. statement = scope.getStatement(); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+BlockStatement<scope:BlockScope>
+= IF(isLocalVarDecl(false)) LocalVariableDeclaration<scope> ";"
+| ClassOrInterfaceDeclaration<scope>
+| Statement0<out statement:Statement, scope>		(. scope.pushStatement(statement); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+LocalVariableDeclaration<scope:BlockScope>		(. var modifiers = new EnumSet<Modifier>(); .)
+= [ "final"						(. modifiers.add(MFinal); .)
+    ] Type<out type:DataType> VariableDeclarators<scope, modifiers, type>
+.
+
+/*---------------------------------------------------------------------------*/
+
+VariableDeclarators<.scope:BlockScope, modifiers:EnumSet<Modifier>, type:DataType.>
+= VariableDeclarator<scope, modifiers, type>
+  { "," VariableDeclarator<scope, modifiers, type> }
+.
+
+/*---------------------------------------------------------------------------*/
+
+ForInit<scope:BlockScope>
+= IF (isLocalVarDecl(true)) LocalVariableDeclaration<scope>
+| StatementExpression<out statement:Statement>			(. scope.pushStatement(statement); .)
+  MoreStatementExpressions<.out statements:Array<Statement>.>	(.
+								for (statement in statements)
+									scope.pushStatement(statement);
+								.)
+.
+
+/*---------------------------------------------------------------------------*/
+
+ForUpdate<.out statements:Array<Statement>.>
+= StatementExpression<out statement:Statement>			(. statements = [statement]; .)
+  MoreStatementExpressions<.out arg:Array<Statement>.>		(. statements = statements.concat(arg); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+StatementExpression<out statement:Statement>
+= Expression0<out expression:Expression>		(. checkExprStat(expression);
+							   statement = SExpression(expression); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+MoreStatementExpressions<.out statements:Array<Statement>.>
+=							(. statements = []; .)
+  { "," StatementExpression<out statement:Statement>	(. statements.push(statement); .)
+    }
+.
+
+/*---------------------------------------------------------------------------*/
+
+Catches<.out catches:Array<Catch>, scope:BlockScope.>	(. catches = []; .)
+= CatchClause<out catchBlock:Catch, scope>		(. catches.push(catchBlock); .)
+  { CatchClause<out catchBlock:Catch, scope>		(. catches.push(catchBlock); .)
+    }
+.
+
+/*---------------------------------------------------------------------------*/
+
+CatchClause<out _catch:Catch, scope:BlockScope>
+= "catch" "(" FormalParameter0<out parameter:FormalParameter> ")"
+  Block<out block:Statement, scope>			(. _catch = {parameter: parameter, body: block}; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+SwitchBlockStatementGroups
+= { SwitchBlockStatementGroup }
+.
+
+/*---------------------------------------------------------------------------*/
+
+SwitchBlockStatementGroup
+= SwitchLabel { BlockStatement<null> }
+.
+
+/*---------------------------------------------------------------------------*/
+
+SwitchLabel
+= "case" Expression0<out expression:Expression> ':'
+| "default" ':'
+.
+
+/*---------------------------------------------------------------------------*
+ *---------------------------- Expressions ----------------------------------*
+ *---------------------------------------------------------------------------*/
+
+Expression0<out expression:Expression>
+= Expression1<out expression:Expression>
+  {
+    AssignmentOperator<out operator:InfixOperator>
+    Expression1<out value:Expression>			(.
+							// rewrite assignment operators as expressions
+							if (operator != null)
+								value = EInfixOperation(operator, expression, value);
+							// extract reference type
+							switch (expression) {
+							    case EReference(identifier, base): expression = EAssignment(identifier, base, value);
+							    case EArrayAccess(index, base): expression = EArrayAssignment(index, base, value);
+							    default: error('invalid assignment left-hand side');
+							}
+							.)
+  }
+.
+
+/*---------------------------------------------------------------------------*/
+
+Expression1<out expression:Expression>
+= Expression2<out expression:Expression>
+  [ ConditionalExpr<out rest:Expression, expression>	(. expression = rest; .)
+    ]
+.
+
+/*---------------------------------------------------------------------------*/
+
+ConditionalExpr<out expression:Expression, conditional:Expression>
+= "?" Expression0<out thenExpression:Expression>
+  ":" Expression1<out elseExpression:Expression>	(. expression = EConditional(conditional, thenExpression, elseExpression); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Expression2<out expression:Expression>
+= Expression3<out expression:Expression>
+  [ Expression2Rest<out rest:Expression, expression>	(. expression = rest; .)
+    ]
+.
+
+/*---------------------------------------------------------------------------*/
+
+Expression2Rest<out expression:Expression, operand:Expression>
+=							(. var builder = new OperationBuilder(); builder.operand(operand); .)
+  Infixop<out operator:InfixOperator>			(. builder.operator(operator); .)
+  Expression3<out operand:Expression>			(. builder.operand(operand); .)
+  { Infixop<out operator:InfixOperator>			(. builder.operator(operator); .)
+    Expression3<out operand:Expression>			(. builder.operand(operand); .)
+    }							(. expression = builder.reduce(); .)
+| "instanceof" Type<out type:DataType>			(. expression = EInstanceOf(expression, type); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+/*
+Expression3<out expression:Expression>               (. var pre:Int = ExprKind.NONE;        .)
+= { IF(prefix.get(la.kind) || isTypeCast())
+    ( PrefixOp<info>      (. if(pre == ExprKind.NONE) pre = info.getKind(); .)
+    | "(" Type ")"                       (. info.setKind(ExprKind.TYPECAST);.)
+    )
+  }
+  Primary<info> { Selector<info> } { PostfixOp<info> }
+                            (. if (pre != ExprKind.NONE) info.setKind(pre); .)
+.*/
+
+Expression3<out expression:Expression>
+= ( Increment<out type:IncrementType>
+    Expression3<out rest:Expression>			(. expression = EPrefix(type, rest); .)
+    | PrefixOp<out operator:PrefixOperator>
+      Expression3<out rest:Expression>			(. expression = EPrefixOperation(operator, rest); .)
+  )
+| IF(isTypeCast()) "(" Type<out type:DataType> ")"
+  Expression3<out rest:Expression>			(. expression = ECast(type, rest); .)
+| Primary<out rest:Expression>				(. expression = rest; .)
+  { Selector<out rest:Expression, expression>		(. expression = rest; .)
+    }
+  { Increment<out type:IncrementType>			(. expression = EPostfix(type, expression); .)
+    }
+.
+
+/*---------------------------------------------------------------------------*/
+
+Primary<out expression:Expression>
+= "(" Expression0<out arg:Expression> ")" 		(. expression = arg; .)
+| "this" ArgumentsOpt<out arg:Expression, EThisReference> 	(. expression = arg; .)
+| "super" SuperSuffix<out arg:Expression> 		(. expression = arg; .)
+| Literal<out arg:Expression> 				(. expression = arg; .)
+| "new"	Creator<out arg:Expression> 			(. expression = arg; .)
+| ident							(. var identifier:String = t.val, base:Expression = null; .)
+  { IF(dotAndIdent()) '.' ident				(. base = EReference(identifier, base); identifier = t.val; .)
+    }							(. expression = EReference(identifier, base); .)
+  [ IF(isIdentSuffix()) IdentifierSuffix<out arg:Expression, identifier, base> 	(. expression = arg; .)
+    ]
+| BasicType<out type:PrimitiveType>
+  BracketsOpt<out bCount:Int> '.' "class"		/* (. info.setKind(ExprKind.SELECT);  .) */
+| "void" '.' "class"					/* (. info.setKind(ExprKind.SELECT);  .) */
+.
+
+/*---------------------------------------------------------------------------*/
+
+Arguments<out arguments:Array<Expression>>		(. arguments = []; .) 
+= "(" [ Expression0<out expression:Expression>		(. arguments.push(expression); .)
+        { "," Expression0<out expression:Expression> 	(. arguments.push(expression); .)
+	  } ] ")"
+.
+
+/*---------------------------------------------------------------------------*/
+
+ArgumentsOpt<out expression:Expression, method:Expression>
+=							(. expression = method; .)
+  [ Arguments<.out arguments:Array<Expression>.>	(. expression = ECall(method, arguments); .)
+    ]
+.
+
+ArgumentsMethodOpt<out expression:Expression, identifier:String, base:Expression>
+=							(. expression = EReference(identifier, base); .)
+  [ Arguments<.out arguments:Array<Expression>.>	(. expression = ECallMethod(identifier, base, arguments); .)
+    ]
+.
+
+/*---------------------------------------------------------------------------*/
+
+SuperSuffix<out expression:Expression>
+= Arguments<.out arguments:Array<Expression>.>		(. expression = ECall(ESuperReference, arguments); .)
+| '.' ident						(. var identifier:String = t.val; .)
+  ArgumentsMethodOpt<out arg:Expression, identifier, ESuperReference>	(. expression = arg; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Literal<out expression:Expression>
+= intLit						(. expression = EIntegerLiteral(Std.parseInt(t.val)); .)
+| floatLit						(. expression = EFloatLiteral(Std.parseFloat(t.val)); .)
+| charLit						(. expression = ECharLiteral(t.val.charCodeAt(0)); .)
+| stringLit						(. expression = EStringLiteral(t.val); .)
+| "true"						(. expression = EBooleanLiteral(true); .)
+| "false"						(. expression = EBooleanLiteral(false); .)
+| "null"						(. expression = ENull; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Creator<out expression:Expression>
+= BasicType<out type:PrimitiveType>
+  ArrayCreatorRest<out arg:Expression, DTPrimitive(type)>		(. expression = arg; .)
+| Qualident<.out qualifier:Array<String>.> 
+  ( ArrayCreatorRest<out arg:Expression, DTReference(qualifier)>	(. expression = arg; .)
+  | ClassCreatorRest<out arg:Expression, qualifier>			(. expression = arg; .)
+  )
+.
+
+/*---------------------------------------------------------------------------*/
+
+ArrayCreatorRest<out expression:Expression, type:DataType>
+= "["
+  ( "]" BracketsOpt<out bCount:Int> ArrayInitializer<out expression:Expression>
+    | Expression0<out dummy:Expression> "]" 
+      { IF (nonEmptyBracket()) "[" Expression0<out dummy:Expression> "]" } 
+      { IF (emptyBracket()) "[" "]" }
+  )
+.
+
+/*---------------------------------------------------------------------------*/
+
+ClassCreatorRest<.out expression:Expression, qualifier:Array<String>.>
+= Arguments<.out arguments:Array<Expression>.>		(. expression = EObjectInstantiation(qualifier, arguments); .)
+  [ ClassBody<.out classScope:ClassScope.> ]		(. /* TODO */ .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+IdentifierSuffix<out expression:Expression, identifier:String, base:Expression>
+= '[' ']' BracketsOpt<out bCount:Int> "." "class"	(. /* info.setKind(ExprKind.SELECT); */ .)
+|  Arguments<.out arguments:Array<Expression>.>	(. expression = base == null ? ECall(EReference(identifier), arguments) : ECallMethod(identifier, base, arguments); .)
+|  "." ( "class" | "this" |
+         "super" '.' ident
+	 ArgumentsMethodOpt<out dummy:Expression, null, null>)	(. /* TODO */ .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Selector<out expression:Expression, base:Expression>
+= "." ( ident							(. var identifier:String = t.val; .)
+	ArgumentsMethodOpt<out arg:Expression, identifier, base>	(. expression = arg; .)
+      | "super" Arguments<.out arguments:Array<Expression>.>	(. /* TODO */ .)
+      | "new" InnerCreator
+      )
+| '[' Expression0<out index:Expression> ']'			(. expression = EArrayAccess(index, base); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+InnerCreator						(. var qualifier:Array<String> = []; .)
+= ident ClassCreatorRest<out expression:Expression, qualifier>
+.
+
+/*---------------------------------------------------------------------------*/
+
+ParExpression<out expression:Expression>
+= "(" Expression0<out expression:Expression> ")"
+.
+
+/*---------------------------------------------------------------------------*/
+
+AssignmentOperator<out operator:InfixOperator>			
+= "="						(. operator = null; .)
+| "+="						(. operator = OpAdd; .)
+| "-="						(. operator = OpSubtract; .)
+| "*="						(. operator = OpMultiply; .)
+| "/="						(. operator = OpDivide; .)
+| "&="						(. operator = OpBitwiseAnd; .)
+| "|="						(. operator = OpBitwiseOr; .)
+| "^="						(. operator = OpBitwiseXor; .)
+| "%="						(. operator = OpModulus; .)
+| "<<="						(. operator = OpLeftShift; .)
+| ">>="						(. operator = OpRightShift; .)
+| ">>>="					(. operator = OpZeroRightShift; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Infixop<out operator:InfixOperator>
+= "||"						(. operator = OpOr; .)
+| "&&"						(. operator = OpAnd; .)
+| "|"						(. operator = OpBitwiseOr; .)
+| "^"						(. operator = OpBitwiseXor; .)
+| "&"						(. operator = OpBitwiseAnd; .)
+| "=="						(. operator = OpEqual; .)
+| "!="						(. operator = OpUnequal; .)
+| "<"						(. operator = OpLessThan; .)
+| ">"						(. operator = OpGreaterThan; .)
+| "<="						(. operator = OpLessThanOrEqual; .)
+| ">="						(. operator = OpGreaterThanOrEqual; .)
+| "<<"						(. operator = OpLeftShift; .)
+| ">>"						(. operator = OpRightShift; .)
+| ">>>"						(. operator = OpZeroRightShift; .)
+| "+"						(. operator = OpAdd; .)
+| "-"						(. operator = OpSubtract; .)
+| "*"						(. operator = OpMultiply; .)
+| "/"						(. operator = OpDivide; .)
+| "%"						(. operator = OpModulus; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+PrefixOp<out operator:PrefixOperator>
+/*= "++"
+| "--"*/
+= "!"						(. operator = OpNot; .)
+| "~"						(. operator = OpBitwiseNot; .)
+| "+"						(. operator = OpUnaryPlus; .)
+| "-"						(. operator = OpUnaryMinus; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Increment<out type:IncrementType>
+= "++"						(. type = IIncrement; .)
+| "--"						(. type = IDecrement; .)
+.
+
+/*---------------------------------------------------------------------------*/
+/*
+PostfixOp<builder:ExpressionBuilder>
+= "++"						(. builder.pushOperator(PPostfix(IIncrement)); .)
+| "--"						(. builder.pushOperator(PPostfix(IDecrement)); .)  
+.*/
+
+/*---------------------------------------------------------------------------*/
+
+END PdeProgram.
