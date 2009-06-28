@@ -12,7 +12,7 @@ import xpde.parser.Scanner;
  * @author 
  */
 
-class Main 
+class ParserMain 
 {
 	static function main() 
 	{

@@ -4,11 +4,11 @@
   <output>
     <movie disabled="False" />
     <movie input="" />
-    <movie path="bin\parser\parser.js" />
-    <movie fps="0" />
-    <movie width="0" />
-    <movie height="0" />
-    <movie version="11" />
+    <movie path="bin\ABCSandbox.swf" />
+    <movie fps="30" />
+    <movie width="800" />
+    <movie height="600" />
+    <movie version="9" />
     <movie background="#FFFFFF" />
   </output>
   <!-- Other classes to be compiled into your SWF -->
@@ -32,6 +32,10 @@
   <compileTargets>
     <compile path="src\Main.hx" />
   </compileTargets>
+  <!-- Assets to embed into the output SWF -->
+  <library>
+    <!-- example: <asset path="..." id="..." update="..." glyphs="..." mode="..." place="..." sharepoint="..." /> -->
+  </library>
   <!-- Paths to exclude from the Project Explorer tree -->
   <hiddenPaths>
     <!-- example: <hidden path="..." /> -->
@@ -39,10 +43,10 @@
   <!-- Executed before build -->
   <preBuildCommand />
   <!-- Executed after build -->
-  <postBuildCommand alwaysRun="False" />
+  <postBuildCommand alwaysRun="False">decompile.bat</postBuildCommand>
   <!-- Other project options -->
   <options>
     <option showHiddenPaths="False" />
-    <option testMovie="Default" />
+    <option testMovie="ExternalPlayer" />
   </options>
 </project>
