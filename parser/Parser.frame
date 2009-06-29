@@ -230,121 +230,167 @@ class OperationBuilder
 		    case OpLeftShift, OpRightShift, OpZeroRightShift: 10;
 		    case OpAdd, OpSubtract: 11;
 		    case OpMultiply, OpDivide, OpModulus: 12;
-//		    case OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus: 14;
 		}
 	}
 }
 
 /*-------------------- block scope ----------------------------------*/
 
-class Scope
+interface LexicalResolver
 {
-	var parent:Scope;
-	var definitions:Array<Definition>;
+	public function resolveLexicalGetter(identifier:String):Expression;
+	public function resolveLexicalSetter(identifier:String, value:Expression):Expression;
+}
+
+class CompilationUnitContext
+{
+	public var definitions(default, null):Array<TopLevelDefinition>;
 	
-	public function new() {
+	private var resolveHash:Hash<Qualident>;
+	public function resolveLexicalGetter(identifier:String):Expression
+	{
+		return resolveHash.has(identifier) ? EQualifiedReference(resolveHash.get(identifier)) : ELexReference(identifier);
+	}
+	public function resolveLexicalSetter(identifier:String, value:Expression):Expression
+	{
+//		return resolveHash.has(identifier) ? EQualifiedReference(resolveHash.get(identifier)) : ELexReference(identifier);
+	}
+	
+	public function addImportDeclaration(ident:Qualident)
+	{
+		// check ident type
+		if (ident.length == 0)
+			throw "Invalid identifier";
+		if (ident[ident.length - 1] != '*')
+			resolveHash.set(ident[ident.length - 1], ident);
+		else {
+			// iterate namespace
+			
+		}
+	}
+	
+	public function new()
+	{
+		definitions = [];
+		resolveHash = new Hash<Qualident>();
+	}
+}
+
+class ClassContext
+{
+	public var staticConstructor(default, null):BlockContext;
+	public var objectConstructor(default, null):BlockContext;
+	public var definitions(default, null):Array<ClassDefinition>;
+	
+	//[TODO] this should take no parent, prevent redefinition of variables/methods with redundant types(!)
+	public function new()
+	{
+		definitions = [];
+		staticConstructor = new BlockContext();
+		objectConstructor = new BlockContext();
+	}
+	
+	//[TODO] have to resolve inner class variables to accessors... yey
+	public function resolveLexicalGetter(identifier:String):Expression;
+	public function resolveLexicalSetter(identifier:String, value:Expression):Expression;
+}
+
+class BlockContext
+{
+	public var statements(default, null):Array<Statement>;
+	public var definitions(default, null):Array<BlockDefinition>;
+	
+	//[TODO] this should take a parent, and prevent redefinition of variables?
+	public function new()
+	{
+		statements = [];
 		definitions = [];
 	}
 	
-	public function pushDefinition(definition:Definition) {
-		definitions.push(definition);
-	}
-	
-	public function getDefinitions():Array<Definition> {
-		return definitions;
-	}
-	
-	public function concat(block:Scope) {
-		for (definition in block.definitions)
-			pushDefinition(definition);
-	}
-}
-
-class CompilationUnitScope extends Scope
-{
-	public var _package:Array<String>;
-	public var _imports:Array<Array<String>>;
-	
-	public function new() {
-		super();
-		_package = [];
-		_imports = [];
-	}
-	
-	public function setPackage(ident:Array<String>) { _package = ident; }	
-	public function getPackage():Array<String> { return _package; }
-	
-	public function pushImport(ident:Array<String>) { _imports.push(ident); }
-	public function getImports():Array<Array<String>> { return _imports; }
-}
-
-class BlockScope extends Scope
-{
-	var statements:Array<Statement>;
-	
-	public function new() {
-		super();
-		statements = [];
-	}
-		
-	public function pushStatement(statement:Statement) {
-		statements.push(statement);
-	}
-	
-	override public function concat(block:Scope) {
-		super.concat(block);
-		var block:BlockScope = cast(block, BlockScope);
-		for (statement in block.statements)
-			pushStatement(statement);
-	}
-	
-	public function getStatement():Statement {
+	public function getBlockStatement():Statement {
 		return SBlock(definitions, statements);
 	}
-}
-
-class ClassScope extends BlockScope
-{
-	override public function getStatement():Statement {
-		return SBlock([], statements);
-	}
+	
+	//[TODO] not much here, just forward them to owner
+	public function resolveLexicalGetter(identifier:String):Expression;
+	public function resolveLexicalSetter(identifier:String, value:Expression):Expression;
 }
 
 /*-------------------- PdeProgram ----------------------------------*/
 
 interface CompilationUnit
 {
-	public function setPackage();
-	public function getDefinitions():Array<TopLevelDefinition>;
-//[TODO] get name?
-}
-//[TODO] also, PDE doesn't really respect compilation units (doesn't allow package definitions, requires a name for each unit)
-
-/* compilation unit */
-
-typedef CompilationUnit = {
-	var packageIdent:Array<String>;
-	var importIdents:Array < Array < String >> ;
-	var definitions:Array<Definition>;
+	var packageQualident:Qualident;
+	var definitions:Array<TopLevelDefinition>;
 }
 
 //[TODO] writeImports: http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/app/preproc/PdePreprocessor.java?view=markup
 
-class JavaProgram extends CompilationUnitScope, implements PdeProgram
+class JavaProgram extends CompilationUnitScope, implements CompilationUnit
 {
-	public function getCompilationUnit(identifier:String):CompilationUnit
+	public var packageQualident(default, null):Qualident;
+	
+	public function new()
 	{
-		// create straight compilation unit
-		return {
-		    packageIdent: _package,
-		    importIdents: _imports,
-		    definitions: definitions
-		};
+		super();
+		
+		packageQualident = [];
 	}
 }
 
-class ActiveProgram extends ClassScope, implements PdeProgram
+class ActiveProgram extends JavaProgram
 {
+	public var classScope(default, null):ClassContext;
+	
+	public function new(programName:String)
+	{
+		super();
+		
+		// create class
+		classScope = new ClassContext();
+		definitions.push(DClass(programName, new EnumSet<Modifier>([MPublic]), classScope.definitions, DTReference(['PApplet'])));
+	}
+}
+
+class StaticProgram extends ActiveProgram
+{
+	public var methodScope(default, null):BlockContext;
+	
+	public function new(programName:String)
+	{
+		super(programName);
+		
+		// create setup method
+		methodScope = new BlockContext();
+		classScope.definitions.push(DMethod('setup', null, new EnumSet<Modifier>(), [], methodScope.blockStatement));
+	}
+}
+
+/*-------------------- PdeProgram ----------------------------------*/
+/*
+interface CompilationUnit
+{
+	public function getPackage():Array<String>;
+	public function getDefinitions():Array<TopLevelDefinition>;
+}
+
+//[TODO] writeImports: http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/app/preproc/PdePreprocessor.java?view=markup
+
+class JavaProgram implements CompilationUnit
+{
+	private var packageQualident:Array<String>;
+	public function setPackage(qualident:Array<String>) { packageQualident = qualident; }
+	public function getPackage():Array < String > { return packageQualident; }
+	
+	public function getCompilationUnitScope
+}
+
+class ActiveProgram extends JavaProgram
+{
+	private var packageQualident:Array<String>;
+	public function setPackage(qualident:Array<String>) { packageQualident = qualident; }
+	public function getPackage():Array <String> { return packageQualident; }
+	
 	public function getCompilationUnit(identifier:String):CompilationUnit
 	{
 		// create class extension
@@ -359,7 +405,7 @@ class ActiveProgram extends ClassScope, implements PdeProgram
 	}
 }
 
-class StaticProgram extends BlockScope, implements PdeProgram
+class StaticProgram extends BlockScope, implements CompilationUnit
 {
 	public function getCompilationUnit(identifier:String):CompilationUnit
 	{
@@ -376,7 +422,7 @@ class StaticProgram extends BlockScope, implements PdeProgram
 		    definitions: [classDefinition]
 		};
 	}
-}
+}*/
   
 /*-------------------- bit array ----------------------------------*/
 

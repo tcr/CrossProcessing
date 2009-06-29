@@ -52,26 +52,36 @@ enum IncrementType
 
 enum Expression
 {
-	// expressions
-	EArrayAccess(index:Expression, base:Expression);
+	// instantiation
 	EArrayInstantiation(type:DataType, sizes:Array<Expression>);
+	EObjectInstantiation(qualifier:Qualident, args:Array<Expression>);
+	
+	// assignment
 	EArrayAssignment(index:Expression, base:Expression, value:Expression);
 	EAssignment(identifier:String, base:Expression, value:Expression);
+	
+	// calling
 	ECall(method:Expression, args:Array<Expression>);
 	ECallMethod(identifier:String, base:Expression, args:Array<Expression>);
-	ECast(type:DataType, expression:Expression);
+	
+	// control
 	EConditional(condition:Expression, thenExpression:Expression, elseExpression:Expression);
-	EInstanceOf(expression:Expression, type:DataType);
-	EObjectInstantiation(qualifier:Array<String>, args:Array<Expression>);
-	EPrefix(type:IncrementType, reference:Expression);
-	EPostfix(type:IncrementType, reference:Expression);
-	EReference(identifier:String, ?base:Expression);
+	
+	// references
+	EArrayAccess(index:Expression, base:Expression);
+	ELexReference(identifier:String);
+	EReference(identifier:String, base:Expression);
+	EQualifiedReference(qualident:Qualident);
 	ESuperReference;
 	EThisReference;
 	
 	// operations
+	ECast(type:DataType, expression:Expression);
 	EPrefixOperation(operation:PrefixOperator, operand:Expression);
 	EInfixOperation(operation:InfixOperator, leftOperand:Expression, rightOperand:Expression);
+	EInstanceOf(expression:Expression, type:DataType);
+	EPrefix(type:IncrementType, reference:Expression);
+	EPostfix(type:IncrementType, reference:Expression);
 	
 	// literals
 	EArrayLiteral(values:Array<Expression>);
@@ -116,9 +126,11 @@ enum Visibility
 enum DataType
 {
 	DTPrimitive(type:PrimitiveType);
-	DTReference(qualident:Array<String>);
-	DTArray(type:DataType, dimensions:Int);	//[TODO] disallow DTArray in datatype, or make it part of syntax notation?
+	DTReference(qualident:Qualident);
+	DTArray(type:DataType, dimensions:Int);	//[TODO] disallow DTArray in datatype (or make cumulation an innate part of its notation?)
 }
+
+typedef Qualident = Array<String>;
 
 enum PrimitiveType
 {
