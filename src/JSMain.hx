@@ -1,7 +1,9 @@
 ﻿package ;
 
 import haxe.io.StringInput;
+import haxe.rtti.Infos;
 import js.Lib;
+import xpde.core.PApplet;
 //import xpde.compiler.JSCompiler;
 //import xpde.interpreter.JSInterpreter;
 
@@ -40,10 +42,11 @@ class JSMain
 		// initialize root packages
 		var rootPackage = new JavaPackage();
 //[TODO]
+		trace(untyped PApplet.__rtti);
 		
 		// initialize main sketch
-		var sketch:CompilationUnit = new ParsedCompilationUnit(rootPackage, ['Sketch'], new StringInput(getSource()));
-		sketch.initialize();
+//		var sketch:CompilationUnit = new ParsedCompilationUnit(rootPackage, ['Sketch'], new StringInput(getSource()));
+//		sketch.initialize();
 		
 		// compile main sketch
 //		var interpreter:IInterpreter = new JSInterpreter();

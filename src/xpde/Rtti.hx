@@ -1,13 +1,13 @@
 ﻿/**
- * ...
+ * Java Runtime type informations
  * @author 
  */
-
-// definitions
 
 package xpde;
 
 import xpde.parser.Parser;
+
+/* types */
 
 enum DataType
 {
@@ -33,6 +33,23 @@ enum PrimitiveType
 	PTBoolean;
 }
 
+/* access modifiers */
+
+enum Modifier {
+	MPublic;
+	MPrivate;
+	MProtected;
+	MStatic;
+	MFinal;
+	MSynchronized;
+	MVolatile;
+	MTransient;
+	MNative;
+	MAbstract;
+	MStrictfp;
+}
+
+/* definitions */
 
 enum TopLevelDefinition
 {
@@ -62,20 +79,6 @@ typedef MethodDefinition = {
 	var throwsList:Array<Qualident>;
 	var parameters:Array<FormalParameter>;
 };
-
-enum Modifier {
-	MPublic;
-	MPrivate;
-	MProtected;
-	MStatic;
-	MFinal;
-	MSynchronized;
-	MVolatile;
-	MTransient;
-	MNative;
-	MAbstract;
-	MStrictfp;
-}
 
 typedef FormalParameter = {
 	var identifier:String;

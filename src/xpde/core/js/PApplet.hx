@@ -1,24 +1,20 @@
-/*
- * Processing.js - John Resig (http://ejohn.org/)
- * MIT Licensed
- * http://ejohn.org/blog/processingjs/
- *
- * This is a port of the Processing Visualization Language.
- * More information: http://processing.org/
+﻿/**
+ * ...
+ * @author 
  */
 
-(function(){
-function log() {
-  try {
-    console.log.apply( console, arguments );
-  } catch(e) {
-    try {
-      opera.postError.apply( opera, arguments );
-    } catch(e){}
-  }
-}
+package xpde.core.js;
 
-function PApplet( curElement ){
+class PApplet implements haxe.rtti.Infos
+{
+/*	public function new(?curElement:String):Void;
+	public function size(width:Int, height:Int):Void;
+	public function noStroke():Void;
+	public function smooth():Void;
+	public function noLoop():Void;
+	public function ellipse(x:Int, y:Int, width:Int, height:Int):Void;*/
+	
+	public function new(?curElement:String):Void {untyped __js__('
   if ( typeof curElement == "string" )
     curElement = document.getElementById(curElement);
 
@@ -150,7 +146,7 @@ function PApplet( curElement ){
   
   // Load a file or URL into strings     
   p.loadStrings = function loadStrings(url) {
-    return p.ajax(url).split("\n");              
+    return p.ajax(url).split("\\n");              
   };
   
   // In case I ever need to do HSV conversion:
@@ -520,11 +516,11 @@ function PApplet( curElement ){
         case " ":return font["space"];break;
         case "$":return font["dollar"];break;
         case "!":return font["exclam"];break;
-        case '"':return font["quotedbl"];break;
+        case \'"\':return font["quotedbl"];break;
         case "#":return font["numbersign"];break;
         case "%":return font["percent"];break;
         case "&":return font["ampersand"];break;
-        case "'":return font["quotesingle"];break;
+        case "\'":return font["quotesingle"];break;
         case "(":return font["parenleft"];break;
         case ")":return font["parenright"];break;
         case "*":return font["asterisk"];break;
@@ -542,7 +538,7 @@ function PApplet( curElement ){
         case "?":return font["question"];break;
         case "@":return font["at"];break;
         case "[":return font["bracketleft"];break;
-        case "\\":return font["backslash"];break;
+        case "\\\\":return font["backslash"];break;
         case "]":return font["bracketright"];break;
         case "^":return font["asciicircum"];break;
         case "`":return font["grave"];break;
@@ -625,7 +621,7 @@ function PApplet( curElement ){
         p.glyphTable[url]["ascent"]=parseFloat(font_face.getAttribute("ascent"));
         p.glyphTable[url]["descent"]=parseFloat(font_face.getAttribute("descent"));          
         
-        var getXY = "[0-9\-]+";
+        var getXY = "[0-9\\-]+";
         var glyph = svg.getElementsByTagName("glyph");
         
         // Loop through each glyph in the SVG
@@ -636,10 +632,10 @@ function PApplet( curElement ){
           var unicode = glyph[i].getAttribute("unicode");
           var name = glyph[i].getAttribute("glyph-name");
           var horiz_adv_x = glyph[i].getAttribute("horiz-adv-x");
-          if(horiz_adv_x==null){var horiz_adv_x=p.glyphTable[url]['horiz_adv_x'];}
+          if(horiz_adv_x==null){var horiz_adv_x=p.glyphTable[url]["horiz_adv_x"];}
           
           var buildPath = function buildPath(d){ 
-            var c = regex("[A-Za-z][0-9\- ]+|Z",d);                                                    
+            var c = regex("[A-Za-z][0-9\\- ]+|Z",d);                                                    
             // Begin storing path object 
             var path="var path={draw:function(){curContext.beginPath();";//curContext.beginPath();
             // Loop through SVG commands translating to canvas eqivs functions in path object
@@ -1143,7 +1139,7 @@ function PApplet( curElement ){
   
   // Str() - F1LT3R
   p.str = function str( aNumber ){
-      return aNumber+'';
+      return aNumber+"";
   }
   
   p.sq = function sq( aNumber ) {
@@ -1548,7 +1544,7 @@ function PApplet( curElement ){
   };
 
   p.updatePixels = function() {
-    var colors = /(\d+),(\d+),(\d+),(\d+)/;
+    var colors = /(\\d+),(\\d+),(\\d+),(\\d+)/;
     var pixels = {};
     pixels.width = p.width;
     pixels.height = p.height;
@@ -1729,12 +1725,6 @@ function PApplet( curElement ){
         elem.attachEvent( "on" + type, fn );
     }
 
-  };
-
-  return p;
+  };');
+	}
 }
-
-window.xpde.core = {PApplet: PApplet};
-window.xpde.xml = {};
-
-})();
