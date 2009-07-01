@@ -31,7 +31,8 @@ Coco/R itself) does not fall under the GNU General Public License.
 ------------------------------------------------------------------------*/
 -->begin
 
-class Parser {
+class Parser
+{
 -->constants
 	inline static var T:Bool = true;
 	inline static var x:Bool = false;
@@ -114,25 +115,27 @@ class Parser {
 	
 -->productions
 
-	public function Parse():PdeProgram {
+	public function Parse():Void {
+		// parse AST
 		la = new Token();
 		la.val = "";		
 		Get();
-		
-		var ret:PdeProgram = -->parseRoot
+-->parseRoot
 		Expect(0);
-		return ret;
+		
+		// second pass
+		var resolver:LexicalResolver = new LexicalResolver(unit);
+		resolver.resolve();
 	}
 
 	private static var set:Array<Array<Bool>> = [
 -->initialization
 	];
-} // end Parser
+}
 
-
-class Errors {
+class Errors
+{
 	public var count:Int;                                    // number of errors detected
-//	public java.io.PrintStream errorStream = System.out;     // error messages go to this stream
 	static var errMsgFormat:String = "-- line {0} col {1}: {2}"; // 0=line, 1=column, 2=text
 	
 	public function new() {
@@ -166,9 +169,10 @@ class Errors {
 	public function Warning (?line:Int, ?col:Int, s:String):Void {	
 		line == null ? printMsg(line, col, s): trace(s);
 	}
-} // Errors
+}
 
-class FatalError {
+class FatalError
+{
 	public var message:String;
 	public static var serialVersionUID:Float = 1.0;
 	public function new(s:String) { this.message = s; }
