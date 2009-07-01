@@ -590,9 +590,9 @@ QualidentList						(. var list:Array<Array<String>> = []; .)
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclarator<.modifiers:EnumSet<Modifier>, type:DataType.>
+VariableDeclarator<.context:FieldContext, modifiers:EnumSet<Modifier>, type:DataType.>
 = ident							(. var identifier:String = t.val; .)
-  VariableDeclaratorRest<modifiers, type, identifier>
+  VariableDeclaratorRest<context, modifiers, type, identifier>
 .
 
 /*---------------------------------------------------------------------------*/
@@ -604,11 +604,11 @@ VariableDeclaratorId
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclaratorRest<.modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
+VariableDeclaratorRest<.context:FieldContext, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
 = BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
 							(. var init:Expression = null; .)
   [ "=" VariableInitializer<out expression:Expression>	(. init = expression; .)
-    ]							(. fieldContext.defineField({identifier: identifier, type: type, modifiers: modifiers}, init); .)
+    ]							(. context.defineField({identifier: identifier, type: type, modifiers: modifiers}, init); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -675,16 +675,16 @@ MethodOrFieldDecl<.modifiers:EnumSet<Modifier>.>
 
 MethodOrFieldRest<.modifiers:EnumSet<Modifier>, identifier:String, type:DataType.>
 =							(. checkModifierPermission(modifiers, ModifierSet.fields);  .) 
-  VariableDeclaratorsRest<modifiers, type, identifier> ';'
+  VariableDeclaratorsRest<classContexts[0], modifiers, type, identifier> ';'
 |							(. checkModifierPermission(modifiers, ModifierSet.methods); .)
   MethodDeclaratorRest<modifiers, type, identifier>
 .
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclaratorsRest<.modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
-= VariableDeclaratorRest<modifiers, type, identifier>
-  {',' VariableDeclarator<modifiers, type>}
+VariableDeclaratorsRest<.context:FieldContext, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
+= VariableDeclaratorRest<context, modifiers, type, identifier>
+  {',' VariableDeclarator<context, modifiers, type>}
 .
 
 /*---------------------------------------------------------------------------*/
@@ -907,14 +907,14 @@ BlockStatement
 
 LocalVariableDeclaration				(. var modifiers = new EnumSet<Modifier>(); .)
 = [ "final"						(. modifiers.add(MFinal); .)
-    ] Type<out type:DataType> VariableDeclarators<modifiers, type>
+    ] Type<out type:DataType> VariableDeclarators<blockContexts[0], modifiers, type>
 .
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclarators<.modifiers:EnumSet<Modifier>, type:DataType.>
-= VariableDeclarator<modifiers, type>
-  { "," VariableDeclarator<modifiers, type> }
+VariableDeclarators<.context:FieldContext, modifiers:EnumSet<Modifier>, type:DataType.>
+= VariableDeclarator<context, modifiers, type>
+  { "," VariableDeclarator<context, modifiers, type> }
 .
 
 /*---------------------------------------------------------------------------*/
