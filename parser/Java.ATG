@@ -182,9 +182,8 @@ function checkModifierAccess(set:EnumSet<Modifier>):Void {
 
 /*---------------------------- contexts ----------------------------*/
 
-var classContext:ClassContext;
-var blockContext:BlockContext;
-var fieldContext:FieldContext;
+var classContexts:Array<ClassContext>;
+var blockContexts:Array<BlockContext>;
 
 /*-----------------------------------------------------------------*
  * Resolver routines to resolve LL(1) conflicts:                   *
@@ -399,9 +398,8 @@ PdeProgram
 							unit.context.mapImports(['xpde', 'xml', '*']);
 
 							// initialize active program
-							classContext = fieldContext = new ClassContext(new EnumSet<Modifier>([MPublic]), unit.packageDeclaration.slice( -1)[0]);
-							classContext.extend = DTReference(['xpde', 'core', 'PApplet']);
-							unit.context.defineClass(classContext.getClassDefinition());
+							classContexts.unshift(new ClassContext(new EnumSet<Modifier>([MPublic]), unit.packageDeclaration.slice( -1)[0]));
+							classContexts[0].extend = DTReference(['xpde', 'core', 'PApplet']);
 							.)
     { (IF (isLocalVarDecl(false)) LocalVariableDeclaration) ";" }
     ( IF (isActiveProgram())
@@ -417,18 +415,23 @@ PdeProgram
 							}*/
 							
 							// initialize setup method
-							blockContext = fieldContext = new BlockContext();
-							classContext.defineMethod( {
+							blockContexts.unshift(new BlockContext());
+							.)
+        BlockStatement { BlockStatement }		(.
+							// add to class
+							classContexts[0].defineMethod( {
 							    identifier: 'setup',
 							    type: null,
 							    modifiers: new EnumSet<Modifier>(),
 							    params: []
-							    body: blockContext.getBlockStatement()
+							    body: blockContexts.shift().getBlockStatement()
 							});
 							.)
-        BlockStatement { BlockStatement }
       )
     )							(.
+							// add class
+							unit.context.defineClass(classContext.shift().getClassDefinition());
+							
 							// validate script
 							if (la.kind != _EOF)
 								error("unexpected script termination");
@@ -488,9 +491,8 @@ TypeDeclaration
 
 ClassOrInterfaceDeclaration				(. var modifiers = new EnumSet<Modifier>(); .) 
 = { ClassModifier<modifiers> } 
-  ( 							(. classContext = new ClassContext(modifiers); .)
-    ClassDeclaration	
-  |  InterfaceDeclaration
+  ( ClassDeclaration<modifiers>
+  |  InterfaceDeclaration<modifiers>
   )
 .
 
@@ -622,12 +624,12 @@ VariableInitializer<out expression:Expression>
 
 ClassDeclaration<.modifiers:EnumSet<Modifier>.>
 = 							(. checkModifierPermission(modifiers, ModifierSet.classes); .)
-  "class" ident						(. classContext = fieldContext = new ClassContext(modifiers, t.val); .)
-  [ "extends" Type<out arg:DataType> 			(. classContext.extend = arg; .)
+  "class" ident						(. classContexts.unshift(new ClassContext(modifiers, t.val)); .)
+  [ "extends" Type<out arg:DataType> 			(. classContexts[0].extend = arg; .)
     ]
-  [ "implements" TypeList<.out arg:Array<DataType>.>	(. classContext.implement = arg; .)
+  [ "implements" TypeList<.out arg:Array<DataType>.>	(. classContexts[0].implement = arg; .)
     ]
-  ClassBody						(. unit.context.defineClass(classContext.getClassDefinition()); .)
+  ClassBody						(. unit.context.defineClass(classContexts.shift().getClassDefinition()); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -705,7 +707,7 @@ MethodDeclaratorRest<.modifiers:EnumSet<Modifier>, type:DataType, identifier:Str
   ( Block<out block:Statement, null>			(. body = block; .)
   | ";"
   )							(.
-							classContext.defineMethod( {
+							classContexts[0].defineMethod( {
 							    identifier: identifier,
 							    type: type,
 							    modifiers: modifiers, 
@@ -724,7 +726,7 @@ VoidMethodDeclaratorRest<.modifiers:EnumSet<Modifier>, identifier:String.>
   ["throws" QualidentList]
   (Block<out block:Statement, null>			(. body = block; .)
     | ';')						(.
-							classContext.defineMethod( {
+							classContexts[0].defineMethod( {
 							    identifier: identifier,
 							    type: null,
 							    modifiers: modifiers, 
@@ -742,7 +744,7 @@ ConstructorDeclaratorRest<.modifiers:EnumSet<Modifier>, identifier:String.>
   FormalParameters<.out parameters:Array<FormalParameter>.>
   [ "throws" QualidentList ]
   Block<out body:Statement, null>			(.
-							classContext.defineMethod( {
+							classContexts[0].defineMethod( {
 							    identifier: identifier,
 							    type: null,
 							    modifiers: modifiers, 
@@ -844,35 +846,33 @@ VoidInterfaceMethodDeclaratorRest
 /*---------------------------------------------------------------------------*/
 
 Statement0<out statement:Statement>
-= Block<out block:Statement>				(. statement = block; .)
+= Block<out block:Statement, blockContexts[0]>		(. statement = block; .)
 | "if" ParExpression<out condition:Expression>
    Statement0<out thenStatement:Statement>		(. var elseStatement:Statement = null; .)
    [ "else" Statement0<out body:Statement>		(. elseStatement = body; .)
      ]							(. statement = SConditional(condition, thenStatement, elseStatement); .)
-| "for" "("						(. var parent = blockContext;
-							   blockContext = fieldContext = new BlockContext(parent); .)
+| "for" "("						(. blockContexts.unshift(new BlockContext(blockContexts[0])); .)
   [ ForInit ] ";"					(. var conditional:Expression = EBooleanLiteral(true); .)
   [ Expression0<out expression:Expression>		(. conditional = expression; .)
     ] ";"						(. var body:Array<Statement> = []; .)
   [ ForUpdate<.out updates:Array<Statement>.>		(. body = updates; .)
     ] ")"
   Statement0<out arg:Statement>				(. body = [arg].concat(body);
-							   blockContext.pushStatement(SLoop(conditional, SBlock([], body), false));
-							   statement = blockContext.getBlockStatement();
-							   blockContext = fieldContext = parent; .)
+							   blockContexts[0].pushStatement(SLoop(conditional, SBlock([], body), false));
+							   statement = blockContexts.shift().getBlockStatement(); .)
 | "while" ParExpression<out condition:Expression>
   Statement0<out body:Statement>			(. statement = SLoop(condition, body, false); .)
 | "do" Statement0<out body:Statement>
   "while" ParExpression<out condition:Expression> ";"	(. statement = SLoop(condition, body, true); .)
-| "try" Block<out body:Statement>			(. var catches:Array<Catch> = [], finallyBody:Statement = null; .)
+| "try" Block<out body:Statement, blockContexts[0]>	(. var catches:Array<Catch> = [], finallyBody:Statement = null; .)
   ( Catches<.out _catches:Array<Catch>.>		(. catches = _catches; .)
-    [ "finally" Block<out block:Statement>		(. finallyBody = block; .)
+    [ "finally" Block<out block:Statement, blockContexts[0]>	(. finallyBody = block; .)
       ]
-    | "finally" Block<out block:Statement>		(. finallyBody = block; .)
+    | "finally" Block<out block:Statement, blockContexts[0]>	(. finallyBody = block; .)
       )							(. statement = STry(body, catches, finallyBody); .)
 | "switch" ParExpression<out expression:Expression> '{' SwitchBlockStatementGroups '}' /* TODO */
 | "synchronized" ParExpression<out expression:Expression>
-  Block<out block:Statement, null>			/* TODO */
+  Block<out block:Statement, blockContexts[0]>		/* TODO */
 | "return"						(. var value:Expression = null; .)
   [ Expression0<out expression:Expression>		(. value = expression; .)
     ] ";"						(. statement = SReturn(value); .)
@@ -891,10 +891,8 @@ Statement0<out statement:Statement>
 
 /*---------------------------------------------------------------------------*/
 
-Block<out statement:Statement>				(. var parent = blockContext;
-							   blockContext = fieldContext = new BlockContext(blockContext); .)
-= "{" { BlockStatement } "}"				(. statement = blockContext.getBlockStatement(); 
-							   blockContext = parent = parent;  .)
+Block<out statement:Statement, parent:BlockContext>	(. blockContexts.unshift(new BlockContext(parent)); .)
+= "{" { BlockStatement } "}"				(. statement = blockContexts.shift().getBlockStatement(); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -902,12 +900,12 @@ Block<out statement:Statement>				(. var parent = blockContext;
 BlockStatement
 = IF(isLocalVarDecl(false)) LocalVariableDeclaration ";"
 | ClassOrInterfaceDeclaration				/*[TODO] support local classes... */
-| Statement0<out statement:Statement>			(. blockContext.pushStatement(statement); .)
+| Statement0<out statement:Statement>			(. blockContexts[0].pushStatement(statement); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-LocalVariableDeclaration			(. var modifiers = new EnumSet<Modifier>(); .)
+LocalVariableDeclaration				(. var modifiers = new EnumSet<Modifier>(); .)
 = [ "final"						(. modifiers.add(MFinal); .)
     ] Type<out type:DataType> VariableDeclarators<modifiers, type>
 .
@@ -923,10 +921,10 @@ VariableDeclarators<.modifiers:EnumSet<Modifier>, type:DataType.>
 
 ForInit
 = IF (isLocalVarDecl(true)) LocalVariableDeclaration
-| StatementExpression<out statement:Statement>			(. blockContext.pushStatement(statement); .)
+| StatementExpression<out statement:Statement>			(. blockContexts[0].pushStatement(statement); .)
   MoreStatementExpressions<.out statements:Array<Statement>.>	(.
 								for (statement in statements)
-									blockContext.pushStatement(statement);
+									blockContexts[0].pushStatement(statement);
 								.)
 .
 
@@ -964,7 +962,7 @@ Catches<.out catches:Array<Catch>.>			(. catches = []; .)
 
 CatchClause<out _catch:Catch>
 = "catch" "(" FormalParameter0<out parameter:FormalParameter> ")"
-  Block<out block:Statement>				(. _catch = {parameter: parameter, body: block}; .)
+  Block<out block:Statement, blockContexts[0]>		(. _catch = {parameter: parameter, body: block}; .)
 .
 
 /*---------------------------------------------------------------------------*/

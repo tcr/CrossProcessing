@@ -53,6 +53,10 @@ class Parser {
 		this.scanner = scanner;
 		this.unit = unit;
 		errors = new Errors();
+		
+		// parsing contexts
+		classContexts = [];
+		blockContexts = [];
 	}
 
 	function SynErr (n:Int):Void {
