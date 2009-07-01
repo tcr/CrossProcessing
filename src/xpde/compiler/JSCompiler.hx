@@ -7,7 +7,7 @@ package xpde.compiler;
 
 import xpde.parser.AST;
 
-class JSCompiler 
+class JSCompiler implements ICompiler
 {
 	var output:StringBuf;
 	var packageIdent:Array<String>;

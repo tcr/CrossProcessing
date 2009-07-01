@@ -3,11 +3,15 @@
  * @author ...
  */
 
-package processing.compiler;
+package xpde.compiler;
 
-import processing.parser.Syntax;
+import xpde.parser.AST;
+import xpde.parser.Parser;
 
 interface ICompiler
 {
-	public function compile(script:Definition):Dynamic;
+	function compileClass(packageDefinition:Array<String>, definition:ClassDefinition):Void;
+	function importClass(qualident:Array<String>):Void;
+//[TODO] return Class
+	function getClass(name:Array<String>):Dynamic;
 }
