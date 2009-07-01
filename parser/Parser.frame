@@ -1,4 +1,5 @@
 import js.Boot;
+import xpde.parser.ClassDefinition;
 import xpde.parser.FieldDefinition;
 import xpde.parser.Qualident;
 /*-------------------------------------------------------------------------
@@ -335,6 +336,18 @@ class ParsedCompilationUnit implements CompilationUnit
 
 class CompilationUnitContext
 {
+	private var unit:CompilationUnit;
+	private var rootPackage:JavaPackage;
+	
+	public function new(rootPackage:JavaPackage, unit:CompilationUnit)
+	{
+		this.unit = unit;
+		this.rootPackage = rootPackage;
+		
+		definitions = new Hash<TopLevelDefinition>();
+		importMap = new Hash<Qualident>();
+	}
+	
 	public var definitions:Hash<TopLevelDefinition>;
 	public function define(identifier:String, definition:TopLevelDefinition)
 	{
@@ -367,40 +380,31 @@ class CompilationUnitContext
 			catch (e:Dynamic) { }
 		}
 	}
-	
-	private var unit:CompilationUnit;
-	private var rootPackage:JavaPackage;
-	
-	public function new(rootPackage:JavaPackage, unit:CompilationUnit)
-	{
-		this.unit = unit;
-		this.rootPackage = rootPackage;
-		
-		definitions = new Hash<TopLevelDefinition>();
-		importMap = new Hash<Qualident>();
-	}
 }
 
 class ClassContext
 {
+	// public variables
+	public var identifier:String;
+	public var modifiers(default, null):EnumSet<Modifier>;
+	public var extend:DataType;
+	public var implement(default, null):Array<DataType>;
+	// definitions
+	private var fieldDefinitions(default, null):Hash<ClassDefinition>;
+	private var methodDefinitions(default, null):Hash<ClassDefinition>;	
+	// constructors
 	public var staticConstructor(default, null):BlockContext;
 	public var objectConstructor(default, null):BlockContext;
-	
-	private var lexicalParent:LexicalResolver;
-	
-	//[TODO] this should take no parent, prevent redefinition of variables/methods with redundant types(!)
-	public function new(lexicalParent:LexicalResolver)
+
+	public function new()
 	{
-		this.lexicalParent = lexicalParent;
-		
+		modifiers = new EnumSet<Modifier>();
+		implement = [];
 		fieldDefinitions = [];
 		methodDefinitions = [];
 		staticConstructor = new BlockContext();
 		objectConstructor = new BlockContext();
 	}
-	
-	private var fieldDefinitions(default, null):Hash<ClassDefinition>;
-	private var methodDefinitions(default, null):Hash<ClassDefinition>;
 	
 	public function defineField(definition:FieldDefinition)
 	{
@@ -415,6 +419,11 @@ class ClassContext
 //		if (methodDefinitions.has(definition.identifier))
 //			throw 'redefinition of top-level declaration "' + identifier + '"';
 		methodDefinitions.set(definition.identifier, definition);
+	}
+	
+	public function getClassDefinition():ClassDefinition
+	{
+		return 
 	}
 }
 
@@ -555,6 +564,45 @@ class BitSet
 	{
 		for (i in 0...bitset.length)
 			bitset[i] = bitset[i] || bitset2.get(i);
+	}
+}
+
+/*------------------- enum set -----------------------------*/
+
+class EnumSet<T>
+{
+	private var set:Array<T>;
+
+	public function new(?enums:Array<Dynamic>)
+	{
+		set = [];
+		if (enums != null)
+			for (item in enums)
+				add(item);
+	}
+	
+	public function add(item:T)
+	{
+		if (!contains(item))
+			set.push(item);
+	}
+
+	public function contains(itemA:T)
+	{
+		for (itemB in set)
+			if (Type.enumEq(itemA, itemB))
+				return true;
+		return false;
+	}
+	
+	public function iterator():Iterator<T>
+	{
+		return set.iterator();
+	}
+	
+	public function toString():String
+	{
+		return set.join(' ');
 	}
 }
 
