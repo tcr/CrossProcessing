@@ -44,10 +44,13 @@ class Parser {
 	public var errors:Errors;
 
 	-->declarations
+	
+	public var unit:ParsedCompilationUnit;
 
-	public function new(scanner:Scanner) {
+	public function new(scanner:Scanner, unit:ParsedCompilationUnit) {
 		errDist = minErrDist;
 		this.scanner = scanner;
+		this.unit = unit;
 		errors = new Errors();
 	}
 
@@ -330,14 +333,7 @@ class ParsedCompilationUnit implements CompilationUnit
 
 /*-------------------- block scope ----------------------------------*/
 
-interface LexicalResolver
-{
-	public function resolveLexicalType(identifier:String):DataType;
-	public function resolveLexicalGetter(identifier:String):Expression;
-	public function resolveLexicalSetter(identifier:String, value:Expression):Expression;
-}
-
-class CompilationUnitContext implements LexicalResolver
+class CompilationUnitContext
 {
 	public var definitions:Hash<TopLevelDefinition>;
 	public function define(identifier:String, definition:TopLevelDefinition)
@@ -383,39 +379,9 @@ class CompilationUnitContext implements LexicalResolver
 		definitions = new Hash<TopLevelDefinition>();
 		importMap = new Hash<Qualident>();
 	}
-	
-	/* lexical resolution */
-	
-	public function resolveLexicalType(identifier:String):DataType
-	{
-		// only qualified references should get this far
-		if (!importMap.has(identifier))
-			throw "reference to undeclared type " + identifier;
-		// add to dependencies map
-		unit.dependencies.push(importMap.get(identifier));
-		// return datatype
-		return DTReference(importMap.get(identifier));
-	}
-	
-	public function resolveLexicalGetter(identifier:String):Expression
-	{
-		// check for a qualified reference
-		if (!importMap.has(identifier))
-			return ELexReference(identifier);
-		// add to dependencies map
-		unit.dependencies.push(importMap.get(identifier));
-		// return expression
-		return EQualifiedReference(importMap.get(identifier));
-	}
-	
-	public function resolveLexicalSetter(identifier:String, value:Expression):Expression
-	{
-		// lexical setter
-		return ELexAssignment(identifier, value);
-	}
 }
 
-class ClassContext implements LexicalResolver
+class ClassContext
 {
 	public var staticConstructor(default, null):BlockContext;
 	public var objectConstructor(default, null):BlockContext;
@@ -450,28 +416,9 @@ class ClassContext implements LexicalResolver
 //			throw 'redefinition of top-level declaration "' + identifier + '"';
 		methodDefinitions.set(definition.identifier, definition);
 	}
-	
-	/* lexical resolution */
-	
-	//[TODO] resolve inner class variables to accessors... yey
-	public function resolveLexicalType(identifier:String):DataType
-	{
-		return lexicalParent.resolveLexicalType(identifier);
-	}
-	
-//[TODO] any way to resolve these to class fields?
-	public function resolveLexicalGetter(identifier:String):Expression
-	{
-		return lexicalParent.resolveLexicalGetter(identifier);
-	}
-	
-	public function resolveLexicalSetter(identifier:String, value:Expression):Expression
-	{
-		return lexicalParent.resolveLexicalSetter(identifier);
-	}
 }
 
-class BlockContext implements LexicalResolver
+class BlockContext
 {
 	public var statements(default, null):Array<Statement>;
 	
@@ -508,39 +455,76 @@ class BlockContext implements LexicalResolver
 	{
 		return SBlock(fieldDefinitions, statements);
 	}
-	
-	/* lexical resolution */
-	
-	public function resolveLexicalType(identifier:String):DataType
-	{
-//[TODO] local classes
-		return lexicalParent.resolveLexicalType(identifier);
-	}
-	
-	public function resolveLexicalGetter(identifier:String):Expression
-	{
-		if (definitions.has(identifier))
-			return ELexReference(identifier);
-		return lexicalParent.resolveLexicalGetter(identifier);
-	}
-	
-	public function resolveLexicalSetter(identifier:String, value:Expression):Expression
-	{
-		if (definitions.has(identifier)
-			return ELexAssignment(identifier, value);
-		return lexicalParent.resolveLexicalSetter(identifier, value);
-	}
 }
 
 class LexicalResolver
 {
 	private var unit:ParsedCompilationUnit;
-	private var context:CompilationUnitContext;
 	private var classContext:ClassContext;
+	private var blockContext:BlockContext;
 	
 	public function new(unit:ParsedCompilationUnit)
 	{
 		
+	}
+	
+	/* lexical resolution */
+	
+//TODO:
+// resolve class fields to this.variable accessors
+// resolve inner class variables to accessors
+// resolve types to qualified references, add dependencies
+	
+	public function resolveLexicalType(identifier:String):DataType
+	{
+		
+	}
+	
+	public function resolveLexicalReference(identifier:String):Expression
+	{
+		
+	}
+	
+	public function resolveLexicalAssignment(identifier:String, value:Expression):Expression
+	{
+		
+	}
+	
+	public function resolveLexicalCall(identifier:String, args:Array<Expression>):Expression
+	{
+		
+	}
+	
+/*unit-level*/
+	
+	/* lexical resolution */
+	
+	public function resolveLexicalType(identifier:String):DataType
+	{
+		// only qualified references should get this far
+		if (!importMap.has(identifier))
+			throw "reference to undeclared type " + identifier;
+		// add to dependencies map
+		unit.dependencies.push(importMap.get(identifier));
+		// return datatype
+		return DTReference(importMap.get(identifier));
+	}
+	
+	public function resolveLexicalGetter(identifier:String):Expression
+	{
+		// check for a qualified reference
+		if (!importMap.has(identifier))
+			return ELexReference(identifier);
+		// add to dependencies map
+		unit.dependencies.push(importMap.get(identifier));
+		// return expression
+		return EQualifiedReference(importMap.get(identifier));
+	}
+	
+	public function resolveLexicalSetter(identifier:String, value:Expression):Expression
+	{
+		// lexical setter
+		return ELexAssignment(identifier, value);
 	}
 }
   

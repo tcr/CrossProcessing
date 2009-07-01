@@ -61,20 +61,20 @@ enum Expression
 	
 	// references
 	EArrayAccess(index:Expression, base:Expression);
-	ELexReference(identifier:String);
+	ELocalReference(identifier:String);
 	EReference(identifier:String, base:Expression);
 	EQualifiedReference(qualident:Qualident);
 	ESuperReference;
 	EThisReference;
 	// calling
-	ELexCall(identifier:String, args:Array<Expression>);
+//	ELocalCall(identifier:String, args:Array<Expression>);
 	ECall(identifier:String, base:Expression, args:Array<Expression>);
 	EThisCall(args:Array<Expression>);
 	ESuperCall(args:Array<Expression>);
 	// assignment
 	EArrayAssignment(index:Expression, base:Expression, value:Expression);
 	EAssignment(identifier:String, base:Expression, value:Expression);
-	ELexAssignment(identifier:String, value:Expression);
+	ELocalAssignment(identifier:String, value:Expression);
 	
 	// operations
 	ECast(type:DataType, expression:Expression);
@@ -92,6 +92,16 @@ enum Expression
 	ECharLiteral(value:Int);
 	EBooleanLiteral(value:Bool);
 	ENull;
+	
+	// second pass
+	EAmbigLexExpression(expression:LexicalExpression);
+}
+
+enum LexicalExpression
+{
+	LReference(identifier:String);
+	LCall(identifier:String, args:Array<Expression>);
+	LAssignment(identifier:String, value:Expression);
 }
 
 /* statements */
@@ -129,6 +139,9 @@ enum DataType
 	DTPrimitive(type:PrimitiveType);
 	DTReference(qualident:Qualident);
 	DTArray(type:DataType, dimensions:Int);	//[TODO] disallow DTArray in datatype (or make cumulation an innate part of its notation?)
+	
+	// second pass
+	DTAmbigLexReference(qualident:Qualident);
 }
 
 typedef Qualident = Array<String>;

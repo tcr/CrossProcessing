@@ -115,18 +115,26 @@ function checkExprStat(expression:Expression):Void {
 	    case EObjectInstantiation(_, _):
 	    
 	    // calling
-	    case ELexCall(_, _):
+	    case ELocalCall(_, _):
 	    case ECall(_, _, _):
 	    case EThisCall(_):
 	    case ESuperCall(_):
 	    // assignment
 	    case EArrayAssignment(_, _, _):
 	    case EAssignment(_, _, _):
-	    case ELexAssignment(_, _):
+	    case ELocalAssignment(_, _):
 	    
 	    // operations
 	    case EPrefix(_, _):
 	    case EPostfix(_, _):
+	    
+	    // second pass
+	    case EAmbigLexExpression(expression):
+		switch (expression) {
+		    case LCall(_, _):
+		    case LAssignment(_, _):
+		    default: error("not a statement" + " (" + expression + ")");
+		}
 	    
 	    default: error("not a statement" + " (" + expression + ")");
 	}
@@ -171,6 +179,12 @@ function checkModifierAccess(set:EnumSet<Modifier>):Void {
 	if (access > 1)
 		error("illegal combination of modifiers: " + set);
 }
+
+/*---------------------------- contexts ----------------------------*/
+
+var classContext:ClassContext;
+var blockContext:BlockContext;
+var fieldContext:{var defineField(default, null):FieldDefinition -> Void};
 
 /*-----------------------------------------------------------------*
  * Resolver routines to resolve LL(1) conflicts:                   *
@@ -375,10 +389,10 @@ IGNORE lf + cr + tab
 
 PRODUCTIONS
 
-PdeProgram<unit:ParsedCompilationUnit>
+PdeProgram
 = { ImportDeclaration<.out importIdent:Array<String>.>	(. unit.context.mapImports(importIdent); .)
     }
-  (IF (isJavaProgram()) CompilationUnit<unit>
+  (IF (isJavaProgram()) CompilationUnit
     |							(.
 							// default imports
 							unit.context.mapImports(['xpde', 'core', '*']);
@@ -386,7 +400,7 @@ PdeProgram<unit:ParsedCompilationUnit>
 
 							// initialize active program
 							var identifier:String = unit.packageDeclaration.slice(-1)[0];
-							var classContext = new ClassContext(unit.context);
+							classContext = fieldContext = new ClassContext(unit.context);
 							unit.context.define(identifier, DClass(identifier, new EnumSet < Modifier > ([MPublic]), classScope.definitions, unit.context.resolveLexicalType('PApplet')));
 							.)
     { (IF (isLocalVarDecl(false)) LocalVariableDeclaration<classContext>) ";" }
@@ -394,8 +408,8 @@ PdeProgram<unit:ParsedCompilationUnit>
       ClassBodyDeclaration<classContext> { ClassBodyDeclaration<classContext> }
       |							(.
 							// initialize setup method
-							var methodContext = new BlockContext(classContext);
-							// move variable declarations to method
+							blockContext = fieldContext = new BlockContext();
+							// move field declarations to method
 							for (identifier in tempContext.definitions.keys())
 							{
 								methodContext.definitions.set(identifier, tempContext.definitions.get(identifier));
@@ -507,8 +521,8 @@ Modifier1<.m:EnumSet<Modifier>.>
 
 /*---------------------------------------------------------------------------*/
 
-Type<out type:DataType>
-= ( Qualident<.out qualident:Array<String>.>		(. type = DTReference(qualident); .)
+Type<out type:DataType>					/* TODO: qualifier MAY be a local class, an inner class, or a top-level import */
+= ( Qualident<.out qualident:Array<String>.>		(. type = DTAmbigLexReference(qualident); .)
   | BasicType<out primitive:PrimitiveType>		(. type = DTPrimitive(primitive); .) 
   ) BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
 .
@@ -949,9 +963,14 @@ Expression0<out expression:Expression>
 								value = EInfixOperation(operator, expression, value);
 							// extract reference type
 							switch (expression) {
-							    case ELexReference(identifier): expression = ELexAssignment(identifier, value);
+							    case ELocalReference(identifier): expression = ELocalAssignment(identifier, value);
 							    case EReference(identifier, base): expression = EAssignment(identifier, base, value);
 							    case EArrayAccess(index, base): expression = EArrayAssignment(index, base, value);
+							    case EAmbigLexExpression(expression):
+								switch (expression) {
+								    case LReference(identifier): expression = EAmbigLexExpression(LAssignment(identifier, value));
+								    default: error('invalid assignment left-hand side');
+								}
 							    default: error('invalid assignment left-hand side');
 							}
 							.)
@@ -1032,9 +1051,11 @@ Primary<out expression:Expression>
 | Literal<out arg:Expression> 				(. expression = arg; .)
 | "new"	Creator<out arg:Expression> 			(. expression = arg; .)
 | ident							(. var identifier:String = t.val, base:Expression = null; .)
-  { IF(dotAndIdent()) '.' ident				(. base = base == null ? ELexReference(identifier) : EReference(identifier, base);
+  { IF(dotAndIdent()) '.' ident				(. base = base != null ? EReference(identifier, base) :
+								blockContext.isFieldDefined(identifier) ? ELocalReference(identifier) : EAmbigLexExpression(LReference(identifier));
 							   identifier = t.val; .)
-    }							(. expression = base == null ? ELexReference(identifier) : EReference(identifier, base); .)
+    }							(. expression = base != null ? EReference(identifier, base) :
+								blockContext.isFieldDefined(identifier) ? ELocalReference(identifier) : EAmbigLexExpression(LReference(identifier)); .)
   [ IF(isIdentSuffix()) IdentifierSuffix<out arg:Expression, identifier, base> 	(. expression = arg; .)
     ]
 | BasicType<out type:PrimitiveType>
@@ -1083,7 +1104,7 @@ Literal<out expression:Expression>
 Creator<out expression:Expression>
 = BasicType<out type:PrimitiveType>
   ArrayCreatorRest<out arg:Expression, DTPrimitive(type)>		(. expression = arg; .)
-| Qualident<.out qualifier:Array<String>.> 
+| Qualident<.out qualifier:Array<String>.> 				/*[TODO] is DTReference ambig? */
   ( ArrayCreatorRest<out arg:Expression, DTReference(qualifier)>	(. expression = arg; .)
   | ClassCreatorRest<out arg:Expression, qualifier>			(. expression = arg; .)
   )
