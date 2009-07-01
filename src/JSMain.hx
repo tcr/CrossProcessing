@@ -2,9 +2,8 @@
 
 import haxe.io.StringInput;
 import js.Lib;
-import xpde.compiler.JSCompiler;
-import xpde.interpreter.JSInterpreter;
-import xpde.parser.CompilationUnitScope;
+//import xpde.compiler.JSCompiler;
+//import xpde.interpreter.JSInterpreter;
 
 import xpde.parser.Parser;
 import xpde.parser.Scanner;
@@ -27,13 +26,13 @@ class JSMain
 	
 	static function compile()
 	{
-		var scanner:Scanner = new Scanner(new StringInput(getSource()));
+/*		var scanner:Scanner = new Scanner(new StringInput(getSource()));
 		var parser:Parser = new Parser(scanner);
-		var program:PdeProgram = parser.Parse();
+		parser.Parse();
 		
 		var compiler = new JSCompiler();
 		trace(compiler.compile(program.getCompilationUnit('Sketch')));
-		trace('#DONE#');
+		trace('#DONE#');*/
 	}
 	
 	static function interpret()
@@ -43,12 +42,12 @@ class JSMain
 //[TODO]
 		
 		// initialize main sketch
-		var sketch:CompilationUnit = new CompilationUnitContext(rootPackage, ['Sketch']);
+		var sketch:CompilationUnit = new ParsedCompilationUnit(rootPackage, ['Sketch'], new StringInput(getSource()));
 		sketch.initialize();
 		
 		// compile main sketch
-		var interpreter:IInterpreter = new JSInterpreter();
-		interpreter.interpret(rootPackage, ['Sketch']);
+//		var interpreter:IInterpreter = new JSInterpreter();
+//		interpreter.interpret(rootPackage, ['Sketch']);
 		
 /*		var scanner:Scanner = new Scanner(new StringInput(getSource()));
 		var parser:Parser = new Parser(scanner);

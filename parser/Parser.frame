@@ -1,7 +1,3 @@
-import js.Boot;
-import xpde.parser.ClassDefinition;
-import xpde.parser.FieldDefinition;
-import xpde.parser.Qualident;
 /*-------------------------------------------------------------------------
 Compiler Generator Coco/R,
 Copyright (c) 1990, 2004 Hanspeter Moessenboeck, University of Linz
@@ -124,8 +120,7 @@ class Parser
 		Expect(0);
 		
 		// second pass
-		var resolver:LexicalResolver = new LexicalResolver(unit);
-		resolver.resolve();
+		(new LexicalResolver()).resolve(unit);
 	}
 
 	private static var set:Array<Array<Bool>> = [
@@ -251,7 +246,7 @@ class OperationBuilder
 
 /*-------------------- Packages ----------------------------------*/
 
-class JavaPackage
+class JavaPackage implements JavaPackageItem
 {
 	public var contents(default, null):Hash<JavaPackageItem>;
 	
@@ -263,14 +258,14 @@ class JavaPackage
 	public function addCompilationUnit(qualident:Qualident, unit:CompilationUnit)
 	{
 		if (qualident.length == 0)
-			if (contents.has(qualident[0]))
+			if (contents.exists(qualident[0]))
 				throw "redefinition of " + qualident.join('.');
 			else
 				contents.set(qualident[0], unit);
 		else {
-			if (contents.has(qualident[0]) && !Std.is(contents.get(qualident[0]), JavaPackage))
+			if (contents.exists(qualident[0]) && !Std.is(contents.get(qualident[0]), JavaPackage))
 				throw qualident.join('.') + " is not a package";
-			else if (!contents.has(qualident[0]))
+			else if (!contents.exists(qualident[0]))
 				contents.set(qualident[0], new JavaPackage());
 			(cast(contents.get(qualident[0]), JavaPackage)).addCompilationUnit(qualident.slice(1), unit);
 		}
@@ -279,12 +274,12 @@ class JavaPackage
 	public function getByQualident(qualident:Qualident):JavaPackageItem
 	{
 		try {
-			if (!contents.has(qualident[0]))
+			if (!contents.exists(qualident[0]))
 				throw false;
 			if (qualident.length == 1)
 				return contents.get(qualident[0]);
 			else
-				return contents.get(qualident[0]).getByQualident(qualident.slice(1));
+				return cast(contents.get(qualident[0]), JavaPackage).getByQualident(qualident.slice(1));
 			
 		} catch (e:Dynamic)
 		{
@@ -297,10 +292,10 @@ interface JavaPackageItem { }
 
 interface CompilationUnit implements JavaPackageItem
 {
-	var packageDeclaration:Qualident;
-	var dependencies:Array<Qualident>;
+	var packageDeclaration(default, null):Qualident;
+	var dependencies(default, null):Array<Qualident>;
 	function initialize():Void;
-	function compile(compiler:ICompiler):Void;
+//	function compile(compiler:ICompiler):Void;
 }
 
 class ParsedCompilationUnit implements CompilationUnit
@@ -332,7 +327,7 @@ class ParsedCompilationUnit implements CompilationUnit
 			return;
 		
 		// scan and compile
-		var scanner:Scanner = new Scanner(new StringInput(getSource()));
+		var scanner:Scanner = new Scanner(source);
 		var parser:Parser = new Parser(scanner, this);
 		parser.Parse();
 			
@@ -360,7 +355,7 @@ class CompilationUnitContext
 	
 	private function define(identifier:String, definition:TopLevelDefinition)
 	{
-		if (definitions.has(identifier))
+		if (definitions.exists(identifier))
 			throw 'redefinition of top-level declaration "' + identifier + '"';
 		definitions.set(identifier, definition);
 	}
@@ -386,7 +381,7 @@ class CompilationUnitContext
 		{
 			// check that the compilation unit exists
 			if (!Std.is(rootPackage.getByQualident(ident.slice(0, -1)), CompilationUnit))
-				return false;
+				return;
 			importMap.set(ident[ident.length - 1], ident);
 		}
 		else
@@ -396,7 +391,7 @@ class CompilationUnitContext
 				var importPackage = cast(rootPackage.getByQualident(ident.slice(0, -1)), JavaPackage);
 				for (item in importPackage.contents.keys())
 					if (Std.is(importPackage.contents.get(item), CompilationUnit))
-						importMap.set(item, ident.slice(0, -1).concat(item));
+						importMap.set(item, ident.slice(0, -1).concat([item]));
 			}
 			catch (e:Dynamic) { }
 		}
@@ -405,19 +400,19 @@ class CompilationUnitContext
 
 interface FieldContext
 {
-	public function defineField(definition:FieldDefinition, ?init:Expression);
+	function defineField(definition:FieldDefinition, ?init:Expression):Void;
 }
 
 class ClassContext implements FieldContext
 {
 	// public variables
 	public var identifier:String;
-	public var modifiers(default, null):EnumSet<Modifier>;
+	public var modifiers:EnumSet<Modifier>;
 	public var extend:DataType;
-	public var implement(default, null):Array<DataType>;
+	public var implement:Array<DataType>;
 	// definitions
-	private var fieldDefinitions(default, null):Hash<ClassDefinition>;
-	private var methodDefinitions(default, null):Hash<ClassDefinition>;	
+	private var fieldDefinitions(default, null):Hash<FieldDefinition>;
+	private var methodDefinitions(default, null):Hash<MethodDefinition>;	
 	// constructors
 	public var staticConstructor(default, null):BlockContext;
 	public var objectConstructor(default, null):BlockContext;
@@ -428,27 +423,27 @@ class ClassContext implements FieldContext
 		this.identifier = identifier;
 		
 		implement = [];
-		fieldDefinitions = [];
-		methodDefinitions = [];
+		fieldDefinitions = new Hash<FieldDefinition>();
+		methodDefinitions = new Hash<MethodDefinition>();
 		staticConstructor = new BlockContext();
 		objectConstructor = new BlockContext();
 	}
 	
 	public function defineField(definition:FieldDefinition, ?init:Expression)
 	{
-		if (fieldDefinitions.has(definition.identifier))
-			throw 'redeclaration of field "' + identifier + '"';
+		if (fieldDefinitions.exists(definition.identifier))
+			throw 'redeclaration of field "' + definition.identifier + '"';
 		fieldDefinitions.set(definition.identifier, definition);
 		if (init != null)
 			definition.modifiers.contains(MStatic) ?
-			    staticConstructor.pushStatement(EAssignment(definition.identifier, EAmbigLexExpression(EReference(this.identifier)), init)) :
-			    objectConstructor.pushStatement(EAssignment(definition.identifier, EThisReference, init));
+			    staticConstructor.pushStatement(SExpression(EAssignment(definition.identifier, EAmbigLexExpression(LReference(this.identifier)), init))) :
+			    objectConstructor.pushStatement(SExpression(EAssignment(definition.identifier, EThisReference, init)));
 	}
 	
 	public function defineMethod(definition:MethodDefinition)
 	{
 //[TODO] hash by method signature!
-//		if (methodDefinitions.has(definition.identifier))
+//		if (methodDefinitions.exists(definition.identifier))
 //			throw 'redefinition of top-level declaration "' + identifier + '"';
 		methodDefinitions.set(definition.identifier, definition);
 	}
@@ -477,30 +472,30 @@ class BlockContext implements FieldContext
 		statements.push(statement);
 	}
 	
-	private var fieldDefinitions(default, null):Hash<ClassDefinition>;
+	private var fieldDefinitions(default, null):Hash<FieldDefinition>;
 	
 	public function defineField(definition:FieldDefinition, ?init:Expression)
 	{
 		if (isFieldDefined(definition.identifier))
-			throw 'redeclaration of variable "' + identifier + '" in block scope';
+			throw 'redeclaration of variable "' + definition.identifier + '" in block scope';
 		fieldDefinitions.set(definition.identifier, definition);
 		if (init != null)
-			pushStatement(ELocalAssignment(definition.identifier, init));
+			pushStatement(SExpression(ELocalAssignment(definition.identifier, init)));
 	}
 	
 	public function isFieldDefined(identifier:String):Bool
 	{
-		return fieldDefinitions.has(identifier) || (parent != null ? lexicalParent.isFieldDefined(identifier) : false);
+		return fieldDefinitions.exists(identifier) || (parent != null ? parent.isFieldDefined(identifier) : false);
 	}
 	
 	private var parent:BlockContext;
 	
-	public function new(parent:BlockContext)
+	public function new(?parent:BlockContext)
 	{
 		this.parent = parent;
 		
 		statements = [];
-		fieldDefinitions = [];
+		fieldDefinitions = new Hash<FieldDefinition>();
 	}
 	
 	public function getBlockStatement():Statement
@@ -515,9 +510,13 @@ class LexicalResolver
 	private var classContext:ClassContext;
 	private var blockContext:BlockContext;
 	
-	public function new(unit:ParsedCompilationUnit)
+	public function new()
 	{
-		
+	}
+	
+	public function resolve(unit:ParsedCompilationUnit)
+	{
+		this.unit = unit;
 	}
 	
 	/* lexical resolution */
@@ -527,6 +526,7 @@ class LexicalResolver
 // resolve inner class variables to accessors
 // resolve types to qualified references, add dependencies
 	
+/*
 	public function resolveLexicalType(identifier:String):DataType
 	{
 		
@@ -545,16 +545,14 @@ class LexicalResolver
 	public function resolveLexicalCall(identifier:String, args:Array<Expression>):Expression
 	{
 		
-	}
+	}*/
 	
-/*unit-level*/
-	
-	/* lexical resolution */
+/* unit-level lexical resolution 
 	
 	public function resolveLexicalType(identifier:String):DataType
 	{
 		// only qualified references should get this far
-		if (!importMap.has(identifier))
+		if (!importMap.exists(identifier))
 			throw "reference to undeclared type " + identifier;
 		// add to dependencies map
 		unit.dependencies.push(importMap.get(identifier));
@@ -565,7 +563,7 @@ class LexicalResolver
 	public function resolveLexicalGetter(identifier:String):Expression
 	{
 		// check for a qualified reference
-		if (!importMap.has(identifier))
+		if (!importMap.exists(identifier))
 			return ELexReference(identifier);
 		// add to dependencies map
 		unit.dependencies.push(importMap.get(identifier));
@@ -577,7 +575,7 @@ class LexicalResolver
 	{
 		// lexical setter
 		return ELexAssignment(identifier, value);
-	}
+	}*/
 }
   
 /*-------------------- bit array ----------------------------------*/

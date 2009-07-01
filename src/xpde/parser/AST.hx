@@ -108,7 +108,7 @@ enum LexicalExpression
 
 enum Statement 
 {
-	SBlock(definitions:Array<FieldDefinition>, statements:Array<Statement>);
+	SBlock(definitions:Hash<FieldDefinition>, statements:Array<Statement>);
 	SBreak(?label:String);
 	SConditional(condition:Expression, thenBlock:Statement, ?elseBlock:Statement);
 	SContinue(?label:String);
@@ -127,12 +127,6 @@ typedef Catch = {
 }
 
 /* definitions */
-
-enum Visibility
-{
-	VPublic;
-	VPrivate;
-}
 
 enum DataType
 {
@@ -168,10 +162,10 @@ enum TopLevelDefinition
 typedef ClassDefinition = {
 	var identifier:String;
 	var modifiers:EnumSet<Modifier>;
-	var fields:Iterable<FieldDefinition>;
-	var methods:Iterable<MethodDefinition>;
-	var extend:DataType;
-	var implement:Iterable<DataType>;
+	var fields:Hash<FieldDefinition>;
+	var methods:Hash<MethodDefinition>;
+	var extend:Null<DataType>;
+	var implement:Array<DataType>;
 	var clinit:Statement;
 	var init:Statement;
 };
@@ -184,9 +178,9 @@ typedef FieldDefinition = {
 
 typedef MethodDefinition = {
 	var identifier:String;
-	var type:DataType;
+	var type:Null<DataType>;
 	var modifiers:EnumSet<Modifier>;
-	var params:Array<FormalParameter>;
+	var parameters:Array<FormalParameter>;
 	var body:Statement;
 };
 

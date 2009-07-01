@@ -6,7 +6,6 @@
 package xpde.compiler;
 
 import xpde.parser.AST;
-import xpde.parser.EnumSet;
 
 class JSCompiler 
 {

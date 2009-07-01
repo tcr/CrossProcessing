@@ -1,6 +1,7 @@
 import xpde.parser.Scanner;
 import xpde.parser.AST;
-import xpde.parser.EnumSet;
+import haxe.io.Input;
+import haxe.io.StringInput;
 
 COMPILER PdeProgram
   
@@ -115,7 +116,7 @@ function checkExprStat(expression:Expression):Void {
 	    case EObjectInstantiation(_, _):
 	    
 	    // calling
-	    case ELocalCall(_, _):
+//	    case ELocalCall(_, _):
 	    case ECall(_, _, _):
 	    case EThisCall(_):
 	    case ESuperCall(_):
@@ -423,14 +424,14 @@ PdeProgram
 							    identifier: 'setup',
 							    type: null,
 							    modifiers: new EnumSet<Modifier>(),
-							    params: []
+							    parameters: [],
 							    body: blockContexts.shift().getBlockStatement()
 							});
 							.)
       )
     )							(.
 							// add class
-							unit.context.defineClass(classContext.shift().getClassDefinition());
+							unit.context.defineClass(classContexts.shift().getClassDefinition());
 							
 							// validate script
 							if (la.kind != _EOF)
@@ -645,7 +646,7 @@ ClassBodyDeclaration
 = ";"
 |							(. var modifiers = new EnumSet<Modifier>(); .)
   ["static"						(. addModifier(modifiers, MStatic); .)
-  ] ( Block<out block:Statement, null>			(. classContext.staticConstructor.pushStatement(block); .)
+  ] ( Block<out block:Statement, null>			(. classContexts[0].staticConstructor.pushStatement(block); .)
     | [ Modifier1<modifiers> { Modifier0<modifiers> } ] MemberDecl<modifiers>
     )
 .
@@ -654,7 +655,7 @@ ClassBodyDeclaration
 
 MemberDecl<.modifiers:EnumSet<Modifier>.>
 = IF (identAndLPar()) ident				(. var identifier:String = t.val;
-							   if (identifier != classContext.identifier) error('invalid function declaration'); .)
+							   if (identifier != classContexts[0].identifier) error('invalid function declaration'); .)
   ConstructorDeclaratorRest<modifiers, identifier>
 | MethodOrFieldDecl<modifiers>
 |							(. checkModifierPermission(modifiers, ModifierSet.methods); .)
@@ -857,7 +858,7 @@ Statement0<out statement:Statement>
   [ ForUpdate<.out updates:Array<Statement>.>		(. body = updates; .)
     ] ")"
   Statement0<out arg:Statement>				(. body = [arg].concat(body);
-							   blockContexts[0].pushStatement(SLoop(conditional, SBlock([], body), false));
+							   blockContexts[0].pushStatement(SLoop(conditional, SBlock(new Hash<FieldDefinition>(), body), false));
 							   statement = blockContexts.shift().getBlockStatement(); .)
 | "while" ParExpression<out condition:Expression>
   Statement0<out body:Statement>			(. statement = SLoop(condition, body, false); .)
@@ -1000,8 +1001,8 @@ Expression0<out expression:Expression>
 							    case ELocalReference(identifier): expression = ELocalAssignment(identifier, value);
 							    case EReference(identifier, base): expression = EAssignment(identifier, base, value);
 							    case EArrayAccess(index, base): expression = EArrayAssignment(index, base, value);
-							    case EAmbigLexExpression(expression):
-								switch (expression) {
+							    case EAmbigLexExpression(lexpression):
+								switch (lexpression) {
 								    case LReference(identifier): expression = EAmbigLexExpression(LAssignment(identifier, value));
 								    default: error('invalid assignment left-hand side');
 								}
@@ -1086,10 +1087,10 @@ Primary<out expression:Expression>
 | "new"	Creator<out arg:Expression> 			(. expression = arg; .)
 | ident							(. var identifier:String = t.val, base:Expression = null; .)
   { IF(dotAndIdent()) '.' ident				(. base = base != null ? EReference(identifier, base) :
-								blockContext.isFieldDefined(identifier) ? ELocalReference(identifier) : EAmbigLexExpression(LReference(identifier));
+								blockContexts[0].isFieldDefined(identifier) ? ELocalReference(identifier) : EAmbigLexExpression(LReference(identifier));
 							   identifier = t.val; .)
     }							(. expression = base != null ? EReference(identifier, base) :
-								blockContext.isFieldDefined(identifier) ? ELocalReference(identifier) : EAmbigLexExpression(LReference(identifier)); .)
+								blockContexts[0].isFieldDefined(identifier) ? ELocalReference(identifier) : EAmbigLexExpression(LReference(identifier)); .)
   [ IF(isIdentSuffix()) IdentifierSuffix<out arg:Expression, identifier, base> 	(. expression = arg; .)
     ]
 | BasicType<out type:PrimitiveType>
@@ -1166,7 +1167,7 @@ ClassCreatorRest<.out expression:Expression, qualifier:Array<String>.>
 
 IdentifierSuffix<out expression:Expression, identifier:String, base:Expression>
 = '[' ']' BracketsOpt<out bCount:Int> "." "class"	(. /* info.setKind(ExprKind.SELECT); */ .)
-|  Arguments<.out arguments:Array<Expression>.>		(. expression = base == null ? ELexCall(identifier, arguments) : ECall(identifier, base, arguments); .)
+|  Arguments<.out arguments:Array<Expression>.>		(. expression = base == null ? EAmbigLexExpression(LCall(identifier, arguments)) : ECall(identifier, base, arguments); .)
 |  "." ( "class" | "this" |
          "super" '.' ident
 	 ArgumentsOpt<out dummy:Expression, null, null>)	(. /* TODO */ .)
