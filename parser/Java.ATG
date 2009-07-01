@@ -391,7 +391,7 @@ PRODUCTIONS
 PdeProgram
 = { ImportDeclaration<.out importIdent:Array<String>.>	(. unit.context.mapImports(importIdent); .)
     }
-  (IF (isJavaProgram()) CompilationUnit
+  (IF (isJavaProgram()) TypeDeclaration { TypeDeclaration }
     |							(.
 							// default imports
 							unit.context.mapImports(['xpde', 'core', '*']);
@@ -715,7 +715,6 @@ MethodDeclaratorRest<.modifiers:EnumSet<Modifier>, type:DataType, identifier:Str
 							    body: body
 							});
 							.)
-  }
 .
 
 /*---------------------------------------------------------------------------*/
@@ -974,7 +973,7 @@ SwitchBlockStatementGroups
 /*---------------------------------------------------------------------------*/
 
 SwitchBlockStatementGroup
-= SwitchLabel { BlockStatement<null> }
+= SwitchLabel { BlockStatement }
 .
 
 /*---------------------------------------------------------------------------*/
