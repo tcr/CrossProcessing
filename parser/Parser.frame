@@ -1,3 +1,5 @@
+import js.Boot;
+import xpde.parser.FieldDefinition;
 import xpde.parser.Qualident;
 /*-------------------------------------------------------------------------
 Compiler Generator Coco/R,
@@ -261,6 +263,22 @@ class JavaPackage
 			(cast(contents.get(qualident[0]), JavaPackage)).addCompilationUnit(qualident.slice(1), unit);
 		}
 	}
+	
+	public function getByQualident(qualident:Qualident):JavaPackageItem
+	{
+		try {
+			if (!contents.has(qualident[0]))
+				throw false;
+			if (qualident.length == 1)
+				return contents.get(qualident[0]);
+			else
+				return contents.get(qualident[0]).getByQualident(qualident.slice(1));
+			
+		} catch (e:Dynamic)
+		{
+			throw "invalid qualified reference " + qualident.join('.');
+		}
+	}
 }
 
 interface JavaPackageItem { }
@@ -336,13 +354,21 @@ class CompilationUnitContext implements LexicalResolver
 		// check ident type
 		if (ident[ident.length - 1] != '*')
 		{
-			//
+			// check that the compilation unit exists
+			if (!Std.is(rootPackage.getByQualident(ident.slice(0, -1)), CompilationUnit))
+				return false;
 			importMap.set(ident[ident.length - 1], ident);
 		}
 		else
 		{
 			// iterate namespace
-			
+			try {
+				var importPackage = cast(rootPackage.getByQualident(ident.slice(0, -1)), JavaPackage);
+				for (item in importPackage.contents.keys())
+					if (Std.is(importPackage.contents.get(item), CompilationUnit))
+						importMap.set(item, ident.slice(0, -1).concat(item));
+			}
+			catch (e:Dynamic) { }
 		}
 	}
 	
@@ -358,6 +384,8 @@ class CompilationUnitContext implements LexicalResolver
 		importMap = new Hash<Qualident>();
 	}
 	
+	/* lexical resolution */
+	
 	public function resolveLexicalType(identifier:String):DataType
 	{
 		// only qualified references should get this far
@@ -371,9 +399,9 @@ class CompilationUnitContext implements LexicalResolver
 	
 	public function resolveLexicalGetter(identifier:String):Expression
 	{
-		// only qualified references should get this far
+		// check for a qualified reference
 		if (!importMap.has(identifier))
-			throw "reference to undeclared variable " + identifier;
+			return ELexReference(identifier);
 		// add to dependencies map
 		unit.dependencies.push(importMap.get(identifier));
 		// return expression
@@ -382,8 +410,8 @@ class CompilationUnitContext implements LexicalResolver
 	
 	public function resolveLexicalSetter(identifier:String, value:Expression):Expression
 	{
-		// no setters should get this far
-		throw "assignment to undeclared variable " + identifier;
+		// lexical setter
+		return ELexAssignment(identifier, value);
 	}
 }
 
@@ -392,96 +420,127 @@ class ClassContext implements LexicalResolver
 	public var staticConstructor(default, null):BlockContext;
 	public var objectConstructor(default, null):BlockContext;
 	
-	private var parent:LexicalResolver;
+	private var lexicalParent:LexicalResolver;
 	
 	//[TODO] this should take no parent, prevent redefinition of variables/methods with redundant types(!)
-	public function new(parent:LexicalResolver)
+	public function new(lexicalParent:LexicalResolver)
 	{
-		this.parent = parent;
+		this.lexicalParent = lexicalParent;
 		
-		definitions = [];
+		fieldDefinitions = [];
+		methodDefinitions = [];
 		staticConstructor = new BlockContext();
 		objectConstructor = new BlockContext();
 	}
 	
-	public var definitions(default, null):Hash<ClassDefinition>;
+	private var fieldDefinitions(default, null):Hash<ClassDefinition>;
+	private var methodDefinitions(default, null):Hash<ClassDefinition>;
 	
-	public function define(identifier:String, definition:ClassDefinition)
+	public function defineField(definition:FieldDefinition)
 	{
-//[TODO] divide field/method definitions
-		definitions.set(identifier, definition);
+		if (fieldDefinitions.has(definition.identifier))
+			throw 'redeclaration of variable "' + identifier + '"';
+		fieldDefinitions.set(definition.identifier, definition);
 	}
 	
-	//[TODO] have to resolve inner class variables to accessors... yey
+	public function defineMethod(definition:MethodDefinition)
+	{
+//[TODO] hash by method signature!
+//		if (methodDefinitions.has(definition.identifier))
+//			throw 'redefinition of top-level declaration "' + identifier + '"';
+		methodDefinitions.set(definition.identifier, definition);
+	}
+	
+	/* lexical resolution */
+	
+	//[TODO] resolve inner class variables to accessors... yey
 	public function resolveLexicalType(identifier:String):DataType
 	{
-//[TODO] local classes
-		return parent.resolveLexicalType(identifier);
+		return lexicalParent.resolveLexicalType(identifier);
 	}
 	
+//[TODO] any way to resolve these to class fields?
 	public function resolveLexicalGetter(identifier:String):Expression
 	{
-		if (definitions.has(identifier))
-			switch (definitions.get(identifier))
-			{
-//[TODO] can java access methods directly?
-			    case DMethod(_, _, _, _, _): throw "cannot access method as variable";
-			    case DField(_, _, _): return EReference(identifier, EThisReference);
-			}
-		return parent.resolveLexicalGetter(identifier);
+		return lexicalParent.resolveLexicalGetter(identifier);
 	}
 	
 	public function resolveLexicalSetter(identifier:String, value:Expression):Expression
 	{
-		if (definitions.has(identifier))
-			switch (definitions.get(identifier))
-			{
-//[TODO] can java access methods directly?
-			    case DMethod(_, _, _, _, _): throw "cannot assign method as variable";
-			    case DField(_, _, _): return EAssignment(identifier, EThisReference, value);
-			}
-		return parent.resolveLexicalSetter(identifier);
+		return lexicalParent.resolveLexicalSetter(identifier);
 	}
 }
 
 class BlockContext implements LexicalResolver
 {
 	public var statements(default, null):Array<Statement>;
-	public var definitions(default, null):Hash<BlockDefinition>;
 	
-	private var parent:LexicalResolver;
+	public function pushStatement(statement:Statement)
+	{
+		statements.push(statement);
+	}
 	
-	//[TODO] this should take a parent, and prevent redefinition of variables?
-	public function new(parent:LexicalResolver)
+	private var fieldDefinitions(default, null):Hash<ClassDefinition>;
+	
+	public function defineField(definition:FieldDefinition)
+	{
+		if (isFieldDefined(definition.identifier))
+			throw 'redeclaration of variable "' + identifier + '" in block scope';
+		fieldDefinitions.set(definition.identifier, definition);
+	}
+	
+	public function isFieldDefined(identifier:String):Bool
+	{
+		return fieldDefinitions.has(identifier) || (parent != null ? lexicalParent.isFieldDefined(identifier) : false);
+	}
+	
+	private var parent:BlockContext;
+	
+	public function new(parent:BlockContext)
 	{
 		this.parent = parent;
 		
 		statements = [];
-		definitions = [];
+		fieldDefinitions = [];
 	}
 	
-	public function getBlockStatement():Statement {
-		return SBlock(definitions, statements);
+	public function getBlockStatement():Statement
+	{
+		return SBlock(fieldDefinitions, statements);
 	}
+	
+	/* lexical resolution */
 	
 	public function resolveLexicalType(identifier:String):DataType
 	{
 //[TODO] local classes
-		return parent.resolveLexicalType(identifier);
+		return lexicalParent.resolveLexicalType(identifier);
 	}
 	
 	public function resolveLexicalGetter(identifier:String):Expression
 	{
 		if (definitions.has(identifier))
 			return ELexReference(identifier);
-		return parent.resolveLexicalGetter(identifier);
+		return lexicalParent.resolveLexicalGetter(identifier);
 	}
 	
 	public function resolveLexicalSetter(identifier:String, value:Expression):Expression
 	{
 		if (definitions.has(identifier)
 			return ELexAssignment(identifier, value);
-		return parent.resolveLexicalSetter(identifier, value);
+		return lexicalParent.resolveLexicalSetter(identifier, value);
+	}
+}
+
+class LexicalResolver
+{
+	private var unit:ParsedCompilationUnit;
+	private var context:CompilationUnitContext;
+	private var classContext:ClassContext;
+	
+	public function new(unit:ParsedCompilationUnit)
+	{
+		
 	}
 }
   

@@ -56,15 +56,6 @@ enum Expression
 	EArrayInstantiation(type:DataType, sizes:Array<Expression>);
 	EObjectInstantiation(qualifier:Qualident, args:Array<Expression>);
 	
-	// assignment
-	EArrayAssignment(index:Expression, base:Expression, value:Expression);
-	EAssignment(identifier:String, base:Expression, value:Expression);
-	ELexAssignment(identifier:String, value:Expression);
-	
-	// calling
-	ECall(method:Expression, args:Array<Expression>);
-	ECallMethod(identifier:String, base:Expression, args:Array<Expression>);
-	
 	// control
 	EConditional(condition:Expression, thenExpression:Expression, elseExpression:Expression);
 	
@@ -75,6 +66,15 @@ enum Expression
 	EQualifiedReference(qualident:Qualident);
 	ESuperReference;
 	EThisReference;
+	// calling
+	ELexCall(identifier:String, args:Array<Expression>);
+	ECall(identifier:String, base:Expression, args:Array<Expression>);
+	EThisCall(args:Array<Expression>);
+	ESuperCall(args:Array<Expression>);
+	// assignment
+	EArrayAssignment(index:Expression, base:Expression, value:Expression);
+	EAssignment(identifier:String, base:Expression, value:Expression);
+	ELexAssignment(identifier:String, value:Expression);
 	
 	// operations
 	ECast(type:DataType, expression:Expression);

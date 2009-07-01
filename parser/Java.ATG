@@ -255,7 +255,7 @@ function isIdentSuffix():Bool {
 /* http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/app/preproc/pde.g?view=markup */
 
 function isJavaProgram():Bool {
-	return (la.kind == _public && peek(1).kind == _class) || (la.kind == _import_);
+	return (la.kind == _public && peek(1).kind == _class);
 }
 
 function isActiveProgram():Bool {
@@ -376,23 +376,23 @@ IGNORE lf + cr + tab
 PRODUCTIONS
 
 PdeProgram<unit:ParsedCompilationUnit>
-= IF (isJavaProgram())
-  CompilationUnit<unit>
-|							(.
+= { ImportDeclaration<.out importIdent:Array<String>.>	(. unit.context.mapImports(importIdent); .)
+    }
+  (IF (isJavaProgram()) CompilationUnit<unit>
+    |							(.
 							// default imports
 							unit.context.mapImports(['xpde', 'core', '*']);
 							unit.context.mapImports(['xpde', 'xml', '*']);
-//[TODO] add Pde imports
 
 							// initialize active program
 							var identifier:String = unit.packageDeclaration.slice(-1)[0];
 							var classContext = new ClassContext(unit.context);
 							unit.context.define(identifier, DClass(identifier, new EnumSet < Modifier > ([MPublic]), classScope.definitions, unit.context.resolveLexicalType('PApplet')));
 							.)
-  { (IF (isLocalVarDecl(false)) LocalVariableDeclaration<classContext>) ";" }
-  ( IF (isActiveProgram())
-    ClassBodyDeclaration<classContext> { ClassBodyDeclaration<classContext> }
-    |							(.
+    { (IF (isLocalVarDecl(false)) LocalVariableDeclaration<classContext>) ";" }
+    ( IF (isActiveProgram())
+      ClassBodyDeclaration<classContext> { ClassBodyDeclaration<classContext> }
+      |							(.
 							// initialize setup method
 							var methodContext = new BlockContext(classContext);
 							// move variable declarations to method
@@ -404,7 +404,8 @@ PdeProgram<unit:ParsedCompilationUnit>
 							// add setup method
 							classContext.definitions.set('setup', DMethod('setup', null, new EnumSet<Modifier>(), [], methodContext.getBlockStatement()));
 							.)
-      BlockStatement<methodContext> { BlockStatement<methodContext> }
+        BlockStatement<methodContext> { BlockStatement<methodContext> }
+      )
     )							(.
 							// validate script
 							if (la.kind != _EOF)
@@ -463,10 +464,10 @@ TypeDeclaration<context:Context>
 
 /*---------------------------------------------------------------------------*/
 
-ClassOrInterfaceDeclaration<scope:Scope>		(. var m = new EnumSet<Modifier>(); .) 
+ClassOrInterfaceDeclaration<context:Context>		(. var m = new EnumSet<Modifier>(); .) 
 = { ClassModifier<m> } 
-  ( ClassDeclaration<scope, m>
-  |  InterfaceDeclaration<scope, m>
+  ( ClassDeclaration<context, m>
+  |  InterfaceDeclaration<context, m>
   )
 .
 
@@ -564,9 +565,9 @@ QualidentList						(. var list:Array<Array<String>> = []; .)
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclarator<.scope:BlockScope, modifiers:EnumSet<Modifier>, type:DataType.>
+VariableDeclarator<.context:BlockContext, modifiers:EnumSet<Modifier>, type:DataType.>
 = ident							(. var identifier:String = t.val; .)
-  VariableDeclaratorRest<scope, modifiers, type, identifier>
+  VariableDeclaratorRest<context, modifiers, type, identifier>
 .
 
 /*---------------------------------------------------------------------------*/
@@ -578,11 +579,11 @@ VariableDeclaratorId
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclaratorRest<.scope:BlockScope, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
+VariableDeclaratorRest<.context:BlockContext, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
 = BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
 							(. var init:Expression = null; .)
-  [ "=" VariableInitializer<out expression:Expression>	(. scope.pushStatement(SExpression(EAssignment(identifier, null, expression))); .)
-    ]							(. scope.pushDefinition(DField(identifier, type, modifiers)); .)
+  [ "=" VariableInitializer<out expression:Expression>	(. context.pushStatement(SExpression(EAssignment(identifier, null, expression))); .)
+    ]							(. context.define(DField(identifier, type, modifiers)); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -598,7 +599,7 @@ VariableInitializer<out expression:Expression>
  *---------------------------- Classes --------------------------------------*
  *---------------------------------------------------------------------------*/
 
-ClassDeclaration<.scope:Scope, m:EnumSet<Modifier>.>
+ClassDeclaration<.context:Context, m:EnumSet<Modifier>.>
 = 							(. checkModifierPermission(m, ModifierSet.classes); .)
   "class" ident						(. var identifier:String = t.val, extend:DataType = null, implement:Array<DataType> = null; .)
   [ "extends" Type<out arg:DataType> 			(. extend = arg; .)
