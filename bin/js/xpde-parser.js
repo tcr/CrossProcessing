@@ -7264,12 +7264,337 @@ xpde.parser.LexicalResolver = function(p) { if( p === $_ ) return; {
 	$s.pop();
 }}
 xpde.parser.LexicalResolver.__name__ = ["xpde","parser","LexicalResolver"];
-xpde.parser.LexicalResolver.prototype.blockContext = null;
-xpde.parser.LexicalResolver.prototype.classContext = null;
+xpde.parser.LexicalResolver.prototype.classDefinition = null;
 xpde.parser.LexicalResolver.prototype.resolve = function(unit) {
 	$s.push("xpde.parser.LexicalResolver::resolve");
 	var $spos = $s.length;
 	this.unit = unit;
+	{ var $it16 = unit.context.definitions.iterator();
+	while( $it16.hasNext() ) { var definition = $it16.next();
+	var $e = (definition);
+	switch( $e[1] ) {
+	case 0:
+	var definition1 = $e[2];
+	{
+		this.classDefinition = definition1;
+		this.resolveClass(definition1);
+	}break;
+	}
+	}}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveClass = function(definition) {
+	$s.push("xpde.parser.LexicalResolver::resolveClass");
+	var $spos = $s.length;
+	{ var $it17 = definition.methods.iterator();
+	while( $it17.hasNext() ) { var method = $it17.next();
+	this.resolveMethod(method);
+	}}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveExpression = function(array,index) {
+	$s.push("xpde.parser.LexicalResolver::resolveExpression");
+	var $spos = $s.length;
+	var expression = array[index];
+	var $e = (expression);
+	switch( $e[1] ) {
+	case 0:
+	var sizes = $e[3];
+	{
+		{
+			var _g1 = 0, _g = sizes.length;
+			while(_g1 < _g) {
+				var index1 = _g1++;
+				this.resolveExpression(sizes,index1);
+			}
+		}
+	}break;
+	case 1:
+	var args = $e[3];
+	{
+		{
+			var _g1 = 0, _g = args.length;
+			while(_g1 < _g) {
+				var index1 = _g1++;
+				this.resolveExpression(args,index1);
+			}
+		}
+	}break;
+	case 2:
+	{
+		this.resolveExpression(Type.enumParameters(expression),0);
+		this.resolveExpression(Type.enumParameters(expression),1);
+		this.resolveExpression(Type.enumParameters(expression),2);
+	}break;
+	case 3:
+	{
+		this.resolveExpression(Type.enumParameters(expression),0);
+		this.resolveExpression(Type.enumParameters(expression),1);
+	}break;
+	case 4:
+	{
+		null;
+	}break;
+	case 5:
+	{
+		this.resolveExpression(Type.enumParameters(expression),1);
+	}break;
+	case 6:
+	{
+		null;
+	}break;
+	case 7:
+	{
+		null;
+	}break;
+	case 8:
+	{
+		null;
+	}break;
+	case 9:
+	var args = $e[4];
+	{
+		this.resolveExpression(Type.enumParameters(expression),1);
+		{
+			var _g1 = 0, _g = args.length;
+			while(_g1 < _g) {
+				var index1 = _g1++;
+				this.resolveExpression(args,index1);
+			}
+		}
+	}break;
+	case 10:
+	var args = $e[2];
+	{
+		{
+			var _g1 = 0, _g = args.length;
+			while(_g1 < _g) {
+				var index1 = _g1++;
+				this.resolveExpression(args,index1);
+			}
+		}
+	}break;
+	case 11:
+	var args = $e[2];
+	{
+		{
+			var _g1 = 0, _g = args.length;
+			while(_g1 < _g) {
+				var index1 = _g1++;
+				this.resolveExpression(args,index1);
+			}
+		}
+	}break;
+	case 12:
+	{
+		this.resolveExpression(Type.enumParameters(expression),0);
+		this.resolveExpression(Type.enumParameters(expression),1);
+		this.resolveExpression(Type.enumParameters(expression),2);
+	}break;
+	case 13:
+	{
+		this.resolveExpression(Type.enumParameters(expression),1);
+		this.resolveExpression(Type.enumParameters(expression),2);
+	}break;
+	case 14:
+	{
+		this.resolveExpression(Type.enumParameters(expression),1);
+	}break;
+	case 15:
+	{
+		this.resolveExpression(Type.enumParameters(expression),1);
+	}break;
+	case 16:
+	{
+		this.resolveExpression(Type.enumParameters(expression),1);
+	}break;
+	case 17:
+	{
+		this.resolveExpression(Type.enumParameters(expression),1);
+		this.resolveExpression(Type.enumParameters(expression),2);
+	}break;
+	case 18:
+	{
+		this.resolveExpression(Type.enumParameters(expression),0);
+	}break;
+	case 19:
+	{
+		this.resolveExpression(Type.enumParameters(expression),1);
+	}break;
+	case 20:
+	{
+		this.resolveExpression(Type.enumParameters(expression),1);
+	}break;
+	case 21:
+	var values = $e[2];
+	{
+		{
+			var _g1 = 0, _g = values.length;
+			while(_g1 < _g) {
+				var index1 = _g1++;
+				this.resolveExpression(values,index1);
+			}
+		}
+	}break;
+	case 22:
+	{
+		null;
+	}break;
+	case 23:
+	{
+		null;
+	}break;
+	case 24:
+	{
+		null;
+	}break;
+	case 25:
+	{
+		null;
+	}break;
+	case 26:
+	{
+		null;
+	}break;
+	case 27:
+	{
+		null;
+	}break;
+	case 28:
+	var expression1 = $e[2];
+	{
+		var $e = (expression1);
+		switch( $e[1] ) {
+		case 0:
+		var identifier = $e[2];
+		{
+			array[index] = this.resolveLexicalReference(identifier);
+		}break;
+		case 1:
+		var args = $e[3], identifier = $e[2];
+		{
+			array[index] = this.resolveLexicalCall(identifier,args);
+		}break;
+		case 2:
+		var value = $e[3], identifier = $e[2];
+		{
+			array[index] = this.resolveLexicalAssignment(identifier,value);
+		}break;
+		}
+	}break;
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveLexicalAssignment = function(identifier,value) {
+	$s.push("xpde.parser.LexicalResolver::resolveLexicalAssignment");
+	var $spos = $s.length;
+	if(this.classDefinition.fields.exists(identifier)) {
+		var $tmp = xpde.parser.Expression.EAssignment(identifier,xpde.parser.Expression.EThisReference,value);
+		$s.pop();
+		return $tmp;
+	}
+	throw "invalid reference to variable \"" + identifier + "\"";
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveLexicalCall = function(identifier,args) {
+	$s.push("xpde.parser.LexicalResolver::resolveLexicalCall");
+	var $spos = $s.length;
+	if(this.classDefinition.methods.exists(identifier)) {
+		var $tmp = xpde.parser.Expression.ECall(identifier,xpde.parser.Expression.EThisReference,args);
+		$s.pop();
+		return $tmp;
+	}
+	throw "invalid call to method \"" + identifier + "\"";
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveLexicalReference = function(identifier) {
+	$s.push("xpde.parser.LexicalResolver::resolveLexicalReference");
+	var $spos = $s.length;
+	if(this.classDefinition.fields.exists(identifier)) {
+		var $tmp = xpde.parser.Expression.EReference(identifier,xpde.parser.Expression.EThisReference);
+		$s.pop();
+		return $tmp;
+	}
+	throw "invalid reference to variable \"" + identifier + "\"";
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveMethod = function(definition) {
+	$s.push("xpde.parser.LexicalResolver::resolveMethod");
+	var $spos = $s.length;
+	this.resolveStatement(definition.body);
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveStatement = function(statement) {
+	$s.push("xpde.parser.LexicalResolver::resolveStatement");
+	var $spos = $s.length;
+	var $e = (statement);
+	switch( $e[1] ) {
+	case 0:
+	var statements = $e[3];
+	{
+		{
+			var _g = 0;
+			while(_g < statements.length) {
+				var statement1 = statements[_g];
+				++_g;
+				this.resolveStatement(statement1);
+			}
+		}
+	}break;
+	case 1:
+	{
+		null;
+	}break;
+	case 2:
+	var elseBlock = $e[4], thenBlock = $e[3];
+	{
+		this.resolveExpression(Type.enumParameters(statement),0);
+		this.resolveStatement(thenBlock);
+		if(elseBlock != null) this.resolveStatement(elseBlock);
+	}break;
+	case 3:
+	{
+		null;
+	}break;
+	case 4:
+	{
+		this.resolveExpression(Type.enumParameters(statement),0);
+	}break;
+	case 5:
+	var body = $e[3];
+	{
+		this.resolveStatement(body);
+	}break;
+	case 6:
+	var body = $e[3];
+	{
+		this.resolveExpression(Type.enumParameters(statement),0);
+		this.resolveStatement(body);
+	}break;
+	case 7:
+	var value = $e[2];
+	{
+		if(value != null) this.resolveExpression(Type.enumParameters(statement),0);
+	}break;
+	case 8:
+	{
+		this.resolveExpression(Type.enumParameters(statement),0);
+	}break;
+	case 9:
+	var finallyBody = $e[4], catches = $e[3], body = $e[2];
+	{
+		this.resolveStatement(body);
+		{
+			var _g = 0;
+			while(_g < catches.length) {
+				var catchBlock = catches[_g];
+				++_g;
+				this.resolveStatement(catchBlock.body);
+			}
+		}
+		if(finallyBody != null) this.resolveStatement(finallyBody);
+	}break;
+	}
 	$s.pop();
 }
 xpde.parser.LexicalResolver.prototype.unit = null;
@@ -7495,8 +7820,6 @@ xpde.parser.Parser._rbrack = 38;
 xpde.parser.Parser._rpar = 39;
 xpde.parser.Parser._tilde = 40;
 xpde.parser.Parser.maxT = 101;
-xpde.parser.Parser.T = true;
-xpde.parser.Parser.x = false;
 xpde.parser.Parser.minErrDist = 2;
 xpde.parser.Parser.maxTerminals = 160;
 xpde.parser.Parser.typeKWarr = [xpde.parser.Parser._byte,xpde.parser.Parser._short,xpde.parser.Parser._char,xpde.parser.Parser._int,xpde.parser.Parser._long,xpde.parser.Parser._float,xpde.parser.Parser._double,xpde.parser.Parser._boolean];
@@ -7505,6 +7828,8 @@ xpde.parser.Parser.prefixArr = [xpde.parser.Parser._inc,xpde.parser.Parser._dec,
 xpde.parser.Parser.typeKW = xpde.parser.Parser.newSet(xpde.parser.Parser.typeKWarr);
 xpde.parser.Parser.castFollower = xpde.parser.Parser.or(xpde.parser.Parser.newSet(xpde.parser.Parser.castFollowerArr),xpde.parser.Parser.typeKW);
 xpde.parser.Parser.prefix = xpde.parser.Parser.newSet(xpde.parser.Parser.prefixArr);
+xpde.parser.Parser.T = true;
+xpde.parser.Parser.x = false;
 xpde.parser.Parser.set = [[true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,true,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,true,true,true,true,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,true,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,true,false,true,true,true,true,false,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,true,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,true,false,false,true,true,true,true,false,true,false,false,false,false,false,false,true,true,false,true,true,true,true,false,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,true,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false,true,true,true,true,false,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,true,true,true,false,true,false,false,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,false,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,false,true,false,false,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,true,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,false,true,false,true,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,true,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,false,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false]];
 xpde.parser.Errors.errMsgFormat = "-- line {0} col {1}: {2}";
 xpde.parser.FatalError.serialVersionUID = 1.0;

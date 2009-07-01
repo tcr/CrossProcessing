@@ -50,8 +50,6 @@ class Parser
 	public static var _tilde:Int = 40;
 	public static var maxT:Int = 101;
 
-	inline static var T:Bool = true;
-	inline static var x:Bool = false;
 	static var minErrDist:Int = 2;
 
 	public var t:Token;    // last recognized token
@@ -1811,6 +1809,8 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		(new LexicalResolver()).resolve(unit);
 	}
 
+	inline static var T:Bool = true;
+	inline static var x:Bool = false;
 	private static var set:Array<Array<Bool>> = [
 		[T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,x,x,x, x,x,x,x, x,T,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,T,x,x, T,T,T,T, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
@@ -2187,6 +2187,8 @@ class ParsedCompilationUnit implements CompilationUnit
 		var scanner:Scanner = new Scanner(source);
 		var parser:Parser = new Parser(scanner, this);
 		parser.Parse();
+		
+//		trace(context.definitions);
 			
 		initialized = true;
 	}
@@ -2208,7 +2210,7 @@ class CompilationUnitContext
 		importMap = new Hash<Qualident>();
 	}
 	
-	private var definitions:Hash<TopLevelDefinition>;
+	public var definitions:Hash<TopLevelDefinition>;
 	
 	private function define(identifier:String, definition:TopLevelDefinition)
 	{
@@ -2364,8 +2366,7 @@ class BlockContext implements FieldContext
 class LexicalResolver
 {
 	private var unit:ParsedCompilationUnit;
-	private var classContext:ClassContext;
-	private var blockContext:BlockContext;
+	private var classDefinition:ClassDefinition;
 	
 	public function new()
 	{
@@ -2374,6 +2375,160 @@ class LexicalResolver
 	public function resolve(unit:ParsedCompilationUnit)
 	{
 		this.unit = unit;
+		for (definition in unit.context.definitions)
+			switch (definition) {
+			    case DClass(definition):
+				classDefinition = definition;
+				resolveClass(definition);
+			}
+	}
+	
+	function resolveClass(definition:ClassDefinition)
+	{
+		for (method in definition.methods)
+			resolveMethod(method);
+	}
+	
+	function resolveMethod(definition:MethodDefinition)
+	{
+		resolveStatement(definition.body);
+	}
+	
+	function resolveStatement(statement:Statement)
+	{
+		switch (statement)
+		{
+		    case SBlock(_, statements):
+			for (statement in statements)
+				resolveStatement(statement);
+				
+		    case SBreak(_):
+		    
+		    case SConditional(_, thenBlock, elseBlock):
+			resolveExpression(Type.enumParameters(statement), 0);
+			resolveStatement(thenBlock);
+			if (elseBlock != null)
+				resolveStatement(elseBlock);
+				
+		    case SContinue(_):
+		    
+		    case SExpression(_):
+			resolveExpression(Type.enumParameters(statement), 0);
+		    
+		    case SLabel(_, body):
+			resolveStatement(body);
+			
+		    case SLoop(_, body, _):
+			resolveExpression(Type.enumParameters(statement), 0);
+			resolveStatement(body);
+			
+		    case SReturn(value):
+			if (value != null)
+				resolveExpression(Type.enumParameters(statement), 0);
+				
+		    case SThrow(_):
+			resolveExpression(Type.enumParameters(statement), 0);
+			
+		    case STry(body, catches, finallyBody):
+			resolveStatement(body);
+			for (catchBlock in catches)
+				resolveStatement(catchBlock.body);
+			if (finallyBody != null)
+				resolveStatement(finallyBody);
+		}
+	}
+	
+	function resolveExpression(array:Array<Dynamic>, index:Int)
+	{
+		var expression:Expression = untyped array[index];
+		switch (expression)
+		{
+		    // instantiation
+		    case EArrayInstantiation(_, sizes):
+			for (index in 0...sizes.length)
+				resolveExpression(sizes, index);
+				
+		    case EObjectInstantiation(_, args):
+			for (index in 0...args.length)
+				resolveExpression(args, index);
+		
+		    // control
+		    case EConditional(_, _, _):
+			resolveExpression(Type.enumParameters(expression), 0);
+			resolveExpression(Type.enumParameters(expression), 1);
+			resolveExpression(Type.enumParameters(expression), 2);
+			
+		    // references
+		    case EArrayAccess(_, _):
+			resolveExpression(Type.enumParameters(expression), 0);
+			resolveExpression(Type.enumParameters(expression), 1);
+			
+		    case ELocalReference(_):
+		    case EReference(_, _):
+			resolveExpression(Type.enumParameters(expression), 1);
+			
+		    case EQualifiedReference(_):
+		    case ESuperReference:
+		    case EThisReference:
+		    // calling
+		    case ECall(_, _, args):
+			resolveExpression(Type.enumParameters(expression), 1);
+			for (index in 0...args.length)
+				resolveExpression(args, index);
+				
+		    case EThisCall(args):
+			for (index in 0...args.length)
+				resolveExpression(args, index);
+		    case ESuperCall(args):
+			for (index in 0...args.length)
+				resolveExpression(args, index);
+		    // assignment
+		    case EArrayAssignment(_, _, _):
+			resolveExpression(Type.enumParameters(expression), 0);
+			resolveExpression(Type.enumParameters(expression), 1);
+			resolveExpression(Type.enumParameters(expression), 2);
+			
+		    case EAssignment(_, _, _):
+			resolveExpression(Type.enumParameters(expression), 1);
+			resolveExpression(Type.enumParameters(expression), 2);
+			
+		    case ELocalAssignment(_, _):
+			resolveExpression(Type.enumParameters(expression), 1);
+		    // operations
+		    case ECast(_, _):
+			resolveExpression(Type.enumParameters(expression), 1);
+		    case EPrefixOperation(_, _):
+			resolveExpression(Type.enumParameters(expression), 1);
+		    case EInfixOperation(_, _, _):
+			resolveExpression(Type.enumParameters(expression), 1);
+			resolveExpression(Type.enumParameters(expression), 2);
+		    case EInstanceOf(_, _):
+			resolveExpression(Type.enumParameters(expression), 0);
+		    case EPrefix(_, _):
+			resolveExpression(Type.enumParameters(expression), 1);
+		    case EPostfix(_, _):
+			resolveExpression(Type.enumParameters(expression), 1);
+		
+		    // literals
+		    case EArrayLiteral(values):
+			for (index in 0...values.length)
+				resolveExpression(values, index);
+				
+		    case EStringLiteral(_):
+		    case EIntegerLiteral(_):
+		    case EFloatLiteral(_):
+		    case ECharLiteral(_):
+		    case EBooleanLiteral(_):
+		    case ENull:
+		
+		    // second pass
+		    case ELexExpression(expression):
+			switch (expression) {
+			    case LReference(identifier): array[index] = resolveLexicalReference(identifier);
+			    case LCall(identifier, args): array[index] = resolveLexicalCall(identifier, args);
+			    case LAssignment(identifier, value): array[index] = resolveLexicalAssignment(identifier, value);
+			}
+		}
 	}
 	
 	/* lexical resolution */
@@ -2383,26 +2538,40 @@ class LexicalResolver
 // resolve inner class variables to accessors
 // resolve types to qualified references, add dependencies
 	
-/*
-	public function resolveLexicalType(identifier:String):DataType
+/*	public function resolveLexicalType(identifier:String):DataType
 	{
 		
-	}
+	}*/
 	
 	public function resolveLexicalReference(identifier:String):Expression
 	{
-		
+		// class fields
+		if (classDefinition.fields.exists(identifier))
+			return EReference(identifier, EThisReference);
+			
+		// no variable found
+		throw 'invalid reference to variable "' + identifier + '"';
 	}
 	
 	public function resolveLexicalAssignment(identifier:String, value:Expression):Expression
 	{
-		
+		// class fields
+		if (classDefinition.fields.exists(identifier))
+			return EAssignment(identifier, EThisReference, value);
+			
+		// no variable found
+		throw 'invalid reference to variable "' + identifier + '"';
 	}
 	
 	public function resolveLexicalCall(identifier:String, args:Array<Expression>):Expression
 	{
-		
-	}*/
+		// class methods
+		if (classDefinition.methods.exists(identifier))
+			return ECall(identifier, EThisReference, args);
+			
+		// no method found
+		throw 'invalid call to method "' + identifier + '"';
+	}
 	
 /* unit-level lexical resolution 
 	
