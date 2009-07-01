@@ -4,6 +4,7 @@ import haxe.io.StringInput;
 import js.Lib;
 import xpde.compiler.JSCompiler;
 import xpde.interpreter.JSInterpreter;
+import xpde.parser.CompilationUnitScope;
 
 import xpde.parser.Parser;
 import xpde.parser.Scanner;
@@ -37,11 +38,23 @@ class JSMain
 	
 	static function interpret()
 	{
-		var scanner:Scanner = new Scanner(new StringInput(getSource()));
+		// initialize root packages
+		var rootPackage = new JavaPackage();
+//[TODO]
+		
+		// initialize main sketch
+		var sketch:CompilationUnit = new CompilationUnitContext(rootPackage, ['Sketch']);
+		sketch.initialize();
+		
+		// compile main sketch
+		var interpreter:IInterpreter = new JSInterpreter();
+		interpreter.interpret(rootPackage, ['Sketch']);
+		
+/*		var scanner:Scanner = new Scanner(new StringInput(getSource()));
 		var parser:Parser = new Parser(scanner);
 		var program:PdeProgram = parser.Parse();
 		
 		var interpreter = new JSInterpreter();
-		interpreter.interpret(program.getCompilationUnit('Sketch'));
+		interpreter.interpret(program.getCompilationUnit('Sketch'));*/
 	}
 }

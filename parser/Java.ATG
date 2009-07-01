@@ -364,27 +364,59 @@ IGNORE lf + cr + tab
 
 PRODUCTIONS
 
-PdeProgram<out program:PdeProgram>
-= IF (isJavaProgram())					(. program = new JavaProgram(); .)
-  CompilationUnit<cast(program, CompilationUnitScope)>
-|							(. var tempScope:BlockScope = new BlockScope(); .)
-  { (IF (isLocalVarDecl(false)) LocalVariableDeclaration<tempScope>) ";" }
-  ( IF (isActiveProgram())				(. program = new ActiveProgram(); (cast(program, Scope)).concat(tempScope); .)
-    ClassBodyDeclaration<cast(program, ClassScope)> { ClassBodyDeclaration<cast(program, ClassScope)> }
-    |							(. program = new StaticProgram(); (cast(program, Scope)).concat(tempScope); .)
-      BlockStatement<cast(program, BlockScope)> { BlockStatement<cast(program, BlockScope)> }
-    )							(. if (la.kind != _EOF) error("unexpected script termination"); .)
+PdeProgram<unit:ParsedCompilationUnit>
+= IF (isJavaProgram())
+  CompilationUnit<unit>
+|							(.
+							// default imports
+							unit.context.mapImports(['xpde', 'core', '*']);
+							unit.context.mapImports(['xpde', 'xml', '*']);
+//[TODO] add Pde imports
+
+							// initialize active program
+							var identifier:String = unit.packageDeclaration.slice(-1)[0];
+							var classContext = new ClassContext(unit.context);
+							unit.context.define(identifier, DClass(identifier, new EnumSet < Modifier > ([MPublic]), classScope.definitions, unit.context.resolveLexicalType('PApplet')));
+							.)
+  { (IF (isLocalVarDecl(false)) LocalVariableDeclaration<classContext>) ";" }
+  ( IF (isActiveProgram())
+    ClassBodyDeclaration<classContext> { ClassBodyDeclaration<classContext> }
+    |							(.
+							// initialize setup method
+							var methodContext = new BlockContext(classContext);
+							// move variable declarations to method
+							for (identifier in tempContext.definitions.keys())
+							{
+								methodContext.definitions.set(identifier, tempContext.definitions.get(identifier));
+								tempContext.definitions.remove(identifier);
+							}
+							// add setup method
+							classContext.definitions.set('setup', DMethod('setup', null, new EnumSet<Modifier>(), [], methodContext.getBlockStatement()));
+							.)
+      BlockStatement<methodContext> { BlockStatement<methodContext> }
+    )							(.
+							// validate script
+							if (la.kind != _EOF)
+								error("unexpected script termination");
+							.)
 .
 
 /*---------------------------------------------------------------------------*/
 
-CompilationUnit<scope:CompilationUnitScope>
-= [ "package" Qualident<.out qualident:Array<String>.> (. scope.setPackage(qualident); .)
+CompilationUnit<unit:ParsedCompilationUnit>		(. var packageDeclaration = []; .)
+= [ "package" Qualident<.out qualident:Array<String>.>	(. packageDeclaration = qualident; .)
     ';' ]
-  { ImportDeclaration<.out importIdent:Array<String>.>	(. scope.pushImport(importIdent); .)
+  { ImportDeclaration<.out importIdent:Array<String>.>	(. unit.context.mapImports(importIdent); .)
     }
-  { TypeDeclaration<scope>
-    }							(. if (la.kind != _EOF) error("'class' or 'interface' expected"); .)
+  { TypeDeclaration<unit.context>
+    }							(.
+							// verify package
+							if (packageDeclaration.join('.') != unit.packageDeclaration.join('.'))
+								error('invalid package declaration (expecting "' + unit.packageDeclaration.join('.') + '")');
+							// verify class file
+							if (la.kind != _EOF)
+								error("'class' or 'interface' expected");
+							.)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -413,8 +445,8 @@ QualifiedImport<.out importIdent:Array<String>.>
 
 /*---------------------------------------------------------------------------*/
 
-TypeDeclaration<scope:Scope>
-= ClassOrInterfaceDeclaration<scope>
+TypeDeclaration<context:Context>
+= ClassOrInterfaceDeclaration<context>
 | ";"
 .
 
@@ -905,6 +937,7 @@ Expression0<out expression:Expression>
 								value = EInfixOperation(operator, expression, value);
 							// extract reference type
 							switch (expression) {
+							    case ELexReference(identifier): expression = ELexAssignment(identifier, value);
 							    case EReference(identifier, base): expression = EAssignment(identifier, base, value);
 							    case EArrayAccess(index, base): expression = EArrayAssignment(index, base, value);
 							    default: error('invalid assignment left-hand side');
@@ -985,8 +1018,9 @@ Primary<out expression:Expression>
 | Literal<out arg:Expression> 				(. expression = arg; .)
 | "new"	Creator<out arg:Expression> 			(. expression = arg; .)
 | ident							(. var identifier:String = t.val, base:Expression = null; .)
-  { IF(dotAndIdent()) '.' ident				(. base = EReference(identifier, base); identifier = t.val; .)
-    }							(. expression = EReference(identifier, base); .)
+  { IF(dotAndIdent()) '.' ident				(. base = base == null ? ELexReference(identifier) : EReference(identifier, base);
+							   identifier = t.val; .)
+    }							(. expression = base == null ? ELexReference(identifier) : EReference(identifier, base); .)
   [ IF(isIdentSuffix()) IdentifierSuffix<out arg:Expression, identifier, base> 	(. expression = arg; .)
     ]
 | BasicType<out type:PrimitiveType>
@@ -1069,7 +1103,7 @@ ClassCreatorRest<.out expression:Expression, qualifier:Array<String>.>
 
 IdentifierSuffix<out expression:Expression, identifier:String, base:Expression>
 = '[' ']' BracketsOpt<out bCount:Int> "." "class"	(. /* info.setKind(ExprKind.SELECT); */ .)
-|  Arguments<.out arguments:Array<Expression>.>	(. expression = base == null ? ECall(EReference(identifier), arguments) : ECallMethod(identifier, base, arguments); .)
+|  Arguments<.out arguments:Array<Expression>.>		(. expression = base == null ? ECall(ELexReference(identifier), arguments) : ECallMethod(identifier, base, arguments); .)
 |  "." ( "class" | "this" |
          "super" '.' ident
 	 ArgumentsMethodOpt<out dummy:Expression, null, null>)	(. /* TODO */ .)

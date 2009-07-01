@@ -59,6 +59,7 @@ enum Expression
 	// assignment
 	EArrayAssignment(index:Expression, base:Expression, value:Expression);
 	EAssignment(identifier:String, base:Expression, value:Expression);
+	ELexAssignment(identifier:String, value:Expression);
 	
 	// calling
 	ECall(method:Expression, args:Array<Expression>);
@@ -97,7 +98,7 @@ enum Expression
 
 enum Statement 
 {
-	SBlock(definitions:Array<Definition>, statements:Array<Statement>);
+	SBlock(definitions:Array<FieldDefinition>, statements:Array<Statement>);
 	SBreak(?label:String);
 	SConditional(condition:Expression, thenBlock:Statement, ?elseBlock:Statement);
 	SContinue(?label:String);
@@ -144,21 +145,37 @@ enum PrimitiveType
 	PTBoolean;
 }
 
+
 enum TopLevelDefinition
 {
-	DClass(identifier:String, modifiers:EnumSet<Modifier>, definitions:Array<Definition>, ?extend:DataType, ?implement:Array<DataType>, ?clinit:Statement, ?init:Statement);
+	DClass(definition:ClassDefinition);
 //	DInterface(identifier:String, modifiers:EnumSet<Modifier>, definitions:Array<Definition>, ?extend:DataType, ?implement:Array<DataType>, ?clinit:Statement, ?init:Statement);
 }
 
-enum ClassDefinition
-{
-	DMethod(identifier:String, type:DataType, modifiers:EnumSet<Modifier>, params:Array<FormalParameter>, body:Statement);
-	DField(identifier:String, type:DataType, modifiers:EnumSet<Modifier>);
-}
+typedef ClassDefinition = {
+	var identifier:String;
+	var modifiers:EnumSet<Modifier>;
+	var fields:Array<FieldDefinition>;
+	var methods:Array<MethodDefinition>;
+	var extend:DataType;
+	var implement:Array<DataType>;
+	var clinit:Statement;
+	var init:Statement;
+};
 
-enum BlockDefinition {
-	DVariable(identifier:String, type:DataType, modifiers:EnumSet<Modifier>);
-}
+typedef FieldDefinition = {
+	var identifier:String;
+	var type:DataType;
+	var modifiers:EnumSet<Modifier>;
+};
+
+typedef MethodDefinition = {
+	var identifier:String;
+	var type:DataType;
+	var modifiers:EnumSet<Modifier>;
+	var params:Array<FormalParameter>;
+	var body:Statement;
+};
 
 enum Modifier {
 	MPublic;

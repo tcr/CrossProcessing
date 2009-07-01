@@ -782,6 +782,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			value = EInfixOperation(operator, expression, value);
 			// extract reference type
 			switch (expression) {
+			    case ELexReference(identifier): expression = ELexAssignment(identifier, value);
 			    case EReference(identifier, base): expression = EAssignment(identifier, base, value);
 			    case EArrayAccess(index, base): expression = EArrayAssignment(index, base, value);
 			    default: error('invalid assignment left-hand side');
@@ -1498,9 +1499,10 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			while (dotAndIdent()) {
 				Expect(29);
 				Expect(1);
-				base = EReference(identifier, base); identifier = t.val; 
+				base = base == null ? ELexReference(identifier) : EReference(identifier, base);
+				identifier = t.val; 
 			}
-			expression = EReference(identifier, base); 
+			expression = base == null ? ELexReference(identifier) : EReference(identifier, base); 
 			if (isIdentSuffix()) {
 				var arg:Expression = IdentifierSuffix(identifier, base);
 				expression = arg; 
@@ -1629,7 +1631,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			
 		} else if (la.kind == 33) {
 			var arguments:Array<Expression> = Arguments();
-			expression = base == null ? ECall(EReference(identifier), arguments) : ECallMethod(identifier, base, arguments); 
+			expression = base == null ? ECall(ELexReference(identifier), arguments) : ECallMethod(identifier, base, arguments); 
 		} else if (la.kind == 29) {
 			Get();
 			if (la.kind == 9) {
@@ -2013,142 +2015,226 @@ class OperationBuilder
 		    case OpLeftShift, OpRightShift, OpZeroRightShift: 10;
 		    case OpAdd, OpSubtract: 11;
 		    case OpMultiply, OpDivide, OpModulus: 12;
-//		    case OpNot, OpBitwiseNot, OpUnaryPlus, OpUnaryMinus: 14;
 		}
 	}
 }
 
 /*-------------------- block scope ----------------------------------*/
 
-class Scope
+interface LexicalResolver
 {
-	var parent:Scope;
-	var definitions:Array<Definition>;
+	public function resolveLexicalGetter(identifier:String):Expression;
+	public function resolveLexicalSetter(identifier:String, value:Expression):Expression;
+}
+
+class CompilationUnitContext implements CompilationUnit, LexicalResolver
+{
+	public var packageDeclaration(default, null):Qualident;
+	public var dependencies(default, null):Array<Qualident>;
 	
-	public function new() {
+	private var definitions:Hash<TopLevelDefinition>;
+	public function define(identifier:String, definition:TopLevelDefinition)
+	{
+		if (definitions.has(identifier))
+			throw 'redefinition of top-level declaration "' + identifier + '"';
+		definitions.set(identifier, definition);
+	}
+	
+	private var importMap:Hash<Qualident>;
+	
+	public function resolveLexicalGetter(identifier:String):Expression
+	{
+		// only qualified references should get this far
+		if (!importMap.has(identifier))
+			throw "reference to undeclared variable " + identifier;
+		// add to dependencies map
+		dependencies.push(importMap.get(identifier));
+		// return expression
+		return EQualifiedReference(importMap.get(identifier));
+	}
+	public function resolveLexicalSetter(identifier:String, value:Expression):Expression
+	{
+		// no setters should get this far
+		throw "assignment to undeclared variable " + identifier;
+	}
+	
+	public function mapImports(ident:Qualident)
+	{
+		// check ident type
+		if (ident.length == 0)
+			throw "Invalid identifier";
+		if (ident[ident.length - 1] != '*')
+			importMap.set(ident[ident.length - 1], ident);
+		else {
+			// iterate namespace
+			
+		}
+	}
+	
+	private var source:Input;
+
+	public function new(rootPackage:JavaPackage, packageDeclaration:Qualident, source:Input)
+	{
+		// add compilation unit to package
+		this.packageDeclaration = packageDeclaration;
+		rootPackage.addCompilationUnit(packageDeclaration, this);
+		dependencies = [];
+		
+		// private vars
+		this.source = source;
+		definitions = new Hash<TopLevelDefinition>();
+		resolveHash = new Hash<Qualident>();
+		initialized = false;
+	}
+	
+	private var initialized:Bool;
+	public function initialize()
+	{
+		if (initialized)
+			return;
+		
+		// scan and compile
+		var scanner:Scanner = new Scanner(new StringInput(getSource()));
+		var parser:Parser = new Parser(scanner, this);
+		parser.Parse();
+			
+		initialized = true;
+	}
+}
+
+class ClassContext implements LexicalResolver
+{
+	public var staticConstructor(default, null):BlockContext;
+	public var objectConstructor(default, null):BlockContext;
+	public var definitions(default, null):Array<ClassDefinition>;
+	
+	private var parent:LexicalResolver;
+	
+	//[TODO] this should take no parent, prevent redefinition of variables/methods with redundant types(!)
+	public function new(parent:LexicalResolver)
+	{
+		this.parent = parent;
+		
+		definitions = [];
+		staticConstructor = new BlockContext();
+		objectConstructor = new BlockContext();
+	}
+	
+	//[TODO] have to resolve inner class variables to accessors... yey
+	public function resolveLexicalGetter(identifier:String):Expression;
+	public function resolveLexicalSetter(identifier:String, value:Expression):Expression;
+}
+
+class BlockContext implements LexicalResolver
+{
+	public var statements(default, null):Array<Statement>;
+	public var definitions(default, null):Array<BlockDefinition>;
+	
+	private var parent:LexicalResolver;
+	
+	//[TODO] this should take a parent, and prevent redefinition of variables?
+	public function new(parent:LexicalResolver)
+	{
+		this.parent = parent;
+		
+		statements = [];
 		definitions = [];
 	}
 	
-	public function pushDefinition(definition:Definition) {
-		definitions.push(definition);
-	}
-	
-	public function getDefinitions():Array<Definition> {
-		return definitions;
-	}
-	
-	public function concat(block:Scope) {
-		for (definition in block.definitions)
-			pushDefinition(definition);
-	}
-}
-
-class CompilationUnitScope extends Scope
-{
-	public var _package:Array<String>;
-	public var _imports:Array<Array<String>>;
-	
-	public function new() {
-		super();
-		_package = [];
-		_imports = [];
-	}
-	
-	public function setPackage(ident:Array<String>) { _package = ident; }	
-	public function getPackage():Array<String> { return _package; }
-	
-	public function pushImport(ident:Array<String>) { _imports.push(ident); }
-	public function getImports():Array<Array<String>> { return _imports; }
-}
-
-class BlockScope extends Scope
-{
-	var statements:Array<Statement>;
-	
-	public function new() {
-		super();
-		statements = [];
-	}
-		
-	public function pushStatement(statement:Statement) {
-		statements.push(statement);
-	}
-	
-	override public function concat(block:Scope) {
-		super.concat(block);
-		var block:BlockScope = cast(block, BlockScope);
-		for (statement in block.statements)
-			pushStatement(statement);
-	}
-	
-	public function getStatement():Statement {
+	public function getBlockStatement():Statement {
 		return SBlock(definitions, statements);
 	}
+	
+	//[TODO] not much here, just forward them to owner
+	public function resolveLexicalGetter(identifier:String):Expression;
+	public function resolveLexicalSetter(identifier:String, value:Expression):Expression;
 }
 
-class ClassScope extends BlockScope
+/*-------------------- Packages ----------------------------------*/
+
+class JavaPackage
 {
-	override public function getStatement():Statement {
-		return SBlock([], statements);
+	public var contents(default, null):Hash<JavaPackageItem>;
+	
+	public function new()
+	{
+		contents = new Hash<JavaPackageItem>();
 	}
+	
+	public function addCompilationUnit(qualident:Qualident, unit:CompilationUnit)
+	{
+		if (qualident.length == 0)
+			if (contents.has(qualident[0]))
+				throw "redefinition of " + qualident.join('.');
+			else
+				contents.set(qualident[0], unit);
+		else {
+			if (contents.has(qualident[0]) && !Std.is(contents.get(qualident[0]), JavaPackage))
+				throw qualident.join('.') + " is not a package";
+			else if (!contents.has(qualident[0]))
+				contents.set(qualident[0], new JavaPackage());
+			(cast(contents.get(qualident[0]), JavaPackage)).addCompilationUnit(qualident.slice(1), unit);
+		}
+	}
+}
+
+interface JavaPackageItem { }
+
+interface CompilationUnit implements JavaPackageItem
+{
+	var packageDeclaration:Qualident;
+	var dependencies:Array<Qualident>;
+	function initialize():Void;
+	function compile(compiler:ICompiler):Void;
 }
 
 /*-------------------- PdeProgram ----------------------------------*/
 
-interface PdeProgram
-{
-	public function getCompilationUnit(identifier:String):CompilationUnit;
-}
-
 //[TODO] writeImports: http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/app/preproc/PdePreprocessor.java?view=markup
-
-class JavaProgram extends CompilationUnitScope, implements PdeProgram
+/*
+class PdeProgram extends CompilationUnitContext
 {
-	public function getCompilationUnit(identifier:String):CompilationUnit
-	{
-		// create straight compilation unit
-		return {
-		    packageIdent: _package,
-		    importIdents: _imports,
-		    definitions: definitions
-		};
-	}
-}
-
-class ActiveProgram extends ClassScope, implements PdeProgram
-{
-	public function getCompilationUnit(identifier:String):CompilationUnit
-	{
-		// create class extension
-		var classDefinition = DClass(identifier, new EnumSet<Modifier>([MPublic]), definitions, DTReference(['PApplet']));
-
-		// create compilation unit
-		return {
-		    packageIdent: [],
-		    importIdents: [['xpde', 'core', '*'], ['xpde', 'xml', '*']],
-		    definitions: [classDefinition]
-		};
-	}
-}
-
-class StaticProgram extends BlockScope, implements PdeProgram
-{
-	public function getCompilationUnit(identifier:String):CompilationUnit
-	{
-		// create setup function
-		var setupDefinition = DMethod('setup', null, new EnumSet<Modifier>(), [], getStatement());
+	public var mode(default, null):PdeProgramMode;
+	public var classScope(default, null):ClassContext;
+	public var methodScope(default, null):BlockContext;
 	
-		// create class extension
-		var classDefinition = DClass(identifier, new EnumSet<Modifier>([MPublic]), [setupDefinition], DTReference(['PApplet']));
+	public function initializeMode(mode:PdeProgramMode)
+	{
+		this.mode = mode;
+		switch (mode) {
+		    case PJava:
+			// default mode
+			
+		    case PActive:
+			// add default imports
+			addImportDeclaration(['xpde', 'core', '*']);
+			addImportDeclaration(['xpde', 'xml', '*']);
+			
+			// create class
+			classScope = new ClassContext();
+			definitions.push(DClass(identifier, new EnumSet<Modifier>([MPublic]), classScope.definitions, DTReference(['xpde', 'core', 'PApplet'])));
 
-		// create compilation unit
-		return {
-		    packageIdent: [],
-		    importIdents: [],
-		    definitions: [classDefinition]
-		};
+		    case PStatic:
+			// create setup method
+			methodScope = new BlockContext();
+			classScope.definitions.push(DMethod('setup', null, new EnumSet<Modifier>(), [], methodScope.getBlockStatement()));
+		}
+	}
+	
+	private var identifier:String;
+	public function new(identifier:String)
+	{
+		super();
+		this.identifier = identifier;
 	}
 }
+
+enum PdeProgramMode
+{
+	PJava;
+	PActive;
+	PStatic;
+}*/
   
 /*-------------------- bit array ----------------------------------*/
 
