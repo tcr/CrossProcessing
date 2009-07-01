@@ -111,12 +111,23 @@ function peek(n:Int):Token {
 function checkExprStat(expression:Expression):Void {
 	switch (expression)
 	{
-	    case ECall(_, _):
-	    case ECallMethod(_, _, _):
+	    // instantiation
 	    case EObjectInstantiation(_, _):
+	    
+	    // calling
+	    case ELexCall(_, _):
+	    case ECall(_, _, _):
+	    case EThisCall(_):
+	    case ESuperCall(_):
+	    // assignment
+	    case EArrayAssignment(_, _, _):
 	    case EAssignment(_, _, _):
+	    case ELexAssignment(_, _):
+	    
+	    // operations
 	    case EPrefix(_, _):
 	    case EPostfix(_, _):
+	    
 	    default: error("not a statement" + " (" + expression + ")");
 	}
 }
@@ -1013,7 +1024,9 @@ Expression3<out expression:Expression>
 
 Primary<out expression:Expression>
 = "(" Expression0<out arg:Expression> ")" 		(. expression = arg; .)
-| "this" ArgumentsOpt<out arg:Expression, EThisReference> 	(. expression = arg; .)
+| "this" 						(. expression = EThisReference; .)
+  [ Arguments<.out arguments:Array<Expression>.>	(. expression = EThisCall(arguments); .)
+    ]
 | "super" SuperSuffix<out arg:Expression> 		(. expression = arg; .)
 | Literal<out arg:Expression> 				(. expression = arg; .)
 | "new"	Creator<out arg:Expression> 			(. expression = arg; .)
@@ -1038,24 +1051,18 @@ Arguments<out arguments:Array<Expression>>		(. arguments = []; .)
 
 /*---------------------------------------------------------------------------*/
 
-ArgumentsOpt<out expression:Expression, method:Expression>
-=							(. expression = method; .)
-  [ Arguments<.out arguments:Array<Expression>.>	(. expression = ECall(method, arguments); .)
-    ]
-.
-
-ArgumentsMethodOpt<out expression:Expression, identifier:String, base:Expression>
+ArgumentsOpt<out expression:Expression, identifier:String, base:Expression>
 =							(. expression = EReference(identifier, base); .)
-  [ Arguments<.out arguments:Array<Expression>.>	(. expression = ECallMethod(identifier, base, arguments); .)
+  [ Arguments<.out arguments:Array<Expression>.>	(. expression = ECall(identifier, base, arguments); .)
     ]
 .
 
 /*---------------------------------------------------------------------------*/
 
 SuperSuffix<out expression:Expression>
-= Arguments<.out arguments:Array<Expression>.>		(. expression = ECall(ESuperReference, arguments); .)
+= Arguments<.out arguments:Array<Expression>.>		(. expression = ESuperCall(arguments); .)
 | '.' ident						(. var identifier:String = t.val; .)
-  ArgumentsMethodOpt<out arg:Expression, identifier, ESuperReference>	(. expression = arg; .)
+  ArgumentsOpt<out arg:Expression, identifier, ESuperReference>	(. expression = arg; .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -1103,17 +1110,17 @@ ClassCreatorRest<.out expression:Expression, qualifier:Array<String>.>
 
 IdentifierSuffix<out expression:Expression, identifier:String, base:Expression>
 = '[' ']' BracketsOpt<out bCount:Int> "." "class"	(. /* info.setKind(ExprKind.SELECT); */ .)
-|  Arguments<.out arguments:Array<Expression>.>		(. expression = base == null ? ECall(ELexReference(identifier), arguments) : ECallMethod(identifier, base, arguments); .)
+|  Arguments<.out arguments:Array<Expression>.>		(. expression = base == null ? ELexCall(identifier, arguments) : ECall(identifier, base, arguments); .)
 |  "." ( "class" | "this" |
          "super" '.' ident
-	 ArgumentsMethodOpt<out dummy:Expression, null, null>)	(. /* TODO */ .)
+	 ArgumentsOpt<out dummy:Expression, null, null>)	(. /* TODO */ .)
 .
 
 /*---------------------------------------------------------------------------*/
 
 Selector<out expression:Expression, base:Expression>
 = "." ( ident							(. var identifier:String = t.val; .)
-	ArgumentsMethodOpt<out arg:Expression, identifier, base>	(. expression = arg; .)
+	ArgumentsOpt<out arg:Expression, identifier, base>	(. expression = arg; .)
       | "super" Arguments<.out arguments:Array<Expression>.>	(. /* TODO */ .)
       | "new" InnerCreator
       )
