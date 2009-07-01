@@ -1,9 +1,10 @@
 ﻿package ;
 
 import haxe.io.StringInput;
-import haxe.rtti.Infos;
+import haxe.Serializer;
 import js.Lib;
 import xpde.core.PApplet;
+import xpde.Rtti;
 //import xpde.compiler.JSCompiler;
 //import xpde.interpreter.JSInterpreter;
 
@@ -41,16 +42,36 @@ class JSMain
 	{
 		// initialize root packages
 		var rootPackage = new JavaPackage();
-//[TODO]
-		trace(untyped PApplet.__rtti);
+		new ParsedCompilationUnit(rootPackage, ['xpde', 'core', 'PApplet'], new StringInput(PApplet.__javartti__));
 		
 		// initialize main sketch
-//		var sketch:CompilationUnit = new ParsedCompilationUnit(rootPackage, ['Sketch'], new StringInput(getSource()));
-//		sketch.initialize();
+		var sketch:CompilationUnit = new ParsedCompilationUnit(rootPackage, ['Sketch'], new StringInput(getSource()));
+		sketch.initialize();
 		
 		// compile main sketch
 //		var interpreter:IInterpreter = new JSInterpreter();
 //		interpreter.interpret(rootPackage, ['Sketch']);
+		
+/*		var a:ClassDefinition = {
+		    identifier: 'PApplet',
+		    modifiers: new EnumSet<Modifier>([MPublic]),
+		    fields: new Hash<FieldDefinition>(),
+		    methods: {
+			var methods = new Hash<MethodDefinition>();
+			methods.set('size', {
+			    identifier: 'size',
+			    type: null,
+			    modifiers: new EnumSet<Modifier>(),
+			    throwsList: new Array<Qualident>(),
+			    parameters: [{identifier: 'width', type: DTPrimitive(PTInt), modifiers: new EnumSet<Modifier>()}, {identifier: 'height', type: DTPrimitive(PTInt), modifiers: new EnumSet<Modifier>()}]
+			});
+		        methods; },
+		    extend: null,
+		    implement: []
+		};
+		var serializer = new Serializer();
+		serializer.serialize(a);
+		trace(serializer);*/
 		
 /*		var scanner:Scanner = new Scanner(new StringInput(getSource()));
 		var parser:Parser = new Parser(scanner);

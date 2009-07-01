@@ -400,6 +400,7 @@ PdeProgram
 
 							// initialize active program
 							classContexts.unshift(new ClassContext(new EnumSet<Modifier>([MPublic]), unit.packageDeclaration.slice( -1)[0]));
+							trace(classContexts);
 							classContexts[0].extend = DTReference(['xpde', 'core', 'PApplet']);
 							.)
     { (IF (isLocalVarDecl(false)) LocalVariableDeclaration) ";" }
@@ -424,8 +425,7 @@ PdeProgram
 							methodContext.body = blockContexts.shift().getBlockStatement();
 							classContexts[0].defineMethod(methodContext);
 							.)
-      )
-    )							(.
+      )							(.
 							// add class
 							unit.context.defineClass(classContexts.shift());
 							
@@ -433,6 +433,7 @@ PdeProgram
 							if (la.kind != _EOF)
 								error("unexpected script termination");
 							.)
+    )
 .
 
 /*---------------------------------------------------------------------------*/

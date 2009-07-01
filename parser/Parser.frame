@@ -257,7 +257,7 @@ class JavaPackage implements JavaPackageItem
 	
 	public function addCompilationUnit(qualident:Qualident, unit:CompilationUnit)
 	{
-		if (qualident.length == 0)
+		if (qualident.length == 1)
 			if (contents.exists(qualident[0]))
 				throw "redefinition of " + qualident.join('.');
 			else
@@ -294,7 +294,7 @@ interface CompilationUnit implements JavaPackageItem
 {
 	var packageDeclaration(default, null):Qualident;
 	var dependencies(default, null):Array<Qualident>;
-	function initialize():Void;
+	function generateDefinitions():Void;
 //	function compile(compiler:ICompiler):Void;
 }
 
@@ -305,35 +305,42 @@ class ParsedCompilationUnit implements CompilationUnit
 	
 	public var context(default, null):CompilationUnitContext;	
 	private var source:Input;
-	private var initialized:Bool;
 	
 	public function new(rootPackage:JavaPackage, packageDeclaration:Qualident, source:Input)
 	{
 		// add compilation unit to package
 		this.packageDeclaration = packageDeclaration;
 		rootPackage.addCompilationUnit(packageDeclaration, this);
-		dependencies = [];
-		
-		context = new CompilationUnitContext(rootPackage, this);
-		
-		// private vars
 		this.source = source;
-		initialized = false;
 	}
-
-	public function initialize()
+	
+	private var context:CompilationUnitContext;
+	
+	private function parseSource()
 	{
-		if (initialized)
-			return;
-		
-		// scan and compile
-		var scanner:Scanner = new Scanner(source);
-		var parser:Parser = new Parser(scanner, this);
-		parser.Parse();
-		
-//		trace(context.definitions);
+		if (context != null)
+		{
+			// create parsing context
+			context = new CompilationUnitContext(rootPackage, this);
 			
-		initialized = true;
+			// scan and compile
+			var scanner:Scanner = new Scanner(source);
+			var parser:Parser = new Parser(scanner, context);
+			parser.Parse();
+			
+			// validate package declaration
+		}
+	}
+	
+	private var definitions:Array<TopLevelDefinition>;
+	
+	public function generateDefinitions()
+	{
+		if (definitions == null)
+		{
+			//[TODO] how do dependencies fit in
+			dependencies = [];
+		}
 	}
 }
 
@@ -549,7 +556,8 @@ class LexicalResolver
 	
 	function resolveMethod(definition:MethodContext)
 	{
-		resolveStatement(definition.body);
+		if (definition.body != null)
+			resolveStatement(definition.body);
 	}
 	
 	function resolveStatement(statement:Statement)

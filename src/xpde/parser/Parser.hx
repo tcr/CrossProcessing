@@ -416,6 +416,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			unit.context.mapImports(['xpde', 'xml', '*']);
 					// initialize active program
 			classContexts.unshift(new ClassContext(new EnumSet<Modifier>([MPublic]), unit.packageDeclaration.slice( -1)[0]));
+			trace(classContexts);
 			classContexts[0].extend = DTReference(['xpde', 'core', 'PApplet']);
 			
 			while (isLocalVarDecl(false)) {
@@ -439,13 +440,13 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 				classContexts[0].defineMethod(methodContext);
 				
 			} else SynErr(102);
+			unit.context.defineClass(classContexts.shift());
+			
+			// validate script
+			if (la.kind != _EOF)
+				error("unexpected script termination");
+			
 		} else SynErr(103);
-		unit.context.defineClass(classContexts.shift());
-		
-		// validate script
-		if (la.kind != _EOF)
-			error("unexpected script termination");
-		
 	}
 
 	function ImportDeclaration():Array<String> {
@@ -2095,7 +2096,7 @@ class JavaPackage implements JavaPackageItem
 	
 	public function addCompilationUnit(qualident:Qualident, unit:CompilationUnit)
 	{
-		if (qualident.length == 0)
+		if (qualident.length == 1)
 			if (contents.exists(qualident[0]))
 				throw "redefinition of " + qualident.join('.');
 			else
@@ -2387,7 +2388,8 @@ class LexicalResolver
 	
 	function resolveMethod(definition:MethodContext)
 	{
-		resolveStatement(definition.body);
+		if (definition.body != null)
+			resolveStatement(definition.body);
 	}
 	
 	function resolveStatement(statement:Statement)

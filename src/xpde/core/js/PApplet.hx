@@ -5,23 +5,24 @@
 
 package xpde.core.js;
 
-class PApplet implements haxe.rtti.Infos
+class PApplet implements Dynamic, implements haxe.rtti.Infos
 {
-/*	public function new(?curElement:String):Void;
-	public function size(width:Int, height:Int):Void;
-	public function noStroke():Void;
-	public function smooth():Void;
-	public function noLoop():Void;
-	public function ellipse(x:Int, y:Int, width:Int, height:Int):Void;*/
-	
+	static public var __javartti__ = '
+public class PApplet {
+	native void size(int width, int height);
+	native void noStroke();
+	native void smooth();
+	native void noLoop();
+	native void ellipse(int x, int y, int width, int height);
+}';
+
 	public function new(?curElement:String):Void {untyped __js__('
   if ( typeof curElement == "string" )
     curElement = document.getElementById(curElement);
 
   var p = this;
   
-  // Eval imported libraries  
-  //for( var i = 0; var len = libs
+  p.curElement = curElement;
   
   // init
   p.PI = Math.PI;

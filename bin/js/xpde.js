@@ -837,7 +837,9 @@ JSMain.interpret = function() {
 	$s.push("JSMain::interpret");
 	var $spos = $s.length;
 	var rootPackage = new xpde.parser.JavaPackage();
-	haxe.Log.trace(xpde.core.js.PApplet.__rtti,{ fileName : "JSMain.hx", lineNumber : 45, className : "JSMain", methodName : "interpret"});
+	new xpde.parser.ParsedCompilationUnit(rootPackage,["xpde","core","PApplet"],new haxe.io.StringInput(xpde.core.js.PApplet.__javartti__));
+	var sketch = new xpde.parser.ParsedCompilationUnit(rootPackage,["Sketch"],new haxe.io.StringInput(JSMain.getSource()));
+	sketch.initialize();
 	$s.pop();
 }
 JSMain.prototype.__class__ = JSMain;
@@ -1443,6 +1445,907 @@ Std.random = function(x) {
 	$s.pop();
 }
 Std.prototype.__class__ = Std;
+List = function(p) { if( p === $_ ) return; {
+	$s.push("List::new");
+	var $spos = $s.length;
+	this.length = 0;
+	$s.pop();
+}}
+List.__name__ = ["List"];
+List.prototype.add = function(item) {
+	$s.push("List::add");
+	var $spos = $s.length;
+	var x = [item];
+	if(this.h == null) this.h = x;
+	else this.q[1] = x;
+	this.q = x;
+	this.length++;
+	$s.pop();
+}
+List.prototype.clear = function() {
+	$s.push("List::clear");
+	var $spos = $s.length;
+	this.h = null;
+	this.q = null;
+	this.length = 0;
+	$s.pop();
+}
+List.prototype.filter = function(f) {
+	$s.push("List::filter");
+	var $spos = $s.length;
+	var l2 = new List();
+	var l = this.h;
+	while(l != null) {
+		var v = l[0];
+		l = l[1];
+		if(f(v)) l2.add(v);
+	}
+	{
+		$s.pop();
+		return l2;
+	}
+	$s.pop();
+}
+List.prototype.first = function() {
+	$s.push("List::first");
+	var $spos = $s.length;
+	{
+		var $tmp = (this.h == null?null:this.h[0]);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+List.prototype.h = null;
+List.prototype.isEmpty = function() {
+	$s.push("List::isEmpty");
+	var $spos = $s.length;
+	{
+		var $tmp = (this.h == null);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+List.prototype.iterator = function() {
+	$s.push("List::iterator");
+	var $spos = $s.length;
+	{
+		var $tmp = { h : this.h, hasNext : function() {
+			$s.push("List::iterator@210");
+			var $spos = $s.length;
+			{
+				var $tmp = (this.h != null);
+				$s.pop();
+				return $tmp;
+			}
+			$s.pop();
+		}, next : function() {
+			$s.push("List::iterator@213");
+			var $spos = $s.length;
+			if(this.h == null) {
+				$s.pop();
+				return null;
+			}
+			var x = this.h[0];
+			this.h = this.h[1];
+			{
+				$s.pop();
+				return x;
+			}
+			$s.pop();
+		}}
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+List.prototype.join = function(sep) {
+	$s.push("List::join");
+	var $spos = $s.length;
+	var s = new StringBuf();
+	var first = true;
+	var l = this.h;
+	while(l != null) {
+		if(first) first = false;
+		else s.b[s.b.length] = sep;
+		s.b[s.b.length] = l[0];
+		l = l[1];
+	}
+	{
+		var $tmp = s.b.join("");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+List.prototype.last = function() {
+	$s.push("List::last");
+	var $spos = $s.length;
+	{
+		var $tmp = (this.q == null?null:this.q[0]);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+List.prototype.length = null;
+List.prototype.map = function(f) {
+	$s.push("List::map");
+	var $spos = $s.length;
+	var b = new List();
+	var l = this.h;
+	while(l != null) {
+		var v = l[0];
+		l = l[1];
+		b.add(f(v));
+	}
+	{
+		$s.pop();
+		return b;
+	}
+	$s.pop();
+}
+List.prototype.pop = function() {
+	$s.push("List::pop");
+	var $spos = $s.length;
+	if(this.h == null) {
+		$s.pop();
+		return null;
+	}
+	var x = this.h[0];
+	this.h = this.h[1];
+	if(this.h == null) this.q = null;
+	this.length--;
+	{
+		$s.pop();
+		return x;
+	}
+	$s.pop();
+}
+List.prototype.push = function(item) {
+	$s.push("List::push");
+	var $spos = $s.length;
+	var x = [item,this.h];
+	this.h = x;
+	if(this.q == null) this.q = x;
+	this.length++;
+	$s.pop();
+}
+List.prototype.q = null;
+List.prototype.remove = function(v) {
+	$s.push("List::remove");
+	var $spos = $s.length;
+	var prev = null;
+	var l = this.h;
+	while(l != null) {
+		if(l[0] == v) {
+			if(prev == null) this.h = l[1];
+			else prev[1] = l[1];
+			if(this.q == l) this.q = prev;
+			this.length--;
+			{
+				$s.pop();
+				return true;
+			}
+		}
+		prev = l;
+		l = l[1];
+	}
+	{
+		$s.pop();
+		return false;
+	}
+	$s.pop();
+}
+List.prototype.toString = function() {
+	$s.push("List::toString");
+	var $spos = $s.length;
+	var s = new StringBuf();
+	var first = true;
+	var l = this.h;
+	s.b[s.b.length] = "{";
+	while(l != null) {
+		if(first) first = false;
+		else s.b[s.b.length] = ", ";
+		s.b[s.b.length] = l[0];
+		l = l[1];
+	}
+	s.b[s.b.length] = "}";
+	{
+		var $tmp = s.b.join("");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+List.prototype.__class__ = List;
+haxe.Serializer = function(p) { if( p === $_ ) return; {
+	$s.push("haxe.Serializer::new");
+	var $spos = $s.length;
+	this.buf = new StringBuf();
+	this.cache = new Array();
+	this.useCache = haxe.Serializer.USE_CACHE;
+	this.useEnumIndex = haxe.Serializer.USE_ENUM_INDEX;
+	this.shash = new Hash();
+	this.scount = 0;
+	$s.pop();
+}}
+haxe.Serializer.__name__ = ["haxe","Serializer"];
+haxe.Serializer.run = function(v) {
+	$s.push("haxe.Serializer::run");
+	var $spos = $s.length;
+	var s = new haxe.Serializer();
+	s.serialize(v);
+	{
+		var $tmp = s.toString();
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+haxe.Serializer.prototype.buf = null;
+haxe.Serializer.prototype.cache = null;
+haxe.Serializer.prototype.scount = null;
+haxe.Serializer.prototype.serialize = function(v) {
+	$s.push("haxe.Serializer::serialize");
+	var $spos = $s.length;
+	var $e = (Type["typeof"](v));
+	switch( $e[1] ) {
+	case 0:
+	{
+		this.buf.add("n");
+	}break;
+	case 1:
+	{
+		if(v == 0) {
+			this.buf.add("z");
+			{
+				$s.pop();
+				return;
+			}
+		}
+		this.buf.add("i");
+		this.buf.add(v);
+	}break;
+	case 2:
+	{
+		if(Math.isNaN(v)) this.buf.add("k");
+		else if(!Math.isFinite(v)) this.buf.add((v < 0?"m":"p"));
+		else {
+			this.buf.add("d");
+			this.buf.add(v);
+		}
+	}break;
+	case 3:
+	{
+		this.buf.add((v?"t":"f"));
+	}break;
+	case 6:
+	var c = $e[2];
+	{
+		if(c == String) {
+			this.serializeString(v);
+			{
+				$s.pop();
+				return;
+			}
+		}
+		if(this.useCache && this.serializeRef(v)) {
+			$s.pop();
+			return;
+		}
+		switch(c) {
+		case Array:{
+			var ucount = 0;
+			this.buf.add("a");
+			var l = v["length"];
+			{
+				var _g = 0;
+				while(_g < l) {
+					var i = _g++;
+					if(v[i] == null) ucount++;
+					else {
+						if(ucount > 0) {
+							if(ucount == 1) this.buf.add("n");
+							else {
+								this.buf.add("u");
+								this.buf.add(ucount);
+							}
+							ucount = 0;
+						}
+						this.serialize(v[i]);
+					}
+				}
+			}
+			if(ucount > 0) {
+				if(ucount == 1) this.buf.add("n");
+				else {
+					this.buf.add("u");
+					this.buf.add(ucount);
+				}
+			}
+			this.buf.add("h");
+		}break;
+		case List:{
+			this.buf.add("l");
+			var v1 = v;
+			{ var $it5 = v1.iterator();
+			while( $it5.hasNext() ) { var i = $it5.next();
+			this.serialize(i);
+			}}
+			this.buf.add("h");
+		}break;
+		case Date:{
+			var d = v;
+			this.buf.add("v");
+			this.buf.add(d.toString());
+		}break;
+		case Hash:{
+			this.buf.add("b");
+			var v1 = v;
+			{ var $it6 = v1.keys();
+			while( $it6.hasNext() ) { var k = $it6.next();
+			{
+				this.serializeString(k);
+				this.serialize(v1.get(k));
+			}
+			}}
+			this.buf.add("h");
+		}break;
+		case IntHash:{
+			this.buf.add("q");
+			var v1 = v;
+			{ var $it7 = v1.keys();
+			while( $it7.hasNext() ) { var k = $it7.next();
+			{
+				this.buf.add(":");
+				this.buf.add(k);
+				this.serialize(v1.get(k));
+			}
+			}}
+			this.buf.add("h");
+		}break;
+		case haxe.io.Bytes:{
+			var v1 = v;
+			var i = 0;
+			var max = v1.length - 2;
+			var chars = "";
+			var b64 = haxe.Serializer.BASE64;
+			while(i < max) {
+				var b1 = v1.b[i++];
+				var b2 = v1.b[i++];
+				var b3 = v1.b[i++];
+				chars += b64.charAt(b1 >> 2) + b64.charAt(((b1 << 4) | (b2 >> 4)) & 63) + b64.charAt(((b2 << 2) | (b3 >> 6)) & 63) + b64.charAt(b3 & 63);
+			}
+			if(i == max) {
+				var b1 = v1.b[i++];
+				var b2 = v1.b[i++];
+				chars += b64.charAt(b1 >> 2) + b64.charAt(((b1 << 4) | (b2 >> 4)) & 63) + b64.charAt((b2 << 2) & 63);
+			}
+			else if(i == max + 1) {
+				var b1 = v1.b[i++];
+				chars += b64.charAt(b1 >> 2) + b64.charAt((b1 << 4) & 63);
+			}
+			this.buf.add("s");
+			this.buf.add(chars.length);
+			this.buf.add(":");
+			this.buf.add(chars);
+		}break;
+		default:{
+			this.cache.pop();
+			this.buf.add("c");
+			this.serializeString(Type.getClassName(c));
+			this.cache.push(v);
+			this.serializeFields(v);
+		}break;
+		}
+	}break;
+	case 4:
+	{
+		if(this.useCache && this.serializeRef(v)) {
+			$s.pop();
+			return;
+		}
+		this.buf.add("o");
+		this.serializeFields(v);
+	}break;
+	case 7:
+	var e = $e[2];
+	{
+		if(this.useCache && this.serializeRef(v)) {
+			$s.pop();
+			return;
+		}
+		this.cache.pop();
+		this.buf.add((this.useEnumIndex?"j":"w"));
+		this.serializeString(Type.getEnumName(e));
+		if(this.useEnumIndex) {
+			this.buf.add(":");
+			this.buf.add(v[1]);
+		}
+		else this.serializeString(v[0]);
+		this.buf.add(":");
+		var l = v["length"];
+		this.buf.add(l - 2);
+		{
+			var _g = 2;
+			while(_g < l) {
+				var i = _g++;
+				this.serialize(v[i]);
+			}
+		}
+		this.cache.push(v);
+	}break;
+	case 5:
+	{
+		throw "Cannot serialize function";
+	}break;
+	default:{
+		throw "Cannot serialize " + Std.string(v);
+	}break;
+	}
+	$s.pop();
+}
+haxe.Serializer.prototype.serializeException = function(e) {
+	$s.push("haxe.Serializer::serializeException");
+	var $spos = $s.length;
+	this.buf.add("x");
+	this.serialize(e);
+	$s.pop();
+}
+haxe.Serializer.prototype.serializeFields = function(v) {
+	$s.push("haxe.Serializer::serializeFields");
+	var $spos = $s.length;
+	{
+		var _g = 0, _g1 = Reflect.fields(v);
+		while(_g < _g1.length) {
+			var f = _g1[_g];
+			++_g;
+			this.serializeString(f);
+			this.serialize(Reflect.field(v,f));
+		}
+	}
+	this.buf.add("g");
+	$s.pop();
+}
+haxe.Serializer.prototype.serializeRef = function(v) {
+	$s.push("haxe.Serializer::serializeRef");
+	var $spos = $s.length;
+	var vt = typeof(v);
+	{
+		var _g1 = 0, _g = this.cache.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var ci = this.cache[i];
+			if(typeof(ci) == vt && ci == v) {
+				this.buf.add("r");
+				this.buf.add(i);
+				{
+					$s.pop();
+					return true;
+				}
+			}
+		}
+	}
+	this.cache.push(v);
+	{
+		$s.pop();
+		return false;
+	}
+	$s.pop();
+}
+haxe.Serializer.prototype.serializeString = function(s) {
+	$s.push("haxe.Serializer::serializeString");
+	var $spos = $s.length;
+	var x = this.shash.get(s);
+	if(x != null) {
+		this.buf.add("R");
+		this.buf.add(x);
+		{
+			$s.pop();
+			return;
+		}
+	}
+	this.shash.set(s,this.scount++);
+	this.buf.add("y");
+	s = StringTools.urlEncode(s);
+	this.buf.add(s.length);
+	this.buf.add(":");
+	this.buf.add(s);
+	$s.pop();
+}
+haxe.Serializer.prototype.shash = null;
+haxe.Serializer.prototype.toString = function() {
+	$s.push("haxe.Serializer::toString");
+	var $spos = $s.length;
+	{
+		var $tmp = this.buf.b.join("");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+haxe.Serializer.prototype.useCache = null;
+haxe.Serializer.prototype.useEnumIndex = null;
+haxe.Serializer.prototype.__class__ = haxe.Serializer;
+ValueType = { __ename__ : ["ValueType"], __constructs__ : ["TNull","TInt","TFloat","TBool","TObject","TFunction","TClass","TEnum","TUnknown"] }
+ValueType.TBool = ["TBool",3];
+ValueType.TBool.toString = $estr;
+ValueType.TBool.__enum__ = ValueType;
+ValueType.TClass = function(c) { var $x = ["TClass",6,c]; $x.__enum__ = ValueType; $x.toString = $estr; return $x; }
+ValueType.TEnum = function(e) { var $x = ["TEnum",7,e]; $x.__enum__ = ValueType; $x.toString = $estr; return $x; }
+ValueType.TFloat = ["TFloat",2];
+ValueType.TFloat.toString = $estr;
+ValueType.TFloat.__enum__ = ValueType;
+ValueType.TFunction = ["TFunction",5];
+ValueType.TFunction.toString = $estr;
+ValueType.TFunction.__enum__ = ValueType;
+ValueType.TInt = ["TInt",1];
+ValueType.TInt.toString = $estr;
+ValueType.TInt.__enum__ = ValueType;
+ValueType.TNull = ["TNull",0];
+ValueType.TNull.toString = $estr;
+ValueType.TNull.__enum__ = ValueType;
+ValueType.TObject = ["TObject",4];
+ValueType.TObject.toString = $estr;
+ValueType.TObject.__enum__ = ValueType;
+ValueType.TUnknown = ["TUnknown",8];
+ValueType.TUnknown.toString = $estr;
+ValueType.TUnknown.__enum__ = ValueType;
+Type = function() { }
+Type.__name__ = ["Type"];
+Type.getClass = function(o) {
+	$s.push("Type::getClass");
+	var $spos = $s.length;
+	if(o == null) {
+		$s.pop();
+		return null;
+	}
+	if(o.__enum__ != null) {
+		$s.pop();
+		return null;
+	}
+	{
+		var $tmp = o.__class__;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+Type.getEnum = function(o) {
+	$s.push("Type::getEnum");
+	var $spos = $s.length;
+	if(o == null) {
+		$s.pop();
+		return null;
+	}
+	{
+		var $tmp = o.__enum__;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+Type.getSuperClass = function(c) {
+	$s.push("Type::getSuperClass");
+	var $spos = $s.length;
+	{
+		var $tmp = c.__super__;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+Type.getClassName = function(c) {
+	$s.push("Type::getClassName");
+	var $spos = $s.length;
+	if(c == null) {
+		$s.pop();
+		return null;
+	}
+	var a = c.__name__;
+	{
+		var $tmp = a.join(".");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+Type.getEnumName = function(e) {
+	$s.push("Type::getEnumName");
+	var $spos = $s.length;
+	var a = e.__ename__;
+	{
+		var $tmp = a.join(".");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+Type.resolveClass = function(name) {
+	$s.push("Type::resolveClass");
+	var $spos = $s.length;
+	var cl;
+	try {
+		cl = eval(name);
+	}
+	catch( $e8 ) {
+		{
+			var e = $e8;
+			{
+				$e = [];
+				while($s.length >= $spos) $e.unshift($s.pop());
+				$s.push($e[0]);
+				cl = null;
+			}
+		}
+	}
+	if(cl == null || cl.__name__ == null) {
+		$s.pop();
+		return null;
+	}
+	{
+		$s.pop();
+		return cl;
+	}
+	$s.pop();
+}
+Type.resolveEnum = function(name) {
+	$s.push("Type::resolveEnum");
+	var $spos = $s.length;
+	var e;
+	try {
+		e = eval(name);
+	}
+	catch( $e9 ) {
+		{
+			var err = $e9;
+			{
+				$e = [];
+				while($s.length >= $spos) $e.unshift($s.pop());
+				$s.push($e[0]);
+				e = null;
+			}
+		}
+	}
+	if(e == null || e.__ename__ == null) {
+		$s.pop();
+		return null;
+	}
+	{
+		$s.pop();
+		return e;
+	}
+	$s.pop();
+}
+Type.createInstance = function(cl,args) {
+	$s.push("Type::createInstance");
+	var $spos = $s.length;
+	if(args.length <= 3) {
+		var $tmp = new cl(args[0],args[1],args[2]);
+		$s.pop();
+		return $tmp;
+	}
+	if(args.length > 8) throw "Too many arguments";
+	{
+		var $tmp = new cl(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7]);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+Type.createEmptyInstance = function(cl) {
+	$s.push("Type::createEmptyInstance");
+	var $spos = $s.length;
+	{
+		var $tmp = new cl($_);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+Type.createEnum = function(e,constr,params) {
+	$s.push("Type::createEnum");
+	var $spos = $s.length;
+	var f = Reflect.field(e,constr);
+	if(f == null) throw "No such constructor " + constr;
+	if(Reflect.isFunction(f)) {
+		if(params == null) throw "Constructor " + constr + " need parameters";
+		{
+			var $tmp = f.apply(e,params);
+			$s.pop();
+			return $tmp;
+		}
+	}
+	if(params != null && params.length != 0) throw "Constructor " + constr + " does not need parameters";
+	{
+		$s.pop();
+		return f;
+	}
+	$s.pop();
+}
+Type.getInstanceFields = function(c) {
+	$s.push("Type::getInstanceFields");
+	var $spos = $s.length;
+	var a = Reflect.fields(c.prototype);
+	a.remove("__class__");
+	{
+		$s.pop();
+		return a;
+	}
+	$s.pop();
+}
+Type.getClassFields = function(c) {
+	$s.push("Type::getClassFields");
+	var $spos = $s.length;
+	var a = Reflect.fields(c);
+	a.remove("__name__");
+	a.remove("__interfaces__");
+	a.remove("__super__");
+	a.remove("prototype");
+	{
+		$s.pop();
+		return a;
+	}
+	$s.pop();
+}
+Type.getEnumConstructs = function(e) {
+	$s.push("Type::getEnumConstructs");
+	var $spos = $s.length;
+	{
+		var $tmp = e.__constructs__;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+Type["typeof"] = function(v) {
+	$s.push("Type::typeof");
+	var $spos = $s.length;
+	switch(typeof(v)) {
+	case "boolean":{
+		{
+			var $tmp = ValueType.TBool;
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	case "string":{
+		{
+			var $tmp = ValueType.TClass(String);
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	case "number":{
+		if(Math.ceil(v) == v % 2147483648.0) {
+			var $tmp = ValueType.TInt;
+			$s.pop();
+			return $tmp;
+		}
+		{
+			var $tmp = ValueType.TFloat;
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	case "object":{
+		if(v == null) {
+			var $tmp = ValueType.TNull;
+			$s.pop();
+			return $tmp;
+		}
+		var e = v.__enum__;
+		if(e != null) {
+			var $tmp = ValueType.TEnum(e);
+			$s.pop();
+			return $tmp;
+		}
+		var c = v.__class__;
+		if(c != null) {
+			var $tmp = ValueType.TClass(c);
+			$s.pop();
+			return $tmp;
+		}
+		{
+			var $tmp = ValueType.TObject;
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	case "function":{
+		if(v.__name__ != null) {
+			var $tmp = ValueType.TObject;
+			$s.pop();
+			return $tmp;
+		}
+		{
+			var $tmp = ValueType.TFunction;
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	case "undefined":{
+		{
+			var $tmp = ValueType.TNull;
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	default:{
+		{
+			var $tmp = ValueType.TUnknown;
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	}
+	$s.pop();
+}
+Type.enumEq = function(a,b) {
+	$s.push("Type::enumEq");
+	var $spos = $s.length;
+	if(a == b) {
+		$s.pop();
+		return true;
+	}
+	if(a[0] != b[0]) {
+		$s.pop();
+		return false;
+	}
+	{
+		var _g1 = 2, _g = a.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			if(!Type.enumEq(a[i],b[i])) {
+				$s.pop();
+				return false;
+			}
+		}
+	}
+	var e = a.__enum__;
+	if(e != b.__enum__ || e == null) {
+		$s.pop();
+		return false;
+	}
+	{
+		$s.pop();
+		return true;
+	}
+	$s.pop();
+}
+Type.enumConstructor = function(e) {
+	$s.push("Type::enumConstructor");
+	var $spos = $s.length;
+	{
+		var $tmp = e[0];
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+Type.enumParameters = function(e) {
+	$s.push("Type::enumParameters");
+	var $spos = $s.length;
+	{
+		var $tmp = e.slice(2);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+Type.enumIndex = function(e) {
+	$s.push("Type::enumIndex");
+	var $spos = $s.length;
+	{
+		var $tmp = e[1];
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+Type.prototype.__class__ = Type;
 xpde = {}
 xpde.core = {}
 xpde.core.js = {}
@@ -1455,8 +2358,7 @@ xpde.core.js.PApplet = function(curElement) { if( curElement === $_ ) return; {
 
   var p = this;
   
-  // Eval imported libraries  
-  //for( var i = 0; var len = libs
+  p.curElement = curElement;
   
   // init
   p.PI = Math.PI;
@@ -3166,383 +4068,6 @@ xpde.core.js.PApplet = function(curElement) { if( curElement === $_ ) return; {
 xpde.core.js.PApplet.__name__ = ["xpde","core","js","PApplet"];
 xpde.core.js.PApplet.prototype.__class__ = xpde.core.js.PApplet;
 xpde.core.js.PApplet.__interfaces__ = [haxe.rtti.Infos];
-ValueType = { __ename__ : ["ValueType"], __constructs__ : ["TNull","TInt","TFloat","TBool","TObject","TFunction","TClass","TEnum","TUnknown"] }
-ValueType.TBool = ["TBool",3];
-ValueType.TBool.toString = $estr;
-ValueType.TBool.__enum__ = ValueType;
-ValueType.TClass = function(c) { var $x = ["TClass",6,c]; $x.__enum__ = ValueType; $x.toString = $estr; return $x; }
-ValueType.TEnum = function(e) { var $x = ["TEnum",7,e]; $x.__enum__ = ValueType; $x.toString = $estr; return $x; }
-ValueType.TFloat = ["TFloat",2];
-ValueType.TFloat.toString = $estr;
-ValueType.TFloat.__enum__ = ValueType;
-ValueType.TFunction = ["TFunction",5];
-ValueType.TFunction.toString = $estr;
-ValueType.TFunction.__enum__ = ValueType;
-ValueType.TInt = ["TInt",1];
-ValueType.TInt.toString = $estr;
-ValueType.TInt.__enum__ = ValueType;
-ValueType.TNull = ["TNull",0];
-ValueType.TNull.toString = $estr;
-ValueType.TNull.__enum__ = ValueType;
-ValueType.TObject = ["TObject",4];
-ValueType.TObject.toString = $estr;
-ValueType.TObject.__enum__ = ValueType;
-ValueType.TUnknown = ["TUnknown",8];
-ValueType.TUnknown.toString = $estr;
-ValueType.TUnknown.__enum__ = ValueType;
-Type = function() { }
-Type.__name__ = ["Type"];
-Type.getClass = function(o) {
-	$s.push("Type::getClass");
-	var $spos = $s.length;
-	if(o == null) {
-		$s.pop();
-		return null;
-	}
-	if(o.__enum__ != null) {
-		$s.pop();
-		return null;
-	}
-	{
-		var $tmp = o.__class__;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-Type.getEnum = function(o) {
-	$s.push("Type::getEnum");
-	var $spos = $s.length;
-	if(o == null) {
-		$s.pop();
-		return null;
-	}
-	{
-		var $tmp = o.__enum__;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-Type.getSuperClass = function(c) {
-	$s.push("Type::getSuperClass");
-	var $spos = $s.length;
-	{
-		var $tmp = c.__super__;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-Type.getClassName = function(c) {
-	$s.push("Type::getClassName");
-	var $spos = $s.length;
-	if(c == null) {
-		$s.pop();
-		return null;
-	}
-	var a = c.__name__;
-	{
-		var $tmp = a.join(".");
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-Type.getEnumName = function(e) {
-	$s.push("Type::getEnumName");
-	var $spos = $s.length;
-	var a = e.__ename__;
-	{
-		var $tmp = a.join(".");
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-Type.resolveClass = function(name) {
-	$s.push("Type::resolveClass");
-	var $spos = $s.length;
-	var cl;
-	try {
-		cl = eval(name);
-	}
-	catch( $e5 ) {
-		{
-			var e = $e5;
-			{
-				$e = [];
-				while($s.length >= $spos) $e.unshift($s.pop());
-				$s.push($e[0]);
-				cl = null;
-			}
-		}
-	}
-	if(cl == null || cl.__name__ == null) {
-		$s.pop();
-		return null;
-	}
-	{
-		$s.pop();
-		return cl;
-	}
-	$s.pop();
-}
-Type.resolveEnum = function(name) {
-	$s.push("Type::resolveEnum");
-	var $spos = $s.length;
-	var e;
-	try {
-		e = eval(name);
-	}
-	catch( $e6 ) {
-		{
-			var err = $e6;
-			{
-				$e = [];
-				while($s.length >= $spos) $e.unshift($s.pop());
-				$s.push($e[0]);
-				e = null;
-			}
-		}
-	}
-	if(e == null || e.__ename__ == null) {
-		$s.pop();
-		return null;
-	}
-	{
-		$s.pop();
-		return e;
-	}
-	$s.pop();
-}
-Type.createInstance = function(cl,args) {
-	$s.push("Type::createInstance");
-	var $spos = $s.length;
-	if(args.length <= 3) {
-		var $tmp = new cl(args[0],args[1],args[2]);
-		$s.pop();
-		return $tmp;
-	}
-	if(args.length > 8) throw "Too many arguments";
-	{
-		var $tmp = new cl(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7]);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-Type.createEmptyInstance = function(cl) {
-	$s.push("Type::createEmptyInstance");
-	var $spos = $s.length;
-	{
-		var $tmp = new cl($_);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-Type.createEnum = function(e,constr,params) {
-	$s.push("Type::createEnum");
-	var $spos = $s.length;
-	var f = Reflect.field(e,constr);
-	if(f == null) throw "No such constructor " + constr;
-	if(Reflect.isFunction(f)) {
-		if(params == null) throw "Constructor " + constr + " need parameters";
-		{
-			var $tmp = f.apply(e,params);
-			$s.pop();
-			return $tmp;
-		}
-	}
-	if(params != null && params.length != 0) throw "Constructor " + constr + " does not need parameters";
-	{
-		$s.pop();
-		return f;
-	}
-	$s.pop();
-}
-Type.getInstanceFields = function(c) {
-	$s.push("Type::getInstanceFields");
-	var $spos = $s.length;
-	var a = Reflect.fields(c.prototype);
-	a.remove("__class__");
-	{
-		$s.pop();
-		return a;
-	}
-	$s.pop();
-}
-Type.getClassFields = function(c) {
-	$s.push("Type::getClassFields");
-	var $spos = $s.length;
-	var a = Reflect.fields(c);
-	a.remove("__name__");
-	a.remove("__interfaces__");
-	a.remove("__super__");
-	a.remove("prototype");
-	{
-		$s.pop();
-		return a;
-	}
-	$s.pop();
-}
-Type.getEnumConstructs = function(e) {
-	$s.push("Type::getEnumConstructs");
-	var $spos = $s.length;
-	{
-		var $tmp = e.__constructs__;
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-Type["typeof"] = function(v) {
-	$s.push("Type::typeof");
-	var $spos = $s.length;
-	switch(typeof(v)) {
-	case "boolean":{
-		{
-			var $tmp = ValueType.TBool;
-			$s.pop();
-			return $tmp;
-		}
-	}break;
-	case "string":{
-		{
-			var $tmp = ValueType.TClass(String);
-			$s.pop();
-			return $tmp;
-		}
-	}break;
-	case "number":{
-		if(Math.ceil(v) == v % 2147483648.0) {
-			var $tmp = ValueType.TInt;
-			$s.pop();
-			return $tmp;
-		}
-		{
-			var $tmp = ValueType.TFloat;
-			$s.pop();
-			return $tmp;
-		}
-	}break;
-	case "object":{
-		if(v == null) {
-			var $tmp = ValueType.TNull;
-			$s.pop();
-			return $tmp;
-		}
-		var e = v.__enum__;
-		if(e != null) {
-			var $tmp = ValueType.TEnum(e);
-			$s.pop();
-			return $tmp;
-		}
-		var c = v.__class__;
-		if(c != null) {
-			var $tmp = ValueType.TClass(c);
-			$s.pop();
-			return $tmp;
-		}
-		{
-			var $tmp = ValueType.TObject;
-			$s.pop();
-			return $tmp;
-		}
-	}break;
-	case "function":{
-		if(v.__name__ != null) {
-			var $tmp = ValueType.TObject;
-			$s.pop();
-			return $tmp;
-		}
-		{
-			var $tmp = ValueType.TFunction;
-			$s.pop();
-			return $tmp;
-		}
-	}break;
-	case "undefined":{
-		{
-			var $tmp = ValueType.TNull;
-			$s.pop();
-			return $tmp;
-		}
-	}break;
-	default:{
-		{
-			var $tmp = ValueType.TUnknown;
-			$s.pop();
-			return $tmp;
-		}
-	}break;
-	}
-	$s.pop();
-}
-Type.enumEq = function(a,b) {
-	$s.push("Type::enumEq");
-	var $spos = $s.length;
-	if(a == b) {
-		$s.pop();
-		return true;
-	}
-	if(a[0] != b[0]) {
-		$s.pop();
-		return false;
-	}
-	{
-		var _g1 = 2, _g = a.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			if(!Type.enumEq(a[i],b[i])) {
-				$s.pop();
-				return false;
-			}
-		}
-	}
-	var e = a.__enum__;
-	if(e != b.__enum__ || e == null) {
-		$s.pop();
-		return false;
-	}
-	{
-		$s.pop();
-		return true;
-	}
-	$s.pop();
-}
-Type.enumConstructor = function(e) {
-	$s.push("Type::enumConstructor");
-	var $spos = $s.length;
-	{
-		var $tmp = e[0];
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-Type.enumParameters = function(e) {
-	$s.push("Type::enumParameters");
-	var $spos = $s.length;
-	{
-		var $tmp = e.slice(2);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-Type.enumIndex = function(e) {
-	$s.push("Type::enumIndex");
-	var $spos = $s.length;
-	{
-		var $tmp = e[1];
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-Type.prototype.__class__ = Type;
 js = {}
 js.Lib = function() { }
 js.Lib.__name__ = ["js","Lib"];
@@ -3616,16 +4141,16 @@ xpde.parser.Buffer.prototype.Read = function() {
 	try {
 		this.bufChar = this.stream.readByte();
 	}
-	catch( $e7 ) {
-		if( js.Boot.__instanceof($e7,haxe.io.Eof) ) {
-			var e = $e7;
+	catch( $e10 ) {
+		if( js.Boot.__instanceof($e10,haxe.io.Eof) ) {
+			var e = $e10;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
 				$s.push($e[0]);
 				this.bufChar = xpde.parser.Buffer.EOF;
 			}
-		} else throw($e7);
+		} else throw($e10);
 	}
 	{
 		$s.pop();
@@ -3712,9 +4237,9 @@ Hash.prototype.exists = function(key) {
 			return $tmp;
 		}
 	}
-	catch( $e8 ) {
+	catch( $e11 ) {
 		{
-			var e = $e8;
+			var e = $e11;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -3813,8 +4338,8 @@ Hash.prototype.toString = function() {
 	var s = new StringBuf();
 	s.b[s.b.length] = "{";
 	var it = this.keys();
-	{ var $it9 = it;
-	while( $it9.hasNext() ) { var i = $it9.next();
+	{ var $it12 = it;
+	while( $it12.hasNext() ) { var i = $it12.next();
 	{
 		s.b[s.b.length] = i;
 		s.b[s.b.length] = " => ";
@@ -5152,9 +5677,9 @@ js.Boot.__string_rec = function(o,s) {
 		try {
 			tostr = o.toString;
 		}
-		catch( $e10 ) {
+		catch( $e13 ) {
 			{
-				var e = $e10;
+				var e = $e13;
 				{
 					$e = [];
 					while($s.length >= $spos) $e.unshift($s.pop());
@@ -5262,9 +5787,9 @@ js.Boot.__instanceof = function(o,cl) {
 			return true;
 		}
 	}
-	catch( $e11 ) {
+	catch( $e14 ) {
 		{
-			var e = $e11;
+			var e = $e14;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -5443,6 +5968,127 @@ js.Boot.__init = function() {
 	$s.pop();
 }
 js.Boot.prototype.__class__ = js.Boot;
+IntHash = function(p) { if( p === $_ ) return; {
+	$s.push("IntHash::new");
+	var $spos = $s.length;
+	this.h = {}
+	if(this.h.__proto__ != null) {
+		this.h.__proto__ = null;
+		delete(this.h.__proto__);
+	}
+	else null;
+	$s.pop();
+}}
+IntHash.__name__ = ["IntHash"];
+IntHash.prototype.exists = function(key) {
+	$s.push("IntHash::exists");
+	var $spos = $s.length;
+	{
+		var $tmp = this.h[key] != null;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+IntHash.prototype.get = function(key) {
+	$s.push("IntHash::get");
+	var $spos = $s.length;
+	{
+		var $tmp = this.h[key];
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+IntHash.prototype.h = null;
+IntHash.prototype.iterator = function() {
+	$s.push("IntHash::iterator");
+	var $spos = $s.length;
+	{
+		var $tmp = { ref : this.h, it : this.keys(), hasNext : function() {
+			$s.push("IntHash::iterator@186");
+			var $spos = $s.length;
+			{
+				var $tmp = this.it.hasNext();
+				$s.pop();
+				return $tmp;
+			}
+			$s.pop();
+		}, next : function() {
+			$s.push("IntHash::iterator@187");
+			var $spos = $s.length;
+			var i = this.it.next();
+			{
+				var $tmp = this.ref[i];
+				$s.pop();
+				return $tmp;
+			}
+			$s.pop();
+		}}
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+IntHash.prototype.keys = function() {
+	$s.push("IntHash::keys");
+	var $spos = $s.length;
+	var a = new Array();
+	
+			for( x in this.h )
+				a.push(x);
+		;
+	{
+		var $tmp = a.iterator();
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+IntHash.prototype.remove = function(key) {
+	$s.push("IntHash::remove");
+	var $spos = $s.length;
+	if(this.h[key] == null) {
+		$s.pop();
+		return false;
+	}
+	delete(this.h[key]);
+	{
+		$s.pop();
+		return true;
+	}
+	$s.pop();
+}
+IntHash.prototype.set = function(key,value) {
+	$s.push("IntHash::set");
+	var $spos = $s.length;
+	this.h[key] = value;
+	$s.pop();
+}
+IntHash.prototype.toString = function() {
+	$s.push("IntHash::toString");
+	var $spos = $s.length;
+	var s = new StringBuf();
+	s.b[s.b.length] = "{";
+	var it = this.keys();
+	{ var $it15 = it;
+	while( $it15.hasNext() ) { var i = $it15.next();
+	{
+		s.b[s.b.length] = i;
+		s.b[s.b.length] = " => ";
+		s.b[s.b.length] = Std.string(this.get(i));
+		if(it.hasNext()) s.b[s.b.length] = ", ";
+	}
+	}}
+	s.b[s.b.length] = "}";
+	{
+		var $tmp = s.b.join("");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+IntHash.prototype.__class__ = IntHash;
 xpde.parser.PrefixOperator = { __ename__ : ["xpde","parser","PrefixOperator"], __constructs__ : ["OpNot","OpBitwiseNot","OpUnaryPlus","OpUnaryMinus"] }
 xpde.parser.PrefixOperator.OpBitwiseNot = ["OpBitwiseNot",1];
 xpde.parser.PrefixOperator.OpBitwiseNot.toString = $estr;
@@ -6955,6 +7601,7 @@ xpde.parser.Parser.prototype.PdeProgram = function() {
 		this.unit.context.mapImports(["xpde","core","*"]);
 		this.unit.context.mapImports(["xpde","xml","*"]);
 		this.classContexts.unshift(new xpde.parser.ClassContext(new xpde.parser.EnumSet([xpde.Modifier.MPublic]),this.unit.packageDeclaration.slice(-1)[0]));
+		haxe.Log.trace(this.classContexts,{ fileName : "Parser.hx", lineNumber : 419, className : "xpde.parser.Parser", methodName : "PdeProgram"});
 		this.classContexts[0].extend = xpde.DataType.DTReference(["xpde","core","PApplet"]);
 		while(this.isLocalVarDecl(false)) {
 			this.LocalVariableDeclaration();
@@ -6977,10 +7624,10 @@ xpde.parser.Parser.prototype.PdeProgram = function() {
 			this.classContexts[0].defineMethod(methodContext);
 		}
 		else this.SynErr(102);
+		this.unit.context.defineClass(this.classContexts.shift());
+		if(this.la.kind != xpde.parser.Parser._EOF) this.error("unexpected script termination");
 	}
 	else this.SynErr(103);
-	this.unit.context.defineClass(this.classContexts.shift());
-	if(this.la.kind != xpde.parser.Parser._EOF) this.error("unexpected script termination");
 	$s.pop();
 }
 xpde.parser.Parser.prototype.PrefixOp = function() {
@@ -7674,8 +8321,8 @@ xpde.parser.Parser.prototype.checkModifierAccess = function(set) {
 xpde.parser.Parser.prototype.checkModifierPermission = function(set,permission) {
 	$s.push("xpde.parser.Parser::checkModifierPermission");
 	var $spos = $s.length;
-	{ var $it12 = set.iterator();
-	while( $it12.hasNext() ) { var modifier = $it12.next();
+	{ var $it16 = set.iterator();
+	while( $it16.hasNext() ) { var modifier = $it16.next();
 	if(!permission.contains(modifier)) this.error("modifier(s) " + set + "not allowed here");
 	else this.checkModifierAccess(set);
 	}}
@@ -7993,7 +8640,7 @@ xpde.parser.Errors.prototype.SemErr = function(line,col,s) {
 	$s.push("xpde.parser.Errors::SemErr");
 	var $spos = $s.length;
 	if(line == null) this.printMsg(line,col,s);
-	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 1997, className : "xpde.parser.Errors", methodName : "SemErr"});
+	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 1998, className : "xpde.parser.Errors", methodName : "SemErr"});
 	this.count++;
 	throw new xpde.parser.FatalError(s);
 	$s.pop();
@@ -8445,7 +9092,7 @@ xpde.parser.Errors.prototype.Warning = function(line,col,s) {
 	$s.push("xpde.parser.Errors::Warning");
 	var $spos = $s.length;
 	if(line == null) this.printMsg(line,col,s);
-	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 2003, className : "xpde.parser.Errors", methodName : "Warning"});
+	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 2004, className : "xpde.parser.Errors", methodName : "Warning"});
 	$s.pop();
 }
 xpde.parser.Errors.prototype.count = null;
@@ -8456,7 +9103,7 @@ xpde.parser.Errors.prototype.printMsg = function(line,column,msg) {
 	b = StringTools.replace(b,"{0}",Std.string(line));
 	b = StringTools.replace(b,"{1}",Std.string(column));
 	b = StringTools.replace(b,"{2}",msg);
-	haxe.Log.trace(b,{ fileName : "Parser.hx", lineNumber : 1840, className : "xpde.parser.Errors", methodName : "printMsg"});
+	haxe.Log.trace(b,{ fileName : "Parser.hx", lineNumber : 1841, className : "xpde.parser.Errors", methodName : "printMsg"});
 	$s.pop();
 }
 xpde.parser.Errors.prototype.__class__ = xpde.parser.Errors;
@@ -8693,7 +9340,7 @@ xpde.parser.JavaPackage.__name__ = ["xpde","parser","JavaPackage"];
 xpde.parser.JavaPackage.prototype.addCompilationUnit = function(qualident,unit) {
 	$s.push("xpde.parser.JavaPackage::addCompilationUnit");
 	var $spos = $s.length;
-	if(qualident.length == 0) if(this.contents.exists(qualident[0])) throw "redefinition of " + qualident.join(".");
+	if(qualident.length == 1) if(this.contents.exists(qualident[0])) throw "redefinition of " + qualident.join(".");
 	else this.contents.set(qualident[0],unit);
 	else {
 		if(this.contents.exists(qualident[0]) && !Std["is"](this.contents.get(qualident[0]),xpde.parser.JavaPackage)) throw qualident.join(".") + " is not a package";
@@ -8737,9 +9384,9 @@ xpde.parser.JavaPackage.prototype.getByQualident = function(qualident) {
 			return $tmp;
 		}
 	}
-	catch( $e13 ) {
+	catch( $e17 ) {
 		{
-			var e = $e13;
+			var e = $e17;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -8838,14 +9485,14 @@ xpde.parser.CompilationUnitContext.prototype.mapImports = function(ident) {
 				}($this));
 				return $r;
 			}(this);
-			{ var $it14 = importPackage.contents.keys();
-			while( $it14.hasNext() ) { var item = $it14.next();
+			{ var $it18 = importPackage.contents.keys();
+			while( $it18.hasNext() ) { var item = $it18.next();
 			if(Std["is"](importPackage.contents.get(item),xpde.parser.CompilationUnit)) this.importMap.set(item,ident.slice(0,-1).concat([item]));
 			}}
 		}
-		catch( $e15 ) {
+		catch( $e19 ) {
 			{
-				var e = $e15;
+				var e = $e19;
 				{
 					$e = [];
 					while($s.length >= $spos) $e.unshift($s.pop());
@@ -8980,8 +9627,8 @@ xpde.parser.LexicalResolver.prototype.resolve = function(unit) {
 	$s.push("xpde.parser.LexicalResolver::resolve");
 	var $spos = $s.length;
 	this.unit = unit;
-	{ var $it16 = unit.context.definitions.iterator();
-	while( $it16.hasNext() ) { var definition = $it16.next();
+	{ var $it20 = unit.context.definitions.iterator();
+	while( $it20.hasNext() ) { var definition = $it20.next();
 	var $e = (definition);
 	switch( $e[1] ) {
 	case 0:
@@ -9006,8 +9653,8 @@ xpde.parser.LexicalResolver.prototype.resolveClass = function(definition) {
 	$s.push("xpde.parser.LexicalResolver::resolveClass");
 	var $spos = $s.length;
 	this.classContext = definition;
-	{ var $it17 = this.classContext.methods.iterator();
-	while( $it17.hasNext() ) { var method = $it17.next();
+	{ var $it21 = this.classContext.methods.iterator();
+	while( $it21.hasNext() ) { var method = $it21.next();
 	this.resolveMethod(function($this) {
 		var $r;
 		var tmp = method;
@@ -9252,7 +9899,7 @@ xpde.parser.LexicalResolver.prototype.resolveLexicalReference = function(identif
 xpde.parser.LexicalResolver.prototype.resolveMethod = function(definition) {
 	$s.push("xpde.parser.LexicalResolver::resolveMethod");
 	var $spos = $s.length;
-	this.resolveStatement(definition.body);
+	if(definition.body != null) this.resolveStatement(definition.body);
 	$s.pop();
 }
 xpde.parser.LexicalResolver.prototype.resolveStatement = function(statement) {
@@ -9371,6 +10018,87 @@ $s = [];
 $e = [];
 js.Boot.__init();
 {
+	Date.now = function() {
+		$s.push("@Main::new@119");
+		var $spos = $s.length;
+		{
+			var $tmp = new Date();
+			$s.pop();
+			return $tmp;
+		}
+		$s.pop();
+	}
+	Date.fromTime = function(t) {
+		$s.push("@Main::new@122");
+		var $spos = $s.length;
+		var d = new Date();
+		d["setTime"](t);
+		{
+			$s.pop();
+			return d;
+		}
+		$s.pop();
+	}
+	Date.fromString = function(s) {
+		$s.push("@Main::new@131");
+		var $spos = $s.length;
+		switch(s.length) {
+		case 8:{
+			var k = s.split(":");
+			var d = new Date();
+			d["setTime"](0);
+			d["setUTCHours"](k[0]);
+			d["setUTCMinutes"](k[1]);
+			d["setUTCSeconds"](k[2]);
+			{
+				$s.pop();
+				return d;
+			}
+		}break;
+		case 10:{
+			var k = s.split("-");
+			{
+				var $tmp = new Date(k[0],k[1] - 1,k[2],0,0,0);
+				$s.pop();
+				return $tmp;
+			}
+		}break;
+		case 19:{
+			var k = s.split(" ");
+			var y = k[0].split("-");
+			var t = k[1].split(":");
+			{
+				var $tmp = new Date(y[0],y[1] - 1,y[2],t[0],t[1],t[2]);
+				$s.pop();
+				return $tmp;
+			}
+		}break;
+		default:{
+			throw "Invalid date format : " + s;
+		}break;
+		}
+		$s.pop();
+	}
+	Date.prototype["toString"] = function() {
+		$s.push("@Main::new@160");
+		var $spos = $s.length;
+		var date = this;
+		var m = date.getMonth() + 1;
+		var d = date.getDate();
+		var h = date.getHours();
+		var mi = date.getMinutes();
+		var s = date.getSeconds();
+		{
+			var $tmp = date.getFullYear() + "-" + ((m < 10?"0" + m:"" + m)) + "-" + ((d < 10?"0" + d:"" + d)) + " " + ((h < 10?"0" + h:"" + h)) + ":" + ((mi < 10?"0" + mi:"" + mi)) + ":" + ((s < 10?"0" + s:"" + s));
+			$s.pop();
+			return $tmp;
+		}
+		$s.pop();
+	}
+	Date.prototype.__class__ = Date;
+	Date.__name__ = ["Date"];
+}
+{
 	String.prototype.__class__ = String;
 	String.__name__ = ["String"];
 	Array.prototype.__class__ = Array;
@@ -9428,7 +10156,11 @@ js.Boot.__init();
 		return f(msg,stack);
 	}
 }
-xpde.core.js.PApplet.__rtti = "<class path=\"xpde.core.js.PApplet\" params=\"\" file=\"C:\\Documents and Settings\\Ryan Family\\Desktop\\tim\\xpde\\src/xpde/core/js/PApplet.hx\">\n\t<implements path=\"haxe.rtti.Infos\"/>\n\t<new public=\"1\" line=\"17\"><f a=\"?curElement\">\n\t<c path=\"String\"/>\n\t<e path=\"Void\"/>\n</f></new>\n</class>";
+haxe.Serializer.USE_CACHE = false;
+haxe.Serializer.USE_ENUM_INDEX = false;
+haxe.Serializer.BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%:";
+xpde.core.js.PApplet.__rtti = "<class path=\"xpde.core.js.PApplet\" params=\"\" file=\"C:\\Documents and Settings\\Ryan Family\\Desktop\\tim\\xpde\\src/xpde/core/js/PApplet.hx\">\n\t<implements path=\"haxe.rtti.Infos\"/>\n\t<__javartti__ public=\"1\" line=\"10\" static=\"1\"><c path=\"String\"/></__javartti__>\n\t<new public=\"1\" line=\"19\"><f a=\"?curElement\">\n\t<c path=\"String\"/>\n\t<e path=\"Void\"/>\n</f></new>\n\t<haxe_dynamic><d/></haxe_dynamic>\n</class>";
+xpde.core.js.PApplet.__javartti__ = "\r\npublic class PApplet {\r\n\tnative void size(int width, int height);\r\n\tnative void noStroke();\r\n\tnative void smooth();\r\n\tnative void noLoop();\r\n\tnative void ellipse(int x, int y, int width, int height);\r\n}";
 js.Lib.onerror = null;
 xpde.parser.Buffer.EOF = 65535;
 xpde.parser.Scanner.EOL = 10;
