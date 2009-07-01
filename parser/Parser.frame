@@ -436,7 +436,7 @@ class ClassContext implements FieldContext
 		fieldDefinitions.set(definition.identifier, definition);
 		if (init != null)
 			definition.modifiers.contains(MStatic) ?
-			    staticConstructor.pushStatement(SExpression(EAssignment(definition.identifier, EAmbigLexExpression(LReference(this.identifier)), init))) :
+			    staticConstructor.pushStatement(SExpression(EAssignment(definition.identifier, ELexExpression(LReference(this.identifier)), init))) :
 			    objectConstructor.pushStatement(SExpression(EAssignment(definition.identifier, EThisReference, init)));
 	}
 	

@@ -3796,8 +3796,7 @@ xpde.parser.IncrementType.IDecrement.__enum__ = xpde.parser.IncrementType;
 xpde.parser.IncrementType.IIncrement = ["IIncrement",0];
 xpde.parser.IncrementType.IIncrement.toString = $estr;
 xpde.parser.IncrementType.IIncrement.__enum__ = xpde.parser.IncrementType;
-xpde.parser.Expression = { __ename__ : ["xpde","parser","Expression"], __constructs__ : ["EArrayInstantiation","EObjectInstantiation","EConditional","EArrayAccess","ELocalReference","EReference","EQualifiedReference","ESuperReference","EThisReference","ECall","EThisCall","ESuperCall","EArrayAssignment","EAssignment","ELocalAssignment","ECast","EPrefixOperation","EInfixOperation","EInstanceOf","EPrefix","EPostfix","EArrayLiteral","EStringLiteral","EIntegerLiteral","EFloatLiteral","ECharLiteral","EBooleanLiteral","ENull","EAmbigLexExpression"] }
-xpde.parser.Expression.EAmbigLexExpression = function(expression) { var $x = ["EAmbigLexExpression",28,expression]; $x.__enum__ = xpde.parser.Expression; $x.toString = $estr; return $x; }
+xpde.parser.Expression = { __ename__ : ["xpde","parser","Expression"], __constructs__ : ["EArrayInstantiation","EObjectInstantiation","EConditional","EArrayAccess","ELocalReference","EReference","EQualifiedReference","ESuperReference","EThisReference","ECall","EThisCall","ESuperCall","EArrayAssignment","EAssignment","ELocalAssignment","ECast","EPrefixOperation","EInfixOperation","EInstanceOf","EPrefix","EPostfix","EArrayLiteral","EStringLiteral","EIntegerLiteral","EFloatLiteral","ECharLiteral","EBooleanLiteral","ENull","ELexExpression"] }
 xpde.parser.Expression.EArrayAccess = function(index,base) { var $x = ["EArrayAccess",3,index,base]; $x.__enum__ = xpde.parser.Expression; $x.toString = $estr; return $x; }
 xpde.parser.Expression.EArrayAssignment = function(index,base,value) { var $x = ["EArrayAssignment",12,index,base,value]; $x.__enum__ = xpde.parser.Expression; $x.toString = $estr; return $x; }
 xpde.parser.Expression.EArrayInstantiation = function(type,sizes) { var $x = ["EArrayInstantiation",0,type,sizes]; $x.__enum__ = xpde.parser.Expression; $x.toString = $estr; return $x; }
@@ -3812,6 +3811,7 @@ xpde.parser.Expression.EFloatLiteral = function(value) { var $x = ["EFloatLitera
 xpde.parser.Expression.EInfixOperation = function(operation,leftOperand,rightOperand) { var $x = ["EInfixOperation",17,operation,leftOperand,rightOperand]; $x.__enum__ = xpde.parser.Expression; $x.toString = $estr; return $x; }
 xpde.parser.Expression.EInstanceOf = function(expression,type) { var $x = ["EInstanceOf",18,expression,type]; $x.__enum__ = xpde.parser.Expression; $x.toString = $estr; return $x; }
 xpde.parser.Expression.EIntegerLiteral = function(value) { var $x = ["EIntegerLiteral",23,value]; $x.__enum__ = xpde.parser.Expression; $x.toString = $estr; return $x; }
+xpde.parser.Expression.ELexExpression = function(expression) { var $x = ["ELexExpression",28,expression]; $x.__enum__ = xpde.parser.Expression; $x.toString = $estr; return $x; }
 xpde.parser.Expression.ELocalAssignment = function(identifier,value) { var $x = ["ELocalAssignment",14,identifier,value]; $x.__enum__ = xpde.parser.Expression; $x.toString = $estr; return $x; }
 xpde.parser.Expression.ELocalReference = function(identifier) { var $x = ["ELocalReference",4,identifier]; $x.__enum__ = xpde.parser.Expression; $x.toString = $estr; return $x; }
 xpde.parser.Expression.ENull = ["ENull",27];
@@ -3847,9 +3847,9 @@ xpde.parser.Statement.SLoop = function(condition,body,doLoop) { var $x = ["SLoop
 xpde.parser.Statement.SReturn = function(value) { var $x = ["SReturn",7,value]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
 xpde.parser.Statement.SThrow = function(expression) { var $x = ["SThrow",8,expression]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
 xpde.parser.Statement.STry = function(body,catches,finallyBody) { var $x = ["STry",9,body,catches,finallyBody]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
-xpde.parser.DataType = { __ename__ : ["xpde","parser","DataType"], __constructs__ : ["DTPrimitive","DTReference","DTArray","DTAmbigLexReference"] }
-xpde.parser.DataType.DTAmbigLexReference = function(qualident) { var $x = ["DTAmbigLexReference",3,qualident]; $x.__enum__ = xpde.parser.DataType; $x.toString = $estr; return $x; }
+xpde.parser.DataType = { __ename__ : ["xpde","parser","DataType"], __constructs__ : ["DTPrimitive","DTReference","DTArray","DTLexReference"] }
 xpde.parser.DataType.DTArray = function(type,dimensions) { var $x = ["DTArray",2,type,dimensions]; $x.__enum__ = xpde.parser.DataType; $x.toString = $estr; return $x; }
+xpde.parser.DataType.DTLexReference = function(qualident) { var $x = ["DTLexReference",3,qualident]; $x.__enum__ = xpde.parser.DataType; $x.toString = $estr; return $x; }
 xpde.parser.DataType.DTPrimitive = function(type) { var $x = ["DTPrimitive",0,type]; $x.__enum__ = xpde.parser.DataType; $x.toString = $estr; return $x; }
 xpde.parser.DataType.DTReference = function(qualident) { var $x = ["DTReference",1,qualident]; $x.__enum__ = xpde.parser.DataType; $x.toString = $estr; return $x; }
 xpde.parser.PrimitiveType = { __ename__ : ["xpde","parser","PrimitiveType"], __constructs__ : ["PTByte","PTShort","PTInt","PTLong","PTFloat","PTDouble","PTChar","PTBoolean"] }
@@ -4565,7 +4565,7 @@ xpde.parser.Parser.prototype.Expression0 = function() {
 			case 0:
 			var identifier = $e[2];
 			{
-				expression1 = xpde.parser.Expression.EAmbigLexExpression(xpde.parser.LexicalExpression.LAssignment(identifier,value));
+				expression1 = xpde.parser.Expression.ELexExpression(xpde.parser.LexicalExpression.LAssignment(identifier,value));
 			}break;
 			default:{
 				this.error("invalid assignment left-hand side");
@@ -4792,7 +4792,7 @@ xpde.parser.Parser.prototype.IdentifierSuffix = function(identifier,base) {
 	}
 	else if(this.la.kind == 33) {
 		var arguments = this.Arguments();
-		expression = (base == null?xpde.parser.Expression.EAmbigLexExpression(xpde.parser.LexicalExpression.LCall(identifier,arguments)):xpde.parser.Expression.ECall(identifier,base,arguments));
+		expression = (base == null?xpde.parser.Expression.ELexExpression(xpde.parser.LexicalExpression.LCall(identifier,arguments)):xpde.parser.Expression.ECall(identifier,base,arguments));
 	}
 	else if(this.la.kind == 29) {
 		this.Get();
@@ -5386,10 +5386,10 @@ xpde.parser.Parser.prototype.Primary = function() {
 		while(this.dotAndIdent()) {
 			this.Expect(29);
 			this.Expect(1);
-			base = (base != null?xpde.parser.Expression.EReference(identifier,base):(this.blockContexts[0].isFieldDefined(identifier)?xpde.parser.Expression.ELocalReference(identifier):xpde.parser.Expression.EAmbigLexExpression(xpde.parser.LexicalExpression.LReference(identifier))));
+			base = (base != null?xpde.parser.Expression.EReference(identifier,base):(this.blockContexts[0].isFieldDefined(identifier)?xpde.parser.Expression.ELocalReference(identifier):xpde.parser.Expression.ELexExpression(xpde.parser.LexicalExpression.LReference(identifier))));
 			identifier = this.t.val;
 		}
-		expression = (base != null?xpde.parser.Expression.EReference(identifier,base):(this.blockContexts[0].isFieldDefined(identifier)?xpde.parser.Expression.ELocalReference(identifier):xpde.parser.Expression.EAmbigLexExpression(xpde.parser.LexicalExpression.LReference(identifier))));
+		expression = (base != null?xpde.parser.Expression.EReference(identifier,base):(this.blockContexts[0].isFieldDefined(identifier)?xpde.parser.Expression.ELocalReference(identifier):xpde.parser.Expression.ELexExpression(xpde.parser.LexicalExpression.LReference(identifier))));
 		if(this.isIdentSuffix()) {
 			var arg = this.IdentifierSuffix(identifier,base);
 			expression = arg;
@@ -5753,7 +5753,7 @@ xpde.parser.Parser.prototype.Type = function() {
 	var type = null;
 	if(this.la.kind == 1) {
 		var qualident = this.Qualident();
-		type = xpde.parser.DataType.DTAmbigLexReference(qualident);
+		type = xpde.parser.DataType.DTLexReference(qualident);
 	}
 	else if(this.StartOf(12)) {
 		var primitive = this.BasicType();
@@ -7179,7 +7179,7 @@ xpde.parser.ClassContext.prototype.defineField = function(definition,init) {
 	var $spos = $s.length;
 	if(this.fieldDefinitions.exists(definition.identifier)) throw "redeclaration of field \"" + definition.identifier + "\"";
 	this.fieldDefinitions.set(definition.identifier,definition);
-	if(init != null) if(definition.modifiers.contains(xpde.parser.Modifier.MStatic)) this.staticConstructor.pushStatement(xpde.parser.Statement.SExpression(xpde.parser.Expression.EAssignment(definition.identifier,xpde.parser.Expression.EAmbigLexExpression(xpde.parser.LexicalExpression.LReference(this.identifier)),init)));
+	if(init != null) if(definition.modifiers.contains(xpde.parser.Modifier.MStatic)) this.staticConstructor.pushStatement(xpde.parser.Statement.SExpression(xpde.parser.Expression.EAssignment(definition.identifier,xpde.parser.Expression.ELexExpression(xpde.parser.LexicalExpression.LReference(this.identifier)),init)));
 	else this.objectConstructor.pushStatement(xpde.parser.Statement.SExpression(xpde.parser.Expression.EAssignment(definition.identifier,xpde.parser.Expression.EThisReference,init)));
 	$s.pop();
 }

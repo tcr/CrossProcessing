@@ -130,7 +130,7 @@ function checkExprStat(expression:Expression):Void {
 	    case EPostfix(_, _):
 	    
 	    // second pass
-	    case EAmbigLexExpression(expression):
+	    case ELexExpression(expression):
 		switch (expression) {
 		    case LCall(_, _):
 		    case LAssignment(_, _):
@@ -534,7 +534,7 @@ Modifier1<.modifiers:EnumSet<Modifier>.>
 /*---------------------------------------------------------------------------*/
 
 Type<out type:DataType>					/* TODO: qualifier MAY be a local class, an inner class, or a top-level import */
-= ( Qualident<.out qualident:Array<String>.>		(. type = DTAmbigLexReference(qualident); .)
+= ( Qualident<.out qualident:Array<String>.>		(. type = DTLexReference(qualident); .)
   | BasicType<out primitive:PrimitiveType>		(. type = DTPrimitive(primitive); .) 
   ) BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
 .
@@ -1001,9 +1001,9 @@ Expression0<out expression:Expression>
 							    case ELocalReference(identifier): expression = ELocalAssignment(identifier, value);
 							    case EReference(identifier, base): expression = EAssignment(identifier, base, value);
 							    case EArrayAccess(index, base): expression = EArrayAssignment(index, base, value);
-							    case EAmbigLexExpression(lexpression):
+							    case ELexExpression(lexpression):
 								switch (lexpression) {
-								    case LReference(identifier): expression = EAmbigLexExpression(LAssignment(identifier, value));
+								    case LReference(identifier): expression = ELexExpression(LAssignment(identifier, value));
 								    default: error('invalid assignment left-hand side');
 								}
 							    default: error('invalid assignment left-hand side');
@@ -1087,10 +1087,10 @@ Primary<out expression:Expression>
 | "new"	Creator<out arg:Expression> 			(. expression = arg; .)
 | ident							(. var identifier:String = t.val, base:Expression = null; .)
   { IF(dotAndIdent()) '.' ident				(. base = base != null ? EReference(identifier, base) :
-								blockContexts[0].isFieldDefined(identifier) ? ELocalReference(identifier) : EAmbigLexExpression(LReference(identifier));
+								blockContexts[0].isFieldDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier));
 							   identifier = t.val; .)
     }							(. expression = base != null ? EReference(identifier, base) :
-								blockContexts[0].isFieldDefined(identifier) ? ELocalReference(identifier) : EAmbigLexExpression(LReference(identifier)); .)
+								blockContexts[0].isFieldDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier)); .)
   [ IF(isIdentSuffix()) IdentifierSuffix<out arg:Expression, identifier, base> 	(. expression = arg; .)
     ]
 | BasicType<out type:PrimitiveType>
@@ -1167,7 +1167,7 @@ ClassCreatorRest<.out expression:Expression, qualifier:Array<String>.>
 
 IdentifierSuffix<out expression:Expression, identifier:String, base:Expression>
 = '[' ']' BracketsOpt<out bCount:Int> "." "class"	(. /* info.setKind(ExprKind.SELECT); */ .)
-|  Arguments<.out arguments:Array<Expression>.>		(. expression = base == null ? EAmbigLexExpression(LCall(identifier, arguments)) : ECall(identifier, base, arguments); .)
+|  Arguments<.out arguments:Array<Expression>.>		(. expression = base == null ? ELexExpression(LCall(identifier, arguments)) : ECall(identifier, base, arguments); .)
 |  "." ( "class" | "this" |
          "super" '.' ident
 	 ArgumentsOpt<out dummy:Expression, null, null>)	(. /* TODO */ .)

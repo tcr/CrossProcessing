@@ -94,7 +94,7 @@ enum Expression
 	ENull;
 	
 	// second pass
-	EAmbigLexExpression(expression:LexicalExpression);
+	ELexExpression(expression:LexicalExpression);
 }
 
 enum LexicalExpression
@@ -135,7 +135,7 @@ enum DataType
 	DTArray(type:DataType, dimensions:Int);	//[TODO] disallow DTArray in datatype (or make cumulation an innate part of its notation?)
 	
 	// second pass
-	DTAmbigLexReference(qualident:Qualident);
+	DTLexReference(qualident:Qualident);
 }
 
 typedef Qualident = Array<String>;

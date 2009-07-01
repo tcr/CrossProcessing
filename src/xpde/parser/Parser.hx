@@ -184,7 +184,7 @@ function checkExprStat(expression:Expression):Void {
 	    case EPostfix(_, _):
 	    
 	    // second pass
-	    case EAmbigLexExpression(expression):
+	    case ELexExpression(expression):
 		switch (expression) {
 		    case LCall(_, _):
 		    case LAssignment(_, _):
@@ -690,7 +690,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		var type:DataType = null;
 		if (la.kind == 1) {
 			var qualident:Array<String> = Qualident();
-			type = DTAmbigLexReference(qualident); 
+			type = DTLexReference(qualident); 
 		} else if (StartOf(12)) {
 			var primitive:PrimitiveType = BasicType();
 			type = DTPrimitive(primitive); 
@@ -846,9 +846,9 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			    case ELocalReference(identifier): expression = ELocalAssignment(identifier, value);
 			    case EReference(identifier, base): expression = EAssignment(identifier, base, value);
 			    case EArrayAccess(index, base): expression = EArrayAssignment(index, base, value);
-			    case EAmbigLexExpression(lexpression):
+			    case ELexExpression(lexpression):
 				switch (lexpression) {
-				    case LReference(identifier): expression = EAmbigLexExpression(LAssignment(identifier, value));
+				    case LReference(identifier): expression = ELexExpression(LAssignment(identifier, value));
 				    default: error('invalid assignment left-hand side');
 				}
 			    default: error('invalid assignment left-hand side');
@@ -1588,11 +1588,11 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 				Expect(29);
 				Expect(1);
 				base = base != null ? EReference(identifier, base) :
-				blockContexts[0].isFieldDefined(identifier) ? ELocalReference(identifier) : EAmbigLexExpression(LReference(identifier));
+				blockContexts[0].isFieldDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier));
 				  identifier = t.val; 
 			}
 			expression = base != null ? EReference(identifier, base) :
-			blockContexts[0].isFieldDefined(identifier) ? ELocalReference(identifier) : EAmbigLexExpression(LReference(identifier)); 
+			blockContexts[0].isFieldDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier)); 
 			if (isIdentSuffix()) {
 				var arg:Expression = IdentifierSuffix(identifier, base);
 				expression = arg; 
@@ -1728,7 +1728,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			
 		} else if (la.kind == 33) {
 			var arguments:Array<Expression> = Arguments();
-			expression = base == null ? EAmbigLexExpression(LCall(identifier, arguments)) : ECall(identifier, base, arguments); 
+			expression = base == null ? ELexExpression(LCall(identifier, arguments)) : ECall(identifier, base, arguments); 
 		} else if (la.kind == 29) {
 			Get();
 			if (la.kind == 9) {
@@ -2293,7 +2293,7 @@ class ClassContext implements FieldContext
 		fieldDefinitions.set(definition.identifier, definition);
 		if (init != null)
 			definition.modifiers.contains(MStatic) ?
-			    staticConstructor.pushStatement(SExpression(EAssignment(definition.identifier, EAmbigLexExpression(LReference(this.identifier)), init))) :
+			    staticConstructor.pushStatement(SExpression(EAssignment(definition.identifier, ELexExpression(LReference(this.identifier)), init))) :
 			    objectConstructor.pushStatement(SExpression(EAssignment(definition.identifier, EThisReference, init)));
 	}
 	
