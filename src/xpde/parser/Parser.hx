@@ -2,6 +2,7 @@ package xpde.parser;
 
 import xpde.parser.Scanner;
 import xpde.parser.AST;
+import xpde.Rtti;
 import haxe.io.Input;
 import haxe.io.StringInput;
 
@@ -168,7 +169,6 @@ function checkExprStat(expression:Expression):Void {
 	    case EObjectInstantiation(_, _):
 	    
 	    // calling
-//	    case ELocalCall(_, _):
 	    case ECall(_, _, _):
 	    case EThisCall(_):
 	    case ESuperCall(_):
@@ -434,17 +434,13 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 				while (StartOf(4)) {
 					BlockStatement();
 				}
-				classContexts[0].defineMethod( {
-				   identifier: 'setup',
-				   type: null,
-				   modifiers: new EnumSet<Modifier>(),
-				   parameters: [],
-				   body: blockContexts.shift().getBlockStatement()
-				});
+				var methodContext = new MethodContext(new EnumSet<Modifier>(), null, 'setup');
+				methodContext.body = blockContexts.shift().getBlockStatement();
+				classContexts[0].defineMethod(methodContext);
 				
 			} else SynErr(102);
 		} else SynErr(103);
-		unit.context.defineClass(classContexts.shift().getClassDefinition());
+		unit.context.defineClass(classContexts.shift());
 		
 		// validate script
 		if (la.kind != _EOF)
@@ -625,7 +621,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			classContexts[0].implement = arg; 
 		}
 		ClassBody();
-		unit.context.defineClass(classContexts.shift().getClassDefinition()); 
+		unit.context.defineClass(classContexts.shift()); 
 	}
 
 	function InterfaceDeclaration(modifiers:EnumSet<Modifier>):Void {
@@ -770,8 +766,9 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		return parameter;
 	}
 
-	function QualidentList():Void {
-		var list:Array<Array<String>> = []; 
+	function QualidentList():Array<Array<String>> {
+		var list:Array<Array<String>> = null;
+		list = []; 
 		var qualident:Array<String> = Qualident();
 		list.push(qualident); 
 		while (la.kind == 27) {
@@ -779,15 +776,16 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			var qualident:Array<String> = Qualident();
 			list.push(qualident); 
 		}
+		return list;
 	}
 
-	function VariableDeclarator(context:FieldContext, modifiers:EnumSet<Modifier>, type:DataType):Void {
+	function VariableDeclarator(context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType):Void {
 		Expect(1);
 		var identifier:String = t.val; 
 		VariableDeclaratorRest(context, modifiers, type, identifier);
 	}
 
-	function VariableDeclaratorRest(context:FieldContext, modifiers:EnumSet<Modifier>, type:DataType, identifier:String):Void {
+	function VariableDeclaratorRest(context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType, identifier:String):Void {
 		var bCount:Int = BracketsOpt();
 		type = compoundBrackets(type, bCount); 
 		var init:Expression = null; 
@@ -880,8 +878,9 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		if (identAndLPar()) {
 			Expect(1);
 			var identifier:String = t.val;
+			// validate constructor name
 			if (identifier != classContexts[0].identifier) error('invalid function declaration'); 
-			ConstructorDeclaratorRest(modifiers, identifier);
+			ConstructorDeclaratorRest(new MethodContext(modifiers, null, identifier));
 		} else if (StartOf(16)) {
 			MethodOrFieldDecl(modifiers);
 		} else if (la.kind == 25) {
@@ -889,7 +888,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			Get();
 			Expect(1);
 			var identifier:String = t.val; 
-			VoidMethodDeclaratorRest(modifiers, identifier);
+			VoidMethodDeclaratorRest(new MethodContext(modifiers, null, identifier));
 		} else if (la.kind == 9) {
 			ClassDeclaration(modifiers);
 		} else if (la.kind == 56) {
@@ -897,23 +896,17 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		} else SynErr(116);
 	}
 
-	function ConstructorDeclaratorRest(modifiers:EnumSet<Modifier>, identifier:String):Void {
-		checkModifierPermission(modifiers, ModifierSet.constructors);
-		var throwsList:Array<Array<String>> = []; 
-		var parameters:Array<FormalParameter> = FormalParameters();
+	function ConstructorDeclaratorRest(methodContext:MethodContext):Void {
+		checkModifierPermission(methodContext.modifiers, ModifierSet.constructors); 
+		var arg:Array<FormalParameter> = FormalParameters();
+		methodContext.parameters = arg; 
 		if (la.kind == 55) {
 			Get();
-			QualidentList();
+			var arg:Array<Array<String>> = QualidentList();
+			methodContext.throwsList = arg; 
 		}
 		var body:Statement = Block(null);
-		classContexts[0].defineMethod( {
-		   identifier: identifier,
-		   type: null,
-		   modifiers: modifiers, 
-		   parameters: parameters,
-		   body: body
-		});
-		
+		classContexts[0].defineMethod(methodContext); 
 	}
 
 	function MethodOrFieldDecl(modifiers:EnumSet<Modifier>):Void {
@@ -923,27 +916,21 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		MethodOrFieldRest(modifiers, identifier, type);
 	}
 
-	function VoidMethodDeclaratorRest(modifiers:EnumSet<Modifier>, identifier:String):Void {
-		var body:Statement = null; 
-		var parameters:Array<FormalParameter> = FormalParameters();
+	function VoidMethodDeclaratorRest(methodContext:MethodContext):Void {
+		var arg:Array<FormalParameter> = FormalParameters();
+		methodContext.parameters = arg; 
 		if (la.kind == 55) {
 			Get();
-			QualidentList();
+			var arg:Array<Array<String>> = QualidentList();
+			methodContext.throwsList = arg; 
 		}
 		if (la.kind == 31) {
 			var block:Statement = Block(null);
-			body = block; 
+			methodContext.body = block; 
 		} else if (la.kind == 41) {
 			Get();
 		} else SynErr(117);
-		classContexts[0].defineMethod( {
-		   identifier: identifier,
-		   type: null,
-		   modifiers: modifiers, 
-		   parameters: parameters,
-		   body: body
-		});
-		
+		classContexts[0].defineMethod(methodContext); 
 	}
 
 	function MethodOrFieldRest(modifiers:EnumSet<Modifier>, identifier:String, type:DataType):Void {
@@ -953,11 +940,11 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			Expect(41);
 		} else if (la.kind == 33) {
 			checkModifierPermission(modifiers, ModifierSet.methods); 
-			MethodDeclaratorRest(modifiers, type, identifier);
+			MethodDeclaratorRest(new MethodContext(modifiers, type, identifier));
 		} else SynErr(118);
 	}
 
-	function VariableDeclaratorsRest(context:FieldContext, modifiers:EnumSet<Modifier>, type:DataType, identifier:String):Void {
+	function VariableDeclaratorsRest(context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType, identifier:String):Void {
 		VariableDeclaratorRest(context, modifiers, type, identifier);
 		while (la.kind == 27) {
 			Get();
@@ -965,28 +952,22 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		}
 	}
 
-	function MethodDeclaratorRest(modifiers:EnumSet<Modifier>, type:DataType, identifier:String):Void {
-		var body:Statement = null; 
-		var parameters:Array<FormalParameter> = FormalParameters();
+	function MethodDeclaratorRest(methodContext:MethodContext):Void {
+		var arg:Array<FormalParameter> = FormalParameters();
+		methodContext.parameters = arg; 
 		var bCount:Int = BracketsOpt();
 		if (la.kind == 55) {
 			Get();
-			QualidentList();
+			var arg:Array<Array<String>> = QualidentList();
+			methodContext.throwsList = arg; 
 		}
 		if (la.kind == 31) {
 			var block:Statement = Block(null);
-			body = block; 
+			methodContext.body = block; 
 		} else if (la.kind == 41) {
 			Get();
 		} else SynErr(119);
-		classContexts[0].defineMethod( {
-		   identifier: identifier,
-		   type: type,
-		   modifiers: modifiers, 
-		   parameters: parameters,
-		   body: body
-		});
-		
+		classContexts[0].defineMethod(methodContext); 
 	}
 
 	function FormalParameters():Array<FormalParameter> {
@@ -1051,7 +1032,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		var parameters:Array<FormalParameter> = FormalParameters();
 		if (la.kind == 55) {
 			Get();
-			QualidentList();
+			var arg:Array<Array<String>> = QualidentList();
 		}
 		Expect(41);
 	}
@@ -1080,7 +1061,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		var bCount:Int = BracketsOpt();
 		if (la.kind == 55) {
 			Get();
-			QualidentList();
+			var arg:Array<Array<String>> = QualidentList();
 		}
 		Expect(41);
 	}
@@ -1280,7 +1261,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		return statement;
 	}
 
-	function VariableDeclarators(context:FieldContext, modifiers:EnumSet<Modifier>, type:DataType):Void {
+	function VariableDeclarators(context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType):Void {
 		VariableDeclarator(context, modifiers, type);
 		while (la.kind == 27) {
 			Get();
@@ -2257,42 +2238,44 @@ class CompilationUnitContext
 	}
 }
 
-interface FieldContext
+interface FieldDefinable
 {
 	function defineField(definition:FieldDefinition, ?init:Expression):Void;
 }
 
-class ClassContext implements FieldContext
+class ClassContext implements FieldDefinable
 {
-	// public variables
+	// typedef: ClassDefinition
 	public var identifier:String;
 	public var modifiers:EnumSet<Modifier>;
 	public var extend:DataType;
 	public var implement:Array<DataType>;
-	// definitions
-	private var fieldDefinitions(default, null):Hash<FieldDefinition>;
-	private var methodDefinitions(default, null):Hash<MethodDefinition>;	
+	public var fields:Hash<FieldDefinition>;
+	public var methods:Hash<MethodDefinition>;
+
 	// constructors
-	public var staticConstructor(default, null):BlockContext;
-	public var objectConstructor(default, null):BlockContext;
+	public var staticConstructor:BlockContext;
+	public var objectConstructor:BlockContext;
 
 	public function new(modifiers:EnumSet<Modifier>, identifier:String)
 	{
+		// definition defaults
 		this.modifiers = modifiers;
-		this.identifier = identifier;
-		
+		this.identifier = identifier;	
 		implement = [];
-		fieldDefinitions = new Hash<FieldDefinition>();
-		methodDefinitions = new Hash<MethodDefinition>();
+		fields = new Hash<FieldDefinition>();
+		methods = new Hash<MethodDefinition>();
+		
+		// constructors
 		staticConstructor = new BlockContext();
 		objectConstructor = new BlockContext();
 	}
 	
 	public function defineField(definition:FieldDefinition, ?init:Expression)
 	{
-		if (fieldDefinitions.exists(definition.identifier))
+		if (fields.exists(definition.identifier))
 			throw 'redeclaration of field "' + definition.identifier + '"';
-		fieldDefinitions.set(definition.identifier, definition);
+		fields.set(definition.identifier, definition);
 		if (init != null)
 			definition.modifiers.contains(MStatic) ?
 			    staticConstructor.pushStatement(SExpression(EAssignment(definition.identifier, ELexExpression(LReference(this.identifier)), init))) :
@@ -2304,25 +2287,11 @@ class ClassContext implements FieldContext
 //[TODO] hash by method signature!
 //		if (methodDefinitions.exists(definition.identifier))
 //			throw 'redefinition of top-level declaration "' + identifier + '"';
-		methodDefinitions.set(definition.identifier, definition);
-	}
-	
-	public function getClassDefinition():ClassDefinition
-	{
-		return {
-		    identifier: identifier,
-		    modifiers: modifiers,
-		    fields: fieldDefinitions,
-		    methods: methodDefinitions,
-		    extend: extend,
-		    implement: implement,
-		    clinit: staticConstructor.getBlockStatement(),
-		    init: objectConstructor.getBlockStatement()
-		};
+		methods.set(definition.identifier, definition);
 	}
 }
 
-class BlockContext implements FieldContext
+class BlockContext implements FieldDefinable
 {
 	public var statements(default, null):Array<Statement>;
 	
@@ -2363,10 +2332,35 @@ class BlockContext implements FieldContext
 	}
 }
 
+class MethodContext
+{
+	// typedef: MethodDefinition
+	public var identifier:String;
+	public var type:Null<DataType>;
+	public var modifiers:EnumSet<Modifier>;
+	public var throwsList:Array<Qualident>;
+	public var parameters:Array<FormalParameter>;
+	
+	// method body
+	public var body:Statement;
+	
+	public function new(modifiers:EnumSet<Modifier>, type:Null<DataType>, identifier:String)
+	{
+		// definition defaults
+		this.modifiers = modifiers;
+		this.type = type;
+		this.identifier = identifier;
+		throwsList = [];
+		parameters = [];
+	}
+}
+
+/*-------------------- lexical resolution (second pass) ----------------------------------*/
+
 class LexicalResolver
 {
 	private var unit:ParsedCompilationUnit;
-	private var classDefinition:ClassDefinition;
+	private var classContext:ClassContext;
 	
 	public function new()
 	{
@@ -2378,18 +2372,20 @@ class LexicalResolver
 		for (definition in unit.context.definitions)
 			switch (definition) {
 			    case DClass(definition):
-				classDefinition = definition;
-				resolveClass(definition);
+				resolveClass(cast(definition, ClassContext));
 			}
 	}
 	
-	function resolveClass(definition:ClassDefinition)
+	function resolveClass(definition:ClassContext)
 	{
-		for (method in definition.methods)
-			resolveMethod(method);
+		classContext = definition;
+		for (method in classContext.methods)
+			resolveMethod(cast(method, MethodContext));
+		resolveStatement(classContext.staticConstructor.getBlockStatement());
+		resolveStatement(classContext.objectConstructor.getBlockStatement());
 	}
 	
-	function resolveMethod(definition:MethodDefinition)
+	function resolveMethod(definition:MethodContext)
 	{
 		resolveStatement(definition.body);
 	}
@@ -2546,7 +2542,7 @@ class LexicalResolver
 	public function resolveLexicalReference(identifier:String):Expression
 	{
 		// class fields
-		if (classDefinition.fields.exists(identifier))
+		if (classContext.fields.exists(identifier))
 			return EReference(identifier, EThisReference);
 			
 		// no variable found
@@ -2556,7 +2552,7 @@ class LexicalResolver
 	public function resolveLexicalAssignment(identifier:String, value:Expression):Expression
 	{
 		// class fields
-		if (classDefinition.fields.exists(identifier))
+		if (classContext.fields.exists(identifier))
 			return EAssignment(identifier, EThisReference, value);
 			
 		// no variable found
@@ -2566,7 +2562,7 @@ class LexicalResolver
 	public function resolveLexicalCall(identifier:String, args:Array<Expression>):Expression
 	{
 		// class methods
-		if (classDefinition.methods.exists(identifier))
+		if (classContext.methods.exists(identifier))
 			return ECall(identifier, EThisReference, args);
 			
 		// no method found

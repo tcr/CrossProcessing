@@ -1,5 +1,6 @@
 import xpde.parser.Scanner;
 import xpde.parser.AST;
+import xpde.Rtti;
 import haxe.io.Input;
 import haxe.io.StringInput;
 
@@ -407,30 +408,26 @@ PdeProgram
       |							(.
 //[TODO] this in some graceful manner
 							// move field declarations to setup method
-/*							blockContext = fieldContext = new BlockContext();
+/*							blockContext = FieldDefinable = new BlockContext();
 							for (identifier in tempContext.definitions.keys())
 							{
 								methodContext.definitions.set(identifier, tempContext.definitions.get(identifier));
 								tempContext.definitions.remove(identifier);
 							}*/
 							
-							// initialize setup method
+							// initialize setup scope
 							blockContexts.unshift(new BlockContext());
 							.)
         BlockStatement { BlockStatement }		(.
-							// add to class
-							classContexts[0].defineMethod( {
-							    identifier: 'setup',
-							    type: null,
-							    modifiers: new EnumSet<Modifier>(),
-							    parameters: [],
-							    body: blockContexts.shift().getBlockStatement()
-							});
+							// add setup method to class
+							var methodContext = new MethodContext(new EnumSet<Modifier>(), null, 'setup');
+							methodContext.body = blockContexts.shift().getBlockStatement();
+							classContexts[0].defineMethod(methodContext);
 							.)
       )
     )							(.
 							// add class
-							unit.context.defineClass(classContexts.shift().getClassDefinition());
+							unit.context.defineClass(classContexts.shift());
 							
 							// validate script
 							if (la.kind != _EOF)
@@ -582,7 +579,7 @@ FormalParameter0<out parameter:FormalParameter>		(. var modifiers = new EnumSet<
 
 /*---------------------------------------------------------------------------*/
 
-QualidentList						(. var list:Array<Array<String>> = []; .)
+QualidentList<.out list:Array<Array<String>>.>		(. list = []; .)
 = Qualident<.out qualident:Array<String>.>		(. list.push(qualident); .)
   { "," Qualident<.out qualident:Array<String>.>	(. list.push(qualident); .)
     }
@@ -590,7 +587,7 @@ QualidentList						(. var list:Array<Array<String>> = []; .)
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclarator<.context:FieldContext, modifiers:EnumSet<Modifier>, type:DataType.>
+VariableDeclarator<.context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType.>
 = ident							(. var identifier:String = t.val; .)
   VariableDeclaratorRest<context, modifiers, type, identifier>
 .
@@ -604,7 +601,7 @@ VariableDeclaratorId
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclaratorRest<.context:FieldContext, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
+VariableDeclaratorRest<.context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
 = BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
 							(. var init:Expression = null; .)
   [ "=" VariableInitializer<out expression:Expression>	(. init = expression; .)
@@ -629,7 +626,7 @@ ClassDeclaration<.modifiers:EnumSet<Modifier>.>
     ]
   [ "implements" TypeList<.out arg:Array<DataType>.>	(. classContexts[0].implement = arg; .)
     ]
-  ClassBody						(. unit.context.defineClass(classContexts.shift().getClassDefinition()); .)
+  ClassBody						(. unit.context.defineClass(classContexts.shift()); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -654,12 +651,13 @@ ClassBodyDeclaration
 
 MemberDecl<.modifiers:EnumSet<Modifier>.>
 = IF (identAndLPar()) ident				(. var identifier:String = t.val;
+							   // validate constructor name
 							   if (identifier != classContexts[0].identifier) error('invalid function declaration'); .)
-  ConstructorDeclaratorRest<modifiers, identifier>
+  ConstructorDeclaratorRest<new MethodContext(modifiers, null, identifier)>
 | MethodOrFieldDecl<modifiers>
 |							(. checkModifierPermission(modifiers, ModifierSet.methods); .)
   "void" ident						(. var identifier:String = t.val; .)
-  VoidMethodDeclaratorRest<modifiers, identifier>
+  VoidMethodDeclaratorRest<new MethodContext(modifiers, null, identifier)>
 | ClassDeclaration<modifiers>
 | InterfaceDeclaration<modifiers>
 .
@@ -677,12 +675,12 @@ MethodOrFieldRest<.modifiers:EnumSet<Modifier>, identifier:String, type:DataType
 =							(. checkModifierPermission(modifiers, ModifierSet.fields);  .) 
   VariableDeclaratorsRest<classContexts[0], modifiers, type, identifier> ';'
 |							(. checkModifierPermission(modifiers, ModifierSet.methods); .)
-  MethodDeclaratorRest<modifiers, type, identifier>
+  MethodDeclaratorRest<new MethodContext(modifiers, type, identifier)>
 .
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclaratorsRest<.context:FieldContext, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
+VariableDeclaratorsRest<.context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
 = VariableDeclaratorRest<context, modifiers, type, identifier>
   {',' VariableDeclarator<context, modifiers, type>}
 .
@@ -700,57 +698,34 @@ ArrayInitializer<out expression:Expression>		(. var values:Array<Expression> = [
 
 /*---------------------------------------------------------------------------*/
 
-MethodDeclaratorRest<.modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
-=							(. var body:Statement = null; .)
-  FormalParameters<.out parameters:Array<FormalParameter>.>
-  BracketsOpt<out bCount:Int> [ "throws" QualidentList]
-  ( Block<out block:Statement, null>			(. body = block; .)
+MethodDeclaratorRest<.methodContext:MethodContext.>
+= FormalParameters<.out arg:Array<FormalParameter>.>	(. methodContext.parameters = arg; .)
+  BracketsOpt<out bCount:Int>				/*[TODO] lolwhut */
+  [ "throws" QualidentList<.out arg:Array<Array<String>>.>	(. methodContext.throwsList = arg; .)
+    ]
+  ( Block<out block:Statement, null>			(. methodContext.body = block; .)
   | ";"
-  )							(.
-							classContexts[0].defineMethod( {
-							    identifier: identifier,
-							    type: type,
-							    modifiers: modifiers, 
-							    parameters: parameters,
-							    body: body
-							});
-							.)
+  )							(. classContexts[0].defineMethod(methodContext); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-VoidMethodDeclaratorRest<.modifiers:EnumSet<Modifier>, identifier:String.>
-=							(. var body:Statement = null; .)
-  FormalParameters<.out parameters:Array<FormalParameter>.>
-  ["throws" QualidentList]
-  (Block<out block:Statement, null>			(. body = block; .)
-    | ';')						(.
-							classContexts[0].defineMethod( {
-							    identifier: identifier,
-							    type: null,
-							    modifiers: modifiers, 
-							    parameters: parameters,
-							    body: body
-							});
-							.)
+VoidMethodDeclaratorRest<.methodContext:MethodContext.>
+= FormalParameters<.out arg:Array<FormalParameter>.>	(. methodContext.parameters = arg; .) 
+  [ "throws" QualidentList<.out arg:Array<Array<String>>.>	(. methodContext.throwsList = arg; .)
+    ]
+  (Block<out block:Statement, null>			(. methodContext.body = block; .)
+    | ';')						(. classContexts[0].defineMethod(methodContext); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-ConstructorDeclaratorRest<.modifiers:EnumSet<Modifier>, identifier:String.>
-=							(. checkModifierPermission(modifiers, ModifierSet.constructors);
-							   var throwsList:Array<Array<String>> = []; .)
-  FormalParameters<.out parameters:Array<FormalParameter>.>
-  [ "throws" QualidentList ]
-  Block<out body:Statement, null>			(.
-							classContexts[0].defineMethod( {
-							    identifier: identifier,
-							    type: null,
-							    modifiers: modifiers, 
-							    parameters: parameters,
-							    body: body
-							});
-							.)
+ConstructorDeclaratorRest<.methodContext:MethodContext.>
+=							(. checkModifierPermission(methodContext.modifiers, ModifierSet.constructors); .)
+  FormalParameters<.out arg:Array<FormalParameter>.>	(. methodContext.parameters = arg; .)
+  [ "throws" QualidentList<.out arg:Array<Array<String>>.>	(. methodContext.throwsList = arg; .)
+    ]
+  Block<out body:Statement, null>			(. classContexts[0].defineMethod(methodContext); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -829,13 +804,13 @@ ConstantDeclarator
 /*---------------------------------------------------------------------------*/
 
 InterfaceMethodDeclaratorRest
-= FormalParameters<.out parameters:Array<FormalParameter>.> BracketsOpt<out bCount:Int> [ "throws" QualidentList] ";"
+= FormalParameters<.out parameters:Array<FormalParameter>.> BracketsOpt<out bCount:Int> [ "throws" QualidentList<.out arg:Array<Array<String>>.>] ";"
 .
 
 /*---------------------------------------------------------------------------*/
 
 VoidInterfaceMethodDeclaratorRest
-= FormalParameters<.out parameters:Array<FormalParameter>.> [ "throws" QualidentList] ";"
+= FormalParameters<.out parameters:Array<FormalParameter>.> [ "throws" QualidentList<.out arg:Array<Array<String>>.>] ";"
 .
 
 /*---------------------------------------------------------------------------*
@@ -911,7 +886,7 @@ LocalVariableDeclaration				(. var modifiers = new EnumSet<Modifier>(); .)
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclarators<.context:FieldContext, modifiers:EnumSet<Modifier>, type:DataType.>
+VariableDeclarators<.context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType.>
 = VariableDeclarator<context, modifiers, type>
   { "," VariableDeclarator<context, modifiers, type> }
 .

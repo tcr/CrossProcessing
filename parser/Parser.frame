@@ -400,42 +400,44 @@ class CompilationUnitContext
 	}
 }
 
-interface FieldContext
+interface FieldDefinable
 {
 	function defineField(definition:FieldDefinition, ?init:Expression):Void;
 }
 
-class ClassContext implements FieldContext
+class ClassContext implements FieldDefinable
 {
-	// public variables
+	// typedef: ClassDefinition
 	public var identifier:String;
 	public var modifiers:EnumSet<Modifier>;
 	public var extend:DataType;
 	public var implement:Array<DataType>;
-	// definitions
-	private var fieldDefinitions(default, null):Hash<FieldDefinition>;
-	private var methodDefinitions(default, null):Hash<MethodDefinition>;	
+	public var fields:Hash<FieldDefinition>;
+	public var methods:Hash<MethodDefinition>;
+
 	// constructors
-	public var staticConstructor(default, null):BlockContext;
-	public var objectConstructor(default, null):BlockContext;
+	public var staticConstructor:BlockContext;
+	public var objectConstructor:BlockContext;
 
 	public function new(modifiers:EnumSet<Modifier>, identifier:String)
 	{
+		// definition defaults
 		this.modifiers = modifiers;
-		this.identifier = identifier;
-		
+		this.identifier = identifier;	
 		implement = [];
-		fieldDefinitions = new Hash<FieldDefinition>();
-		methodDefinitions = new Hash<MethodDefinition>();
+		fields = new Hash<FieldDefinition>();
+		methods = new Hash<MethodDefinition>();
+		
+		// constructors
 		staticConstructor = new BlockContext();
 		objectConstructor = new BlockContext();
 	}
 	
 	public function defineField(definition:FieldDefinition, ?init:Expression)
 	{
-		if (fieldDefinitions.exists(definition.identifier))
+		if (fields.exists(definition.identifier))
 			throw 'redeclaration of field "' + definition.identifier + '"';
-		fieldDefinitions.set(definition.identifier, definition);
+		fields.set(definition.identifier, definition);
 		if (init != null)
 			definition.modifiers.contains(MStatic) ?
 			    staticConstructor.pushStatement(SExpression(EAssignment(definition.identifier, ELexExpression(LReference(this.identifier)), init))) :
@@ -447,25 +449,11 @@ class ClassContext implements FieldContext
 //[TODO] hash by method signature!
 //		if (methodDefinitions.exists(definition.identifier))
 //			throw 'redefinition of top-level declaration "' + identifier + '"';
-		methodDefinitions.set(definition.identifier, definition);
-	}
-	
-	public function getClassDefinition():ClassDefinition
-	{
-		return {
-		    identifier: identifier,
-		    modifiers: modifiers,
-		    fields: fieldDefinitions,
-		    methods: methodDefinitions,
-		    extend: extend,
-		    implement: implement,
-		    clinit: staticConstructor.getBlockStatement(),
-		    init: objectConstructor.getBlockStatement()
-		};
+		methods.set(definition.identifier, definition);
 	}
 }
 
-class BlockContext implements FieldContext
+class BlockContext implements FieldDefinable
 {
 	public var statements(default, null):Array<Statement>;
 	
@@ -506,10 +494,35 @@ class BlockContext implements FieldContext
 	}
 }
 
+class MethodContext
+{
+	// typedef: MethodDefinition
+	public var identifier:String;
+	public var type:Null<DataType>;
+	public var modifiers:EnumSet<Modifier>;
+	public var throwsList:Array<Qualident>;
+	public var parameters:Array<FormalParameter>;
+	
+	// method body
+	public var body:Statement;
+	
+	public function new(modifiers:EnumSet<Modifier>, type:Null<DataType>, identifier:String)
+	{
+		// definition defaults
+		this.modifiers = modifiers;
+		this.type = type;
+		this.identifier = identifier;
+		throwsList = [];
+		parameters = [];
+	}
+}
+
+/*-------------------- lexical resolution (second pass) ----------------------------------*/
+
 class LexicalResolver
 {
 	private var unit:ParsedCompilationUnit;
-	private var classDefinition:ClassDefinition;
+	private var classContext:ClassContext;
 	
 	public function new()
 	{
@@ -521,18 +534,20 @@ class LexicalResolver
 		for (definition in unit.context.definitions)
 			switch (definition) {
 			    case DClass(definition):
-				classDefinition = definition;
-				resolveClass(definition);
+				resolveClass(cast(definition, ClassContext));
 			}
 	}
 	
-	function resolveClass(definition:ClassDefinition)
+	function resolveClass(definition:ClassContext)
 	{
-		for (method in definition.methods)
-			resolveMethod(method);
+		classContext = definition;
+		for (method in classContext.methods)
+			resolveMethod(cast(method, MethodContext));
+		resolveStatement(classContext.staticConstructor.getBlockStatement());
+		resolveStatement(classContext.objectConstructor.getBlockStatement());
 	}
 	
-	function resolveMethod(definition:MethodDefinition)
+	function resolveMethod(definition:MethodContext)
 	{
 		resolveStatement(definition.body);
 	}
@@ -689,7 +704,7 @@ class LexicalResolver
 	public function resolveLexicalReference(identifier:String):Expression
 	{
 		// class fields
-		if (classDefinition.fields.exists(identifier))
+		if (classContext.fields.exists(identifier))
 			return EReference(identifier, EThisReference);
 			
 		// no variable found
@@ -699,7 +714,7 @@ class LexicalResolver
 	public function resolveLexicalAssignment(identifier:String, value:Expression):Expression
 	{
 		// class fields
-		if (classDefinition.fields.exists(identifier))
+		if (classContext.fields.exists(identifier))
 			return EAssignment(identifier, EThisReference, value);
 			
 		// no variable found
@@ -709,7 +724,7 @@ class LexicalResolver
 	public function resolveLexicalCall(identifier:String, args:Array<Expression>):Expression
 	{
 		// class methods
-		if (classDefinition.methods.exists(identifier))
+		if (classContext.methods.exists(identifier))
 			return ECall(identifier, EThisReference, args);
 			
 		// no method found
