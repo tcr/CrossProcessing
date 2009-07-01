@@ -348,13 +348,26 @@ class CompilationUnitContext
 		importMap = new Hash<Qualident>();
 	}
 	
-	public var definitions:Hash<TopLevelDefinition>;
-	public function define(identifier:String, definition:TopLevelDefinition)
+	private var definitions:Hash<TopLevelDefinition>;
+	
+	private function define(identifier:String, definition:TopLevelDefinition)
 	{
 		if (definitions.has(identifier))
 			throw 'redefinition of top-level declaration "' + identifier + '"';
 		definitions.set(identifier, definition);
 	}
+	
+	public function defineClass(definition:ClassDefinition)
+	{
+		define(definition.identifier, DClass(definition));
+	}
+	
+/*	public function defineInterface(interface:InterfaceDefinition)
+	{
+		define(definition.identifier, DInterface(definition));
+	}*/
+	
+	/* imports */
 	
 	private var importMap:Hash<Qualident>;
 	
@@ -382,7 +395,12 @@ class CompilationUnitContext
 	}
 }
 
-class ClassContext
+interface FieldContext
+{
+	public function defineField(definition:FieldDefinition, ?init:Expression);
+}
+
+class ClassContext implements FieldContext
 {
 	// public variables
 	public var identifier:String;
@@ -396,9 +414,11 @@ class ClassContext
 	public var staticConstructor(default, null):BlockContext;
 	public var objectConstructor(default, null):BlockContext;
 
-	public function new()
+	public function new(modifiers:EnumSet<Modifier>, identifier:String)
 	{
-		modifiers = new EnumSet<Modifier>();
+		this.modifiers = modifiers;
+		this.identifier = identifier;
+		
 		implement = [];
 		fieldDefinitions = [];
 		methodDefinitions = [];
@@ -406,11 +426,15 @@ class ClassContext
 		objectConstructor = new BlockContext();
 	}
 	
-	public function defineField(definition:FieldDefinition)
+	public function defineField(definition:FieldDefinition, ?init:Expression)
 	{
 		if (fieldDefinitions.has(definition.identifier))
-			throw 'redeclaration of variable "' + identifier + '"';
+			throw 'redeclaration of field "' + identifier + '"';
 		fieldDefinitions.set(definition.identifier, definition);
+		if (init != null)
+			definition.modifiers.contains(MStatic) ?
+			    staticConstructor.pushStatement(EAssignment(definition.identifier, EAmbigLexExpression(EReference(this.identifier)), init)) :
+			    objectConstructor.pushStatement(EAssignment(definition.identifier, EThisReference, init));
 	}
 	
 	public function defineMethod(definition:MethodDefinition)
@@ -423,11 +447,20 @@ class ClassContext
 	
 	public function getClassDefinition():ClassDefinition
 	{
-		return 
+		return {
+		    identifier: identifier,
+		    modifiers: modifiers,
+		    fields: fieldDefinitions,
+		    methods: methodDefinitions,
+		    extend: extend,
+		    implement: implement,
+		    clinit: staticConstructor.getBlockStatement(),
+		    init: objectConstructor.getBlockStatement()
+		};
 	}
 }
 
-class BlockContext
+class BlockContext implements FieldContext
 {
 	public var statements(default, null):Array<Statement>;
 	
@@ -438,11 +471,13 @@ class BlockContext
 	
 	private var fieldDefinitions(default, null):Hash<ClassDefinition>;
 	
-	public function defineField(definition:FieldDefinition)
+	public function defineField(definition:FieldDefinition, ?init:Expression)
 	{
 		if (isFieldDefined(definition.identifier))
 			throw 'redeclaration of variable "' + identifier + '" in block scope';
 		fieldDefinitions.set(definition.identifier, definition);
+		if (init != null)
+			pushStatement(ELocalAssignment(definition.identifier, init));
 	}
 	
 	public function isFieldDefined(identifier:String):Bool

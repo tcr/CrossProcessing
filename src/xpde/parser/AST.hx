@@ -168,10 +168,10 @@ enum TopLevelDefinition
 typedef ClassDefinition = {
 	var identifier:String;
 	var modifiers:EnumSet<Modifier>;
-	var fields:Array<FieldDefinition>;
-	var methods:Array<MethodDefinition>;
+	var fields:Iterable<FieldDefinition>;
+	var methods:Iterable<MethodDefinition>;
 	var extend:DataType;
-	var implement:Array<DataType>;
+	var implement:Iterable<DataType>;
 	var clinit:Statement;
 	var init:Statement;
 };

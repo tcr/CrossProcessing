@@ -184,7 +184,7 @@ function checkModifierAccess(set:EnumSet<Modifier>):Void {
 
 var classContext:ClassContext;
 var blockContext:BlockContext;
-var fieldContext:{var defineField(default, null):FieldDefinition -> Void};
+var fieldContext:FieldContext;
 
 /*-----------------------------------------------------------------*
  * Resolver routines to resolve LL(1) conflicts:                   *
@@ -399,26 +399,34 @@ PdeProgram
 							unit.context.mapImports(['xpde', 'xml', '*']);
 
 							// initialize active program
-							var identifier:String = unit.packageDeclaration.slice(-1)[0];
-							classContext = fieldContext = new ClassContext(unit.context);
-							unit.context.define(identifier, DClass(identifier, new EnumSet < Modifier > ([MPublic]), classScope.definitions, unit.context.resolveLexicalType('PApplet')));
+							classContext = fieldContext = new ClassContext(new EnumSet<Modifier>([MPublic]), unit.packageDeclaration.slice( -1)[0]);
+							classContext.extend = DTReference(['xpde', 'core', 'PApplet']);
+							unit.context.defineClass(classContext.getClassDefinition());
 							.)
-    { (IF (isLocalVarDecl(false)) LocalVariableDeclaration<classContext>) ";" }
+    { (IF (isLocalVarDecl(false)) LocalVariableDeclaration) ";" }
     ( IF (isActiveProgram())
-      ClassBodyDeclaration<classContext> { ClassBodyDeclaration<classContext> }
+      ClassBodyDeclaration { ClassBodyDeclaration }
       |							(.
-							// initialize setup method
-							blockContext = fieldContext = new BlockContext();
-							// move field declarations to method
+//[TODO] this in some graceful manner
+							// move field declarations to setup method
+/*							blockContext = fieldContext = new BlockContext();
 							for (identifier in tempContext.definitions.keys())
 							{
 								methodContext.definitions.set(identifier, tempContext.definitions.get(identifier));
 								tempContext.definitions.remove(identifier);
-							}
-							// add setup method
-							classContext.definitions.set('setup', DMethod('setup', null, new EnumSet<Modifier>(), [], methodContext.getBlockStatement()));
+							}*/
+							
+							// initialize setup method
+							blockContext = fieldContext = new BlockContext();
+							classContext.defineMethod( {
+							    identifier: 'setup',
+							    type: null,
+							    modifiers: new EnumSet<Modifier>(),
+							    params: []
+							    body: blockContext.getBlockStatement()
+							});
 							.)
-        BlockStatement<methodContext> { BlockStatement<methodContext> }
+        BlockStatement { BlockStatement }
       )
     )							(.
 							// validate script
@@ -429,12 +437,12 @@ PdeProgram
 
 /*---------------------------------------------------------------------------*/
 
-CompilationUnit<unit:ParsedCompilationUnit>		(. var packageDeclaration = []; .)
+CompilationUnit						(. var packageDeclaration = []; .)
 = [ "package" Qualident<.out qualident:Array<String>.>	(. packageDeclaration = qualident; .)
     ';' ]
   { ImportDeclaration<.out importIdent:Array<String>.>	(. unit.context.mapImports(importIdent); .)
     }
-  { TypeDeclaration<unit.context>
+  { TypeDeclaration
     }							(.
 							// verify package
 							if (packageDeclaration.join('.') != unit.packageDeclaration.join('.'))
@@ -471,52 +479,53 @@ QualifiedImport<.out importIdent:Array<String>.>
 
 /*---------------------------------------------------------------------------*/
 
-TypeDeclaration<context:Context>
-= ClassOrInterfaceDeclaration<context>
+TypeDeclaration
+= ClassOrInterfaceDeclaration
 | ";"
 .
 
 /*---------------------------------------------------------------------------*/
 
-ClassOrInterfaceDeclaration<context:Context>		(. var m = new EnumSet<Modifier>(); .) 
-= { ClassModifier<m> } 
-  ( ClassDeclaration<context, m>
-  |  InterfaceDeclaration<context, m>
+ClassOrInterfaceDeclaration				(. var modifiers = new EnumSet<Modifier>(); .) 
+= { ClassModifier<modifiers> } 
+  ( 							(. classContext = new ClassContext(modifiers); .)
+    ClassDeclaration	
+  |  InterfaceDeclaration
   )
 .
 
 /*---------------------------------------------------------------------------*/
 
-ClassModifier<.m:EnumSet<Modifier>.>
-= "public"						(. addModifier(m, MPublic); .)
-| "protected"						(. addModifier(m, MProtected); .)
-| "private"						(. addModifier(m, MPrivate); .)
-| "abstract"						(. addModifier(m, MAbstract); .)
-| "static"						(. addModifier(m, MStatic); .)
-| "final"						(. addModifier(m, MFinal); .)
-| "strictfp"						(. addModifier(m, MStrictfp); .)
+ClassModifier<.modifiers:EnumSet<Modifier>.>
+= "public"						(. addModifier(modifiers, MPublic); .)
+| "protected"						(. addModifier(modifiers, MProtected); .)
+| "private"						(. addModifier(modifiers, MPrivate); .)
+| "abstract"						(. addModifier(modifiers, MAbstract); .)
+| "static"						(. addModifier(modifiers, MStatic); .)
+| "final"						(. addModifier(modifiers, MFinal); .)
+| "strictfp"						(. addModifier(modifiers, MStrictfp); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-Modifier0<.m:EnumSet<Modifier>.>
-= "static"						(. addModifier(m, MStatic); .)
-|  Modifier1<m>
+Modifier0<.modifiers:EnumSet<Modifier>.>
+= "static"						(. addModifier(modifiers, MStatic); .)
+|  Modifier1<modifiers>
 .
 
 /*---------------------------------------------------------------------------*/
 
-Modifier1<.m:EnumSet<Modifier>.>
-= "public"						(. addModifier(m, MPublic); .)
-| "protected"						(. addModifier(m, MProtected); .)
-| "private"						(. addModifier(m, MPrivate); .)
-| "abstract"						(. addModifier(m, MAbstract); .)
-| "final"						(. addModifier(m, MFinal); .)
-| "native"						(. addModifier(m, MNative); .)
-| "synchronized"					(. addModifier(m, MSynchronized); .)
-| "transient"						(. addModifier(m, MTransient); .)
-| "volatile"						(. addModifier(m, MVolatile); .)
-| "strictfp"						(. addModifier(m, MStrictfp); .)
+Modifier1<.modifiers:EnumSet<Modifier>.>
+= "public"						(. addModifier(modifiers, MPublic); .)
+| "protected"						(. addModifier(modifiers, MProtected); .)
+| "private"						(. addModifier(modifiers, MPrivate); .)
+| "abstract"						(. addModifier(modifiers, MAbstract); .)
+| "final"						(. addModifier(modifiers, MFinal); .)
+| "native"						(. addModifier(modifiers, MNative); .)
+| "synchronized"					(. addModifier(modifiers, MSynchronized); .)
+| "transient"						(. addModifier(modifiers, MTransient); .)
+| "volatile"						(. addModifier(modifiers, MVolatile); .)
+| "strictfp"						(. addModifier(modifiers, MStrictfp); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -579,9 +588,9 @@ QualidentList						(. var list:Array<Array<String>> = []; .)
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclarator<.context:BlockContext, modifiers:EnumSet<Modifier>, type:DataType.>
+VariableDeclarator<.modifiers:EnumSet<Modifier>, type:DataType.>
 = ident							(. var identifier:String = t.val; .)
-  VariableDeclaratorRest<context, modifiers, type, identifier>
+  VariableDeclaratorRest<modifiers, type, identifier>
 .
 
 /*---------------------------------------------------------------------------*/
@@ -593,16 +602,14 @@ VariableDeclaratorId
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclaratorRest<.context:BlockContext, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
+VariableDeclaratorRest<.modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
 = BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
 							(. var init:Expression = null; .)
-  [ "=" VariableInitializer<out expression:Expression>	(. context.pushStatement(SExpression(EAssignment(identifier, null, expression))); .)
-    ]							(. context.define(DField(identifier, type, modifiers)); .)
+  [ "=" VariableInitializer<out expression:Expression>	(. init = expression; .)
+    ]							(. fieldContext.defineField({identifier: identifier, type: type, modifiers: modifiers}, init); .)
 .
 
 /*---------------------------------------------------------------------------*/
-
-/*[TODO] this should not be an init expression in a block scope!!!! */
 
 VariableInitializer<out expression:Expression>
 = ArrayInitializer<out arg:Expression>			(. expression = arg; .)
@@ -613,68 +620,69 @@ VariableInitializer<out expression:Expression>
  *---------------------------- Classes --------------------------------------*
  *---------------------------------------------------------------------------*/
 
-ClassDeclaration<.context:Context, m:EnumSet<Modifier>.>
-= 							(. checkModifierPermission(m, ModifierSet.classes); .)
-  "class" ident						(. var identifier:String = t.val, extend:DataType = null, implement:Array<DataType> = null; .)
-  [ "extends" Type<out arg:DataType> 			(. extend = arg; .)
+ClassDeclaration<.modifiers:EnumSet<Modifier>.>
+= 							(. checkModifierPermission(modifiers, ModifierSet.classes); .)
+  "class" ident						(. classContext = fieldContext = new ClassContext(modifiers, t.val); .)
+  [ "extends" Type<out arg:DataType> 			(. classContext.extend = arg; .)
     ]
-  [ "implements" TypeList<.out arg:Array<DataType>.>	(. implement = arg; .)
+  [ "implements" TypeList<.out arg:Array<DataType>.>	(. classContext.implement = arg; .)
     ]
-  ClassBody<.out classScope:ClassScope.>		(. scope.pushDefinition(DClass(identifier, m, classScope.getDefinitions(), extend, implement, null, classScope.getStatement())); .)
+  ClassBody						(. unit.context.defineClass(classContext.getClassDefinition()); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-ClassBody<.out classScope:ClassScope.>			(. classScope = new ClassScope(); .)
-= "{" { ClassBodyDeclaration<classScope>	
+ClassBody
+= "{" { ClassBodyDeclaration	
         } "}"
 .
 
 /*---------------------------------------------------------------------------*/
 
-ClassBodyDeclaration<scope:ClassScope>
+ClassBodyDeclaration
 = ";"
-|							(. var m = new EnumSet<Modifier>(); .)
-  ["static"						(. addModifier(m, MStatic); .)
-  ] ( Block<out block:Statement, null>			(. scope.pushStatement(block); .)
-    | [ Modifier1<m> { Modifier0<m> } ] MemberDecl<scope, m>
+|							(. var modifiers = new EnumSet<Modifier>(); .)
+  ["static"						(. addModifier(modifiers, MStatic); .)
+  ] ( Block<out block:Statement, null>			(. classContext.staticConstructor.pushStatement(block); .)
+    | [ Modifier1<modifiers> { Modifier0<modifiers> } ] MemberDecl<modifiers>
     )
 .
 
 /*---------------------------------------------------------------------------*/
 
-MemberDecl<.scope:ClassScope, m:EnumSet<Modifier>.>
-= IF (identAndLPar()) ident				(. var identifier:String = t.val; .) /* TODO: check constructor name == ident name */
-  ConstructorDeclaratorRest<scope, m, identifier>
-| MethodOrFieldDecl<scope, m>
-|							(. checkModifierPermission(m, ModifierSet.methods); .)
+MemberDecl<.modifiers:EnumSet<Modifier>.>
+= IF (identAndLPar()) ident				(. var identifier:String = t.val;
+							   if (identifier != classContext.identifier) error('invalid function declaration'); .)
+  ConstructorDeclaratorRest<modifiers, identifier>
+| MethodOrFieldDecl<modifiers>
+|							(. checkModifierPermission(modifiers, ModifierSet.methods); .)
   "void" ident						(. var identifier:String = t.val; .)
-  VoidMethodDeclaratorRest<scope, m, identifier>
-| ClassDeclaration<scope, m>
-| InterfaceDeclaration<scope, m>
+  VoidMethodDeclaratorRest<modifiers, identifier>
+| ClassDeclaration<modifiers>
+| InterfaceDeclaration<modifiers>
 .
 
 /*---------------------------------------------------------------------------*/
 
-MethodOrFieldDecl<.scope:ClassScope, m:EnumSet<Modifier>.>
+MethodOrFieldDecl<.modifiers:EnumSet<Modifier>.>
 = Type<out type:DataType> ident				(. var identifier:String = t.val; .)
-  MethodOrFieldRest<scope, m, identifier, type>
+  MethodOrFieldRest<modifiers, identifier, type>
 .
 
 /*---------------------------------------------------------------------------*/
 
-MethodOrFieldRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String, type:DataType.>
-=							(. checkModifierPermission(m, ModifierSet.fields);  .) 
-  VariableDeclaratorsRest<scope, m, type, identifier> ';'
-|							(. checkModifierPermission(m, ModifierSet.methods); .)
-  MethodDeclaratorRest<scope, m, identifier, type>
+MethodOrFieldRest<.modifiers:EnumSet<Modifier>, identifier:String, type:DataType.>
+=							(. checkModifierPermission(modifiers, ModifierSet.fields);  .) 
+  VariableDeclaratorsRest<modifiers, type, identifier> ';'
+|							(. checkModifierPermission(modifiers, ModifierSet.methods); .)
+  MethodDeclaratorRest<modifiers, type, identifier>
 .
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclaratorsRest<.scope:BlockScope, m:EnumSet<Modifier>, type:DataType, identifier:String.>
-= VariableDeclaratorRest<scope, m, type, identifier>
-  {',' VariableDeclarator<scope, m, type>}
+VariableDeclaratorsRest<.modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
+= VariableDeclaratorRest<modifiers, type, identifier>
+  {',' VariableDeclarator<modifiers, type>}
 .
 
 /*---------------------------------------------------------------------------*/
@@ -690,33 +698,58 @@ ArrayInitializer<out expression:Expression>		(. var values:Array<Expression> = [
 
 /*---------------------------------------------------------------------------*/
 
-MethodDeclaratorRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String, type:DataType.>
+MethodDeclaratorRest<.modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
 =							(. var body:Statement = null; .)
   FormalParameters<.out parameters:Array<FormalParameter>.>
   BracketsOpt<out bCount:Int> [ "throws" QualidentList]
   ( Block<out block:Statement, null>			(. body = block; .)
   | ";"
-  )							(. scope.pushDefinition(DMethod(identifier, type, m, parameters, body)); .)
+  )							(.
+							classContext.defineMethod( {
+							    identifier: identifier,
+							    type: type,
+							    modifiers: modifiers, 
+							    parameters: parameters,
+							    body: body
+							});
+							.)
+  }
 .
 
 /*---------------------------------------------------------------------------*/
 
-VoidMethodDeclaratorRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String.>
+VoidMethodDeclaratorRest<.modifiers:EnumSet<Modifier>, identifier:String.>
 =							(. var body:Statement = null; .)
   FormalParameters<.out parameters:Array<FormalParameter>.>
   ["throws" QualidentList]
   (Block<out block:Statement, null>			(. body = block; .)
-    | ';')						(. scope.pushDefinition(DMethod(identifier, null, m, parameters, body)); .)
+    | ';')						(.
+							classContext.defineMethod( {
+							    identifier: identifier,
+							    type: null,
+							    modifiers: modifiers, 
+							    parameters: parameters,
+							    body: body
+							});
+							.)
 .
 
 /*---------------------------------------------------------------------------*/
 
-ConstructorDeclaratorRest<.scope:ClassScope, m:EnumSet<Modifier>, identifier:String.>
-=							(. checkModifierPermission(m, ModifierSet.constructors);
+ConstructorDeclaratorRest<.modifiers:EnumSet<Modifier>, identifier:String.>
+=							(. checkModifierPermission(modifiers, ModifierSet.constructors);
 							   var throwsList:Array<Array<String>> = []; .)
   FormalParameters<.out parameters:Array<FormalParameter>.>
   [ "throws" QualidentList ]
-  Block<out body:Statement, null>			(. scope.pushDefinition(DMethod(identifier, null, m, parameters, body)); .)
+  Block<out body:Statement, null>			(.
+							classContext.defineMethod( {
+							    identifier: identifier,
+							    type: null,
+							    modifiers: modifiers, 
+							    parameters: parameters,
+							    body: body
+							});
+							.)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -731,8 +764,8 @@ FormalParameters<.out parameters:Array<FormalParameter>.>	(. parameters = []; .)
  *---------------------------- Interfaces -----------------------------------*
  *---------------------------------------------------------------------------*/
 
-InterfaceDeclaration<.scope:Scope, m:EnumSet<Modifier>.>
-=							(. checkModifierPermission(m, ModifierSet.interfaces); .)
+InterfaceDeclaration<.modifiers:EnumSet<Modifier>.>
+=							(. checkModifierPermission(modifiers, ModifierSet.interfaces); .)
   "interface" ident [ "extends" TypeList<.out extend:Array<DataType>.> ] InterfaceBody
 .
 
@@ -744,33 +777,33 @@ InterfaceBody
 
 /*---------------------------------------------------------------------------*/
 
-InterfaceBodyDeclaration				(. var m = new EnumSet<Modifier>(); .) 
+InterfaceBodyDeclaration				(. var modifiers = new EnumSet<Modifier>(); .) 
 = ";"
-| { Modifier0<m> } InterfaceMemberDecl<m>
+| { Modifier0<modifiers> } InterfaceMemberDecl<modifiers>
 .
 
 /*---------------------------------------------------------------------------*/
 
-InterfaceMemberDecl<.m:EnumSet<Modifier>.>
-= InterfaceMethodOrFieldDecl<m>
-|							(. checkModifierPermission(m, ModifierSet.interfaces); .)
+InterfaceMemberDecl<.modifiers:EnumSet<Modifier>.>
+= InterfaceMethodOrFieldDecl<modifiers>
+|							(. checkModifierPermission(modifiers, ModifierSet.interfaces); .)
   "void" ident VoidInterfaceMethodDeclaratorRest
-| ClassDeclaration<null, m>
-| InterfaceDeclaration<null, m>
+| ClassDeclaration<modifiers>
+| InterfaceDeclaration<modifiers>
 .
 
 /*---------------------------------------------------------------------------*/
 
-InterfaceMethodOrFieldDecl<.m:EnumSet<Modifier>.>
-= Type<out type:DataType> ident InterfaceMethodOrFieldRest<m>
+InterfaceMethodOrFieldDecl<.modifiers:EnumSet<Modifier>.>
+= Type<out type:DataType> ident InterfaceMethodOrFieldRest<modifiers>
 .
 
 /*---------------------------------------------------------------------------*/
 
-InterfaceMethodOrFieldRest<.m:EnumSet<Modifier>.>
-=							(. checkModifierPermission(m, ModifierSet.constants);  .) 
+InterfaceMethodOrFieldRest<.modifiers:EnumSet<Modifier>.>
+=							(. checkModifierPermission(modifiers, ModifierSet.constants);  .) 
   ConstantDeclaratorsRest ";"
-|							(. checkModifierPermission(m, ModifierSet.interfaces); .) 
+|							(. checkModifierPermission(modifiers, ModifierSet.interfaces); .) 
   InterfaceMethodDeclaratorRest
 .
 
@@ -810,30 +843,32 @@ VoidInterfaceMethodDeclaratorRest
 
 /*---------------------------------------------------------------------------*/
 
-Statement0<out statement:Statement, scope:BlockScope>
-= Block<out block:Statement, scope>			(. statement = block; .)
+Statement0<out statement:Statement>
+= Block<out block:Statement>				(. statement = block; .)
 | "if" ParExpression<out condition:Expression>
-   Statement0<out thenStatement:Statement, scope>	(. var elseStatement:Statement = null; .)
-   [ "else" Statement0<out body:Statement, scope>	(. elseStatement = body; .)
+   Statement0<out thenStatement:Statement>		(. var elseStatement:Statement = null; .)
+   [ "else" Statement0<out body:Statement>		(. elseStatement = body; .)
      ]							(. statement = SConditional(condition, thenStatement, elseStatement); .)
-| "for" "("						(. var forScope:BlockScope = new BlockScope(); .)
-  [ ForInit<forScope> ] ";"				(. var conditional:Expression = EBooleanLiteral(true); .)
+| "for" "("						(. var parent = blockContext;
+							   blockContext = fieldContext = new BlockContext(parent); .)
+  [ ForInit ] ";"					(. var conditional:Expression = EBooleanLiteral(true); .)
   [ Expression0<out expression:Expression>		(. conditional = expression; .)
     ] ";"						(. var body:Array<Statement> = []; .)
   [ ForUpdate<.out updates:Array<Statement>.>		(. body = updates; .)
     ] ")"
-  Statement0<out arg:Statement, scope>			(. body = [arg].concat(body);
-							   forScope.pushStatement(SLoop(conditional, SBlock([], body), false));
-							   statement = forScope.getStatement(); .)
+  Statement0<out arg:Statement>				(. body = [arg].concat(body);
+							   blockContext.pushStatement(SLoop(conditional, SBlock([], body), false));
+							   statement = blockContext.getBlockStatement();
+							   blockContext = fieldContext = parent; .)
 | "while" ParExpression<out condition:Expression>
-  Statement0<out body:Statement, scope>			(. statement = SLoop(condition, body, false); .)
-| "do" Statement0<out body:Statement, scope>
+  Statement0<out body:Statement>			(. statement = SLoop(condition, body, false); .)
+| "do" Statement0<out body:Statement>
   "while" ParExpression<out condition:Expression> ";"	(. statement = SLoop(condition, body, true); .)
-| "try" Block<out body:Statement, scope>		(. var catches:Array<Catch> = [], finallyBody:Statement = null; .)
-  ( Catches<.out _catches:Array<Catch>, scope.>	(. catches = _catches; .)
-    [ "finally" Block<out block:Statement, scope>	(. finallyBody = block; .)
+| "try" Block<out body:Statement>			(. var catches:Array<Catch> = [], finallyBody:Statement = null; .)
+  ( Catches<.out _catches:Array<Catch>.>		(. catches = _catches; .)
+    [ "finally" Block<out block:Statement>		(. finallyBody = block; .)
       ]
-    | "finally" Block<out block:Statement, scope>	(. finallyBody = block; .)
+    | "finally" Block<out block:Statement>		(. finallyBody = block; .)
       )							(. statement = STry(body, catches, finallyBody); .)
 | "switch" ParExpression<out expression:Expression> '{' SwitchBlockStatementGroups '}' /* TODO */
 | "synchronized" ParExpression<out expression:Expression>
@@ -850,46 +885,48 @@ Statement0<out statement:Statement, scope:BlockScope>
     ] ';'						(. statement = SContinue(label); .)
 | ";"
 | IF (isLabel()) ident					(. var label:String = t.val; .)
-  ":" Statement0<out body:Statement, scope>		(. statement = SLabel(label, body); .)
+  ":" Statement0<out body:Statement>			(. statement = SLabel(label, body); .)
 | StatementExpression<out arg:Statement> ';'		(. statement = arg; .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-Block<out statement:Statement, parent:BlockScope>	(. var scope:BlockScope = new BlockScope(); .)
-= "{" { BlockStatement<scope> } "}"			(. statement = scope.getStatement(); .)
+Block<out statement:Statement>				(. var parent = blockContext;
+							   blockContext = fieldContext = new BlockContext(blockContext); .)
+= "{" { BlockStatement } "}"				(. statement = blockContext.getBlockStatement(); 
+							   blockContext = parent = parent;  .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-BlockStatement<scope:BlockScope>
-= IF(isLocalVarDecl(false)) LocalVariableDeclaration<scope> ";"
-| ClassOrInterfaceDeclaration<scope>
-| Statement0<out statement:Statement, scope>		(. scope.pushStatement(statement); .)
+BlockStatement
+= IF(isLocalVarDecl(false)) LocalVariableDeclaration ";"
+| ClassOrInterfaceDeclaration				/*[TODO] support local classes... */
+| Statement0<out statement:Statement>			(. blockContext.pushStatement(statement); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-LocalVariableDeclaration<scope:BlockScope>		(. var modifiers = new EnumSet<Modifier>(); .)
+LocalVariableDeclaration			(. var modifiers = new EnumSet<Modifier>(); .)
 = [ "final"						(. modifiers.add(MFinal); .)
-    ] Type<out type:DataType> VariableDeclarators<scope, modifiers, type>
+    ] Type<out type:DataType> VariableDeclarators<modifiers, type>
 .
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclarators<.scope:BlockScope, modifiers:EnumSet<Modifier>, type:DataType.>
-= VariableDeclarator<scope, modifiers, type>
-  { "," VariableDeclarator<scope, modifiers, type> }
+VariableDeclarators<.modifiers:EnumSet<Modifier>, type:DataType.>
+= VariableDeclarator<modifiers, type>
+  { "," VariableDeclarator<modifiers, type> }
 .
 
 /*---------------------------------------------------------------------------*/
 
-ForInit<scope:BlockScope>
-= IF (isLocalVarDecl(true)) LocalVariableDeclaration<scope>
-| StatementExpression<out statement:Statement>			(. scope.pushStatement(statement); .)
+ForInit
+= IF (isLocalVarDecl(true)) LocalVariableDeclaration
+| StatementExpression<out statement:Statement>			(. blockContext.pushStatement(statement); .)
   MoreStatementExpressions<.out statements:Array<Statement>.>	(.
 								for (statement in statements)
-									scope.pushStatement(statement);
+									blockContext.pushStatement(statement);
 								.)
 .
 
@@ -917,17 +954,17 @@ MoreStatementExpressions<.out statements:Array<Statement>.>
 
 /*---------------------------------------------------------------------------*/
 
-Catches<.out catches:Array<Catch>, scope:BlockScope.>	(. catches = []; .)
-= CatchClause<out catchBlock:Catch, scope>		(. catches.push(catchBlock); .)
-  { CatchClause<out catchBlock:Catch, scope>		(. catches.push(catchBlock); .)
+Catches<.out catches:Array<Catch>.>			(. catches = []; .)
+= CatchClause<out catchBlock:Catch>			(. catches.push(catchBlock); .)
+  { CatchClause<out catchBlock:Catch>			(. catches.push(catchBlock); .)
     }
 .
 
 /*---------------------------------------------------------------------------*/
 
-CatchClause<out _catch:Catch, scope:BlockScope>
+CatchClause<out _catch:Catch>
 = "catch" "(" FormalParameter0<out parameter:FormalParameter> ")"
-  Block<out block:Statement, scope>			(. _catch = {parameter: parameter, body: block}; .)
+  Block<out block:Statement>				(. _catch = {parameter: parameter, body: block}; .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -1125,7 +1162,7 @@ ArrayCreatorRest<out expression:Expression, type:DataType>
 
 ClassCreatorRest<.out expression:Expression, qualifier:Array<String>.>
 = Arguments<.out arguments:Array<Expression>.>		(. expression = EObjectInstantiation(qualifier, arguments); .)
-  [ ClassBody<.out classScope:ClassScope.> ]		(. /* TODO */ .)
+  [ ClassBody ]						(. /* TODO */ .)
 .
 
 /*---------------------------------------------------------------------------*/
