@@ -67,7 +67,6 @@ enum Expression
 	ESuperReference;
 	EThisReference;
 	// calling
-//	ELocalCall(identifier:String, args:Array<Expression>);
 	ECall(identifier:String, base:Expression, args:Array<Expression>);
 	EThisCall(args:Array<Expression>);
 	ESuperCall(args:Array<Expression>);

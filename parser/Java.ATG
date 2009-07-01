@@ -116,7 +116,6 @@ function checkExprStat(expression:Expression):Void {
 	    case EObjectInstantiation(_, _):
 	    
 	    // calling
-//	    case ELocalCall(_, _):
 	    case ECall(_, _, _):
 	    case EThisCall(_):
 	    case ESuperCall(_):
