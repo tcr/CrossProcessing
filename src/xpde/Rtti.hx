@@ -13,10 +13,8 @@ enum DataType
 {
 	DTPrimitive(type:PrimitiveType);
 	DTReference(qualident:Qualident);
-	DTArray(type:DataType, dimensions:Int);	//[TODO] disallow DTArray in datatype (or make cumulation an innate part of its notation?)
-	
-	// second pass
-	DTLexReference(qualident:Qualident);
+	DTPrimitiveArray(type:PrimitiveType, dimensions:Int);
+	DTReferenceArray(qualident:Qualident, dimensions:Int);
 }
 
 typedef Qualident = Array<String>;
@@ -51,11 +49,15 @@ enum Modifier {
 
 /* definitions */
 
-enum TopLevelDefinition
+enum TypeDefinition
 {
-	DClass(definition:ClassDefinition);
-//	DInterface(identifier:String, modifiers:EnumSet<Modifier>, definitions:Array<Definition>, ?extend:DataType, ?implement:Array<DataType>, ?clinit:Statement, ?init:Statement);
+	TClass(definition:ClassDefinition);
+	TInterface(definition:InterfaceDefinition);
 }
+
+typedef InterfaceDefinition = {
+	var identifier:String;	
+};
 
 typedef ClassDefinition = {
 	var identifier:String;

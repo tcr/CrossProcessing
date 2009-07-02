@@ -5,6 +5,7 @@ import haxe.Serializer;
 import js.Lib;
 import xpde.core.PApplet;
 import xpde.Rtti;
+import xpde.JavaPackage;
 //import xpde.compiler.JSCompiler;
 //import xpde.interpreter.JSInterpreter;
 
@@ -42,11 +43,15 @@ class JSMain
 	{
 		// initialize root packages
 		var rootPackage = new JavaPackage();
-		new ParsedCompilationUnit(rootPackage, ['xpde', 'core', 'PApplet'], new StringInput(PApplet.__javartti__));
+		var papplet = new ParsedCompilationUnit(['xpde', 'core', 'PApplet'], new StringInput(PApplet.__javartti__));
+		rootPackage.addCompilationUnit(papplet.packageDeclaration, papplet);
 		
 		// initialize main sketch
-		var sketch:CompilationUnit = new ParsedCompilationUnit(rootPackage, ['Sketch'], new StringInput(getSource()));
-		sketch.initialize();
+		var sketch = new ParsedCompilationUnit(['Sketch'], new StringInput(getSource()));
+		rootPackage.addCompilationUnit(sketch.packageDeclaration, sketch);
+		sketch.initialize(rootPackage);
+		
+		trace(sketch.types);
 		
 		// compile main sketch
 //		var interpreter:IInterpreter = new JSInterpreter();

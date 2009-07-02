@@ -1,8 +1,8 @@
+import xpde.Rtti;
+import xpde.JavaPackage;
 import xpde.parser.Scanner;
 import xpde.parser.AST;
-import xpde.Rtti;
 import haxe.io.Input;
-import haxe.io.StringInput;
 
 COMPILER PdeProgram
   
@@ -147,8 +147,10 @@ function compoundBrackets(type:DataType, bCount:Int):DataType {
 	if (bCount == 0)
 		return type;
 	switch (type) {
-	    case DTArray(type, dimensions): return DTArray(type, dimensions + bCount);
-	    default: return DTArray(type, bCount);
+	    case DTPrimitive(type): return DTPrimitiveArray(type, bCount);
+	    case DTPrimitiveArray(type, dimensions): return DTPrimitiveArray(type, dimensions + bCount);
+	    case DTReference(qualident): return DTReferenceArray(qualident, bCount);
+	    case DTReferenceArray(qualident, dimensions): return DTReferenceArray(qualident, dimensions + bCount);
 	}
 }
 
@@ -390,17 +392,16 @@ IGNORE lf + cr + tab
 PRODUCTIONS
 
 PdeProgram
-= { ImportDeclaration<.out importIdent:Array<String>.>	(. unit.context.mapImports(importIdent); .)
+= { ImportDeclaration<.out importIdent:Array<String>.>	(. context.imports.push(importIdent); .)
     }
   (IF (isJavaProgram()) TypeDeclaration { TypeDeclaration }
     |							(.
 							// default imports
-							unit.context.mapImports(['xpde', 'core', '*']);
-							unit.context.mapImports(['xpde', 'xml', '*']);
+							context.imports.push(['xpde', 'core', '*']);
+							context.imports.push(['xpde', 'xml', '*']);
 
 							// initialize active program
-							classContexts.unshift(new ClassContext(new EnumSet<Modifier>([MPublic]), unit.packageDeclaration.slice( -1)[0]));
-							trace(classContexts);
+							classContexts.unshift(new ClassContext(new EnumSet<Modifier>([MPublic]), context.packageDeclaration.slice( -1)[0]));
 							classContexts[0].extend = DTReference(['xpde', 'core', 'PApplet']);
 							.)
     { (IF (isLocalVarDecl(false)) LocalVariableDeclaration) ";" }
@@ -423,12 +424,12 @@ PdeProgram
 							// add setup method to class
 							var methodContext = new MethodContext(new EnumSet<Modifier>(), null, 'setup');
 							methodContext.body = blockContexts.shift().getBlockStatement();
-							classContexts[0].defineMethod(methodContext);
+							classContexts[0].methods.push(methodContext);
 							.)
       )							(.
 							// add class
-							unit.context.defineClass(classContexts.shift());
-							
+							context.types.push(classContexts.shift());
+
 							// validate script
 							if (la.kind != _EOF)
 								error("unexpected script termination");
@@ -438,20 +439,13 @@ PdeProgram
 
 /*---------------------------------------------------------------------------*/
 
-CompilationUnit						(. var packageDeclaration = []; .)
-= [ "package" Qualident<.out qualident:Array<String>.>	(. packageDeclaration = qualident; .)
+CompilationUnit
+= [ "package" Qualident<.out qualident:Array<String>.>	(. context.packageDeclaration = qualident; .)
     ';' ]
-  { ImportDeclaration<.out importIdent:Array<String>.>	(. unit.context.mapImports(importIdent); .)
+  { ImportDeclaration<.out importIdent:Array<String>.>	(. context.imports.push(importIdent); .)
     }
   { TypeDeclaration
-    }							(.
-							// verify package
-							if (packageDeclaration.join('.') != unit.packageDeclaration.join('.'))
-								error('invalid package declaration (expecting "' + unit.packageDeclaration.join('.') + '")');
-							// verify class file
-							if (la.kind != _EOF)
-								error("'class' or 'interface' expected");
-							.)
+    }							(. if (la.kind != _EOF) error("'class' or 'interface' expected"); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -481,16 +475,16 @@ QualifiedImport<.out importIdent:Array<String>.>
 /*---------------------------------------------------------------------------*/
 
 TypeDeclaration
-= ClassOrInterfaceDeclaration
+= ClassOrInterfaceDeclaration<out typeContext:TypeContext>	(. context.types.push(typeContext); .)
 | ";"
 .
 
 /*---------------------------------------------------------------------------*/
 
-ClassOrInterfaceDeclaration				(. var modifiers = new EnumSet<Modifier>(); .) 
+ClassOrInterfaceDeclaration<out typeContext:TypeContext>	(. var modifiers = new EnumSet<Modifier>(); .) 
 = { ClassModifier<modifiers> } 
-  ( ClassDeclaration<modifiers>
-  |  InterfaceDeclaration<modifiers>
+  ( ClassDeclaration<out arg:TypeContext, modifiers>		(. typeContext = arg; .)
+    | InterfaceDeclaration<out arg:TypeContext, modifiers>	(. typeContext = arg; .)
   )
 .
 
@@ -531,7 +525,7 @@ Modifier1<.modifiers:EnumSet<Modifier>.>
 /*---------------------------------------------------------------------------*/
 
 Type<out type:DataType>					/* TODO: qualifier MAY be a local class, an inner class, or a top-level import */
-= ( Qualident<.out qualident:Array<String>.>		(. type = DTLexReference(qualident); .)
+= ( Qualident<.out qualident:Array<String>.>		(. type = DTReference(qualident); .)
   | BasicType<out primitive:PrimitiveType>		(. type = DTPrimitive(primitive); .) 
   ) BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
 .
@@ -588,9 +582,9 @@ QualidentList<.out list:Array<Array<String>>.>		(. list = []; .)
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclarator<.context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType.>
-= ident							(. var identifier:String = t.val; .)
-  VariableDeclaratorRest<context, modifiers, type, identifier>
+VariableDeclarator<.out context:FieldContext, modifiers:EnumSet<Modifier>, type:DataType.>
+= ident							(. context = new FieldContext(modifiers, type, t.val); .)
+  VariableDeclaratorRest<context>
 .
 
 /*---------------------------------------------------------------------------*/
@@ -602,11 +596,10 @@ VariableDeclaratorId
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclaratorRest<.context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
-= BracketsOpt<out bCount:Int>				(. type = compoundBrackets(type, bCount); .)
-							(. var init:Expression = null; .)
-  [ "=" VariableInitializer<out expression:Expression>	(. init = expression; .)
-    ]							(. context.defineField({identifier: identifier, type: type, modifiers: modifiers}, init); .)
+VariableDeclaratorRest<context:FieldContext>
+= BracketsOpt<out bCount:Int>				(. context.type = compoundBrackets(context.type, bCount); .)
+  [ "=" VariableInitializer<out expression:Expression>	(. context.initialization = expression; .)
+    ]
 .
 
 /*---------------------------------------------------------------------------*/
@@ -620,14 +613,14 @@ VariableInitializer<out expression:Expression>
  *---------------------------- Classes --------------------------------------*
  *---------------------------------------------------------------------------*/
 
-ClassDeclaration<.modifiers:EnumSet<Modifier>.>
+ClassDeclaration<.out typeContext:TypeContext, modifiers:EnumSet<Modifier>.>
 = 							(. checkModifierPermission(modifiers, ModifierSet.classes); .)
   "class" ident						(. classContexts.unshift(new ClassContext(modifiers, t.val)); .)
   [ "extends" Type<out arg:DataType> 			(. classContexts[0].extend = arg; .)
     ]
   [ "implements" TypeList<.out arg:Array<DataType>.>	(. classContexts[0].implement = arg; .)
     ]
-  ClassBody						(. unit.context.defineClass(classContexts.shift()); .)
+  ClassBody						(. typeContext = classContexts.shift(); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -659,8 +652,8 @@ MemberDecl<.modifiers:EnumSet<Modifier>.>
 |							(. checkModifierPermission(modifiers, ModifierSet.methods); .)
   "void" ident						(. var identifier:String = t.val; .)
   VoidMethodDeclaratorRest<new MethodContext(modifiers, null, identifier)>
-| ClassDeclaration<modifiers>
-| InterfaceDeclaration<modifiers>
+| ClassDeclaration<out typeContext:TypeContext, modifiers>
+| InterfaceDeclaration<out typeContext:TypeContext, modifiers>
 .
 
 /*---------------------------------------------------------------------------*/
@@ -674,16 +667,18 @@ MethodOrFieldDecl<.modifiers:EnumSet<Modifier>.>
 
 MethodOrFieldRest<.modifiers:EnumSet<Modifier>, identifier:String, type:DataType.>
 =							(. checkModifierPermission(modifiers, ModifierSet.fields);  .) 
-  VariableDeclaratorsRest<classContexts[0], modifiers, type, identifier> ';'
+  VariableDeclaratorsRest<modifiers, type, identifier> ';'
 |							(. checkModifierPermission(modifiers, ModifierSet.methods); .)
   MethodDeclaratorRest<new MethodContext(modifiers, type, identifier)>
 .
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclaratorsRest<.context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
-= VariableDeclaratorRest<context, modifiers, type, identifier>
-  {',' VariableDeclarator<context, modifiers, type>}
+VariableDeclaratorsRest<.modifiers:EnumSet<Modifier>, type:DataType, identifier:String.>
+=									(. var context = new FieldContext(modifiers, type, identifier); .)
+  VariableDeclaratorRest<context>					(. classContexts[0].defineField(context); .)
+  {',' VariableDeclarator<out context:FieldContext, modifiers, type>	(. classContexts[0].defineField(context); .)
+    }
 .
 
 /*---------------------------------------------------------------------------*/
@@ -741,7 +736,7 @@ FormalParameters<.out parameters:Array<FormalParameter>.>	(. parameters = []; .)
  *---------------------------- Interfaces -----------------------------------*
  *---------------------------------------------------------------------------*/
 
-InterfaceDeclaration<.modifiers:EnumSet<Modifier>.>
+InterfaceDeclaration<.out typeContext:TypeContext, modifiers:EnumSet<Modifier>.>
 =							(. checkModifierPermission(modifiers, ModifierSet.interfaces); .)
   "interface" ident [ "extends" TypeList<.out extend:Array<DataType>.> ] InterfaceBody
 .
@@ -765,8 +760,8 @@ InterfaceMemberDecl<.modifiers:EnumSet<Modifier>.>
 = InterfaceMethodOrFieldDecl<modifiers>
 |							(. checkModifierPermission(modifiers, ModifierSet.interfaces); .)
   "void" ident VoidInterfaceMethodDeclaratorRest
-| ClassDeclaration<modifiers>
-| InterfaceDeclaration<modifiers>
+| ClassDeclaration<out typeContext:TypeContext, modifiers>
+| InterfaceDeclaration<out typeContext:TypeContext, modifiers>
 .
 
 /*---------------------------------------------------------------------------*/
@@ -833,7 +828,7 @@ Statement0<out statement:Statement>
   [ ForUpdate<.out updates:Array<Statement>.>		(. body = updates; .)
     ] ")"
   Statement0<out arg:Statement>				(. body = [arg].concat(body);
-							   blockContexts[0].pushStatement(SLoop(conditional, SBlock(new Hash<FieldDefinition>(), body), false));
+							   blockContexts[0].pushStatement(SLoop(conditional, SBlock(body), false));
 							   statement = blockContexts.shift().getBlockStatement(); .)
 | "while" ParExpression<out condition:Expression>
   Statement0<out body:Statement>			(. statement = SLoop(condition, body, false); .)
@@ -874,22 +869,27 @@ Block<out statement:Statement, parent:BlockContext>	(. blockContexts.unshift(new
 
 BlockStatement
 = IF(isLocalVarDecl(false)) LocalVariableDeclaration ";"
-| ClassOrInterfaceDeclaration				/*[TODO] support local classes... */
-| Statement0<out statement:Statement>			(. blockContexts[0].pushStatement(statement); .)
+| ClassOrInterfaceDeclaration<out typeContext:TypeContext>	/*[TODO] support local classes... */
+| Statement0<out statement:Statement>				(. blockContexts[0].pushStatement(statement); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
-LocalVariableDeclaration				(. var modifiers = new EnumSet<Modifier>(); .)
-= [ "final"						(. modifiers.add(MFinal); .)
-    ] Type<out type:DataType> VariableDeclarators<blockContexts[0], modifiers, type>
+LocalVariableDeclaration					(. var modifiers = new EnumSet<Modifier>(); .)
+= [ "final"							(. modifiers.add(MFinal); .)
+    ] Type<out type:DataType> VariableDeclarators<.out fields:Array<FieldContext>, modifiers, type.>
+								(.
+								for (field in fields)
+									blockContexts[0].defineVariable(field);
+								.)
 .
 
 /*---------------------------------------------------------------------------*/
 
-VariableDeclarators<.context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType.>
-= VariableDeclarator<context, modifiers, type>
-  { "," VariableDeclarator<context, modifiers, type> }
+VariableDeclarators<.out fields:Array<FieldContext>, modifiers:EnumSet<Modifier>, type:DataType.>
+= VariableDeclarator<out field:FieldContext, modifiers, type>		(. fields = [field]; .)
+  { "," VariableDeclarator<out field:FieldContext, modifiers, type>	(. fields.push(field); .)
+    }
 .
 
 /*---------------------------------------------------------------------------*/
@@ -1062,10 +1062,10 @@ Primary<out expression:Expression>
 | "new"	Creator<out arg:Expression> 			(. expression = arg; .)
 | ident							(. var identifier:String = t.val, base:Expression = null; .)
   { IF(dotAndIdent()) '.' ident				(. base = base != null ? EReference(identifier, base) :
-								blockContexts[0].isFieldDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier));
+								blockContexts[0].isVariableDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier));
 							   identifier = t.val; .)
     }							(. expression = base != null ? EReference(identifier, base) :
-								blockContexts[0].isFieldDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier)); .)
+								blockContexts[0].isVariableDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier)); .)
   [ IF(isIdentSuffix()) IdentifierSuffix<out arg:Expression, identifier, base> 	(. expression = arg; .)
     ]
 | BasicType<out type:PrimitiveType>

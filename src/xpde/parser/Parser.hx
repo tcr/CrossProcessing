@@ -1,10 +1,10 @@
 package xpde.parser;
 
+import xpde.Rtti;
+import xpde.JavaPackage;
 import xpde.parser.Scanner;
 import xpde.parser.AST;
-import xpde.Rtti;
 import haxe.io.Input;
-import haxe.io.StringInput;
 
 class Parser
 {
@@ -199,8 +199,10 @@ function compoundBrackets(type:DataType, bCount:Int):DataType {
 	if (bCount == 0)
 		return type;
 	switch (type) {
-	    case DTArray(type, dimensions): return DTArray(type, dimensions + bCount);
-	    default: return DTArray(type, bCount);
+	    case DTPrimitive(type): return DTPrimitiveArray(type, bCount);
+	    case DTPrimitiveArray(type, dimensions): return DTPrimitiveArray(type, dimensions + bCount);
+	    case DTReference(qualident): return DTReferenceArray(qualident, bCount);
+	    case DTReferenceArray(qualident, dimensions): return DTReferenceArray(qualident, dimensions + bCount);
 	}
 }
 
@@ -335,12 +337,12 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 
 
 	
-	public var unit:ParsedCompilationUnit;
+	public var context:CompilationUnitContext;
 
-	public function new(scanner:Scanner, unit:ParsedCompilationUnit) {
+	public function new(scanner:Scanner, context:CompilationUnitContext) {
 		errDist = minErrDist;
 		this.scanner = scanner;
-		this.unit = unit;
+		this.context = context;
 		errors = new Errors();
 		
 		// parsing contexts
@@ -404,7 +406,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 	function PdeProgram():Void {
 		while (la.kind == 14) {
 			var importIdent:Array<String> = ImportDeclaration();
-			unit.context.mapImports(importIdent); 
+			context.imports.push(importIdent); 
 		}
 		if (isJavaProgram()) {
 			TypeDeclaration();
@@ -412,11 +414,10 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 				TypeDeclaration();
 			}
 		} else if (StartOf(2)) {
-			unit.context.mapImports(['xpde', 'core', '*']);
-			unit.context.mapImports(['xpde', 'xml', '*']);
+			context.imports.push(['xpde', 'core', '*']);
+			context.imports.push(['xpde', 'xml', '*']);
 					// initialize active program
-			classContexts.unshift(new ClassContext(new EnumSet<Modifier>([MPublic]), unit.packageDeclaration.slice( -1)[0]));
-			trace(classContexts);
+			classContexts.unshift(new ClassContext(new EnumSet<Modifier>([MPublic]), context.packageDeclaration.slice( -1)[0]));
 			classContexts[0].extend = DTReference(['xpde', 'core', 'PApplet']);
 			
 			while (isLocalVarDecl(false)) {
@@ -437,12 +438,11 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 				}
 				var methodContext = new MethodContext(new EnumSet<Modifier>(), null, 'setup');
 				methodContext.body = blockContexts.shift().getBlockStatement();
-				classContexts[0].defineMethod(methodContext);
+				classContexts[0].methods.push(methodContext);
 				
 			} else SynErr(102);
-			unit.context.defineClass(classContexts.shift());
-			
-			// validate script
+			context.types.push(classContexts.shift());
+				// validate script
 			if (la.kind != _EOF)
 				error("unexpected script termination");
 			
@@ -462,7 +462,8 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 
 	function TypeDeclaration():Void {
 		if (StartOf(5)) {
-			ClassOrInterfaceDeclaration();
+			var typeContext:TypeContext = ClassOrInterfaceDeclaration();
+			context.types.push(typeContext); 
 		} else if (la.kind == 41) {
 			Get();
 		} else SynErr(104);
@@ -475,7 +476,10 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			modifiers.add(MFinal); 
 		}
 		var type:DataType = Type();
-		VariableDeclarators(blockContexts[0], modifiers, type);
+		var fields:Array<FieldContext> = VariableDeclarators(modifiers, type);
+		for (field in fields)
+		blockContexts[0].defineVariable(field);
+		
 	}
 
 	function ClassBodyDeclaration():Void {
@@ -507,7 +511,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			LocalVariableDeclaration();
 			Expect(41);
 		} else if (StartOf(5)) {
-			ClassOrInterfaceDeclaration();
+			var typeContext:TypeContext = ClassOrInterfaceDeclaration();
 		} else if (StartOf(10)) {
 			var statement:Statement = Statement0();
 			blockContexts[0].pushStatement(statement); 
@@ -515,26 +519,20 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 	}
 
 	function CompilationUnit():Void {
-		var packageDeclaration = []; 
 		if (la.kind == 42) {
 			Get();
 			var qualident:Array<String> = Qualident();
-			packageDeclaration = qualident; 
+			context.packageDeclaration = qualident; 
 			Expect(41);
 		}
 		while (la.kind == 14) {
 			var importIdent:Array<String> = ImportDeclaration();
-			unit.context.mapImports(importIdent); 
+			context.imports.push(importIdent); 
 		}
 		while (StartOf(1)) {
 			TypeDeclaration();
 		}
-		if (packageDeclaration.join('.') != unit.packageDeclaration.join('.'))
-		error('invalid package declaration (expecting "' + unit.packageDeclaration.join('.') + '")');
-		// verify class file
-		if (la.kind != _EOF)
-			error("'class' or 'interface' expected");
-		
+		if (la.kind != _EOF) error("'class' or 'interface' expected"); 
 	}
 
 	function Qualident():Array<String> {
@@ -567,16 +565,20 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		return importIdent;
 	}
 
-	function ClassOrInterfaceDeclaration():Void {
+	function ClassOrInterfaceDeclaration():TypeContext {
+		var typeContext:TypeContext = null;
 		var modifiers = new EnumSet<Modifier>(); 
 		while (StartOf(11)) {
 			ClassModifier(modifiers);
 		}
 		if (la.kind == 9) {
-			ClassDeclaration(modifiers);
+			var arg:TypeContext = ClassDeclaration(modifiers);
+			typeContext = arg; 
 		} else if (la.kind == 56) {
-			InterfaceDeclaration(modifiers);
+			var arg:TypeContext = InterfaceDeclaration(modifiers);
+			typeContext = arg; 
 		} else SynErr(109);
+		return typeContext;
 	}
 
 	function ClassModifier(modifiers:EnumSet<Modifier>):Void {
@@ -606,7 +608,8 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		}
 	}
 
-	function ClassDeclaration(modifiers:EnumSet<Modifier>):Void {
+	function ClassDeclaration(modifiers:EnumSet<Modifier>):TypeContext {
+		var typeContext:TypeContext = null;
 		checkModifierPermission(modifiers, ModifierSet.classes); 
 		Expect(9);
 		Expect(1);
@@ -622,10 +625,12 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			classContexts[0].implement = arg; 
 		}
 		ClassBody();
-		unit.context.defineClass(classContexts.shift()); 
+		typeContext = classContexts.shift(); 
+		return typeContext;
 	}
 
-	function InterfaceDeclaration(modifiers:EnumSet<Modifier>):Void {
+	function InterfaceDeclaration(modifiers:EnumSet<Modifier>):TypeContext {
+		var typeContext:TypeContext = null;
 		checkModifierPermission(modifiers, ModifierSet.interfaces); 
 		Expect(56);
 		Expect(1);
@@ -634,6 +639,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			var extend:Array<DataType> = TypeList();
 		}
 		InterfaceBody();
+		return typeContext;
 	}
 
 	function Modifier0(modifiers:EnumSet<Modifier>):Void {
@@ -685,7 +691,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		var type:DataType = null;
 		if (la.kind == 1) {
 			var qualident:Array<String> = Qualident();
-			type = DTLexReference(qualident); 
+			type = DTReference(qualident); 
 		} else if (StartOf(12)) {
 			var primitive:PrimitiveType = BasicType();
 			type = DTPrimitive(primitive); 
@@ -780,22 +786,22 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		return list;
 	}
 
-	function VariableDeclarator(context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType):Void {
+	function VariableDeclarator(modifiers:EnumSet<Modifier>, type:DataType):FieldContext {
+		var context:FieldContext = null;
 		Expect(1);
-		var identifier:String = t.val; 
-		VariableDeclaratorRest(context, modifiers, type, identifier);
+		context = new FieldContext(modifiers, type, t.val); 
+		VariableDeclaratorRest(context);
+		return context;
 	}
 
-	function VariableDeclaratorRest(context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType, identifier:String):Void {
+	function VariableDeclaratorRest(context:FieldContext):Void {
 		var bCount:Int = BracketsOpt();
-		type = compoundBrackets(type, bCount); 
-		var init:Expression = null; 
+		context.type = compoundBrackets(context.type, bCount); 
 		if (la.kind == 52) {
 			Get();
 			var expression:Expression = VariableInitializer();
-			init = expression; 
+			context.initialization = expression; 
 		}
-		context.defineField({identifier: identifier, type: type, modifiers: modifiers}, init); 
 	}
 
 	function VariableInitializer():Expression {
@@ -891,9 +897,9 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			var identifier:String = t.val; 
 			VoidMethodDeclaratorRest(new MethodContext(modifiers, null, identifier));
 		} else if (la.kind == 9) {
-			ClassDeclaration(modifiers);
+			var typeContext:TypeContext = ClassDeclaration(modifiers);
 		} else if (la.kind == 56) {
-			InterfaceDeclaration(modifiers);
+			var typeContext:TypeContext = InterfaceDeclaration(modifiers);
 		} else SynErr(116);
 	}
 
@@ -937,7 +943,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 	function MethodOrFieldRest(modifiers:EnumSet<Modifier>, identifier:String, type:DataType):Void {
 		if (StartOf(17)) {
 			checkModifierPermission(modifiers, ModifierSet.fields);  
-			VariableDeclaratorsRest(classContexts[0], modifiers, type, identifier);
+			VariableDeclaratorsRest(modifiers, type, identifier);
 			Expect(41);
 		} else if (la.kind == 33) {
 			checkModifierPermission(modifiers, ModifierSet.methods); 
@@ -945,11 +951,14 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		} else SynErr(118);
 	}
 
-	function VariableDeclaratorsRest(context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType, identifier:String):Void {
-		VariableDeclaratorRest(context, modifiers, type, identifier);
+	function VariableDeclaratorsRest(modifiers:EnumSet<Modifier>, type:DataType, identifier:String):Void {
+		var context = new FieldContext(modifiers, type, identifier); 
+		VariableDeclaratorRest(context);
+		classContexts[0].defineField(context); 
 		while (la.kind == 27) {
 			Get();
-			VariableDeclarator(context, modifiers, type);
+			var context:FieldContext = VariableDeclarator(modifiers, type);
+			classContexts[0].defineField(context); 
 		}
 	}
 
@@ -1017,9 +1026,9 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			Expect(1);
 			VoidInterfaceMethodDeclaratorRest();
 		} else if (la.kind == 9) {
-			ClassDeclaration(modifiers);
+			var typeContext:TypeContext = ClassDeclaration(modifiers);
 		} else if (la.kind == 56) {
-			InterfaceDeclaration(modifiers);
+			var typeContext:TypeContext = InterfaceDeclaration(modifiers);
 		} else SynErr(121);
 	}
 
@@ -1116,7 +1125,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			Expect(39);
 			var arg:Statement = Statement0();
 			body = [arg].concat(body);
-			blockContexts[0].pushStatement(SLoop(conditional, SBlock(new Hash<FieldDefinition>(), body), false));
+			blockContexts[0].pushStatement(SLoop(conditional, SBlock(body), false));
 			statement = blockContexts.shift().getBlockStatement(); 
 		} else if (la.kind == 60) {
 			Get();
@@ -1262,12 +1271,16 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		return statement;
 	}
 
-	function VariableDeclarators(context:FieldDefinable, modifiers:EnumSet<Modifier>, type:DataType):Void {
-		VariableDeclarator(context, modifiers, type);
+	function VariableDeclarators(modifiers:EnumSet<Modifier>, type:DataType):Array<FieldContext> {
+		var fields:Array<FieldContext> = null;
+		var field:FieldContext = VariableDeclarator(modifiers, type);
+		fields = [field]; 
 		while (la.kind == 27) {
 			Get();
-			VariableDeclarator(context, modifiers, type);
+			var field:FieldContext = VariableDeclarator(modifiers, type);
+			fields.push(field); 
 		}
+		return fields;
 	}
 
 	function MoreStatementExpressions():Array<Statement> {
@@ -1568,11 +1581,11 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 				Expect(29);
 				Expect(1);
 				base = base != null ? EReference(identifier, base) :
-				blockContexts[0].isFieldDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier));
+				blockContexts[0].isVariableDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier));
 				  identifier = t.val; 
 			}
 			expression = base != null ? EReference(identifier, base) :
-			blockContexts[0].isFieldDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier)); 
+			blockContexts[0].isVariableDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier)); 
 			if (isIdentSuffix()) {
 				var arg:Expression = IdentifierSuffix(identifier, base);
 				expression = arg; 
@@ -1786,9 +1799,6 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		PdeProgram();
 
 		Expect(0);
-		
-		// second pass
-		(new LexicalResolver()).resolve(unit);
 	}
 
 	inline static var T:Bool = true;
@@ -2083,180 +2093,93 @@ class OperationBuilder
 	}
 }
 
-/*-------------------- Packages ----------------------------------*/
-
-class JavaPackage implements JavaPackageItem
-{
-	public var contents(default, null):Hash<JavaPackageItem>;
-	
-	public function new()
-	{
-		contents = new Hash<JavaPackageItem>();
-	}
-	
-	public function addCompilationUnit(qualident:Qualident, unit:CompilationUnit)
-	{
-		if (qualident.length == 1)
-			if (contents.exists(qualident[0]))
-				throw "redefinition of " + qualident.join('.');
-			else
-				contents.set(qualident[0], unit);
-		else {
-			if (contents.exists(qualident[0]) && !Std.is(contents.get(qualident[0]), JavaPackage))
-				throw qualident.join('.') + " is not a package";
-			else if (!contents.exists(qualident[0]))
-				contents.set(qualident[0], new JavaPackage());
-			(cast(contents.get(qualident[0]), JavaPackage)).addCompilationUnit(qualident.slice(1), unit);
-		}
-	}
-	
-	public function getByQualident(qualident:Qualident):JavaPackageItem
-	{
-		try {
-			if (!contents.exists(qualident[0]))
-				throw false;
-			if (qualident.length == 1)
-				return contents.get(qualident[0]);
-			else
-				return cast(contents.get(qualident[0]), JavaPackage).getByQualident(qualident.slice(1));
-			
-		} catch (e:Dynamic)
-		{
-			throw "invalid qualified reference " + qualident.join('.');
-		}
-	}
-}
-
-interface JavaPackageItem { }
-
-interface CompilationUnit implements JavaPackageItem
-{
-	var packageDeclaration(default, null):Qualident;
-	var dependencies(default, null):Array<Qualident>;
-	function initialize():Void;
-//	function compile(compiler:ICompiler):Void;
-}
+/*-------------------- compilation unit parsing -----------------------------------*/
 
 class ParsedCompilationUnit implements CompilationUnit
 {	
 	public var packageDeclaration(default, null):Qualident;
 	public var dependencies(default, null):Array<Qualident>;
+	public var types(default, null):Array<TypeDefinition>;
 	
-	public var context(default, null):CompilationUnitContext;	
 	private var source:Input;
-	private var initialized:Bool;
 	
-	public function new(rootPackage:JavaPackage, packageDeclaration:Qualident, source:Input)
+	public function new(packageDeclaration:Qualident, source:Input)
 	{
-		// add compilation unit to package
+		// public
 		this.packageDeclaration = packageDeclaration;
-		rootPackage.addCompilationUnit(packageDeclaration, this);
 		dependencies = [];
+		types = [];
 		
-		context = new CompilationUnitContext(rootPackage, this);
-		
-		// private vars
+		// private
 		this.source = source;
 		initialized = false;
 	}
-
-	public function initialize()
+	
+	private var initialized:Bool;
+	
+	public function initialize(rootPackage:JavaPackage)
 	{
-		if (initialized)
-			return;
+		// initialize once
+		if (initialized) return;
+		initialized = true;
 		
+		// create parsing context
+		var context = new CompilationUnitContext(packageDeclaration);
 		// scan and compile
 		var scanner:Scanner = new Scanner(source);
-		var parser:Parser = new Parser(scanner, this);
+		var parser:Parser = new Parser(scanner, context);
 		parser.Parse();
 		
-//		trace(context.definitions);
-			
-		initialized = true;
+		// validate package declaration
+		if (packageDeclaration.join('.') != context.packageDeclaration.join('.'))
+			throw "incompatible package declaration " + context.packageDeclaration.join('.');
+		
+		// parser second pass
+		var resolver = new LexicalResolver(this);
+		resolver.resolve(context, rootPackage);
 	}
 }
 
-/*-------------------- block scope ----------------------------------*/
+/*-------------------- parsing contexts ----------------------------------*/
 
 class CompilationUnitContext
 {
-	private var unit:CompilationUnit;
-	private var rootPackage:JavaPackage;
+	public var packageDeclaration:Array<String>;
+	public var imports:Array<Array<String>>;
+	public var types:Array<TypeContext>;
 	
-	public function new(rootPackage:JavaPackage, unit:CompilationUnit)
+	public function new(packageDeclaration:Array<String>)
 	{
-		this.unit = unit;
-		this.rootPackage = rootPackage;
-		
-		definitions = new Hash<TopLevelDefinition>();
-		importMap = new Hash<Qualident>();
-	}
-	
-	public var definitions:Hash<TopLevelDefinition>;
-	
-	private function define(identifier:String, definition:TopLevelDefinition)
-	{
-		if (definitions.exists(identifier))
-			throw 'redefinition of top-level declaration "' + identifier + '"';
-		definitions.set(identifier, definition);
-	}
-	
-	public function defineClass(definition:ClassDefinition)
-	{
-		define(definition.identifier, DClass(definition));
-	}
-	
-/*	public function defineInterface(interface:InterfaceDefinition)
-	{
-		define(definition.identifier, DInterface(definition));
-	}*/
-	
-	/* imports */
-	
-	private var importMap:Hash<Qualident>;
-	
-	public function mapImports(ident:Qualident)
-	{
-		// check ident type
-		if (ident[ident.length - 1] != '*')
-		{
-			// check that the compilation unit exists
-			if (!Std.is(rootPackage.getByQualident(ident.slice(0, -1)), CompilationUnit))
-				return;
-			importMap.set(ident[ident.length - 1], ident);
-		}
-		else
-		{
-			// iterate namespace
-			try {
-				var importPackage = cast(rootPackage.getByQualident(ident.slice(0, -1)), JavaPackage);
-				for (item in importPackage.contents.keys())
-					if (Std.is(importPackage.contents.get(item), CompilationUnit))
-						importMap.set(item, ident.slice(0, -1).concat([item]));
-			}
-			catch (e:Dynamic) { }
-		}
+		this.packageDeclaration = packageDeclaration;
+		imports = [];
+		types = [];
 	}
 }
 
-interface FieldDefinable
-{
-	function defineField(definition:FieldDefinition, ?init:Expression):Void;
+interface TypeContext {
+	public var identifier:String;
+	public var extend:DataType;
+	public var implement:Array<DataType>;
 }
 
-class ClassContext implements FieldDefinable
+class ClassContext implements TypeContext
 {
 	// typedef: ClassDefinition
 	public var identifier:String;
 	public var modifiers:EnumSet<Modifier>;
 	public var extend:DataType;
 	public var implement:Array<DataType>;
-	public var fields:Hash<FieldDefinition>;
-	public var methods:Hash<MethodDefinition>;
+	public var memberTypes:Hash<Qualident>;
+	public var fields:Hash<FieldContext>;
+	public var methods:Array<MethodContext>; // array, because we can't resolve similar types until second pass
+//[TODO] can we resolve similar types before second pass!?	
 
 	// constructors
 	public var staticConstructor:BlockContext;
 	public var objectConstructor:BlockContext;
+	
+	// anonymous class uniqid
+	public var anonClassID:Int;
 
 	public function new(modifiers:EnumSet<Modifier>, identifier:String)
 	{
@@ -2264,72 +2187,45 @@ class ClassContext implements FieldDefinable
 		this.modifiers = modifiers;
 		this.identifier = identifier;	
 		implement = [];
-		fields = new Hash<FieldDefinition>();
-		methods = new Hash<MethodDefinition>();
+		fields = new Hash<FieldContext>();
+		memberTypes = new Hash<Qualident>();
+		methods = [];
 		
 		// constructors
 		staticConstructor = new BlockContext();
 		objectConstructor = new BlockContext();
-	}
-	
-	public function defineField(definition:FieldDefinition, ?init:Expression)
-	{
-		if (fields.exists(definition.identifier))
-			throw 'redeclaration of field "' + definition.identifier + '"';
-		fields.set(definition.identifier, definition);
-		if (init != null)
-			definition.modifiers.contains(MStatic) ?
-			    staticConstructor.pushStatement(SExpression(EAssignment(definition.identifier, ELexExpression(LReference(this.identifier)), init))) :
-			    objectConstructor.pushStatement(SExpression(EAssignment(definition.identifier, EThisReference, init)));
-	}
-	
-	public function defineMethod(definition:MethodDefinition)
-	{
-//[TODO] hash by method signature!
-//		if (methodDefinitions.exists(definition.identifier))
-//			throw 'redefinition of top-level declaration "' + identifier + '"';
-		methods.set(definition.identifier, definition);
-	}
-}
-
-class BlockContext implements FieldDefinable
-{
-	public var statements(default, null):Array<Statement>;
-	
-	public function pushStatement(statement:Statement)
-	{
-		statements.push(statement);
-	}
-	
-	private var fieldDefinitions(default, null):Hash<FieldDefinition>;
-	
-	public function defineField(definition:FieldDefinition, ?init:Expression)
-	{
-		if (isFieldDefined(definition.identifier))
-			throw 'redeclaration of variable "' + definition.identifier + '" in block scope';
-		fieldDefinitions.set(definition.identifier, definition);
-		if (init != null)
-			pushStatement(SExpression(ELocalAssignment(definition.identifier, init)));
-	}
-	
-	public function isFieldDefined(identifier:String):Bool
-	{
-		return fieldDefinitions.exists(identifier) || (parent != null ? parent.isFieldDefined(identifier) : false);
-	}
-	
-	private var parent:BlockContext;
-	
-	public function new(?parent:BlockContext)
-	{
-		this.parent = parent;
 		
-		statements = [];
-		fieldDefinitions = new Hash<FieldDefinition>();
+		// anonymous class ID
+		anonClassID = 0;
 	}
 	
-	public function getBlockStatement():Statement
+	public function defineField(field:FieldContext)
 	{
-		return SBlock(fieldDefinitions, statements);
+		// prevent redefinition
+		if (fields.exists(field.identifier))
+			throw "redeclaration of field " + field.identifier + " in class " + this.identifier;
+		
+		// add definition
+		fields.set(field.identifier, field);
+		if (field.initialization != null)
+			field.modifiers.contains(MStatic) ?
+			    staticConstructor.pushStatement(SExpression(EAssignment(field.identifier, ELexExpression(LReference(identifier)), field.initialization))) :
+			    objectConstructor.pushStatement(SExpression(EAssignment(field.identifier, EThisReference, field.initialization)));
+	}
+	
+	public function defineMethod(method:MethodContext)
+	{
+		// push definition
+		//[NOTE] check for colliding definitions on second pass
+		methods.push(method);
+	}
+	
+	public function defineMemberType(identifier:String, qualident:Qualident)
+	{
+		// prevent redefinition
+		if (memberTypes.exists(identifier))
+			throw "redeclaration of member type " + identifier + " in class " + this.identifier;
+		memberTypes.set(identifier, qualident);
 	}
 }
 
@@ -2356,27 +2252,230 @@ class MethodContext
 	}
 }
 
+class FieldContext
+{
+	public var identifier:String;
+	public var type:Null<DataType>;
+	public var modifiers:EnumSet<Modifier>;
+	public var initialization:Expression;
+	
+	public function new(modifiers:EnumSet<Modifier>, type:Null<DataType>, identifier:String)
+	{
+		// definition defaults
+		this.modifiers = modifiers;
+		this.type = type;
+		this.identifier = identifier;
+	}
+}
+
+class BlockContext
+{
+	public var statements(default, null):Array<Statement>;
+	public var variables:Hash<FieldContext>;
+	public var types:Hash<Qualident>;
+	
+	public function pushStatement(statement:Statement)
+	{
+		statements.push(statement);
+	}
+	
+	private var parent:BlockContext;
+	
+	public function new(?parent:BlockContext)
+	{
+		this.parent = parent;
+		statements = [];
+		variables = new Hash<FieldContext>();
+		types = new Hash<Qualident>();
+	}
+	
+	public function getBlockStatement():Statement
+	{
+		return SBlock(statements);
+	}
+	
+	public function isVariableDefined(identifier:String):Bool
+	{
+		return variables.exists(identifier) || (parent != null ? parent.isVariableDefined(identifier) : false);
+	}
+	
+	public function defineVariable(variable:FieldContext)
+	{
+		// prevent redefinition
+		if (isVariableDefined(variable.identifier))
+			throw "redeclaration of variable " + variable.identifier + " in block scope";
+		
+		// add definition
+		variables.set(variable.identifier, variable);
+		// add definition
+		pushStatement(SDefinition(DVariable(variable.identifier, variable.modifiers, variable.type)));
+		if (variable.initialization != null)
+			pushStatement(SExpression(ELocalAssignment(variable.identifier, variable.initialization)));
+	}
+}
+
 /*-------------------- lexical resolution (second pass) ----------------------------------*/
 
 class LexicalResolver
 {
 	private var unit:ParsedCompilationUnit;
-	private var classContext:ClassContext;
 	
-	public function new()
-	{
-	}
-	
-	public function resolve(unit:ParsedCompilationUnit)
+	public function new(unit:ParsedCompilationUnit)
 	{
 		this.unit = unit;
-		for (definition in unit.context.definitions)
-			switch (definition) {
-			    case DClass(definition):
-				resolveClass(cast(definition, ClassContext));
-			}
+		qualifiers = new Hash<Qualident>();
+		imports = new Hash<Qualident>();
 	}
 	
+	/* imports */
+	
+	private var qualifiers:Hash<Qualident>;
+	
+	function qualifyDataType(?type:DataType):DataType
+	{
+		if (type == null)
+			return null;
+		return switch (type) {
+		    case DTPrimitive(_):
+			type;
+		    case DTPrimitiveArray(_, _):
+			type;
+		    case DTReference(qualident):
+			DTReference(qualifyReference(qualident));
+		    case DTReferenceArray(qualident, dimensions):
+			DTReferenceArray(qualifyReference(qualident), dimensions);
+		}
+	}
+	
+	function qualifyReference(qualident:Qualident):Qualident
+	{
+//[TODO] ensure this order is correct
+		// check qualifier map
+		if (qualifiers.exists(qualident[0]))
+			return qualifiers.get(qualident[0]).concat(qualident.slice(1));
+			
+		// check potenital imports
+		if (imports.exists(qualident[0]))
+		{
+			// add dependency
+			unit.dependencies.push(imports.get(qualident[0]));
+			// add lookup
+			qualifiers.set(qualident[0], imports.get(qualident[0]));
+			// return qualifier
+			return imports.get(qualident[0]);
+		}
+		
+		// ensure type exists (or throw exception)
+		rootPackage.getByQualident(qualident);
+		// add dependency
+		unit.dependencies.push(qualident);
+		// return qualifier
+		return qualident;
+	}
+	
+	private var imports:Hash<Qualident>;
+	
+	function loadImports()
+	{
+		for (ident in context.imports)
+		{
+			// check ident type
+			if (ident[ident.length - 1] != '*')
+			{
+				// check that the compilation unit exists
+				if (!Std.is(rootPackage.getByQualident(ident.slice(0, -1)), CompilationUnit))
+					return;
+				imports.set(ident[ident.length - 1], ident);
+			}
+			else
+			{
+				// iterate namespace
+				try {
+					var importPackage = cast(rootPackage.getByQualident(ident.slice(0, -1)), JavaPackage);
+					for (item in importPackage.contents.keys())
+						if (Std.is(importPackage.contents.get(item), CompilationUnit))
+							imports.set(item, ident.slice(0, -1).concat([item]));
+				}
+				catch (e:Dynamic) { }
+			}
+		}
+	}
+	
+	/* resolvers */
+	
+	private var context:CompilationUnitContext;
+	private var rootPackage:JavaPackage;
+	
+	public function resolve(context:CompilationUnitContext, rootPackage:JavaPackage)
+	{
+		// private variables
+		this.context = context;
+		this.rootPackage = rootPackage;
+		
+		// add top-level type qualifiers
+		for (type in context.types)
+			qualifiers.set(type.identifier, context.packageDeclaration.concat([type.identifier]));
+		// generate definitions
+		for (type in context.types)
+			if (Std.is(type, ClassContext))
+				unit.types.push(TClass(generateClassDefinition(cast(type, ClassContext))));
+	}
+	
+	function generateClassDefinition(type:ClassContext):ClassDefinition 
+	{
+		var definition = {
+		    identifier: type.identifier,
+		    modifiers: type.modifiers,
+		    fields: new Hash<FieldDefinition>(),
+		    methods: new Hash<MethodDefinition>(),
+		    extend: qualifyDataType(type.extend),
+		    implement: [],
+		};
+		if (type.implement != null)
+			for (dt in type.implement)
+				definition.implement.push(qualifyDataType(dt));
+		for (field in type.fields)
+			definition.fields.set(field.identifier, generateFieldDefinition(field));
+		for (method in type.methods)
+			definition.methods.set(method.identifier, generateMethodDefinition(method));
+		return definition;
+	}
+	
+	function generateFieldDefinition(field:FieldContext):FieldDefinition
+	{
+		return {
+		    identifier: field.identifier,
+		    modifiers: field.modifiers,
+		    type: qualifyDataType(field.type)
+		};
+	}
+	
+	function generateMethodDefinition(method:MethodContext):MethodDefinition
+	{
+		var definition = {
+		    identifier: method.identifier,
+		    type: qualifyDataType(method.type),
+		    modifiers: method.modifiers,
+		    throwsList: [],
+		    parameters: [],
+		};
+		if (method.throwsList != null)
+			for (qualident in method.throwsList)
+				definition.throwsList.push(qualifyReference(qualident));
+		for (param in method.parameters)
+			definition.parameters.push(generateFormalParameter(param));
+		return definition;
+	}
+	
+	function generateFormalParameter(param:FormalParameter)
+	{
+		return {
+		    identifier: param.identifier,
+		    type: qualifyDataType(param.type),
+		    modifiers: param.modifiers
+		};
+	}
+/*
 	function resolveClass(definition:ClassContext)
 	{
 		classContext = definition;
@@ -2539,7 +2638,7 @@ class LexicalResolver
 /*	public function resolveLexicalType(identifier:String):DataType
 	{
 		
-	}*/
+	}
 	
 	public function resolveLexicalReference(identifier:String):Expression
 	{
