@@ -402,7 +402,7 @@ PdeProgram
 
 							// initialize active program
 							classContexts.unshift(new ClassContext(new EnumSet<Modifier>([MPublic]), context.packageDeclaration.slice( -1)[0]));
-							classContexts[0].extend = DTReference(['xpde', 'core', 'PApplet']);
+							classContexts[0].extend = ['xpde', 'core', 'PApplet'];
 							.)
     { (IF (isLocalVarDecl(false)) LocalVariableDeclaration) ";" }
     ( IF (isActiveProgram())
@@ -551,13 +551,13 @@ BracketsOpt<out bCount:Int>				(. bCount = 0; .)
 .
 
 /*---------------------------------------------------------------------------*/
-
-TypeList<.out list:Array<DataType>.>			(. list = []; .)	
-= Type<out type:DataType>				(. list.push(type); .)
-  { "," Type<out type:DataType>				(. list.push(type); .)
+/*
+QualidentList<.out list:Array<Array<String>>.>		(. list = []; .)	
+= Qualident<out arg:Array<String>.>				(. list.push(type); .)
+  { "," Qualident<out type:DataType>				(. list.push(type); .)
     }
 .
-
+*/
 /*---------------------------------------------------------------------------*/
 
 /*
@@ -616,9 +616,9 @@ VariableInitializer<out expression:Expression>
 ClassDeclaration<.out typeContext:TypeContext, modifiers:EnumSet<Modifier>.>
 = 							(. checkModifierPermission(modifiers, ModifierSet.classes); .)
   "class" ident						(. classContexts.unshift(new ClassContext(modifiers, t.val)); .)
-  [ "extends" Type<out arg:DataType> 			(. classContexts[0].extend = arg; .)
+  [ "extends" Qualident<.out arg:Array<String>.>	(. classContexts[0].extend = arg; .)
     ]
-  [ "implements" TypeList<.out arg:Array<DataType>.>	(. classContexts[0].implement = arg; .)
+  [ "implements" QualidentList<.out arg:Array<Array<String>>.>	(. classContexts[0].implement = arg; .)
     ]
   ClassBody						(. typeContext = classContexts.shift(); .)
 .
@@ -738,7 +738,7 @@ FormalParameters<.out parameters:Array<FormalParameter>.>	(. parameters = []; .)
 
 InterfaceDeclaration<.out typeContext:TypeContext, modifiers:EnumSet<Modifier>.>
 =							(. checkModifierPermission(modifiers, ModifierSet.interfaces); .)
-  "interface" ident [ "extends" TypeList<.out extend:Array<DataType>.> ] InterfaceBody
+  "interface" ident [ "extends" QualidentList<.out extend:Array<Array<String>>.> ] InterfaceBody
 .
 
 /*---------------------------------------------------------------------------*/
