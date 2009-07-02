@@ -247,7 +247,7 @@ class ParsedCompilationUnit implements CompilationUnit
 {	
 	public var packageDeclaration(default, null):Qualident;
 	public var dependencies(default, null):Array<Qualident>;
-	public var types(default, null):Array<TypeDefinition>;
+	public var types(default, null):Hash<TypeDefinition>;
 	
 	private var source:Input;
 	
@@ -256,7 +256,7 @@ class ParsedCompilationUnit implements CompilationUnit
 		// public
 		this.packageDeclaration = packageDeclaration;
 		dependencies = [];
-		types = [];
+		types = new Hash<TypeDefinition>();
 		
 		// private
 		this.source = source;
@@ -264,6 +264,7 @@ class ParsedCompilationUnit implements CompilationUnit
 	}
 	
 	private var initialized:Bool;
+	public var ast:Hash<Statement>;
 	
 	public function initialize(rootPackage:JavaPackage)
 	{
@@ -285,6 +286,9 @@ class ParsedCompilationUnit implements CompilationUnit
 		// parser second pass
 		var resolver = new LexicalResolver(this);
 		resolver.resolve(context, rootPackage);
+		
+		// save passed AST
+		ast = context.ast;
 	}
 }
 
@@ -295,28 +299,33 @@ class CompilationUnitContext
 	public var packageDeclaration:Array<String>;
 	public var imports:Array<Array<String>>;
 	public var types:Array<TypeContext>;
+	public var ast:Hash<Statement>;
 	
 	public function new(packageDeclaration:Array<String>)
 	{
 		this.packageDeclaration = packageDeclaration;
 		imports = [];
 		types = [];
+		ast = new Hash<Statement>();
 	}
 }
 
 interface TypeContext {
 	public var identifier:String;
-	public var extend:DataType;
-	public var implement:Array<DataType>;
+	public var extend:Qualident;
+	public var implement:Array<Qualident>;
 }
 
 class ClassContext implements TypeContext
 {
-	// typedef: ClassDefinition
+	// reference
+	public var definition:ClassDefinition;
+
+	// public
 	public var identifier:String;
 	public var modifiers:EnumSet<Modifier>;
-	public var extend:DataType;
-	public var implement:Array<DataType>;
+	public var extend:Qualident;
+	public var implement:Array<Qualident>;
 	public var memberTypes:Hash<Qualident>;
 	public var fields:Hash<FieldContext>;
 	public var methods:Array<MethodContext>; // array, because we can't resolve similar types until second pass
@@ -377,7 +386,7 @@ class ClassContext implements TypeContext
 	}
 }
 
-class MethodContext
+class MethodContext implements DefinesLocalVariables
 {
 	// typedef: MethodDefinition
 	public var identifier:String;
@@ -398,6 +407,14 @@ class MethodContext
 		throwsList = [];
 		parameters = [];
 	}
+	
+	public function isVariableDefined(identifier:String):Bool
+	{
+		for (param in parameters)
+			if (param.identifier == identifier)
+				return true;
+		return false;
+	}
 }
 
 class FieldContext
@@ -416,7 +433,12 @@ class FieldContext
 	}
 }
 
-class BlockContext
+interface DefinesLocalVariables
+{
+	function isVariableDefined(identifier:String):Bool;
+}
+
+class BlockContext implements DefinesLocalVariables
 {
 	public var statements(default, null):Array<Statement>;
 	public var variables:Hash<FieldContext>;
@@ -427,9 +449,9 @@ class BlockContext
 		statements.push(statement);
 	}
 	
-	private var parent:BlockContext;
+	private var parent:DefinesLocalVariables;
 	
-	public function new(?parent:BlockContext)
+	public function new(?parent:DefinesLocalVariables)
 	{
 		this.parent = parent;
 		statements = [];
@@ -495,8 +517,19 @@ class LexicalResolver
 		}
 	}
 	
+	function addDependency(qualident:Qualident)
+	{
+		// add dependency
+		unit.dependencies.push(qualident);
+		// initialize
+		(cast(rootPackage.getByQualident(qualident), CompilationUnit)).initialize(rootPackage);
+	}
+	
 	function qualifyReference(qualident:Qualident):Qualident
 	{
+		if (qualident == null)
+			return null;
+		
 //[TODO] ensure this order is correct
 		// check qualifier map
 		if (qualifiers.exists(qualident[0]))
@@ -506,7 +539,7 @@ class LexicalResolver
 		if (imports.exists(qualident[0]))
 		{
 			// add dependency
-			unit.dependencies.push(imports.get(qualident[0]));
+			addDependency(imports.get(qualident[0]));
 			// add lookup
 			qualifiers.set(qualident[0], imports.get(qualident[0]));
 			// return qualifier
@@ -516,7 +549,7 @@ class LexicalResolver
 		// ensure type exists (or throw exception)
 		rootPackage.getByQualident(qualident);
 		// add dependency
-		unit.dependencies.push(qualident);
+		addDependency(qualident);
 		// return qualifier
 		return qualident;
 	}
@@ -566,7 +599,14 @@ class LexicalResolver
 		// generate definitions
 		for (type in context.types)
 			if (Std.is(type, ClassContext))
-				unit.types.push(TClass(generateClassDefinition(cast(type, ClassContext))));
+				unit.types.set(type.identifier, TClass(generateClassDefinition(cast(type, ClassContext))));
+
+//[TODO] we could find competing method names here; better, when definitions are generated!
+				
+		// lexical resolution
+		for (type in context.types)
+			if (Std.is(type, ClassContext))
+				resolveClass(context, cast(type, ClassContext));
 	}
 	
 	function generateClassDefinition(type:ClassContext):ClassDefinition 
@@ -576,16 +616,17 @@ class LexicalResolver
 		    modifiers: type.modifiers,
 		    fields: new Hash<FieldDefinition>(),
 		    methods: new Hash<MethodDefinition>(),
-		    extend: qualifyDataType(type.extend),
+		    extend: qualifyReference(type.extend),
 		    implement: [],
 		};
 		if (type.implement != null)
 			for (dt in type.implement)
-				definition.implement.push(qualifyDataType(dt));
+				definition.implement.push(qualifyReference(dt));
 		for (field in type.fields)
 			definition.fields.set(field.identifier, generateFieldDefinition(field));
 		for (method in type.methods)
 			definition.methods.set(method.identifier, generateMethodDefinition(method));
+		type.definition = definition;
 		return definition;
 	}
 	
@@ -623,155 +664,186 @@ class LexicalResolver
 		    modifiers: param.modifiers
 		};
 	}
-/*
-	function resolveClass(definition:ClassContext)
+	
+	/* lexical resolution */
+	
+	var methods:Hash<MethodDefinition>;
+	var fields:Hash<FieldDefinition>;
+	var memberTypes:Hash<Qualident>;
+	
+	function initializeResolvers(definition:ClassDefinition)
 	{
-		classContext = definition;
-		for (method in classContext.methods)
-			resolveMethod(cast(method, MethodContext));
-		resolveStatement(classContext.staticConstructor.getBlockStatement());
-		resolveStatement(classContext.objectConstructor.getBlockStatement());
+		if (definition.extend != null)
+			initializeResolvers(rootPackage.getClassByQualident(definition.extend));
+		for (method in definition.methods)
+			methods.set(method.identifier, method);
+		for (field in definition.fields)
+			fields.set(field.identifier, field);
 	}
 	
-	function resolveMethod(definition:MethodContext)
+	function resolveClass(context:CompilationUnitContext, classContext:ClassContext)
 	{
-		if (definition.body != null)
-			resolveStatement(definition.body);
-	}
-	
-	function resolveStatement(statement:Statement)
-	{
-		switch (statement)
+		// initialize resolvers
+		methods = new Hash<MethodDefinition>();
+		fields = new Hash<FieldDefinition>();
+		memberTypes = new Hash<Qualident>();
+		// walk inheritance tree
+		initializeResolvers(classContext.definition);
+		
+		// resolve method bodies
+		for (methodContext in classContext.methods)
 		{
-		    case SBlock(_, statements):
+			if (methodContext.body != null)
+			{
+				context.ast.set(context.packageDeclaration.concat([classContext.identifier]).join('.') + '|' + methodContext.identifier, resolveStatement(methodContext.body));
+			}
+		}
+//		resolveStatement(classContext.staticConstructor.getBlockStatement());
+//		resolveStatement(classContext.objectConstructor.getBlockStatement());
+	}
+
+	function resolveStatement(statement:Statement):Statement
+	{
+		if (statement == null)
+			return null;
+		
+		return switch (statement)
+		{
+		    case SBlock(statements):
+			var s = new Array<Statement>();
 			for (statement in statements)
-				resolveStatement(statement);
+				s.push(resolveStatement(statement));
+			SBlock(s);
 				
 		    case SBreak(_):
+			statement;
 		    
-		    case SConditional(_, thenBlock, elseBlock):
-			resolveExpression(Type.enumParameters(statement), 0);
-			resolveStatement(thenBlock);
-			if (elseBlock != null)
-				resolveStatement(elseBlock);
+		    case SConditional(condition, thenBlock, elseBlock):
+			SConditional(resolveExpression(condition), resolveStatement(thenBlock), resolveStatement(elseBlock));
 				
 		    case SContinue(_):
+			statement;
 		    
-		    case SExpression(_):
-			resolveExpression(Type.enumParameters(statement), 0);
+		    case SDefinition(definition):
+			statement;
 		    
-		    case SLabel(_, body):
-			resolveStatement(body);
+		    case SExpression(expression):
+			SExpression(resolveExpression(expression));
+		    
+		    case SLabel(label, body):
+			SLabel(label, resolveStatement(body));
 			
-		    case SLoop(_, body, _):
-			resolveExpression(Type.enumParameters(statement), 0);
-			resolveStatement(body);
+		    case SLoop(condition, body, doLoop):
+			SLoop(resolveExpression(condition), resolveStatement(body), doLoop);
 			
 		    case SReturn(value):
-			if (value != null)
-				resolveExpression(Type.enumParameters(statement), 0);
+			SReturn(resolveExpression(value));
 				
-		    case SThrow(_):
-			resolveExpression(Type.enumParameters(statement), 0);
+		    case SThrow(expression):
+			SThrow(resolveExpression(expression));
 			
 		    case STry(body, catches, finallyBody):
-			resolveStatement(body);
 			for (catchBlock in catches)
-				resolveStatement(catchBlock.body);
-			if (finallyBody != null)
-				resolveStatement(finallyBody);
+				catchBlock.body = resolveStatement(catchBlock.body);
+			STry(resolveStatement(body), catches, resolveStatement(finallyBody));
 		}
 	}
 	
-	function resolveExpression(array:Array<Dynamic>, index:Int)
+	function eArr(arr:Array<Expression>):Array<Expression>
 	{
-		var expression:Expression = untyped array[index];
-		switch (expression)
+		var n = new Array<Expression>();
+		for (e in arr)
+			n.push(resolveExpression(e));
+		return n;
+	}
+	
+	function resolveExpression(expression):Expression
+	{
+		if (expression == null)
+			return null;
+			
+		return switch (expression)
 		{
 		    // instantiation
-		    case EArrayInstantiation(_, sizes):
-			for (index in 0...sizes.length)
-				resolveExpression(sizes, index);
+		    case EArrayInstantiation(type, sizes):
+			EArrayInstantiation(qualifyDataType(type), eArr(sizes));
 				
-		    case EObjectInstantiation(_, args):
-			for (index in 0...args.length)
-				resolveExpression(args, index);
+		    case EObjectInstantiation(type, args):
+			EObjectInstantiation(qualifyReference(type), eArr(args));
 		
 		    // control
-		    case EConditional(_, _, _):
-			resolveExpression(Type.enumParameters(expression), 0);
-			resolveExpression(Type.enumParameters(expression), 1);
-			resolveExpression(Type.enumParameters(expression), 2);
+		    case EConditional(condition, trueExp, falseExp):
+			EConditional(resolveExpression(condition), resolveExpression(trueExp), resolveExpression(falseExp));
 			
 		    // references
-		    case EArrayAccess(_, _):
-			resolveExpression(Type.enumParameters(expression), 0);
-			resolveExpression(Type.enumParameters(expression), 1);
+		    case EArrayAccess(index, base):
+			EArrayAccess(resolveExpression(index), resolveExpression(base));
 			
-		    case ELocalReference(_):
-		    case EReference(_, _):
-			resolveExpression(Type.enumParameters(expression), 1);
+		    case ELocalReference(_): expression;
+		    
+		    case EReference(identifier, base):
+			EReference(identifier, resolveExpression(base));
 			
-		    case EQualifiedReference(_):
-		    case ESuperReference:
-		    case EThisReference:
+		    case EQualifiedReference(_): expression;
+		    case ESuperReference: expression;
+		    case EThisReference: expression;
+		    
 		    // calling
-		    case ECall(_, _, args):
-			resolveExpression(Type.enumParameters(expression), 1);
-			for (index in 0...args.length)
-				resolveExpression(args, index);
+		    case ECall(identifier, base, args):
+			ECall(identifier, resolveExpression(base), eArr(args));
 				
 		    case EThisCall(args):
-			for (index in 0...args.length)
-				resolveExpression(args, index);
+			EThisCall(eArr(args));
+			
 		    case ESuperCall(args):
-			for (index in 0...args.length)
-				resolveExpression(args, index);
+			ESuperCall(eArr(args));
+			
 		    // assignment
-		    case EArrayAssignment(_, _, _):
-			resolveExpression(Type.enumParameters(expression), 0);
-			resolveExpression(Type.enumParameters(expression), 1);
-			resolveExpression(Type.enumParameters(expression), 2);
+		    case EArrayAssignment(index, base, value):
+			EArrayAssignment(resolveExpression(index), resolveExpression(base), resolveExpression(value));
 			
-		    case EAssignment(_, _, _):
-			resolveExpression(Type.enumParameters(expression), 1);
-			resolveExpression(Type.enumParameters(expression), 2);
+		    case EAssignment(identifier, base, value):
+			EAssignment(identifier, resolveExpression(base), resolveExpression(value));
 			
-		    case ELocalAssignment(_, _):
-			resolveExpression(Type.enumParameters(expression), 1);
+		    case ELocalAssignment(identifier, value):
+			ELocalAssignment(identifier, resolveExpression(value));
+			
 		    // operations
-		    case ECast(_, _):
-			resolveExpression(Type.enumParameters(expression), 1);
-		    case EPrefixOperation(_, _):
-			resolveExpression(Type.enumParameters(expression), 1);
-		    case EInfixOperation(_, _, _):
-			resolveExpression(Type.enumParameters(expression), 1);
-			resolveExpression(Type.enumParameters(expression), 2);
-		    case EInstanceOf(_, _):
-			resolveExpression(Type.enumParameters(expression), 0);
-		    case EPrefix(_, _):
-			resolveExpression(Type.enumParameters(expression), 1);
-		    case EPostfix(_, _):
-			resolveExpression(Type.enumParameters(expression), 1);
+		    case ECast(type, value):
+			ECast(qualifyDataType(type), resolveExpression(value));
+			
+		    case EPrefixOperation(type, reference):
+			EPrefixOperation(type, resolveExpression(reference));
+			
+		    case EInfixOperation(type, left, right):
+			EInfixOperation(type, resolveExpression(left), resolveExpression(right));
+			
+		    case EInstanceOf(expression, type):
+			EInstanceOf(resolveExpression(expression), qualifyDataType(type));
+			
+		    case EPrefix(type, reference):
+			EPrefix(type, resolveExpression(reference));
+			
+		    case EPostfix(type, reference):
+			EPostfix(type, resolveExpression(reference));
 		
 		    // literals
 		    case EArrayLiteral(values):
-			for (index in 0...values.length)
-				resolveExpression(values, index);
+			EArrayLiteral(eArr(values));
 				
-		    case EStringLiteral(_):
-		    case EIntegerLiteral(_):
-		    case EFloatLiteral(_):
-		    case ECharLiteral(_):
-		    case EBooleanLiteral(_):
-		    case ENull:
+		    case EStringLiteral(_): expression;
+		    case EIntegerLiteral(_): expression;
+		    case EFloatLiteral(_): expression;
+		    case ECharLiteral(_): expression;
+		    case EBooleanLiteral(_): expression;
+		    case ENull: expression;
 		
 		    // second pass
 		    case ELexExpression(expression):
 			switch (expression) {
-			    case LReference(identifier): array[index] = resolveLexicalReference(identifier);
-			    case LCall(identifier, args): array[index] = resolveLexicalCall(identifier, args);
-			    case LAssignment(identifier, value): array[index] = resolveLexicalAssignment(identifier, value);
+			    case LReference(identifier): resolveLexicalReference(identifier);
+			    case LCall(identifier, args): resolveLexicalCall(identifier, args);
+			    case LAssignment(identifier, value): resolveLexicalAssignment(identifier, value);
 			}
 		}
 	}
@@ -783,39 +855,34 @@ class LexicalResolver
 // resolve inner class variables to accessors
 // resolve types to qualified references, add dependencies
 	
-/*	public function resolveLexicalType(identifier:String):DataType
-	{
-		
-	}
-	
 	public function resolveLexicalReference(identifier:String):Expression
 	{
 		// class fields
-		if (classContext.fields.exists(identifier))
+		if (fields.exists(identifier))
 			return EReference(identifier, EThisReference);
-			
+
 		// no variable found
-		throw 'invalid reference to variable "' + identifier + '"';
+		throw 'reference to nonexistant variable "' + identifier + '"';
 	}
 	
 	public function resolveLexicalAssignment(identifier:String, value:Expression):Expression
 	{
 		// class fields
-		if (classContext.fields.exists(identifier))
+		if (fields.exists(identifier))
 			return EAssignment(identifier, EThisReference, value);
 			
 		// no variable found
-		throw 'invalid reference to variable "' + identifier + '"';
+		throw 'assignment to nonexistant variable "' + identifier + '"';
 	}
 	
 	public function resolveLexicalCall(identifier:String, args:Array<Expression>):Expression
 	{
 		// class methods
-		if (classContext.methods.exists(identifier))
+		if (methods.exists(identifier))
 			return ECall(identifier, EThisReference, args);
 			
 		// no method found
-		throw 'invalid call to method "' + identifier + '"';
+		throw 'call to nonexistant method "' + identifier + '"';
 	}
 	
 /* unit-level lexical resolution 

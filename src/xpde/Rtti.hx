@@ -64,8 +64,8 @@ typedef ClassDefinition = {
 	var modifiers:EnumSet<Modifier>;
 	var fields:Hash<FieldDefinition>;
 	var methods:Hash<MethodDefinition>;
-	var extend:Null<DataType>;
-	var implement:Array<DataType>;
+	var extend:Null<Qualident>;
+	var implement:Array<Qualident>;
 };
 
 typedef FieldDefinition = {

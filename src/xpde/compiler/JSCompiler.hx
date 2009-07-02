@@ -5,60 +5,90 @@
 
 package xpde.compiler;
 
+import xpde.Rtti;
 import xpde.parser.AST;
+import xpde.parser.Parser;
 
 class JSCompiler implements ICompiler
 {
 	var output:StringBuf;
-	var packageIdent:Array<String>;
-	var packageIdentString:String;
-	var classDef:String;
 
 	public function new() 
 	{
-		
-	}
-	
-	public function compile(unit:CompilationUnit):String
-	{
 		// start output
 		output = new StringBuf();
-		
-		// package
-		packageIdent = ["window"].concat(unit.packageIdent);
-		packageIdentString = packageIdent.join('.') + '.';
-//		if (unit.packageIdent.length > 0)
-//			packageIdentString = unit.packageIdent.join('.') + '.';
-		
-		// closure
-		output.add('(function () {\n');
-		
-		// imports
-//		for (imp in unit.importIdents)
-//			output.add('import ' + imp.join('.') + ';\n');
-//		output.add('\n');
-		output.add('var PApplet = xpde.core.PApplet;\n\n');
-
-		// definitions
-		for (definition in unit.definitions) {
-			compileDefinition(definition);
-			output.add('\n');
-		}
-		
-		// closure
-		output.add('})()');
-		
-		// return output
-		return output.toString();
 	}
 	
+	// compiler state
+	private var ast:Hash<Statement>;
+	private var packageDeclaration:Qualident;
+	private var qualident:Qualident;
+	
+	
+	private var packageIdent:Array<String>;
+	private var packageIdentString:String;
+	private var classDef:String;
+	
+	public function compileClass(packageDeclaration:Array<String>, definition:ClassDefinition, ast:Hash<Statement>)
+	{
+		// save variables
+		this.packageDeclaration = packageDeclaration;
+		this.qualident = packageDeclaration.concat([definition.identifier]);
+		this.ast = ast;
+		
+		// package
+//		packageIdent = ["window"].concat(packageDeclaration);
+//		packageIdentString = packageDeclaration.join('.') + '.';
+//		if (unit.packageIdent.length > 0)
+//			packageIdentString = unit.packageIdent.join('.') + '.';
+
+		// class definition
+		output.add(qualident.join('.') + ' = function () {\n');
+/*		if (extend != null) {
+			compileType(extend);
+			output.add('.apply(this, arguments);\n');
+		}
+		if (ast.exists(qualident.join('.') + '|<init>')) {
+			compileStatement(ast.get(packageDeclaration.join('.') + '|<init>'));
+		}*/
+		output.add('};\n');
+		output.add(qualident.join('.') + '.__name__ = ["' + qualident.join('","') + '"];\n');
+		output.add(qualident.join('.') + '.prototype.__class__ = ' + qualident.join('.') + ';\n');
+		for (method in definition.methods) {
+			compileMethod(method);
+		}
+/*			if (clinit != null) {
+			output.add('static ');
+			compileStatement(clinit);
+		}*/
+		
+		trace(output.toString());
+	}
+	
+	function compileMethod(definition:MethodDefinition)
+	{
+		if (ast.exists(qualident.join('.') + '|' + definition.identifier))
+		{
+			output.add(qualident.join('.') + '.prototype.' + definition.identifier + ' = function (');
+			for (i in 0...definition.parameters.length) {
+				compileFormalParameter(definition.parameters[i]);
+				if (i < definition.parameters.length - 1)
+					output.add(', ');
+			}
+			output.add(') ');
+			compileStatement(ast.get(qualident.join('.') + '|' + definition.identifier));
+			output.add(';\n');
+		}
+	}
+
+/*
 	function compileDefinition(definition:Definition)
 	{
 		switch (definition)
 		{
 		    case DMethod(identifier, type, modifiers, params, body):
 			if (classDef != null)
-				output.add(classDef + identifier + ' = ');
+				output.add(qualident.join('.') + '.prototype.'; + identifier + ' = ');
 			output.add('function');
 			output.add(' ' + identifier + '(');
 			for (i in 0...params.length) {
@@ -81,31 +111,9 @@ class JSCompiler implements ICompiler
 			output.add(' ' + identifier + ';\n');
 		    
 		    case DClass(identifier, modifiers, definitions, extend, implement, clinit, init):
-			output.add(packageIdentString + identifier + ' = function () {\n');
-			if (extend != null) {
-				compileType(extend);
-				output.add('.apply(this, arguments);\n');
-			}
-			output.add('with(this){\n');
-			if (init != null) {
-				compileStatement(init);
-			}
-			output.add('}};\n');
-			output.add(packageIdentString + identifier + '.__name__ = ["'
-			    + packageIdent.concat([identifier]).join('","') + '"];\n');
-			output.add(packageIdentString + identifier + '.prototype.__class__ = ' + packageIdentString + identifier + ';\n');
-			var tmp:String = classDef;
-			classDef = packageIdentString + identifier + '.prototype.';
-			for (definition in definitions) {
-				compileDefinition(definition);
-			}
-			classDef = tmp;
-/*			if (clinit != null) {
-				output.add('static ');
-				compileStatement(clinit);
-			}*/
+
 		}
-	}
+	}*/
 	
 	function compileType(type:DataType)
 	{
@@ -113,7 +121,7 @@ class JSCompiler implements ICompiler
 			output.add('void');
 			return;
 		}
-		
+/*
 		switch (type)
 		{
 		    case DTPrimitive(type):
@@ -128,13 +136,14 @@ class JSCompiler implements ICompiler
 			    case PTChar: output.add('char');
 			    case PTBoolean: output.add('boolean');
 			}
+		    case Primitive
 		    case DTReference(qualident):
 			output.add(qualident.join('.'));
 		    case DTArray(type, dimensions):
 			compileType(type);
 			for (i in 0...dimensions)
 				output.add('[]');
-		}
+		}*/
 	}
 	
 	function compileModifiers(modifiers:EnumSet<Modifier>)
@@ -163,10 +172,10 @@ class JSCompiler implements ICompiler
 
 		switch (statement)
 		{
-		    case SBlock(definitions, statements):
+		    case SBlock(statements):
 			output.add('{\n');
-			for (definition in definitions)
-				compileDefinition(definition);
+//			for (definition in definitions)
+//				compileDefinition(definition);
 			for (statement in statements)
 				compileStatement(statement);
 			output.add('}\n');
@@ -192,6 +201,8 @@ class JSCompiler implements ICompiler
 			if (label != null)
 				output.add(' ' + label);
 			output.add(';\n');
+		
+		    case SDefinition(definition):
 			
 		    case SExpression(expression):
 			compileExpression(expression);
@@ -248,8 +259,6 @@ class JSCompiler implements ICompiler
 				output.add('finally\n');
 				compileStatement(finallyBody);
 			}
-		    
-		    default:
 		}
 	}
 	
@@ -267,7 +276,7 @@ class JSCompiler implements ICompiler
 			compileExpression(index);
 			output.add(']');
 		    
-/*		    case EArrayInstantiation(type:DataType, sizes:Array<Expression>):*/
+		    case EArrayInstantiation(type, sizes):
 
 		    case EArrayAssignment(index, base, value):
 			compileExpression(base);
@@ -276,20 +285,23 @@ class JSCompiler implements ICompiler
 			output.add(']');
 			output.add(' = ');
 			compileExpression(value);
-
-		    case EAssignment(identifier, base, value):
-			if (base != null) {
-				compileExpression(base);
-				output.add('.');
-			}
+			
+		    case ELocalAssignment(identifier, value):
 			output.add(identifier);
 			output.add(' = ');
 			compileExpression(value);
-		    
-		    case ECall(method, args):
+
+		    case EAssignment(identifier, base, value):
+			compileExpression(base);
+			output.add('.');
+			output.add(identifier);
+			output.add(' = ');
+			compileExpression(value);
+			
+		    case ECall(identifier, base, args):
+			compileExpression(base);
+			output.add('.' + identifier);
 			output.add('(');
-			compileExpression(method);
-			output.add(')(');
 			for (i in 0...args.length)
 			{
 				compileExpression(args[i]);
@@ -298,9 +310,19 @@ class JSCompiler implements ICompiler
 			}
 			output.add(')');
 			
-		    case ECallMethod(identifier, base, args):
-			compileExpression(base);
-			output.add('.' + identifier);
+		    case EThisCall(args):
+			output.add('this');
+			output.add('(');
+			for (i in 0...args.length)
+			{
+				compileExpression(args[i]);
+				if (i < args.length - 1)
+					output.add(', ');
+			}
+			output.add(')');
+			
+		    case ESuperCall(args):
+			output.add('super');
 			output.add('(');
 			for (i in 0...args.length)
 			{
@@ -352,12 +374,16 @@ class JSCompiler implements ICompiler
 			compileExpression(reference);
 			output.add(')');
 			compileIncrementType(type);
+			
+		    case ELocalReference(identifier):
+			output.add(identifier);
+			
+		    case EQualifiedReference(qualident):
+			output.add(qualident.join('.'));
 		    
 		    case EReference(identifier, base):
-			if (base != null) {
-				compileExpression(base);
-				output.add('.');
-			}
+			compileExpression(base);
+			output.add('.');
 			output.add(identifier);
 		    
 		    case ESuperReference:
@@ -408,8 +434,9 @@ class JSCompiler implements ICompiler
 		    
 		    case ENull:
 			output.add('null');
-			
-		    default:
+		
+		    // parser
+		    case ELexExpression(_): throw "Invalid compiler expression " + expression;
 		}
 	}
 	

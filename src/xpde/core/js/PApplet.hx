@@ -13,6 +13,7 @@ public class PApplet {
 	native void noStroke();
 	native void smooth();
 	native void noLoop();
+	native void fill(float value);
 	native void ellipse(int x, int y, int width, int height);
 }';
 

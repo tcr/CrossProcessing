@@ -6,7 +6,7 @@ import js.Lib;
 import xpde.core.PApplet;
 import xpde.Rtti;
 import xpde.JavaPackage;
-//import xpde.compiler.JSCompiler;
+import xpde.compiler.JSCompiler;
 //import xpde.interpreter.JSInterpreter;
 
 import xpde.parser.Parser;
@@ -51,7 +51,9 @@ class JSMain
 		rootPackage.addCompilationUnit(sketch.packageDeclaration, sketch);
 		sketch.initialize(rootPackage);
 		
-		trace(sketch.types);
+		// source compiler
+		var compiler = new JSCompiler();
+		compiler.compileClass(['Sketch'], Type.enumParameters(sketch.types.get('Sketch'))[0], sketch.ast);
 		
 		// compile main sketch
 //		var interpreter:IInterpreter = new JSInterpreter();

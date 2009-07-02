@@ -47,6 +47,20 @@ class JavaPackage implements JavaPackageItem
 			throw "invalid qualified reference " + qualident.join('.');
 		}
 	}
+	
+	public function getClassByQualident(qualident:Qualident):ClassDefinition
+	{
+		try {
+			var unit = cast(getByQualident(qualident), CompilationUnit);
+			var type = unit.types.get(qualident[qualident.length - 1]);
+			switch (type) {
+			    case TClass(definition): return definition;
+			    default: throw false;
+			}
+		} catch (e:Dynamic) {
+			throw "invalid class name " + qualident.join('.');
+		}
+	}
 }
 
 interface JavaPackageItem { }
@@ -55,7 +69,7 @@ interface CompilationUnit implements JavaPackageItem
 {
 	var packageDeclaration(default, null):Qualident;
 	var dependencies(default, null):Array<Qualident>;
-	var types(default, null):Array<TypeDefinition>;
+	var types(default, null):Hash<TypeDefinition>;
 	function initialize(rootPackage:JavaPackage):Void;
 //	function compile(compiler:ICompiler):Void;
 }

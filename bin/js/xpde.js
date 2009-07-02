@@ -367,6 +367,12 @@ haxe.io.Input.prototype.setEndian = function(b) {
 	$s.pop();
 }
 haxe.io.Input.prototype.__class__ = haxe.io.Input;
+xpde = {}
+xpde.compiler = {}
+xpde.compiler.ICompiler = function() { }
+xpde.compiler.ICompiler.__name__ = ["xpde","compiler","ICompiler"];
+xpde.compiler.ICompiler.prototype.compileClass = null;
+xpde.compiler.ICompiler.prototype.__class__ = xpde.compiler.ICompiler;
 StringTools = function() { }
 StringTools.__name__ = ["StringTools"];
 StringTools.urlEncode = function(s) {
@@ -842,7 +848,8 @@ JSMain.interpret = function() {
 	var sketch = new xpde.parser.ParsedCompilationUnit(["Sketch"],new haxe.io.StringInput(JSMain.getSource()));
 	rootPackage.addCompilationUnit(sketch.packageDeclaration,sketch);
 	sketch.initialize(rootPackage);
-	haxe.Log.trace(sketch.types,{ fileName : "JSMain.hx", lineNumber : 54, className : "JSMain", methodName : "interpret"});
+	var compiler = new xpde.compiler.JSCompiler();
+	compiler.compileClass(["Sketch"],Type.enumParameters(sketch.types.get("Sketch"))[0],sketch.ast);
 	$s.pop();
 }
 JSMain.prototype.__class__ = JSMain;
@@ -1069,6 +1076,639 @@ haxe.rtti = {}
 haxe.rtti.Infos = function() { }
 haxe.rtti.Infos.__name__ = ["haxe","rtti","Infos"];
 haxe.rtti.Infos.prototype.__class__ = haxe.rtti.Infos;
+xpde.compiler.JSCompiler = function(p) { if( p === $_ ) return; {
+	$s.push("xpde.compiler.JSCompiler::new");
+	var $spos = $s.length;
+	this.output = new StringBuf();
+	$s.pop();
+}}
+xpde.compiler.JSCompiler.__name__ = ["xpde","compiler","JSCompiler"];
+xpde.compiler.JSCompiler.prototype.ast = null;
+xpde.compiler.JSCompiler.prototype.classDef = null;
+xpde.compiler.JSCompiler.prototype.compileClass = function(packageDeclaration,definition,ast) {
+	$s.push("xpde.compiler.JSCompiler::compileClass");
+	var $spos = $s.length;
+	this.packageDeclaration = packageDeclaration;
+	this.qualident = packageDeclaration.concat([definition.identifier]);
+	this.ast = ast;
+	this.output.add(this.qualident.join(".") + " = function () {\n");
+	this.output.add("};\n");
+	this.output.add(this.qualident.join(".") + ".__name__ = [\"" + this.qualident.join("\",\"") + "\"];\n");
+	this.output.add(this.qualident.join(".") + ".prototype.__class__ = " + this.qualident.join(".") + ";\n");
+	{ var $it5 = definition.methods.iterator();
+	while( $it5.hasNext() ) { var method = $it5.next();
+	{
+		this.compileMethod(method);
+	}
+	}}
+	haxe.Log.trace(this.output.b.join(""),{ fileName : "JSCompiler.hx", lineNumber : 65, className : "xpde.compiler.JSCompiler", methodName : "compileClass"});
+	$s.pop();
+}
+xpde.compiler.JSCompiler.prototype.compileExpression = function(expression) {
+	$s.push("xpde.compiler.JSCompiler::compileExpression");
+	var $spos = $s.length;
+	var $e = (expression);
+	switch( $e[1] ) {
+	case 3:
+	var base = $e[3], index = $e[2];
+	{
+		this.compileExpression(base);
+		this.output.add("[");
+		this.compileExpression(index);
+		this.output.add("]");
+	}break;
+	case 0:
+	var sizes = $e[3], type = $e[2];
+	{
+		null;
+	}break;
+	case 12:
+	var value = $e[4], base = $e[3], index = $e[2];
+	{
+		this.compileExpression(base);
+		this.output.add("[");
+		this.compileExpression(index);
+		this.output.add("]");
+		this.output.add(" = ");
+		this.compileExpression(value);
+	}break;
+	case 14:
+	var value = $e[3], identifier = $e[2];
+	{
+		this.output.add(identifier);
+		this.output.add(" = ");
+		this.compileExpression(value);
+	}break;
+	case 13:
+	var value = $e[4], base = $e[3], identifier = $e[2];
+	{
+		this.compileExpression(base);
+		this.output.add(".");
+		this.output.add(identifier);
+		this.output.add(" = ");
+		this.compileExpression(value);
+	}break;
+	case 9:
+	var args = $e[4], base = $e[3], identifier = $e[2];
+	{
+		this.compileExpression(base);
+		this.output.add("." + identifier);
+		this.output.add("(");
+		{
+			var _g1 = 0, _g = args.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				this.compileExpression(args[i]);
+				if(i < args.length - 1) this.output.add(", ");
+			}
+		}
+		this.output.add(")");
+	}break;
+	case 10:
+	var args = $e[2];
+	{
+		this.output.add("this");
+		this.output.add("(");
+		{
+			var _g1 = 0, _g = args.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				this.compileExpression(args[i]);
+				if(i < args.length - 1) this.output.add(", ");
+			}
+		}
+		this.output.add(")");
+	}break;
+	case 11:
+	var args = $e[2];
+	{
+		this.output.add("super");
+		this.output.add("(");
+		{
+			var _g1 = 0, _g = args.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				this.compileExpression(args[i]);
+				if(i < args.length - 1) this.output.add(", ");
+			}
+		}
+		this.output.add(")");
+	}break;
+	case 15:
+	var expression1 = $e[3], type = $e[2];
+	{
+		this.output.add("(");
+		this.compileType(type);
+		this.output.add(") (");
+		this.compileExpression(expression1);
+		this.output.add(")");
+	}break;
+	case 2:
+	var elseExpression = $e[4], thenExpression = $e[3], condition = $e[2];
+	{
+		this.output.add("(");
+		this.compileExpression(condition);
+		this.output.add(" ? ");
+		this.compileExpression(thenExpression);
+		this.output.add(" : ");
+		this.compileExpression(elseExpression);
+		this.output.add(")");
+	}break;
+	case 18:
+	var type = $e[3], expression1 = $e[2];
+	{
+		this.compileExpression(expression1);
+		this.output.add(" instanceof ");
+		this.compileType(type);
+	}break;
+	case 1:
+	var args = $e[3], qualifier = $e[2];
+	{
+		this.output.add("new " + qualifier.join(".") + "(");
+		{
+			var _g1 = 0, _g = args.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				this.compileExpression(args[i]);
+				if(i < args.length - 1) this.output.add(", ");
+			}
+		}
+		this.output.add(")");
+	}break;
+	case 19:
+	var reference = $e[3], type = $e[2];
+	{
+		this.compileIncrementType(type);
+		this.output.add("(");
+		this.compileExpression(reference);
+		this.output.add(")");
+	}break;
+	case 20:
+	var reference = $e[3], type = $e[2];
+	{
+		this.output.add("(");
+		this.compileExpression(reference);
+		this.output.add(")");
+		this.compileIncrementType(type);
+	}break;
+	case 4:
+	var identifier = $e[2];
+	{
+		this.output.add(identifier);
+	}break;
+	case 6:
+	var qualident = $e[2];
+	{
+		this.output.add(qualident.join("."));
+	}break;
+	case 5:
+	var base = $e[3], identifier = $e[2];
+	{
+		this.compileExpression(base);
+		this.output.add(".");
+		this.output.add(identifier);
+	}break;
+	case 7:
+	{
+		this.output.add("super");
+	}break;
+	case 8:
+	{
+		this.output.add("this");
+	}break;
+	case 17:
+	var rightOperand = $e[4], leftOperand = $e[3], operator = $e[2];
+	{
+		this.output.add("(");
+		this.compileExpression(leftOperand);
+		this.compileInfixOperator(operator);
+		this.compileExpression(rightOperand);
+		this.output.add(")");
+	}break;
+	case 16:
+	var operand = $e[3], operator = $e[2];
+	{
+		this.compilePrefixOperator(operator);
+		this.output.add("(");
+		this.compileExpression(operand);
+		this.output.add(")");
+	}break;
+	case 21:
+	var values = $e[2];
+	{
+		this.output.add("{");
+		{
+			var _g1 = 0, _g = values.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				this.compileExpression(values[i]);
+				if(i < values.length - 1) this.output.add(", ");
+			}
+		}
+		this.output.add("}");
+	}break;
+	case 22:
+	var value = $e[2];
+	{
+		this.output.add("\"" + StringTools.replace(value,"\"","\\\"") + "\"");
+	}break;
+	case 23:
+	var value = $e[2];
+	{
+		this.output.add(Std.string(value));
+	}break;
+	case 24:
+	var value = $e[2];
+	{
+		this.output.add(Std.string(value));
+	}break;
+	case 25:
+	var value = $e[2];
+	{
+		this.output.add("'" + String.fromCharCode(value) + "'");
+	}break;
+	case 26:
+	var value = $e[2];
+	{
+		this.output.add((value?"true":"false"));
+	}break;
+	case 27:
+	{
+		this.output.add("null");
+	}break;
+	case 28:
+	{
+		throw "Invalid compiler expression " + expression;
+	}break;
+	}
+	$s.pop();
+}
+xpde.compiler.JSCompiler.prototype.compileFormalParameter = function(parameter) {
+	$s.push("xpde.compiler.JSCompiler::compileFormalParameter");
+	var $spos = $s.length;
+	this.output.add(parameter.identifier);
+	$s.pop();
+}
+xpde.compiler.JSCompiler.prototype.compileIncrementType = function(type) {
+	$s.push("xpde.compiler.JSCompiler::compileIncrementType");
+	var $spos = $s.length;
+	this.output.add(function($this) {
+		var $r;
+		var $e = (type);
+		switch( $e[1] ) {
+		case 0:
+		{
+			$r = "++";
+		}break;
+		case 1:
+		{
+			$r = "--";
+		}break;
+		default:{
+			$r = null;
+		}break;
+		}
+		return $r;
+	}(this));
+	$s.pop();
+}
+xpde.compiler.JSCompiler.prototype.compileInfixOperator = function(operator) {
+	$s.push("xpde.compiler.JSCompiler::compileInfixOperator");
+	var $spos = $s.length;
+	this.output.add(function($this) {
+		var $r;
+		var $e = (operator);
+		switch( $e[1] ) {
+		case 0:
+		{
+			$r = "||";
+		}break;
+		case 1:
+		{
+			$r = "&&";
+		}break;
+		case 2:
+		{
+			$r = "|";
+		}break;
+		case 3:
+		{
+			$r = "^";
+		}break;
+		case 4:
+		{
+			$r = "&";
+		}break;
+		case 5:
+		{
+			$r = "==";
+		}break;
+		case 6:
+		{
+			$r = "!=";
+		}break;
+		case 7:
+		{
+			$r = "<";
+		}break;
+		case 8:
+		{
+			$r = "<=";
+		}break;
+		case 9:
+		{
+			$r = ">";
+		}break;
+		case 10:
+		{
+			$r = ">=";
+		}break;
+		case 11:
+		{
+			$r = "<<";
+		}break;
+		case 12:
+		{
+			$r = ">>";
+		}break;
+		case 13:
+		{
+			$r = ">>>";
+		}break;
+		case 14:
+		{
+			$r = "+";
+		}break;
+		case 15:
+		{
+			$r = "-";
+		}break;
+		case 16:
+		{
+			$r = "*";
+		}break;
+		case 17:
+		{
+			$r = "/";
+		}break;
+		case 18:
+		{
+			$r = "%";
+		}break;
+		default:{
+			$r = null;
+		}break;
+		}
+		return $r;
+	}(this));
+	$s.pop();
+}
+xpde.compiler.JSCompiler.prototype.compileMethod = function(definition) {
+	$s.push("xpde.compiler.JSCompiler::compileMethod");
+	var $spos = $s.length;
+	if(this.ast.exists(this.qualident.join(".") + "|" + definition.identifier)) {
+		this.output.add(this.qualident.join(".") + ".prototype." + definition.identifier + " = function (");
+		{
+			var _g1 = 0, _g = definition.parameters.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				this.compileFormalParameter(definition.parameters[i]);
+				if(i < definition.parameters.length - 1) this.output.add(", ");
+			}
+		}
+		this.output.add(") ");
+		this.compileStatement(this.ast.get(this.qualident.join(".") + "|" + definition.identifier));
+		this.output.add(";\n");
+	}
+	$s.pop();
+}
+xpde.compiler.JSCompiler.prototype.compileModifiers = function(modifiers) {
+	$s.push("xpde.compiler.JSCompiler::compileModifiers");
+	var $spos = $s.length;
+	{ var $it6 = modifiers.iterator();
+	while( $it6.hasNext() ) { var modifier = $it6.next();
+	var $e = (modifier);
+	switch( $e[1] ) {
+	case 0:
+	{
+		this.output.add("public ");
+	}break;
+	case 1:
+	{
+		this.output.add("private ");
+	}break;
+	case 2:
+	{
+		this.output.add("protected ");
+	}break;
+	case 3:
+	{
+		this.output.add("static ");
+	}break;
+	case 4:
+	{
+		this.output.add("final ");
+	}break;
+	case 5:
+	{
+		this.output.add("synchronized ");
+	}break;
+	case 6:
+	{
+		this.output.add("volatile ");
+	}break;
+	case 7:
+	{
+		this.output.add("transient ");
+	}break;
+	case 8:
+	{
+		this.output.add("native ");
+	}break;
+	case 9:
+	{
+		this.output.add("abstract ");
+	}break;
+	case 10:
+	{
+		this.output.add("strictfp ");
+	}break;
+	}
+	}}
+	$s.pop();
+}
+xpde.compiler.JSCompiler.prototype.compilePrefixOperator = function(operator) {
+	$s.push("xpde.compiler.JSCompiler::compilePrefixOperator");
+	var $spos = $s.length;
+	this.output.add(function($this) {
+		var $r;
+		var $e = (operator);
+		switch( $e[1] ) {
+		case 0:
+		{
+			$r = "!";
+		}break;
+		case 1:
+		{
+			$r = "~";
+		}break;
+		case 2:
+		{
+			$r = "+";
+		}break;
+		case 3:
+		{
+			$r = "-";
+		}break;
+		default:{
+			$r = null;
+		}break;
+		}
+		return $r;
+	}(this));
+	$s.pop();
+}
+xpde.compiler.JSCompiler.prototype.compileStatement = function(statement) {
+	$s.push("xpde.compiler.JSCompiler::compileStatement");
+	var $spos = $s.length;
+	var $e = (statement);
+	switch( $e[1] ) {
+	case 0:
+	var statements = $e[2];
+	{
+		this.output.add("{\n");
+		{
+			var _g = 0;
+			while(_g < statements.length) {
+				var statement1 = statements[_g];
+				++_g;
+				this.compileStatement(statement1);
+			}
+		}
+		this.output.add("}\n");
+	}break;
+	case 1:
+	var label = $e[2];
+	{
+		this.output.add("break");
+		if(label != null) this.output.add(" " + label);
+		this.output.add(";\n");
+	}break;
+	case 2:
+	var elseBlock = $e[4], thenBlock = $e[3], condition = $e[2];
+	{
+		this.output.add("if (");
+		this.compileExpression(condition);
+		this.output.add(") ");
+		this.compileStatement(thenBlock);
+		if(elseBlock != null) {
+			this.output.add("else ");
+			this.compileStatement(elseBlock);
+		}
+	}break;
+	case 3:
+	var label = $e[2];
+	{
+		this.output.add("continue");
+		if(label != null) this.output.add(" " + label);
+		this.output.add(";\n");
+	}break;
+	case 4:
+	var definition = $e[2];
+	{
+		null;
+	}break;
+	case 5:
+	var expression = $e[2];
+	{
+		this.compileExpression(expression);
+		this.output.add(";\n");
+	}break;
+	case 6:
+	var body = $e[3], label = $e[2];
+	{
+		this.output.add(label + ": ");
+		this.compileStatement(body);
+	}break;
+	case 7:
+	var doLoop = $e[4], body = $e[3], condition = $e[2];
+	{
+		if(doLoop) {
+			this.output.add("do ");
+			this.compileStatement(body);
+			this.output.add("while (");
+			this.compileExpression(condition);
+			this.output.add(");\n");
+		}
+		else {
+			this.output.add("while (");
+			this.compileExpression(condition);
+			this.output.add(") ");
+			this.compileStatement(body);
+		}
+	}break;
+	case 8:
+	var value = $e[2];
+	{
+		this.output.add("return");
+		if(value != null) {
+			this.output.add(" ");
+			this.compileExpression(value);
+		}
+		this.output.add(";\n");
+	}break;
+	case 9:
+	var expression = $e[2];
+	{
+		this.output.add("throw");
+		this.compileExpression(expression);
+		this.output.add(";\n");
+	}break;
+	case 10:
+	var finallyBody = $e[4], catches = $e[3], body = $e[2];
+	{
+		this.output.add("try ");
+		this.compileStatement(body);
+		if(catches != null) {
+			{
+				var _g = 0;
+				while(_g < catches.length) {
+					var katch = catches[_g];
+					++_g;
+					this.output.add("catch (");
+					this.compileFormalParameter(katch.parameter);
+					this.output.add(")");
+					this.compileStatement(katch.body);
+				}
+			}
+		}
+		if(finallyBody != null) {
+			this.output.add("finally\n");
+			this.compileStatement(finallyBody);
+		}
+	}break;
+	}
+	$s.pop();
+}
+xpde.compiler.JSCompiler.prototype.compileType = function(type) {
+	$s.push("xpde.compiler.JSCompiler::compileType");
+	var $spos = $s.length;
+	if(type == null) {
+		this.output.add("void");
+		{
+			$s.pop();
+			return;
+		}
+	}
+	$s.pop();
+}
+xpde.compiler.JSCompiler.prototype.output = null;
+xpde.compiler.JSCompiler.prototype.packageDeclaration = null;
+xpde.compiler.JSCompiler.prototype.packageIdent = null;
+xpde.compiler.JSCompiler.prototype.packageIdentString = null;
+xpde.compiler.JSCompiler.prototype.qualident = null;
+xpde.compiler.JSCompiler.prototype.__class__ = xpde.compiler.JSCompiler;
+xpde.compiler.JSCompiler.__interfaces__ = [xpde.compiler.ICompiler];
 haxe.io.BytesInput = function(b,pos,len) { if( b === $_ ) return; {
 	$s.push("haxe.io.BytesInput::new");
 	var $spos = $s.length;
@@ -1773,8 +2413,8 @@ haxe.Serializer.prototype.serialize = function(v) {
 		case List:{
 			this.buf.add("l");
 			var v1 = v;
-			{ var $it5 = v1.iterator();
-			while( $it5.hasNext() ) { var i = $it5.next();
+			{ var $it7 = v1.iterator();
+			while( $it7.hasNext() ) { var i = $it7.next();
 			this.serialize(i);
 			}}
 			this.buf.add("h");
@@ -1787,8 +2427,8 @@ haxe.Serializer.prototype.serialize = function(v) {
 		case Hash:{
 			this.buf.add("b");
 			var v1 = v;
-			{ var $it6 = v1.keys();
-			while( $it6.hasNext() ) { var k = $it6.next();
+			{ var $it8 = v1.keys();
+			while( $it8.hasNext() ) { var k = $it8.next();
 			{
 				this.serializeString(k);
 				this.serialize(v1.get(k));
@@ -1799,8 +2439,8 @@ haxe.Serializer.prototype.serialize = function(v) {
 		case IntHash:{
 			this.buf.add("q");
 			var v1 = v;
-			{ var $it7 = v1.keys();
-			while( $it7.hasNext() ) { var k = $it7.next();
+			{ var $it9 = v1.keys();
+			while( $it9.hasNext() ) { var k = $it9.next();
 			{
 				this.buf.add(":");
 				this.buf.add(k);
@@ -2073,9 +2713,9 @@ Type.resolveClass = function(name) {
 	try {
 		cl = eval(name);
 	}
-	catch( $e8 ) {
+	catch( $e10 ) {
 		{
-			var e = $e8;
+			var e = $e10;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -2101,9 +2741,9 @@ Type.resolveEnum = function(name) {
 	try {
 		e = eval(name);
 	}
-	catch( $e9 ) {
+	catch( $e11 ) {
 		{
-			var err = $e9;
+			var err = $e11;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -2349,7 +2989,6 @@ Type.enumIndex = function(e) {
 	$s.pop();
 }
 Type.prototype.__class__ = Type;
-xpde = {}
 xpde.core = {}
 xpde.core.js = {}
 xpde.core.js.PApplet = function(curElement) { if( curElement === $_ ) return; {
@@ -4144,16 +4783,16 @@ xpde.parser.Buffer.prototype.Read = function() {
 	try {
 		this.bufChar = this.stream.readByte();
 	}
-	catch( $e10 ) {
-		if( js.Boot.__instanceof($e10,haxe.io.Eof) ) {
-			var e = $e10;
+	catch( $e12 ) {
+		if( js.Boot.__instanceof($e12,haxe.io.Eof) ) {
+			var e = $e12;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
 				$s.push($e[0]);
 				this.bufChar = xpde.parser.Buffer.EOF;
 			}
-		} else throw($e10);
+		} else throw($e12);
 	}
 	{
 		$s.pop();
@@ -4240,9 +4879,9 @@ Hash.prototype.exists = function(key) {
 			return $tmp;
 		}
 	}
-	catch( $e11 ) {
+	catch( $e13 ) {
 		{
-			var e = $e11;
+			var e = $e13;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -4341,8 +4980,8 @@ Hash.prototype.toString = function() {
 	var s = new StringBuf();
 	s.b[s.b.length] = "{";
 	var it = this.keys();
-	{ var $it12 = it;
-	while( $it12.hasNext() ) { var i = $it12.next();
+	{ var $it14 = it;
+	while( $it14.hasNext() ) { var i = $it14.next();
 	{
 		s.b[s.b.length] = i;
 		s.b[s.b.length] = " => ";
@@ -5680,9 +6319,9 @@ js.Boot.__string_rec = function(o,s) {
 		try {
 			tostr = o.toString;
 		}
-		catch( $e13 ) {
+		catch( $e15 ) {
 			{
-				var e = $e13;
+				var e = $e15;
 				{
 					$e = [];
 					while($s.length >= $spos) $e.unshift($s.pop());
@@ -5790,9 +6429,9 @@ js.Boot.__instanceof = function(o,cl) {
 			return true;
 		}
 	}
-	catch( $e14 ) {
+	catch( $e16 ) {
 		{
-			var e = $e14;
+			var e = $e16;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -6074,8 +6713,8 @@ IntHash.prototype.toString = function() {
 	var s = new StringBuf();
 	s.b[s.b.length] = "{";
 	var it = this.keys();
-	{ var $it15 = it;
-	while( $it15.hasNext() ) { var i = $it15.next();
+	{ var $it17 = it;
+	while( $it17.hasNext() ) { var i = $it17.next();
 	{
 		s.b[s.b.length] = i;
 		s.b[s.b.length] = " => ";
@@ -6282,14 +6921,57 @@ xpde.JavaPackage.prototype.getByQualident = function(qualident) {
 			return $tmp;
 		}
 	}
-	catch( $e16 ) {
+	catch( $e18 ) {
 		{
-			var e = $e16;
+			var e = $e18;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
 				$s.push($e[0]);
 				throw "invalid qualified reference " + qualident.join(".");
+			}
+		}
+	}
+	$s.pop();
+}
+xpde.JavaPackage.prototype.getClassByQualident = function(qualident) {
+	$s.push("xpde.JavaPackage::getClassByQualident");
+	var $spos = $s.length;
+	try {
+		var unit = function($this) {
+			var $r;
+			var tmp = $this.getByQualident(qualident);
+			$r = (Std["is"](tmp,xpde.CompilationUnit)?tmp:function($this) {
+				var $r;
+				throw "Class cast error";
+				return $r;
+			}($this));
+			return $r;
+		}(this);
+		var type = unit.types.get(qualident[qualident.length - 1]);
+		var $e = (type);
+		switch( $e[1] ) {
+		case 0:
+		var definition = $e[2];
+		{
+			{
+				$s.pop();
+				return definition;
+			}
+		}break;
+		default:{
+			throw false;
+		}break;
+		}
+	}
+	catch( $e19 ) {
+		{
+			var e = $e19;
+			{
+				$e = [];
+				while($s.length >= $spos) $e.unshift($s.pop());
+				$s.push($e[0]);
+				throw "invalid class name " + qualident.join(".");
 			}
 		}
 	}
@@ -6736,12 +7418,12 @@ xpde.parser.Parser.prototype.ClassDeclaration = function(modifiers) {
 	this.classContexts.unshift(new xpde.parser.ClassContext(modifiers,this.t.val));
 	if(this.la.kind == 53) {
 		this.Get();
-		var arg = this.Type();
+		var arg = this.Qualident();
 		this.classContexts[0].extend = arg;
 	}
 	if(this.la.kind == 54) {
 		this.Get();
-		var arg = this.TypeList();
+		var arg = this.QualidentList();
 		this.classContexts[0].implement = arg;
 	}
 	this.ClassBody();
@@ -6883,7 +7565,7 @@ xpde.parser.Parser.prototype.ConstructorDeclaratorRest = function(methodContext)
 		var arg1 = this.QualidentList();
 		methodContext.throwsList = arg1;
 	}
-	var body = this.Block(null);
+	var body = this.Block(methodContext);
 	this.classContexts[0].defineMethod(methodContext);
 	$s.pop();
 }
@@ -7389,7 +8071,7 @@ xpde.parser.Parser.prototype.InterfaceDeclaration = function(modifiers) {
 	this.Expect(1);
 	if(this.la.kind == 53) {
 		this.Get();
-		var extend = this.TypeList();
+		var extend = this.QualidentList();
 	}
 	this.InterfaceBody();
 	{
@@ -7557,7 +8239,7 @@ xpde.parser.Parser.prototype.MethodDeclaratorRest = function(methodContext) {
 		methodContext.throwsList = arg1;
 	}
 	if(this.la.kind == 31) {
-		var block = this.Block(null);
+		var block = this.Block(methodContext);
 		methodContext.body = block;
 	}
 	else if(this.la.kind == 41) {
@@ -7710,7 +8392,7 @@ xpde.parser.Parser.prototype.PdeProgram = function() {
 		this.context.imports.push(["xpde","core","*"]);
 		this.context.imports.push(["xpde","xml","*"]);
 		this.classContexts.unshift(new xpde.parser.ClassContext(new xpde.parser.EnumSet([xpde.Modifier.MPublic]),this.context.packageDeclaration.slice(-1)[0]));
-		this.classContexts[0].extend = xpde.DataType.DTReference(["xpde","core","PApplet"]);
+		this.classContexts[0].extend = ["xpde","core","PApplet"];
 		while(this.isLocalVarDecl(false)) {
 			this.LocalVariableDeclaration();
 			this.Expect(41);
@@ -8204,24 +8886,6 @@ xpde.parser.Parser.prototype.TypeDeclaration = function() {
 	else this.SynErr(104);
 	$s.pop();
 }
-xpde.parser.Parser.prototype.TypeList = function() {
-	$s.push("xpde.parser.Parser::TypeList");
-	var $spos = $s.length;
-	var list = null;
-	list = [];
-	var type = this.Type();
-	list.push(type);
-	while(this.la.kind == 27) {
-		this.Get();
-		var type1 = this.Type();
-		list.push(type1);
-	}
-	{
-		$s.pop();
-		return list;
-	}
-	$s.pop();
-}
 xpde.parser.Parser.prototype.VariableDeclarator = function(modifiers,type) {
 	$s.push("xpde.parser.Parser::VariableDeclarator");
 	var $spos = $s.length;
@@ -8318,7 +8982,7 @@ xpde.parser.Parser.prototype.VoidMethodDeclaratorRest = function(methodContext) 
 		methodContext.throwsList = arg1;
 	}
 	if(this.la.kind == 31) {
-		var block = this.Block(null);
+		var block = this.Block(methodContext);
 		methodContext.body = block;
 	}
 	else if(this.la.kind == 41) {
@@ -8443,8 +9107,8 @@ xpde.parser.Parser.prototype.checkModifierAccess = function(set) {
 xpde.parser.Parser.prototype.checkModifierPermission = function(set,permission) {
 	$s.push("xpde.parser.Parser::checkModifierPermission");
 	var $spos = $s.length;
-	{ var $it17 = set.iterator();
-	while( $it17.hasNext() ) { var modifier = $it17.next();
+	{ var $it20 = set.iterator();
+	while( $it20.hasNext() ) { var modifier = $it20.next();
 	if(!permission.contains(modifier)) this.error("modifier(s) " + set + "not allowed here");
 	else this.checkModifierAccess(set);
 	}}
@@ -8782,7 +9446,7 @@ xpde.parser.Errors.prototype.SemErr = function(line,col,s) {
 	$s.push("xpde.parser.Errors::SemErr");
 	var $spos = $s.length;
 	if(line == null) this.printMsg(line,col,s);
-	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 2008, className : "xpde.parser.Errors", methodName : "SemErr"});
+	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 1995, className : "xpde.parser.Errors", methodName : "SemErr"});
 	this.count++;
 	throw new xpde.parser.FatalError(s);
 	$s.pop();
@@ -9234,7 +9898,7 @@ xpde.parser.Errors.prototype.Warning = function(line,col,s) {
 	$s.push("xpde.parser.Errors::Warning");
 	var $spos = $s.length;
 	if(line == null) this.printMsg(line,col,s);
-	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 2014, className : "xpde.parser.Errors", methodName : "Warning"});
+	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 2001, className : "xpde.parser.Errors", methodName : "Warning"});
 	$s.pop();
 }
 xpde.parser.Errors.prototype.count = null;
@@ -9245,7 +9909,7 @@ xpde.parser.Errors.prototype.printMsg = function(line,column,msg) {
 	b = StringTools.replace(b,"{0}",Std.string(line));
 	b = StringTools.replace(b,"{1}",Std.string(column));
 	b = StringTools.replace(b,"{2}",msg);
-	haxe.Log.trace(b,{ fileName : "Parser.hx", lineNumber : 1851, className : "xpde.parser.Errors", methodName : "printMsg"});
+	haxe.Log.trace(b,{ fileName : "Parser.hx", lineNumber : 1838, className : "xpde.parser.Errors", methodName : "printMsg"});
 	$s.pop();
 }
 xpde.parser.Errors.prototype.__class__ = xpde.parser.Errors;
@@ -9474,12 +10138,13 @@ xpde.parser.ParsedCompilationUnit = function(packageDeclaration,source) { if( pa
 	var $spos = $s.length;
 	this.packageDeclaration = packageDeclaration;
 	this.dependencies = [];
-	this.types = [];
+	this.types = new Hash();
 	this.source = source;
 	this.initialized = false;
 	$s.pop();
 }}
 xpde.parser.ParsedCompilationUnit.__name__ = ["xpde","parser","ParsedCompilationUnit"];
+xpde.parser.ParsedCompilationUnit.prototype.ast = null;
 xpde.parser.ParsedCompilationUnit.prototype.dependencies = null;
 xpde.parser.ParsedCompilationUnit.prototype.initialize = function(rootPackage) {
 	$s.push("xpde.parser.ParsedCompilationUnit::initialize");
@@ -9496,6 +10161,7 @@ xpde.parser.ParsedCompilationUnit.prototype.initialize = function(rootPackage) {
 	if(this.packageDeclaration.join(".") != context.packageDeclaration.join(".")) throw "incompatible package declaration " + context.packageDeclaration.join(".");
 	var resolver = new xpde.parser.LexicalResolver(this);
 	resolver.resolve(context,rootPackage);
+	this.ast = context.ast;
 	$s.pop();
 }
 xpde.parser.ParsedCompilationUnit.prototype.initialized = null;
@@ -9510,9 +10176,11 @@ xpde.parser.CompilationUnitContext = function(packageDeclaration) { if( packageD
 	this.packageDeclaration = packageDeclaration;
 	this.imports = [];
 	this.types = [];
+	this.ast = new Hash();
 	$s.pop();
 }}
 xpde.parser.CompilationUnitContext.__name__ = ["xpde","parser","CompilationUnitContext"];
+xpde.parser.CompilationUnitContext.prototype.ast = null;
 xpde.parser.CompilationUnitContext.prototype.imports = null;
 xpde.parser.CompilationUnitContext.prototype.packageDeclaration = null;
 xpde.parser.CompilationUnitContext.prototype.types = null;
@@ -9561,6 +10229,7 @@ xpde.parser.ClassContext.prototype.defineMethod = function(method) {
 	this.methods.push(method);
 	$s.pop();
 }
+xpde.parser.ClassContext.prototype.definition = null;
 xpde.parser.ClassContext.prototype.extend = null;
 xpde.parser.ClassContext.prototype.fields = null;
 xpde.parser.ClassContext.prototype.identifier = null;
@@ -9572,6 +10241,10 @@ xpde.parser.ClassContext.prototype.objectConstructor = null;
 xpde.parser.ClassContext.prototype.staticConstructor = null;
 xpde.parser.ClassContext.prototype.__class__ = xpde.parser.ClassContext;
 xpde.parser.ClassContext.__interfaces__ = [xpde.parser.TypeContext];
+xpde.parser.DefinesLocalVariables = function() { }
+xpde.parser.DefinesLocalVariables.__name__ = ["xpde","parser","DefinesLocalVariables"];
+xpde.parser.DefinesLocalVariables.prototype.isVariableDefined = null;
+xpde.parser.DefinesLocalVariables.prototype.__class__ = xpde.parser.DefinesLocalVariables;
 xpde.parser.MethodContext = function(modifiers,type,identifier) { if( modifiers === $_ ) return; {
 	$s.push("xpde.parser.MethodContext::new");
 	var $spos = $s.length;
@@ -9585,11 +10258,32 @@ xpde.parser.MethodContext = function(modifiers,type,identifier) { if( modifiers 
 xpde.parser.MethodContext.__name__ = ["xpde","parser","MethodContext"];
 xpde.parser.MethodContext.prototype.body = null;
 xpde.parser.MethodContext.prototype.identifier = null;
+xpde.parser.MethodContext.prototype.isVariableDefined = function(identifier) {
+	$s.push("xpde.parser.MethodContext::isVariableDefined");
+	var $spos = $s.length;
+	{
+		var _g = 0, _g1 = this.parameters;
+		while(_g < _g1.length) {
+			var param = _g1[_g];
+			++_g;
+			if(param.identifier == identifier) {
+				$s.pop();
+				return true;
+			}
+		}
+	}
+	{
+		$s.pop();
+		return false;
+	}
+	$s.pop();
+}
 xpde.parser.MethodContext.prototype.modifiers = null;
 xpde.parser.MethodContext.prototype.parameters = null;
 xpde.parser.MethodContext.prototype.throwsList = null;
 xpde.parser.MethodContext.prototype.type = null;
 xpde.parser.MethodContext.prototype.__class__ = xpde.parser.MethodContext;
+xpde.parser.MethodContext.__interfaces__ = [xpde.parser.DefinesLocalVariables];
 xpde.parser.FieldContext = function(modifiers,type,identifier) { if( modifiers === $_ ) return; {
 	$s.push("xpde.parser.FieldContext::new");
 	var $spos = $s.length;
@@ -9654,6 +10348,7 @@ xpde.parser.BlockContext.prototype.statements = null;
 xpde.parser.BlockContext.prototype.types = null;
 xpde.parser.BlockContext.prototype.variables = null;
 xpde.parser.BlockContext.prototype.__class__ = xpde.parser.BlockContext;
+xpde.parser.BlockContext.__interfaces__ = [xpde.parser.DefinesLocalVariables];
 xpde.parser.LexicalResolver = function(unit) { if( unit === $_ ) return; {
 	$s.push("xpde.parser.LexicalResolver::new");
 	var $spos = $s.length;
@@ -9663,21 +10358,56 @@ xpde.parser.LexicalResolver = function(unit) { if( unit === $_ ) return; {
 	$s.pop();
 }}
 xpde.parser.LexicalResolver.__name__ = ["xpde","parser","LexicalResolver"];
+xpde.parser.LexicalResolver.prototype.addDependency = function(qualident) {
+	$s.push("xpde.parser.LexicalResolver::addDependency");
+	var $spos = $s.length;
+	this.unit.dependencies.push(qualident);
+	(function($this) {
+		var $r;
+		var tmp = $this.rootPackage.getByQualident(qualident);
+		$r = (Std["is"](tmp,xpde.CompilationUnit)?tmp:function($this) {
+			var $r;
+			throw "Class cast error";
+			return $r;
+		}($this));
+		return $r;
+	}(this)).initialize(this.rootPackage);
+	$s.pop();
+}
 xpde.parser.LexicalResolver.prototype.context = null;
+xpde.parser.LexicalResolver.prototype.eArr = function(arr) {
+	$s.push("xpde.parser.LexicalResolver::eArr");
+	var $spos = $s.length;
+	var n = new Array();
+	{
+		var _g = 0;
+		while(_g < arr.length) {
+			var e = arr[_g];
+			++_g;
+			n.push(this.resolveExpression(e));
+		}
+	}
+	{
+		$s.pop();
+		return n;
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.fields = null;
 xpde.parser.LexicalResolver.prototype.generateClassDefinition = function(type) {
 	$s.push("xpde.parser.LexicalResolver::generateClassDefinition");
 	var $spos = $s.length;
-	var definition = { identifier : type.identifier, modifiers : type.modifiers, fields : new Hash(), methods : new Hash(), extend : this.qualifyDataType(type.extend), implement : []}
+	var definition = { identifier : type.identifier, modifiers : type.modifiers, fields : new Hash(), methods : new Hash(), extend : this.qualifyReference(type.extend), implement : []}
 	if(type.implement != null) {
 		var _g = 0, _g1 = type.implement;
 		while(_g < _g1.length) {
 			var dt = _g1[_g];
 			++_g;
-			definition.implement.push(this.qualifyDataType(dt));
+			definition.implement.push(this.qualifyReference(dt));
 		}
 	}
-	{ var $it18 = type.fields.iterator();
-	while( $it18.hasNext() ) { var field = $it18.next();
+	{ var $it21 = type.fields.iterator();
+	while( $it21.hasNext() ) { var field = $it21.next();
 	definition.fields.set(field.identifier,this.generateFieldDefinition(field));
 	}}
 	{
@@ -9688,6 +10418,7 @@ xpde.parser.LexicalResolver.prototype.generateClassDefinition = function(type) {
 			definition.methods.set(method.identifier,this.generateMethodDefinition(method));
 		}
 	}
+	type.definition = definition;
 	{
 		$s.pop();
 		return definition;
@@ -9741,6 +10472,20 @@ xpde.parser.LexicalResolver.prototype.generateMethodDefinition = function(method
 	$s.pop();
 }
 xpde.parser.LexicalResolver.prototype.imports = null;
+xpde.parser.LexicalResolver.prototype.initializeResolvers = function(definition) {
+	$s.push("xpde.parser.LexicalResolver::initializeResolvers");
+	var $spos = $s.length;
+	if(definition.extend != null) this.initializeResolvers(this.rootPackage.getClassByQualident(definition.extend));
+	{ var $it22 = definition.methods.iterator();
+	while( $it22.hasNext() ) { var method = $it22.next();
+	this.methods.set(method.identifier,method);
+	}}
+	{ var $it23 = definition.fields.iterator();
+	while( $it23.hasNext() ) { var field = $it23.next();
+	this.fields.set(field.identifier,field);
+	}}
+	$s.pop();
+}
 xpde.parser.LexicalResolver.prototype.loadImports = function() {
 	$s.push("xpde.parser.LexicalResolver::loadImports");
 	var $spos = $s.length;
@@ -9767,14 +10512,14 @@ xpde.parser.LexicalResolver.prototype.loadImports = function() {
 					}($this));
 					return $r;
 				}(this);
-				{ var $it19 = importPackage.contents.keys();
-				while( $it19.hasNext() ) { var item = $it19.next();
+				{ var $it24 = importPackage.contents.keys();
+				while( $it24.hasNext() ) { var item = $it24.next();
 				if(Std["is"](importPackage.contents.get(item),xpde.CompilationUnit)) this.imports.set(item,ident.slice(0,-1).concat([item]));
 				}}
 			}
-			catch( $e20 ) {
+			catch( $e25 ) {
 				{
-					var e = $e20;
+					var e = $e25;
 					{
 						$e = [];
 						while($s.length >= $spos) $e.unshift($s.pop());
@@ -9787,6 +10532,8 @@ xpde.parser.LexicalResolver.prototype.loadImports = function() {
 	}
 	$s.pop();
 }
+xpde.parser.LexicalResolver.prototype.memberTypes = null;
+xpde.parser.LexicalResolver.prototype.methods = null;
 xpde.parser.LexicalResolver.prototype.qualifiers = null;
 xpde.parser.LexicalResolver.prototype.qualifyDataType = function(type) {
 	$s.push("xpde.parser.LexicalResolver::qualifyDataType");
@@ -9832,13 +10579,17 @@ xpde.parser.LexicalResolver.prototype.qualifyDataType = function(type) {
 xpde.parser.LexicalResolver.prototype.qualifyReference = function(qualident) {
 	$s.push("xpde.parser.LexicalResolver::qualifyReference");
 	var $spos = $s.length;
+	if(qualident == null) {
+		$s.pop();
+		return null;
+	}
 	if(this.qualifiers.exists(qualident[0])) {
 		var $tmp = this.qualifiers.get(qualident[0]).concat(qualident.slice(1));
 		$s.pop();
 		return $tmp;
 	}
 	if(this.imports.exists(qualident[0])) {
-		this.unit.dependencies.push(this.imports.get(qualident[0]));
+		this.addDependency(this.imports.get(qualident[0]));
 		this.qualifiers.set(qualident[0],this.imports.get(qualident[0]));
 		{
 			var $tmp = this.imports.get(qualident[0]);
@@ -9847,7 +10598,7 @@ xpde.parser.LexicalResolver.prototype.qualifyReference = function(qualident) {
 		}
 	}
 	this.rootPackage.getByQualident(qualident);
-	this.unit.dependencies.push(qualident);
+	this.addDependency(qualident);
 	{
 		$s.pop();
 		return qualident;
@@ -9872,7 +10623,7 @@ xpde.parser.LexicalResolver.prototype.resolve = function(context,rootPackage) {
 		while(_g < _g1.length) {
 			var type = _g1[_g];
 			++_g;
-			if(Std["is"](type,xpde.parser.ClassContext)) this.unit.types.push(xpde.TypeDefinition.TClass(this.generateClassDefinition(function($this) {
+			if(Std["is"](type,xpde.parser.ClassContext)) this.unit.types.set(type.identifier,xpde.TypeDefinition.TClass(this.generateClassDefinition(function($this) {
 				var $r;
 				var tmp = type;
 				$r = (Std["is"](tmp,xpde.parser.ClassContext)?tmp:function($this) {
@@ -9883,6 +10634,358 @@ xpde.parser.LexicalResolver.prototype.resolve = function(context,rootPackage) {
 				return $r;
 			}(this))));
 		}
+	}
+	{
+		var _g = 0, _g1 = context.types;
+		while(_g < _g1.length) {
+			var type = _g1[_g];
+			++_g;
+			if(Std["is"](type,xpde.parser.ClassContext)) this.resolveClass(context,function($this) {
+				var $r;
+				var tmp = type;
+				$r = (Std["is"](tmp,xpde.parser.ClassContext)?tmp:function($this) {
+					var $r;
+					throw "Class cast error";
+					return $r;
+				}($this));
+				return $r;
+			}(this));
+		}
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveClass = function(context,classContext) {
+	$s.push("xpde.parser.LexicalResolver::resolveClass");
+	var $spos = $s.length;
+	this.methods = new Hash();
+	this.fields = new Hash();
+	this.memberTypes = new Hash();
+	this.initializeResolvers(classContext.definition);
+	{
+		var _g = 0, _g1 = classContext.methods;
+		while(_g < _g1.length) {
+			var methodContext = _g1[_g];
+			++_g;
+			if(methodContext.body != null) {
+				context.ast.set(context.packageDeclaration.concat([classContext.identifier]).join(".") + "|" + methodContext.identifier,this.resolveStatement(methodContext.body));
+			}
+		}
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveExpression = function(expression) {
+	$s.push("xpde.parser.LexicalResolver::resolveExpression");
+	var $spos = $s.length;
+	if(expression == null) {
+		$s.pop();
+		return null;
+	}
+	{
+		var $tmp = function($this) {
+			var $r;
+			var $e = (expression);
+			switch( $e[1] ) {
+			case 0:
+			var sizes = $e[3], type = $e[2];
+			{
+				$r = xpde.parser.Expression.EArrayInstantiation($this.qualifyDataType(type),$this.eArr(sizes));
+			}break;
+			case 1:
+			var args = $e[3], type = $e[2];
+			{
+				$r = xpde.parser.Expression.EObjectInstantiation($this.qualifyReference(type),$this.eArr(args));
+			}break;
+			case 2:
+			var falseExp = $e[4], trueExp = $e[3], condition = $e[2];
+			{
+				$r = xpde.parser.Expression.EConditional($this.resolveExpression(condition),$this.resolveExpression(trueExp),$this.resolveExpression(falseExp));
+			}break;
+			case 3:
+			var base = $e[3], index = $e[2];
+			{
+				$r = xpde.parser.Expression.EArrayAccess($this.resolveExpression(index),$this.resolveExpression(base));
+			}break;
+			case 4:
+			{
+				$r = expression;
+			}break;
+			case 5:
+			var base = $e[3], identifier = $e[2];
+			{
+				$r = xpde.parser.Expression.EReference(identifier,$this.resolveExpression(base));
+			}break;
+			case 6:
+			{
+				$r = expression;
+			}break;
+			case 7:
+			{
+				$r = expression;
+			}break;
+			case 8:
+			{
+				$r = expression;
+			}break;
+			case 9:
+			var args = $e[4], base = $e[3], identifier = $e[2];
+			{
+				$r = xpde.parser.Expression.ECall(identifier,$this.resolveExpression(base),$this.eArr(args));
+			}break;
+			case 10:
+			var args = $e[2];
+			{
+				$r = xpde.parser.Expression.EThisCall($this.eArr(args));
+			}break;
+			case 11:
+			var args = $e[2];
+			{
+				$r = xpde.parser.Expression.ESuperCall($this.eArr(args));
+			}break;
+			case 12:
+			var value = $e[4], base = $e[3], index = $e[2];
+			{
+				$r = xpde.parser.Expression.EArrayAssignment($this.resolveExpression(index),$this.resolveExpression(base),$this.resolveExpression(value));
+			}break;
+			case 13:
+			var value = $e[4], base = $e[3], identifier = $e[2];
+			{
+				$r = xpde.parser.Expression.EAssignment(identifier,$this.resolveExpression(base),$this.resolveExpression(value));
+			}break;
+			case 14:
+			var value = $e[3], identifier = $e[2];
+			{
+				$r = xpde.parser.Expression.ELocalAssignment(identifier,$this.resolveExpression(value));
+			}break;
+			case 15:
+			var value = $e[3], type = $e[2];
+			{
+				$r = xpde.parser.Expression.ECast($this.qualifyDataType(type),$this.resolveExpression(value));
+			}break;
+			case 16:
+			var reference = $e[3], type = $e[2];
+			{
+				$r = xpde.parser.Expression.EPrefixOperation(type,$this.resolveExpression(reference));
+			}break;
+			case 17:
+			var right = $e[4], left = $e[3], type = $e[2];
+			{
+				$r = xpde.parser.Expression.EInfixOperation(type,$this.resolveExpression(left),$this.resolveExpression(right));
+			}break;
+			case 18:
+			var type = $e[3], expression1 = $e[2];
+			{
+				$r = xpde.parser.Expression.EInstanceOf($this.resolveExpression(expression1),$this.qualifyDataType(type));
+			}break;
+			case 19:
+			var reference = $e[3], type = $e[2];
+			{
+				$r = xpde.parser.Expression.EPrefix(type,$this.resolveExpression(reference));
+			}break;
+			case 20:
+			var reference = $e[3], type = $e[2];
+			{
+				$r = xpde.parser.Expression.EPostfix(type,$this.resolveExpression(reference));
+			}break;
+			case 21:
+			var values = $e[2];
+			{
+				$r = xpde.parser.Expression.EArrayLiteral($this.eArr(values));
+			}break;
+			case 22:
+			{
+				$r = expression;
+			}break;
+			case 23:
+			{
+				$r = expression;
+			}break;
+			case 24:
+			{
+				$r = expression;
+			}break;
+			case 25:
+			{
+				$r = expression;
+			}break;
+			case 26:
+			{
+				$r = expression;
+			}break;
+			case 27:
+			{
+				$r = expression;
+			}break;
+			case 28:
+			var expression1 = $e[2];
+			{
+				$r = function($this) {
+					var $r;
+					var $e = (expression1);
+					switch( $e[1] ) {
+					case 0:
+					var identifier = $e[2];
+					{
+						$r = $this.resolveLexicalReference(identifier);
+					}break;
+					case 1:
+					var args = $e[3], identifier = $e[2];
+					{
+						$r = $this.resolveLexicalCall(identifier,args);
+					}break;
+					case 2:
+					var value = $e[3], identifier = $e[2];
+					{
+						$r = $this.resolveLexicalAssignment(identifier,value);
+					}break;
+					default:{
+						$r = null;
+					}break;
+					}
+					return $r;
+				}($this);
+			}break;
+			default:{
+				$r = null;
+			}break;
+			}
+			return $r;
+		}(this);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveLexicalAssignment = function(identifier,value) {
+	$s.push("xpde.parser.LexicalResolver::resolveLexicalAssignment");
+	var $spos = $s.length;
+	if(this.fields.exists(identifier)) {
+		var $tmp = xpde.parser.Expression.EAssignment(identifier,xpde.parser.Expression.EThisReference,value);
+		$s.pop();
+		return $tmp;
+	}
+	throw "assignment to nonexistant variable \"" + identifier + "\"";
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveLexicalCall = function(identifier,args) {
+	$s.push("xpde.parser.LexicalResolver::resolveLexicalCall");
+	var $spos = $s.length;
+	if(this.methods.exists(identifier)) {
+		var $tmp = xpde.parser.Expression.ECall(identifier,xpde.parser.Expression.EThisReference,args);
+		$s.pop();
+		return $tmp;
+	}
+	throw "call to nonexistant method \"" + identifier + "\"";
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveLexicalReference = function(identifier) {
+	$s.push("xpde.parser.LexicalResolver::resolveLexicalReference");
+	var $spos = $s.length;
+	if(this.fields.exists(identifier)) {
+		var $tmp = xpde.parser.Expression.EReference(identifier,xpde.parser.Expression.EThisReference);
+		$s.pop();
+		return $tmp;
+	}
+	throw "reference to nonexistant variable \"" + identifier + "\"";
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveStatement = function(statement) {
+	$s.push("xpde.parser.LexicalResolver::resolveStatement");
+	var $spos = $s.length;
+	if(statement == null) {
+		$s.pop();
+		return null;
+	}
+	{
+		var $tmp = function($this) {
+			var $r;
+			var $e = (statement);
+			switch( $e[1] ) {
+			case 0:
+			var statements = $e[2];
+			{
+				$r = function($this) {
+					var $r;
+					var s = new Array();
+					{
+						var _g = 0;
+						while(_g < statements.length) {
+							var statement1 = statements[_g];
+							++_g;
+							s.push($this.resolveStatement(statement1));
+						}
+					}
+					$r = xpde.parser.Statement.SBlock(s);
+					return $r;
+				}($this);
+			}break;
+			case 1:
+			{
+				$r = statement;
+			}break;
+			case 2:
+			var elseBlock = $e[4], thenBlock = $e[3], condition = $e[2];
+			{
+				$r = xpde.parser.Statement.SConditional($this.resolveExpression(condition),$this.resolveStatement(thenBlock),$this.resolveStatement(elseBlock));
+			}break;
+			case 3:
+			{
+				$r = statement;
+			}break;
+			case 4:
+			var definition = $e[2];
+			{
+				$r = statement;
+			}break;
+			case 5:
+			var expression = $e[2];
+			{
+				$r = xpde.parser.Statement.SExpression($this.resolveExpression(expression));
+			}break;
+			case 6:
+			var body = $e[3], label = $e[2];
+			{
+				$r = xpde.parser.Statement.SLabel(label,$this.resolveStatement(body));
+			}break;
+			case 7:
+			var doLoop = $e[4], body = $e[3], condition = $e[2];
+			{
+				$r = xpde.parser.Statement.SLoop($this.resolveExpression(condition),$this.resolveStatement(body),doLoop);
+			}break;
+			case 8:
+			var value = $e[2];
+			{
+				$r = xpde.parser.Statement.SReturn($this.resolveExpression(value));
+			}break;
+			case 9:
+			var expression = $e[2];
+			{
+				$r = xpde.parser.Statement.SThrow($this.resolveExpression(expression));
+			}break;
+			case 10:
+			var finallyBody = $e[4], catches = $e[3], body = $e[2];
+			{
+				$r = function($this) {
+					var $r;
+					{
+						var _g = 0;
+						while(_g < catches.length) {
+							var catchBlock = catches[_g];
+							++_g;
+							catchBlock.body = $this.resolveStatement(catchBlock.body);
+						}
+					}
+					$r = xpde.parser.Statement.STry($this.resolveStatement(body),catches,$this.resolveStatement(finallyBody));
+					return $r;
+				}($this);
+			}break;
+			default:{
+				$r = null;
+			}break;
+			}
+			return $r;
+		}(this);
+		$s.pop();
+		return $tmp;
 	}
 	$s.pop();
 }
@@ -10072,8 +11175,8 @@ js.Boot.__init();
 haxe.Serializer.USE_CACHE = false;
 haxe.Serializer.USE_ENUM_INDEX = false;
 haxe.Serializer.BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%:";
-xpde.core.js.PApplet.__rtti = "<class path=\"xpde.core.js.PApplet\" params=\"\" file=\"C:\\Documents and Settings\\Ryan Family\\Desktop\\tim\\xpde\\src/xpde/core/js/PApplet.hx\">\n\t<implements path=\"haxe.rtti.Infos\"/>\n\t<__javartti__ public=\"1\" line=\"10\" static=\"1\"><c path=\"String\"/></__javartti__>\n\t<new public=\"1\" line=\"19\"><f a=\"?curElement\">\n\t<c path=\"String\"/>\n\t<e path=\"Void\"/>\n</f></new>\n\t<haxe_dynamic><d/></haxe_dynamic>\n</class>";
-xpde.core.js.PApplet.__javartti__ = "\r\npublic class PApplet {\r\n\tnative void size(int width, int height);\r\n\tnative void noStroke();\r\n\tnative void smooth();\r\n\tnative void noLoop();\r\n\tnative void ellipse(int x, int y, int width, int height);\r\n}";
+xpde.core.js.PApplet.__rtti = "<class path=\"xpde.core.js.PApplet\" params=\"\" file=\"C:\\Documents and Settings\\Ryan Family\\Desktop\\tim\\xpde\\src/xpde/core/js/PApplet.hx\">\n\t<implements path=\"haxe.rtti.Infos\"/>\n\t<__javartti__ public=\"1\" line=\"10\" static=\"1\"><c path=\"String\"/></__javartti__>\n\t<new public=\"1\" line=\"20\"><f a=\"?curElement\">\n\t<c path=\"String\"/>\n\t<e path=\"Void\"/>\n</f></new>\n\t<haxe_dynamic><d/></haxe_dynamic>\n</class>";
+xpde.core.js.PApplet.__javartti__ = "\r\npublic class PApplet {\r\n\tnative void size(int width, int height);\r\n\tnative void noStroke();\r\n\tnative void smooth();\r\n\tnative void noLoop();\r\n\tnative void fill(float value);\r\n\tnative void ellipse(int x, int y, int width, int height);\r\n}";
 js.Lib.onerror = null;
 xpde.parser.Buffer.EOF = 65535;
 xpde.parser.Scanner.EOL = 10;

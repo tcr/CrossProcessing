@@ -695,33 +695,33 @@ ArrayInitializer<out expression:Expression>		(. var values:Array<Expression> = [
 /*---------------------------------------------------------------------------*/
 
 MethodDeclaratorRest<.methodContext:MethodContext.>
-= FormalParameters<.out arg:Array<FormalParameter>.>	(. methodContext.parameters = arg; .)
-  BracketsOpt<out bCount:Int>				/*[TODO] lolwhut */
+= FormalParameters<.out arg:Array<FormalParameter>.>		(. methodContext.parameters = arg; .)
+  BracketsOpt<out bCount:Int>					/*[TODO] lolwhut */
   [ "throws" QualidentList<.out arg:Array<Array<String>>.>	(. methodContext.throwsList = arg; .)
     ]
-  ( Block<out block:Statement, null>			(. methodContext.body = block; .)
+  ( Block<out block:Statement, methodContext>			(. methodContext.body = block; .)
   | ";"
-  )							(. classContexts[0].defineMethod(methodContext); .)
+  )								(. classContexts[0].defineMethod(methodContext); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
 VoidMethodDeclaratorRest<.methodContext:MethodContext.>
-= FormalParameters<.out arg:Array<FormalParameter>.>	(. methodContext.parameters = arg; .) 
+= FormalParameters<.out arg:Array<FormalParameter>.>		(. methodContext.parameters = arg; .) 
   [ "throws" QualidentList<.out arg:Array<Array<String>>.>	(. methodContext.throwsList = arg; .)
     ]
-  (Block<out block:Statement, null>			(. methodContext.body = block; .)
-    | ';')						(. classContexts[0].defineMethod(methodContext); .)
+  (Block<out block:Statement, methodContext>			(. methodContext.body = block; .)
+    | ';')							(. classContexts[0].defineMethod(methodContext); .)
 .
 
 /*---------------------------------------------------------------------------*/
 
 ConstructorDeclaratorRest<.methodContext:MethodContext.>
-=							(. checkModifierPermission(methodContext.modifiers, ModifierSet.constructors); .)
-  FormalParameters<.out arg:Array<FormalParameter>.>	(. methodContext.parameters = arg; .)
+=								(. checkModifierPermission(methodContext.modifiers, ModifierSet.constructors); .)
+  FormalParameters<.out arg:Array<FormalParameter>.>		(. methodContext.parameters = arg; .)
   [ "throws" QualidentList<.out arg:Array<Array<String>>.>	(. methodContext.throwsList = arg; .)
     ]
-  Block<out body:Statement, null>			(. classContexts[0].defineMethod(methodContext); .)
+  Block<out body:Statement, methodContext>			(. classContexts[0].defineMethod(methodContext); .)
 .
 
 /*---------------------------------------------------------------------------*/
@@ -861,8 +861,8 @@ Statement0<out statement:Statement>
 
 /*---------------------------------------------------------------------------*/
 
-Block<out statement:Statement, parent:BlockContext>	(. blockContexts.unshift(new BlockContext(parent)); .)
-= "{" { BlockStatement } "}"				(. statement = blockContexts.shift().getBlockStatement(); .)
+Block<out statement:Statement, parent:DefinesLocalVariables>	(. blockContexts.unshift(new BlockContext(parent)); .)
+= "{" { BlockStatement } "}"					(. statement = blockContexts.shift().getBlockStatement(); .)
 .
 
 /*---------------------------------------------------------------------------*/

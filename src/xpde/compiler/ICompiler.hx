@@ -6,12 +6,12 @@
 package xpde.compiler;
 
 import xpde.parser.AST;
-import xpde.parser.Parser;
+import xpde.Rtti;
 
 interface ICompiler
 {
-	function compileClass(packageDefinition:Array<String>, definition:ClassDefinition):Void;
-	function importClass(qualident:Array<String>):Void;
-//[TODO] return Class
-	function getClass(name:Array<String>):Dynamic;
+	function compileClass(packageDeclaration:Array<String>, definition:ClassDefinition, ast:Hash<Statement>):Void;
+//	function importClass(qualident:Array<String>, klass:Class):Void;
+//[TODO] return Class?
+//	function getClass(name:Array<String>):Dynamic;
 }
