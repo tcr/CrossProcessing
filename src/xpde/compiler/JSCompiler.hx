@@ -172,10 +172,10 @@ class JSCompiler implements ICompiler
 
 		switch (statement)
 		{
-		    case SBlock(statements):
+		    case SBlock(variables, statements):
 			output.add('{\n');
-//			for (definition in definitions)
-//				compileDefinition(definition);
+			for (variable in variables)
+				output.add('var ' + variable.identifier + ' = 0;\n');
 			for (statement in statements)
 				compileStatement(statement);
 			output.add('}\n');
@@ -201,8 +201,6 @@ class JSCompiler implements ICompiler
 			if (label != null)
 				output.add(' ' + label);
 			output.add(';\n');
-		
-		    case SDefinition(definition):
 			
 		    case SExpression(expression):
 			compileExpression(expression);

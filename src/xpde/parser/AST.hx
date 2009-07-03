@@ -108,11 +108,10 @@ enum LexicalExpression
 
 enum Statement 
 {
-	SBlock(statements:Array<Statement>);
+	SBlock(variables:Hash<FieldDefinition>, statements:Array<Statement>);
 	SBreak(?label:String);
 	SConditional(condition:Expression, thenBlock:Statement, ?elseBlock:Statement);
 	SContinue(?label:String);
-	SDefinition(definition:LocalDefinition);
 	SExpression(expression:Expression);
 	SLabel(label:String, body:Statement);
 	SLoop(condition:Expression, body:Statement, doLoop:Bool);
@@ -120,12 +119,6 @@ enum Statement
 //	SSwitch();
 	SThrow(expression:Expression);
 	STry(body:Statement, ?catches:Array<Catch>, ?finallyBody:Statement);
-}
-
-enum LocalDefinition
-{
-	DVariable(identifier:String, modifiers:EnumSet<Modifier>, type:DataType);
-	DClass(identifier:String);
 }
 
 typedef Catch = {

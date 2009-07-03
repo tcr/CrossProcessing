@@ -10,6 +10,7 @@ import xpde.compiler.JSCompiler;
 //import xpde.interpreter.JSInterpreter;
 
 import xpde.parser.Parser;
+import xpde.parser.Context;
 import xpde.parser.Scanner;
 
 /**
@@ -43,17 +44,17 @@ class JSMain
 	{
 		// initialize root packages
 		var rootPackage = new JavaPackage();
-		var papplet = new ParsedCompilationUnit(['xpde', 'core', 'PApplet'], new StringInput(PApplet.__javartti__));
-		rootPackage.addCompilationUnit(papplet.packageDeclaration, papplet);
+		var papplet = new ParsedCompilationUnit('PApplet', new StringInput(PApplet.__javartti__));
+		rootPackage.addCompilationUnit(['xpde', 'core'], papplet);
 		
 		// initialize main sketch
-		var sketch = new ParsedCompilationUnit(['Sketch'], new StringInput(getSource()));
-		rootPackage.addCompilationUnit(sketch.packageDeclaration, sketch);
+		var sketch = new ParsedCompilationUnit('Sketch', new StringInput(getSource()));
+		rootPackage.addCompilationUnit([], sketch);
 		sketch.initialize(rootPackage);
 		
 		// source compiler
 		var compiler = new JSCompiler();
-		compiler.compileClass(['Sketch'], Type.enumParameters(sketch.types.get('Sketch'))[0], sketch.ast);
+		compiler.compileClass([], Type.enumParameters(sketch.types.get('Sketch'))[0], sketch.ast);
 		
 		// compile main sketch
 //		var interpreter:IInterpreter = new JSInterpreter();

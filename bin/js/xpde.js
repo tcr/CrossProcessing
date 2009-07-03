@@ -577,6 +577,1100 @@ StringTools.hex = function(n,digits) {
 	$s.pop();
 }
 StringTools.prototype.__class__ = StringTools;
+xpde.Modifier = { __ename__ : ["xpde","Modifier"], __constructs__ : ["MPublic","MPrivate","MProtected","MStatic","MFinal","MSynchronized","MVolatile","MTransient","MNative","MAbstract","MStrictfp"] }
+xpde.Modifier.MAbstract = ["MAbstract",9];
+xpde.Modifier.MAbstract.toString = $estr;
+xpde.Modifier.MAbstract.__enum__ = xpde.Modifier;
+xpde.Modifier.MFinal = ["MFinal",4];
+xpde.Modifier.MFinal.toString = $estr;
+xpde.Modifier.MFinal.__enum__ = xpde.Modifier;
+xpde.Modifier.MNative = ["MNative",8];
+xpde.Modifier.MNative.toString = $estr;
+xpde.Modifier.MNative.__enum__ = xpde.Modifier;
+xpde.Modifier.MPrivate = ["MPrivate",1];
+xpde.Modifier.MPrivate.toString = $estr;
+xpde.Modifier.MPrivate.__enum__ = xpde.Modifier;
+xpde.Modifier.MProtected = ["MProtected",2];
+xpde.Modifier.MProtected.toString = $estr;
+xpde.Modifier.MProtected.__enum__ = xpde.Modifier;
+xpde.Modifier.MPublic = ["MPublic",0];
+xpde.Modifier.MPublic.toString = $estr;
+xpde.Modifier.MPublic.__enum__ = xpde.Modifier;
+xpde.Modifier.MStatic = ["MStatic",3];
+xpde.Modifier.MStatic.toString = $estr;
+xpde.Modifier.MStatic.__enum__ = xpde.Modifier;
+xpde.Modifier.MStrictfp = ["MStrictfp",10];
+xpde.Modifier.MStrictfp.toString = $estr;
+xpde.Modifier.MStrictfp.__enum__ = xpde.Modifier;
+xpde.Modifier.MSynchronized = ["MSynchronized",5];
+xpde.Modifier.MSynchronized.toString = $estr;
+xpde.Modifier.MSynchronized.__enum__ = xpde.Modifier;
+xpde.Modifier.MTransient = ["MTransient",7];
+xpde.Modifier.MTransient.toString = $estr;
+xpde.Modifier.MTransient.__enum__ = xpde.Modifier;
+xpde.Modifier.MVolatile = ["MVolatile",6];
+xpde.Modifier.MVolatile.toString = $estr;
+xpde.Modifier.MVolatile.__enum__ = xpde.Modifier;
+xpde.parser = {}
+xpde.parser.EnumSet = function(enums) { if( enums === $_ ) return; {
+	$s.push("xpde.parser.EnumSet::new");
+	var $spos = $s.length;
+	this.set = [];
+	if(enums != null) {
+		var _g = 0;
+		while(_g < enums.length) {
+			var item = enums[_g];
+			++_g;
+			this.add(item);
+		}
+	}
+	$s.pop();
+}}
+xpde.parser.EnumSet.__name__ = ["xpde","parser","EnumSet"];
+xpde.parser.EnumSet.prototype.add = function(item) {
+	$s.push("xpde.parser.EnumSet::add");
+	var $spos = $s.length;
+	if(!this.contains(item)) this.set.push(item);
+	$s.pop();
+}
+xpde.parser.EnumSet.prototype.contains = function(itemA) {
+	$s.push("xpde.parser.EnumSet::contains");
+	var $spos = $s.length;
+	{
+		var _g = 0, _g1 = this.set;
+		while(_g < _g1.length) {
+			var itemB = _g1[_g];
+			++_g;
+			if(Type.enumEq(itemA,itemB)) {
+				$s.pop();
+				return true;
+			}
+		}
+	}
+	{
+		$s.pop();
+		return false;
+	}
+	$s.pop();
+}
+xpde.parser.EnumSet.prototype.iterator = function() {
+	$s.push("xpde.parser.EnumSet::iterator");
+	var $spos = $s.length;
+	{
+		var $tmp = this.set.iterator();
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+xpde.parser.EnumSet.prototype.set = null;
+xpde.parser.EnumSet.prototype.toString = function() {
+	$s.push("xpde.parser.EnumSet::toString");
+	var $spos = $s.length;
+	{
+		var $tmp = this.set.join(" ");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+xpde.parser.EnumSet.prototype.__class__ = xpde.parser.EnumSet;
+xpde.parser.ModifierSet = function() { }
+xpde.parser.ModifierSet.__name__ = ["xpde","parser","ModifierSet"];
+xpde.parser.ModifierSet.prototype.__class__ = xpde.parser.ModifierSet;
+xpde.parser.OperationBuilder = function(p) { if( p === $_ ) return; {
+	$s.push("xpde.parser.OperationBuilder::new");
+	var $spos = $s.length;
+	this.operators = [];
+	this.operands = [];
+	$s.pop();
+}}
+xpde.parser.OperationBuilder.__name__ = ["xpde","parser","OperationBuilder"];
+xpde.parser.OperationBuilder.prototype.lookupOperatorPrecedence = function(operator) {
+	$s.push("xpde.parser.OperationBuilder::lookupOperatorPrecedence");
+	var $spos = $s.length;
+	{
+		var $tmp = function($this) {
+			var $r;
+			var $e = (operator);
+			switch( $e[1] ) {
+			case 0:
+			{
+				$r = 3;
+			}break;
+			case 1:
+			{
+				$r = 4;
+			}break;
+			case 2:
+			{
+				$r = 5;
+			}break;
+			case 3:
+			{
+				$r = 6;
+			}break;
+			case 4:
+			{
+				$r = 7;
+			}break;
+			case 5:
+			case 6:
+			{
+				$r = 8;
+			}break;
+			case 7:
+			case 8:
+			case 9:
+			case 10:
+			{
+				$r = 9;
+			}break;
+			case 11:
+			case 12:
+			case 13:
+			{
+				$r = 10;
+			}break;
+			case 14:
+			case 15:
+			{
+				$r = 11;
+			}break;
+			case 16:
+			case 17:
+			case 18:
+			{
+				$r = 12;
+			}break;
+			default:{
+				$r = null;
+			}break;
+			}
+			return $r;
+		}(this);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+xpde.parser.OperationBuilder.prototype.operand = function(operand) {
+	$s.push("xpde.parser.OperationBuilder::operand");
+	var $spos = $s.length;
+	this.operands.push(operand);
+	$s.pop();
+}
+xpde.parser.OperationBuilder.prototype.operands = null;
+xpde.parser.OperationBuilder.prototype.operator = function(operator) {
+	$s.push("xpde.parser.OperationBuilder::operator");
+	var $spos = $s.length;
+	this.reduce(this.lookupOperatorPrecedence(operator));
+	this.operators.push(operator);
+	$s.pop();
+}
+xpde.parser.OperationBuilder.prototype.operators = null;
+xpde.parser.OperationBuilder.prototype.reduce = function(precedence) {
+	$s.push("xpde.parser.OperationBuilder::reduce");
+	var $spos = $s.length;
+	if(precedence == null) precedence = 0;
+	while(this.operators.length > 0 && this.lookupOperatorPrecedence(this.operators[this.operators.length - 1]) >= precedence) this.reduceOperator(this.operators.pop());
+	{
+		var $tmp = this.operands[0];
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+xpde.parser.OperationBuilder.prototype.reduceOperator = function(operator) {
+	$s.push("xpde.parser.OperationBuilder::reduceOperator");
+	var $spos = $s.length;
+	var b = this.operands.pop(), a = this.operands.pop();
+	this.operands.push(xpde.parser.Expression.EInfixOperation(operator,a,b));
+	$s.pop();
+}
+xpde.parser.OperationBuilder.prototype.__class__ = xpde.parser.OperationBuilder;
+xpde.JavaPackageItem = function() { }
+xpde.JavaPackageItem.__name__ = ["xpde","JavaPackageItem"];
+xpde.JavaPackageItem.prototype.identifier = null;
+xpde.JavaPackageItem.prototype.__class__ = xpde.JavaPackageItem;
+xpde.CompilationUnit = function() { }
+xpde.CompilationUnit.__name__ = ["xpde","CompilationUnit"];
+xpde.CompilationUnit.prototype.dependencies = null;
+xpde.CompilationUnit.prototype.identifier = null;
+xpde.CompilationUnit.prototype.initialize = null;
+xpde.CompilationUnit.prototype.types = null;
+xpde.CompilationUnit.prototype.__class__ = xpde.CompilationUnit;
+xpde.CompilationUnit.__interfaces__ = [xpde.JavaPackageItem];
+xpde.parser.ParsedCompilationUnit = function(identifier,source) { if( identifier === $_ ) return; {
+	$s.push("xpde.parser.ParsedCompilationUnit::new");
+	var $spos = $s.length;
+	this.identifier = identifier;
+	this.dependencies = [];
+	this.types = new Hash();
+	this.source = source;
+	this.initialized = false;
+	$s.pop();
+}}
+xpde.parser.ParsedCompilationUnit.__name__ = ["xpde","parser","ParsedCompilationUnit"];
+xpde.parser.ParsedCompilationUnit.prototype.ast = null;
+xpde.parser.ParsedCompilationUnit.prototype.dependencies = null;
+xpde.parser.ParsedCompilationUnit.prototype.identifier = null;
+xpde.parser.ParsedCompilationUnit.prototype.initialize = function(rootPackage) {
+	$s.push("xpde.parser.ParsedCompilationUnit::initialize");
+	var $spos = $s.length;
+	if(this.initialized) {
+		$s.pop();
+		return;
+	}
+	this.initialized = true;
+	var context = new xpde.parser.CompilationUnitContext(this.identifier);
+	var scanner = new xpde.parser.Scanner(this.source);
+	var parser = new xpde.parser.Parser(scanner,context);
+	parser.Parse();
+	var resolver = new xpde.parser.LexicalResolver(this);
+	resolver.resolve(context,rootPackage);
+	this.ast = context.ast;
+	$s.pop();
+}
+xpde.parser.ParsedCompilationUnit.prototype.initialized = null;
+xpde.parser.ParsedCompilationUnit.prototype.source = null;
+xpde.parser.ParsedCompilationUnit.prototype.types = null;
+xpde.parser.ParsedCompilationUnit.prototype.__class__ = xpde.parser.ParsedCompilationUnit;
+xpde.parser.ParsedCompilationUnit.__interfaces__ = [xpde.CompilationUnit];
+xpde.parser.CompilationUnitContext = function(identifier) { if( identifier === $_ ) return; {
+	$s.push("xpde.parser.CompilationUnitContext::new");
+	var $spos = $s.length;
+	this.identifier = identifier;
+	this.packageDeclaration = [];
+	this.imports = [];
+	this.types = [];
+	this.ast = new Hash();
+	$s.pop();
+}}
+xpde.parser.CompilationUnitContext.__name__ = ["xpde","parser","CompilationUnitContext"];
+xpde.parser.CompilationUnitContext.prototype.ast = null;
+xpde.parser.CompilationUnitContext.prototype.identifier = null;
+xpde.parser.CompilationUnitContext.prototype.imports = null;
+xpde.parser.CompilationUnitContext.prototype.packageDeclaration = null;
+xpde.parser.CompilationUnitContext.prototype.types = null;
+xpde.parser.CompilationUnitContext.prototype.__class__ = xpde.parser.CompilationUnitContext;
+xpde.parser.TypeContext = function() { }
+xpde.parser.TypeContext.__name__ = ["xpde","parser","TypeContext"];
+xpde.parser.TypeContext.prototype.extend = null;
+xpde.parser.TypeContext.prototype.identifier = null;
+xpde.parser.TypeContext.prototype.implement = null;
+xpde.parser.TypeContext.prototype.__class__ = xpde.parser.TypeContext;
+xpde.parser.ClassContext = function(modifiers,identifier) { if( modifiers === $_ ) return; {
+	$s.push("xpde.parser.ClassContext::new");
+	var $spos = $s.length;
+	this.modifiers = modifiers;
+	this.identifier = identifier;
+	this.implement = [];
+	this.fields = new Hash();
+	this.memberTypes = new Hash();
+	this.methods = [];
+	this.staticConstructor = new xpde.parser.BlockContext();
+	this.objectConstructor = new xpde.parser.BlockContext();
+	this.anonClassID = 0;
+	$s.pop();
+}}
+xpde.parser.ClassContext.__name__ = ["xpde","parser","ClassContext"];
+xpde.parser.ClassContext.prototype.anonClassID = null;
+xpde.parser.ClassContext.prototype.defineField = function(field) {
+	$s.push("xpde.parser.ClassContext::defineField");
+	var $spos = $s.length;
+	if(this.fields.exists(field.identifier)) throw "redeclaration of field " + field.identifier + " in class " + this.identifier;
+	this.fields.set(field.identifier,field);
+	if(field.initialization != null) if(field.modifiers.contains(xpde.Modifier.MStatic)) this.staticConstructor.pushStatement(xpde.parser.Statement.SExpression(xpde.parser.Expression.EAssignment(field.identifier,xpde.parser.Expression.ELexExpression(xpde.parser.LexicalExpression.LReference(this.identifier)),field.initialization)));
+	else this.objectConstructor.pushStatement(xpde.parser.Statement.SExpression(xpde.parser.Expression.EAssignment(field.identifier,xpde.parser.Expression.EThisReference,field.initialization)));
+	$s.pop();
+}
+xpde.parser.ClassContext.prototype.defineMemberType = function(identifier,qualident) {
+	$s.push("xpde.parser.ClassContext::defineMemberType");
+	var $spos = $s.length;
+	if(this.memberTypes.exists(identifier)) throw "redeclaration of member type " + identifier + " in class " + this.identifier;
+	this.memberTypes.set(identifier,qualident);
+	$s.pop();
+}
+xpde.parser.ClassContext.prototype.defineMethod = function(method) {
+	$s.push("xpde.parser.ClassContext::defineMethod");
+	var $spos = $s.length;
+	this.methods.push(method);
+	$s.pop();
+}
+xpde.parser.ClassContext.prototype.definition = null;
+xpde.parser.ClassContext.prototype.extend = null;
+xpde.parser.ClassContext.prototype.fields = null;
+xpde.parser.ClassContext.prototype.identifier = null;
+xpde.parser.ClassContext.prototype.implement = null;
+xpde.parser.ClassContext.prototype.memberTypes = null;
+xpde.parser.ClassContext.prototype.methods = null;
+xpde.parser.ClassContext.prototype.modifiers = null;
+xpde.parser.ClassContext.prototype.objectConstructor = null;
+xpde.parser.ClassContext.prototype.staticConstructor = null;
+xpde.parser.ClassContext.prototype.__class__ = xpde.parser.ClassContext;
+xpde.parser.ClassContext.__interfaces__ = [xpde.parser.TypeContext];
+xpde.parser.DefinesLocalVariables = function() { }
+xpde.parser.DefinesLocalVariables.__name__ = ["xpde","parser","DefinesLocalVariables"];
+xpde.parser.DefinesLocalVariables.prototype.isVariableDefined = null;
+xpde.parser.DefinesLocalVariables.prototype.__class__ = xpde.parser.DefinesLocalVariables;
+xpde.parser.MethodContext = function(modifiers,type,identifier) { if( modifiers === $_ ) return; {
+	$s.push("xpde.parser.MethodContext::new");
+	var $spos = $s.length;
+	this.modifiers = modifiers;
+	this.type = type;
+	this.identifier = identifier;
+	this.throwsList = [];
+	this.parameters = [];
+	$s.pop();
+}}
+xpde.parser.MethodContext.__name__ = ["xpde","parser","MethodContext"];
+xpde.parser.MethodContext.prototype.body = null;
+xpde.parser.MethodContext.prototype.identifier = null;
+xpde.parser.MethodContext.prototype.isVariableDefined = function(identifier) {
+	$s.push("xpde.parser.MethodContext::isVariableDefined");
+	var $spos = $s.length;
+	{
+		var _g = 0, _g1 = this.parameters;
+		while(_g < _g1.length) {
+			var param = _g1[_g];
+			++_g;
+			if(param.identifier == identifier) {
+				$s.pop();
+				return true;
+			}
+		}
+	}
+	{
+		$s.pop();
+		return false;
+	}
+	$s.pop();
+}
+xpde.parser.MethodContext.prototype.modifiers = null;
+xpde.parser.MethodContext.prototype.parameters = null;
+xpde.parser.MethodContext.prototype.throwsList = null;
+xpde.parser.MethodContext.prototype.type = null;
+xpde.parser.MethodContext.prototype.__class__ = xpde.parser.MethodContext;
+xpde.parser.MethodContext.__interfaces__ = [xpde.parser.DefinesLocalVariables];
+xpde.parser.FieldContext = function(modifiers,type,identifier) { if( modifiers === $_ ) return; {
+	$s.push("xpde.parser.FieldContext::new");
+	var $spos = $s.length;
+	this.modifiers = modifiers;
+	this.type = type;
+	this.identifier = identifier;
+	$s.pop();
+}}
+xpde.parser.FieldContext.__name__ = ["xpde","parser","FieldContext"];
+xpde.parser.FieldContext.prototype.getDefinition = function() {
+	$s.push("xpde.parser.FieldContext::getDefinition");
+	var $spos = $s.length;
+	{
+		var $tmp = { modifiers : this.modifiers, type : this.type, identifier : this.identifier}
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+xpde.parser.FieldContext.prototype.identifier = null;
+xpde.parser.FieldContext.prototype.initialization = null;
+xpde.parser.FieldContext.prototype.modifiers = null;
+xpde.parser.FieldContext.prototype.type = null;
+xpde.parser.FieldContext.prototype.__class__ = xpde.parser.FieldContext;
+xpde.parser.BlockContext = function(parent) { if( parent === $_ ) return; {
+	$s.push("xpde.parser.BlockContext::new");
+	var $spos = $s.length;
+	this.parent = parent;
+	this.statements = [];
+	this.variables = new Hash();
+	$s.pop();
+}}
+xpde.parser.BlockContext.__name__ = ["xpde","parser","BlockContext"];
+xpde.parser.BlockContext.prototype.defineVariable = function(variable) {
+	$s.push("xpde.parser.BlockContext::defineVariable");
+	var $spos = $s.length;
+	if(this.isVariableDefined(variable.identifier)) throw "redeclaration of variable " + variable.identifier + " in block scope";
+	this.variables.set(variable.identifier,variable.getDefinition());
+	if(variable.initialization != null) this.pushStatement(xpde.parser.Statement.SExpression(xpde.parser.Expression.ELocalAssignment(variable.identifier,variable.initialization)));
+	$s.pop();
+}
+xpde.parser.BlockContext.prototype.getBlockStatement = function() {
+	$s.push("xpde.parser.BlockContext::getBlockStatement");
+	var $spos = $s.length;
+	{
+		var $tmp = xpde.parser.Statement.SBlock(this.variables,this.statements);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+xpde.parser.BlockContext.prototype.isVariableDefined = function(identifier) {
+	$s.push("xpde.parser.BlockContext::isVariableDefined");
+	var $spos = $s.length;
+	{
+		var $tmp = this.variables.exists(identifier) || ((this.parent != null?this.parent.isVariableDefined(identifier):false));
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+xpde.parser.BlockContext.prototype.parent = null;
+xpde.parser.BlockContext.prototype.pushStatement = function(statement) {
+	$s.push("xpde.parser.BlockContext::pushStatement");
+	var $spos = $s.length;
+	this.statements.push(statement);
+	$s.pop();
+}
+xpde.parser.BlockContext.prototype.statements = null;
+xpde.parser.BlockContext.prototype.variables = null;
+xpde.parser.BlockContext.prototype.__class__ = xpde.parser.BlockContext;
+xpde.parser.BlockContext.__interfaces__ = [xpde.parser.DefinesLocalVariables];
+xpde.parser.LexicalResolver = function(unit) { if( unit === $_ ) return; {
+	$s.push("xpde.parser.LexicalResolver::new");
+	var $spos = $s.length;
+	this.unit = unit;
+	this.qualifiers = new Hash();
+	this.imports = new Hash();
+	$s.pop();
+}}
+xpde.parser.LexicalResolver.__name__ = ["xpde","parser","LexicalResolver"];
+xpde.parser.LexicalResolver.prototype.addDependency = function(qualident) {
+	$s.push("xpde.parser.LexicalResolver::addDependency");
+	var $spos = $s.length;
+	this.unit.dependencies.push(qualident);
+	(function($this) {
+		var $r;
+		var tmp = $this.rootPackage.getByQualident(qualident);
+		$r = (Std["is"](tmp,xpde.CompilationUnit)?tmp:function($this) {
+			var $r;
+			throw "Class cast error";
+			return $r;
+		}($this));
+		return $r;
+	}(this)).initialize(this.rootPackage);
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.context = null;
+xpde.parser.LexicalResolver.prototype.eArr = function(arr) {
+	$s.push("xpde.parser.LexicalResolver::eArr");
+	var $spos = $s.length;
+	var n = new Array();
+	{
+		var _g = 0;
+		while(_g < arr.length) {
+			var e = arr[_g];
+			++_g;
+			n.push(this.resolveExpression(e));
+		}
+	}
+	{
+		$s.pop();
+		return n;
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.fields = null;
+xpde.parser.LexicalResolver.prototype.generateClassDefinition = function(type) {
+	$s.push("xpde.parser.LexicalResolver::generateClassDefinition");
+	var $spos = $s.length;
+	var definition = { identifier : type.identifier, modifiers : type.modifiers, fields : new Hash(), methods : new Hash(), extend : this.qualifyReference(type.extend), implement : []}
+	if(type.implement != null) {
+		var _g = 0, _g1 = type.implement;
+		while(_g < _g1.length) {
+			var dt = _g1[_g];
+			++_g;
+			definition.implement.push(this.qualifyReference(dt));
+		}
+	}
+	{ var $it2 = type.fields.iterator();
+	while( $it2.hasNext() ) { var field = $it2.next();
+	definition.fields.set(field.identifier,this.generateFieldDefinition(field));
+	}}
+	{
+		var _g = 0, _g1 = type.methods;
+		while(_g < _g1.length) {
+			var method = _g1[_g];
+			++_g;
+			definition.methods.set(method.identifier,this.generateMethodDefinition(method));
+		}
+	}
+	type.definition = definition;
+	{
+		$s.pop();
+		return definition;
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.generateFieldDefinition = function(field) {
+	$s.push("xpde.parser.LexicalResolver::generateFieldDefinition");
+	var $spos = $s.length;
+	{
+		var $tmp = { identifier : field.identifier, modifiers : field.modifiers, type : this.qualifyDataType(field.type)}
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.generateFormalParameter = function(param) {
+	$s.push("xpde.parser.LexicalResolver::generateFormalParameter");
+	var $spos = $s.length;
+	{
+		var $tmp = { identifier : param.identifier, type : this.qualifyDataType(param.type), modifiers : param.modifiers}
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.generateMethodDefinition = function(method) {
+	$s.push("xpde.parser.LexicalResolver::generateMethodDefinition");
+	var $spos = $s.length;
+	var definition = { identifier : method.identifier, type : this.qualifyDataType(method.type), modifiers : method.modifiers, throwsList : [], parameters : []}
+	if(method.throwsList != null) {
+		var _g = 0, _g1 = method.throwsList;
+		while(_g < _g1.length) {
+			var qualident = _g1[_g];
+			++_g;
+			definition.throwsList.push(this.qualifyReference(qualident));
+		}
+	}
+	{
+		var _g = 0, _g1 = method.parameters;
+		while(_g < _g1.length) {
+			var param = _g1[_g];
+			++_g;
+			definition.parameters.push(this.generateFormalParameter(param));
+		}
+	}
+	{
+		$s.pop();
+		return definition;
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.imports = null;
+xpde.parser.LexicalResolver.prototype.initializeResolvers = function(definition) {
+	$s.push("xpde.parser.LexicalResolver::initializeResolvers");
+	var $spos = $s.length;
+	if(definition.extend != null) this.initializeResolvers(this.rootPackage.getClass(definition.extend));
+	{ var $it3 = definition.methods.iterator();
+	while( $it3.hasNext() ) { var method = $it3.next();
+	this.methods.set(method.identifier,method);
+	}}
+	{ var $it4 = definition.fields.iterator();
+	while( $it4.hasNext() ) { var field = $it4.next();
+	this.fields.set(field.identifier,field);
+	}}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.loadImports = function() {
+	$s.push("xpde.parser.LexicalResolver::loadImports");
+	var $spos = $s.length;
+	var _g = 0, _g1 = this.context.imports;
+	while(_g < _g1.length) {
+		var ident = _g1[_g];
+		++_g;
+		if(ident[ident.length - 1] != "*") {
+			if(!Std["is"](this.rootPackage.getByQualident(ident.slice(0,-1)),xpde.CompilationUnit)) {
+				$s.pop();
+				return;
+			}
+			this.imports.set(ident[ident.length - 1],ident);
+		}
+		else {
+			try {
+				var importPackage = function($this) {
+					var $r;
+					var tmp = $this.rootPackage.getByQualident(ident.slice(0,-1));
+					$r = (Std["is"](tmp,xpde.JavaPackage)?tmp:function($this) {
+						var $r;
+						throw "Class cast error";
+						return $r;
+					}($this));
+					return $r;
+				}(this);
+				{ var $it5 = importPackage.contents.keys();
+				while( $it5.hasNext() ) { var item = $it5.next();
+				if(Std["is"](importPackage.contents.get(item),xpde.CompilationUnit)) this.imports.set(item,ident.slice(0,-1).concat([item]));
+				}}
+			}
+			catch( $e6 ) {
+				{
+					var e = $e6;
+					{
+						$e = [];
+						while($s.length >= $spos) $e.unshift($s.pop());
+						$s.push($e[0]);
+						null;
+					}
+				}
+			}
+		}
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.memberTypes = null;
+xpde.parser.LexicalResolver.prototype.methods = null;
+xpde.parser.LexicalResolver.prototype.qualifiers = null;
+xpde.parser.LexicalResolver.prototype.qualifyDataType = function(type) {
+	$s.push("xpde.parser.LexicalResolver::qualifyDataType");
+	var $spos = $s.length;
+	if(type == null) {
+		$s.pop();
+		return null;
+	}
+	{
+		var $tmp = function($this) {
+			var $r;
+			var $e = (type);
+			switch( $e[1] ) {
+			case 0:
+			{
+				$r = type;
+			}break;
+			case 2:
+			{
+				$r = type;
+			}break;
+			case 1:
+			var qualident = $e[2];
+			{
+				$r = xpde.DataType.DTReference($this.qualifyReference(qualident));
+			}break;
+			case 3:
+			var dimensions = $e[3], qualident = $e[2];
+			{
+				$r = xpde.DataType.DTReferenceArray($this.qualifyReference(qualident),dimensions);
+			}break;
+			default:{
+				$r = null;
+			}break;
+			}
+			return $r;
+		}(this);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.qualifyReference = function(qualident) {
+	$s.push("xpde.parser.LexicalResolver::qualifyReference");
+	var $spos = $s.length;
+	if(qualident == null) {
+		$s.pop();
+		return null;
+	}
+	if(this.qualifiers.exists(qualident[0])) {
+		var $tmp = this.qualifiers.get(qualident[0]).concat(qualident.slice(1));
+		$s.pop();
+		return $tmp;
+	}
+	if(this.imports.exists(qualident[0])) {
+		this.addDependency(this.imports.get(qualident[0]));
+		this.qualifiers.set(qualident[0],this.imports.get(qualident[0]));
+		{
+			var $tmp = this.imports.get(qualident[0]);
+			$s.pop();
+			return $tmp;
+		}
+	}
+	this.rootPackage.getByQualident(qualident);
+	this.addDependency(qualident);
+	{
+		$s.pop();
+		return qualident;
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolve = function(context,rootPackage) {
+	$s.push("xpde.parser.LexicalResolver::resolve");
+	var $spos = $s.length;
+	this.context = context;
+	this.rootPackage = rootPackage;
+	{
+		var _g = 0, _g1 = context.types;
+		while(_g < _g1.length) {
+			var type = _g1[_g];
+			++_g;
+			this.qualifiers.set(type.identifier,context.packageDeclaration.concat([type.identifier]));
+		}
+	}
+	{
+		var _g = 0, _g1 = context.types;
+		while(_g < _g1.length) {
+			var type = _g1[_g];
+			++_g;
+			if(Std["is"](type,xpde.parser.ClassContext)) this.unit.types.set(type.identifier,xpde.TypeDefinition.TClass(this.generateClassDefinition(function($this) {
+				var $r;
+				var tmp = type;
+				$r = (Std["is"](tmp,xpde.parser.ClassContext)?tmp:function($this) {
+					var $r;
+					throw "Class cast error";
+					return $r;
+				}($this));
+				return $r;
+			}(this))));
+		}
+	}
+	{
+		var _g = 0, _g1 = context.types;
+		while(_g < _g1.length) {
+			var type = _g1[_g];
+			++_g;
+			if(Std["is"](type,xpde.parser.ClassContext)) this.resolveClass(context,function($this) {
+				var $r;
+				var tmp = type;
+				$r = (Std["is"](tmp,xpde.parser.ClassContext)?tmp:function($this) {
+					var $r;
+					throw "Class cast error";
+					return $r;
+				}($this));
+				return $r;
+			}(this));
+		}
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveClass = function(context,classContext) {
+	$s.push("xpde.parser.LexicalResolver::resolveClass");
+	var $spos = $s.length;
+	this.methods = new Hash();
+	this.fields = new Hash();
+	this.memberTypes = new Hash();
+	this.initializeResolvers(classContext.definition);
+	{
+		var _g = 0, _g1 = classContext.methods;
+		while(_g < _g1.length) {
+			var methodContext = _g1[_g];
+			++_g;
+			if(methodContext.body != null) {
+				context.ast.set(context.packageDeclaration.concat([classContext.identifier]).join(".") + "|" + methodContext.identifier,this.resolveStatement(methodContext.body));
+			}
+		}
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveExpression = function(expression) {
+	$s.push("xpde.parser.LexicalResolver::resolveExpression");
+	var $spos = $s.length;
+	if(expression == null) {
+		$s.pop();
+		return null;
+	}
+	{
+		var $tmp = function($this) {
+			var $r;
+			var $e = (expression);
+			switch( $e[1] ) {
+			case 0:
+			var sizes = $e[3], type = $e[2];
+			{
+				$r = xpde.parser.Expression.EArrayInstantiation($this.qualifyDataType(type),$this.eArr(sizes));
+			}break;
+			case 1:
+			var args = $e[3], type = $e[2];
+			{
+				$r = xpde.parser.Expression.EObjectInstantiation($this.qualifyReference(type),$this.eArr(args));
+			}break;
+			case 2:
+			var falseExp = $e[4], trueExp = $e[3], condition = $e[2];
+			{
+				$r = xpde.parser.Expression.EConditional($this.resolveExpression(condition),$this.resolveExpression(trueExp),$this.resolveExpression(falseExp));
+			}break;
+			case 3:
+			var base = $e[3], index = $e[2];
+			{
+				$r = xpde.parser.Expression.EArrayAccess($this.resolveExpression(index),$this.resolveExpression(base));
+			}break;
+			case 4:
+			{
+				$r = expression;
+			}break;
+			case 5:
+			var base = $e[3], identifier = $e[2];
+			{
+				$r = xpde.parser.Expression.EReference(identifier,$this.resolveExpression(base));
+			}break;
+			case 6:
+			{
+				$r = expression;
+			}break;
+			case 7:
+			{
+				$r = expression;
+			}break;
+			case 8:
+			{
+				$r = expression;
+			}break;
+			case 9:
+			var args = $e[4], base = $e[3], identifier = $e[2];
+			{
+				$r = xpde.parser.Expression.ECall(identifier,$this.resolveExpression(base),$this.eArr(args));
+			}break;
+			case 10:
+			var args = $e[2];
+			{
+				$r = xpde.parser.Expression.EThisCall($this.eArr(args));
+			}break;
+			case 11:
+			var args = $e[2];
+			{
+				$r = xpde.parser.Expression.ESuperCall($this.eArr(args));
+			}break;
+			case 12:
+			var value = $e[4], base = $e[3], index = $e[2];
+			{
+				$r = xpde.parser.Expression.EArrayAssignment($this.resolveExpression(index),$this.resolveExpression(base),$this.resolveExpression(value));
+			}break;
+			case 13:
+			var value = $e[4], base = $e[3], identifier = $e[2];
+			{
+				$r = xpde.parser.Expression.EAssignment(identifier,$this.resolveExpression(base),$this.resolveExpression(value));
+			}break;
+			case 14:
+			var value = $e[3], identifier = $e[2];
+			{
+				$r = xpde.parser.Expression.ELocalAssignment(identifier,$this.resolveExpression(value));
+			}break;
+			case 15:
+			var value = $e[3], type = $e[2];
+			{
+				$r = xpde.parser.Expression.ECast($this.qualifyDataType(type),$this.resolveExpression(value));
+			}break;
+			case 16:
+			var reference = $e[3], type = $e[2];
+			{
+				$r = xpde.parser.Expression.EPrefixOperation(type,$this.resolveExpression(reference));
+			}break;
+			case 17:
+			var right = $e[4], left = $e[3], type = $e[2];
+			{
+				$r = xpde.parser.Expression.EInfixOperation(type,$this.resolveExpression(left),$this.resolveExpression(right));
+			}break;
+			case 18:
+			var type = $e[3], expression1 = $e[2];
+			{
+				$r = xpde.parser.Expression.EInstanceOf($this.resolveExpression(expression1),$this.qualifyDataType(type));
+			}break;
+			case 19:
+			var reference = $e[3], type = $e[2];
+			{
+				$r = xpde.parser.Expression.EPrefix(type,$this.resolveExpression(reference));
+			}break;
+			case 20:
+			var reference = $e[3], type = $e[2];
+			{
+				$r = xpde.parser.Expression.EPostfix(type,$this.resolveExpression(reference));
+			}break;
+			case 21:
+			var values = $e[2];
+			{
+				$r = xpde.parser.Expression.EArrayLiteral($this.eArr(values));
+			}break;
+			case 22:
+			{
+				$r = expression;
+			}break;
+			case 23:
+			{
+				$r = expression;
+			}break;
+			case 24:
+			{
+				$r = expression;
+			}break;
+			case 25:
+			{
+				$r = expression;
+			}break;
+			case 26:
+			{
+				$r = expression;
+			}break;
+			case 27:
+			{
+				$r = expression;
+			}break;
+			case 28:
+			var expression1 = $e[2];
+			{
+				$r = function($this) {
+					var $r;
+					var $e = (expression1);
+					switch( $e[1] ) {
+					case 0:
+					var identifier = $e[2];
+					{
+						$r = $this.resolveLexicalReference(identifier);
+					}break;
+					case 1:
+					var args = $e[3], identifier = $e[2];
+					{
+						$r = $this.resolveLexicalCall(identifier,args);
+					}break;
+					case 2:
+					var value = $e[3], identifier = $e[2];
+					{
+						$r = $this.resolveLexicalAssignment(identifier,value);
+					}break;
+					default:{
+						$r = null;
+					}break;
+					}
+					return $r;
+				}($this);
+			}break;
+			default:{
+				$r = null;
+			}break;
+			}
+			return $r;
+		}(this);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveLexicalAssignment = function(identifier,value) {
+	$s.push("xpde.parser.LexicalResolver::resolveLexicalAssignment");
+	var $spos = $s.length;
+	if(this.fields.exists(identifier)) {
+		var $tmp = xpde.parser.Expression.EAssignment(identifier,xpde.parser.Expression.EThisReference,value);
+		$s.pop();
+		return $tmp;
+	}
+	throw "assignment to nonexistant variable \"" + identifier + "\"";
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveLexicalCall = function(identifier,args) {
+	$s.push("xpde.parser.LexicalResolver::resolveLexicalCall");
+	var $spos = $s.length;
+	if(this.methods.exists(identifier)) {
+		var $tmp = xpde.parser.Expression.ECall(identifier,xpde.parser.Expression.EThisReference,args);
+		$s.pop();
+		return $tmp;
+	}
+	throw "call to nonexistant method \"" + identifier + "\"";
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveLexicalReference = function(identifier) {
+	$s.push("xpde.parser.LexicalResolver::resolveLexicalReference");
+	var $spos = $s.length;
+	if(this.fields.exists(identifier)) {
+		var $tmp = xpde.parser.Expression.EReference(identifier,xpde.parser.Expression.EThisReference);
+		$s.pop();
+		return $tmp;
+	}
+	throw "reference to nonexistant variable \"" + identifier + "\"";
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveStatement = function(statement) {
+	$s.push("xpde.parser.LexicalResolver::resolveStatement");
+	var $spos = $s.length;
+	if(statement == null) {
+		$s.pop();
+		return null;
+	}
+	{
+		var $tmp = function($this) {
+			var $r;
+			var $e = (statement);
+			switch( $e[1] ) {
+			case 0:
+			var statements = $e[3], variables = $e[2];
+			{
+				$r = function($this) {
+					var $r;
+					var v = new Hash();
+					{ var $it7 = variables.keys();
+					while( $it7.hasNext() ) { var key = $it7.next();
+					{
+						var variable = variables.get(key);
+						v.set(key,{ identifier : variable.identifier, type : $this.qualifyDataType(variable.type), modifiers : variable.modifiers});
+					}
+					}}
+					var s = new Array();
+					{
+						var _g = 0;
+						while(_g < statements.length) {
+							var statement1 = statements[_g];
+							++_g;
+							s.push($this.resolveStatement(statement1));
+						}
+					}
+					$r = xpde.parser.Statement.SBlock(v,s);
+					return $r;
+				}($this);
+			}break;
+			case 1:
+			{
+				$r = statement;
+			}break;
+			case 2:
+			var elseBlock = $e[4], thenBlock = $e[3], condition = $e[2];
+			{
+				$r = xpde.parser.Statement.SConditional($this.resolveExpression(condition),$this.resolveStatement(thenBlock),$this.resolveStatement(elseBlock));
+			}break;
+			case 3:
+			{
+				$r = statement;
+			}break;
+			case 4:
+			var expression = $e[2];
+			{
+				$r = xpde.parser.Statement.SExpression($this.resolveExpression(expression));
+			}break;
+			case 5:
+			var body = $e[3], label = $e[2];
+			{
+				$r = xpde.parser.Statement.SLabel(label,$this.resolveStatement(body));
+			}break;
+			case 6:
+			var doLoop = $e[4], body = $e[3], condition = $e[2];
+			{
+				$r = xpde.parser.Statement.SLoop($this.resolveExpression(condition),$this.resolveStatement(body),doLoop);
+			}break;
+			case 7:
+			var value = $e[2];
+			{
+				$r = xpde.parser.Statement.SReturn($this.resolveExpression(value));
+			}break;
+			case 8:
+			var expression = $e[2];
+			{
+				$r = xpde.parser.Statement.SThrow($this.resolveExpression(expression));
+			}break;
+			case 9:
+			var finallyBody = $e[4], catches = $e[3], body = $e[2];
+			{
+				$r = function($this) {
+					var $r;
+					{
+						var _g = 0;
+						while(_g < catches.length) {
+							var catchBlock = catches[_g];
+							++_g;
+							catchBlock.body = $this.resolveStatement(catchBlock.body);
+						}
+					}
+					$r = xpde.parser.Statement.STry($this.resolveStatement(body),catches,$this.resolveStatement(finallyBody));
+					return $r;
+				}($this);
+			}break;
+			default:{
+				$r = null;
+			}break;
+			}
+			return $r;
+		}(this);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.rootPackage = null;
+xpde.parser.LexicalResolver.prototype.unit = null;
+xpde.parser.LexicalResolver.prototype.__class__ = xpde.parser.LexicalResolver;
 Reflect = function() { }
 Reflect.__name__ = ["Reflect"];
 Reflect.hasField = function(o,field) {
@@ -588,8 +1682,8 @@ Reflect.hasField = function(o,field) {
 		return $tmp;
 	}
 	var arr = Reflect.fields(o);
-	{ var $it2 = arr.iterator();
-	while( $it2.hasNext() ) { var t = $it2.next();
+	{ var $it8 = arr.iterator();
+	while( $it8.hasNext() ) { var t = $it8.next();
 	if(t == field) {
 		$s.pop();
 		return true;
@@ -608,9 +1702,9 @@ Reflect.field = function(o,field) {
 	try {
 		v = o[field];
 	}
-	catch( $e3 ) {
+	catch( $e9 ) {
 		{
-			var e = $e3;
+			var e = $e9;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -662,9 +1756,9 @@ Reflect.fields = function(o) {
 		try {
 			t = o.__proto__;
 		}
-		catch( $e4 ) {
+		catch( $e10 ) {
 			{
-				var e = $e4;
+				var e = $e10;
 				{
 					$e = [];
 					while($s.length >= $spos) $e.unshift($s.pop());
@@ -843,13 +1937,13 @@ JSMain.interpret = function() {
 	$s.push("JSMain::interpret");
 	var $spos = $s.length;
 	var rootPackage = new xpde.JavaPackage();
-	var papplet = new xpde.parser.ParsedCompilationUnit(["xpde","core","PApplet"],new haxe.io.StringInput(xpde.core.js.PApplet.__javartti__));
-	rootPackage.addCompilationUnit(papplet.packageDeclaration,papplet);
-	var sketch = new xpde.parser.ParsedCompilationUnit(["Sketch"],new haxe.io.StringInput(JSMain.getSource()));
-	rootPackage.addCompilationUnit(sketch.packageDeclaration,sketch);
+	var papplet = new xpde.parser.ParsedCompilationUnit("PApplet",new haxe.io.StringInput(xpde.core.js.PApplet.__javartti__));
+	rootPackage.addCompilationUnit(["xpde","core"],papplet);
+	var sketch = new xpde.parser.ParsedCompilationUnit("Sketch",new haxe.io.StringInput(JSMain.getSource()));
+	rootPackage.addCompilationUnit([],sketch);
 	sketch.initialize(rootPackage);
 	var compiler = new xpde.compiler.JSCompiler();
-	compiler.compileClass(["Sketch"],Type.enumParameters(sketch.types.get("Sketch"))[0],sketch.ast);
+	compiler.compileClass([],Type.enumParameters(sketch.types.get("Sketch"))[0],sketch.ast);
 	$s.pop();
 }
 JSMain.prototype.__class__ = JSMain;
@@ -1095,8 +2189,8 @@ xpde.compiler.JSCompiler.prototype.compileClass = function(packageDeclaration,de
 	this.output.add("};\n");
 	this.output.add(this.qualident.join(".") + ".__name__ = [\"" + this.qualident.join("\",\"") + "\"];\n");
 	this.output.add(this.qualident.join(".") + ".prototype.__class__ = " + this.qualident.join(".") + ";\n");
-	{ var $it5 = definition.methods.iterator();
-	while( $it5.hasNext() ) { var method = $it5.next();
+	{ var $it11 = definition.methods.iterator();
+	while( $it11.hasNext() ) { var method = $it11.next();
 	{
 		this.compileMethod(method);
 	}
@@ -1485,8 +2579,8 @@ xpde.compiler.JSCompiler.prototype.compileMethod = function(definition) {
 xpde.compiler.JSCompiler.prototype.compileModifiers = function(modifiers) {
 	$s.push("xpde.compiler.JSCompiler::compileModifiers");
 	var $spos = $s.length;
-	{ var $it6 = modifiers.iterator();
-	while( $it6.hasNext() ) { var modifier = $it6.next();
+	{ var $it12 = modifiers.iterator();
+	while( $it12.hasNext() ) { var modifier = $it12.next();
 	var $e = (modifier);
 	switch( $e[1] ) {
 	case 0:
@@ -1574,9 +2668,13 @@ xpde.compiler.JSCompiler.prototype.compileStatement = function(statement) {
 	var $e = (statement);
 	switch( $e[1] ) {
 	case 0:
-	var statements = $e[2];
+	var statements = $e[3], variables = $e[2];
 	{
 		this.output.add("{\n");
+		{ var $it13 = variables.iterator();
+		while( $it13.hasNext() ) { var variable = $it13.next();
+		this.output.add("var " + variable.identifier + " = 0;\n");
+		}}
 		{
 			var _g = 0;
 			while(_g < statements.length) {
@@ -1614,23 +2712,18 @@ xpde.compiler.JSCompiler.prototype.compileStatement = function(statement) {
 		this.output.add(";\n");
 	}break;
 	case 4:
-	var definition = $e[2];
-	{
-		null;
-	}break;
-	case 5:
 	var expression = $e[2];
 	{
 		this.compileExpression(expression);
 		this.output.add(";\n");
 	}break;
-	case 6:
+	case 5:
 	var body = $e[3], label = $e[2];
 	{
 		this.output.add(label + ": ");
 		this.compileStatement(body);
 	}break;
-	case 7:
+	case 6:
 	var doLoop = $e[4], body = $e[3], condition = $e[2];
 	{
 		if(doLoop) {
@@ -1647,7 +2740,7 @@ xpde.compiler.JSCompiler.prototype.compileStatement = function(statement) {
 			this.compileStatement(body);
 		}
 	}break;
-	case 8:
+	case 7:
 	var value = $e[2];
 	{
 		this.output.add("return");
@@ -1657,14 +2750,14 @@ xpde.compiler.JSCompiler.prototype.compileStatement = function(statement) {
 		}
 		this.output.add(";\n");
 	}break;
-	case 9:
+	case 8:
 	var expression = $e[2];
 	{
 		this.output.add("throw");
 		this.compileExpression(expression);
 		this.output.add(";\n");
 	}break;
-	case 10:
+	case 9:
 	var finallyBody = $e[4], catches = $e[3], body = $e[2];
 	{
 		this.output.add("try ");
@@ -2413,8 +3506,8 @@ haxe.Serializer.prototype.serialize = function(v) {
 		case List:{
 			this.buf.add("l");
 			var v1 = v;
-			{ var $it7 = v1.iterator();
-			while( $it7.hasNext() ) { var i = $it7.next();
+			{ var $it14 = v1.iterator();
+			while( $it14.hasNext() ) { var i = $it14.next();
 			this.serialize(i);
 			}}
 			this.buf.add("h");
@@ -2427,8 +3520,8 @@ haxe.Serializer.prototype.serialize = function(v) {
 		case Hash:{
 			this.buf.add("b");
 			var v1 = v;
-			{ var $it8 = v1.keys();
-			while( $it8.hasNext() ) { var k = $it8.next();
+			{ var $it15 = v1.keys();
+			while( $it15.hasNext() ) { var k = $it15.next();
 			{
 				this.serializeString(k);
 				this.serialize(v1.get(k));
@@ -2439,8 +3532,8 @@ haxe.Serializer.prototype.serialize = function(v) {
 		case IntHash:{
 			this.buf.add("q");
 			var v1 = v;
-			{ var $it9 = v1.keys();
-			while( $it9.hasNext() ) { var k = $it9.next();
+			{ var $it16 = v1.keys();
+			while( $it16.hasNext() ) { var k = $it16.next();
 			{
 				this.buf.add(":");
 				this.buf.add(k);
@@ -2713,9 +3806,9 @@ Type.resolveClass = function(name) {
 	try {
 		cl = eval(name);
 	}
-	catch( $e10 ) {
+	catch( $e17 ) {
 		{
-			var e = $e10;
+			var e = $e17;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -2741,9 +3834,9 @@ Type.resolveEnum = function(name) {
 	try {
 		e = eval(name);
 	}
-	catch( $e11 ) {
+	catch( $e18 ) {
 		{
-			var err = $e11;
+			var err = $e18;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -4740,7 +5833,6 @@ js.Lib.setErrorHandler = function(f) {
 	$s.pop();
 }
 js.Lib.prototype.__class__ = js.Lib;
-xpde.parser = {}
 xpde.parser.Token = function(p) { if( p === $_ ) return; {
 	$s.push("xpde.parser.Token::new");
 	var $spos = $s.length;
@@ -4783,16 +5875,16 @@ xpde.parser.Buffer.prototype.Read = function() {
 	try {
 		this.bufChar = this.stream.readByte();
 	}
-	catch( $e12 ) {
-		if( js.Boot.__instanceof($e12,haxe.io.Eof) ) {
-			var e = $e12;
+	catch( $e19 ) {
+		if( js.Boot.__instanceof($e19,haxe.io.Eof) ) {
+			var e = $e19;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
 				$s.push($e[0]);
 				this.bufChar = xpde.parser.Buffer.EOF;
 			}
-		} else throw($e12);
+		} else throw($e19);
 	}
 	{
 		$s.pop();
@@ -4879,9 +5971,9 @@ Hash.prototype.exists = function(key) {
 			return $tmp;
 		}
 	}
-	catch( $e13 ) {
+	catch( $e20 ) {
 		{
-			var e = $e13;
+			var e = $e20;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -4980,8 +6072,8 @@ Hash.prototype.toString = function() {
 	var s = new StringBuf();
 	s.b[s.b.length] = "{";
 	var it = this.keys();
-	{ var $it14 = it;
-	while( $it14.hasNext() ) { var i = $it14.next();
+	{ var $it21 = it;
+	while( $it21.hasNext() ) { var i = $it21.next();
 	{
 		s.b[s.b.length] = i;
 		s.b[s.b.length] = " => ";
@@ -6319,9 +7411,9 @@ js.Boot.__string_rec = function(o,s) {
 		try {
 			tostr = o.toString;
 		}
-		catch( $e15 ) {
+		catch( $e22 ) {
 			{
-				var e = $e15;
+				var e = $e22;
 				{
 					$e = [];
 					while($s.length >= $spos) $e.unshift($s.pop());
@@ -6429,9 +7521,9 @@ js.Boot.__instanceof = function(o,cl) {
 			return true;
 		}
 	}
-	catch( $e16 ) {
+	catch( $e23 ) {
 		{
-			var e = $e16;
+			var e = $e23;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -6713,8 +7805,8 @@ IntHash.prototype.toString = function() {
 	var s = new StringBuf();
 	s.b[s.b.length] = "{";
 	var it = this.keys();
-	{ var $it17 = it;
-	while( $it17.hasNext() ) { var i = $it17.next();
+	{ var $it24 = it;
+	while( $it24.hasNext() ) { var i = $it24.next();
 	{
 		s.b[s.b.length] = i;
 		s.b[s.b.length] = " => ";
@@ -6849,49 +7941,43 @@ xpde.parser.LexicalExpression = { __ename__ : ["xpde","parser","LexicalExpressio
 xpde.parser.LexicalExpression.LAssignment = function(identifier,value) { var $x = ["LAssignment",2,identifier,value]; $x.__enum__ = xpde.parser.LexicalExpression; $x.toString = $estr; return $x; }
 xpde.parser.LexicalExpression.LCall = function(identifier,args) { var $x = ["LCall",1,identifier,args]; $x.__enum__ = xpde.parser.LexicalExpression; $x.toString = $estr; return $x; }
 xpde.parser.LexicalExpression.LReference = function(identifier) { var $x = ["LReference",0,identifier]; $x.__enum__ = xpde.parser.LexicalExpression; $x.toString = $estr; return $x; }
-xpde.parser.Statement = { __ename__ : ["xpde","parser","Statement"], __constructs__ : ["SBlock","SBreak","SConditional","SContinue","SDefinition","SExpression","SLabel","SLoop","SReturn","SThrow","STry"] }
-xpde.parser.Statement.SBlock = function(statements) { var $x = ["SBlock",0,statements]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
+xpde.parser.Statement = { __ename__ : ["xpde","parser","Statement"], __constructs__ : ["SBlock","SBreak","SConditional","SContinue","SExpression","SLabel","SLoop","SReturn","SThrow","STry"] }
+xpde.parser.Statement.SBlock = function(variables,statements) { var $x = ["SBlock",0,variables,statements]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
 xpde.parser.Statement.SBreak = function(label) { var $x = ["SBreak",1,label]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
 xpde.parser.Statement.SConditional = function(condition,thenBlock,elseBlock) { var $x = ["SConditional",2,condition,thenBlock,elseBlock]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
 xpde.parser.Statement.SContinue = function(label) { var $x = ["SContinue",3,label]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
-xpde.parser.Statement.SDefinition = function(definition) { var $x = ["SDefinition",4,definition]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
-xpde.parser.Statement.SExpression = function(expression) { var $x = ["SExpression",5,expression]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
-xpde.parser.Statement.SLabel = function(label,body) { var $x = ["SLabel",6,label,body]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
-xpde.parser.Statement.SLoop = function(condition,body,doLoop) { var $x = ["SLoop",7,condition,body,doLoop]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
-xpde.parser.Statement.SReturn = function(value) { var $x = ["SReturn",8,value]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
-xpde.parser.Statement.SThrow = function(expression) { var $x = ["SThrow",9,expression]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
-xpde.parser.Statement.STry = function(body,catches,finallyBody) { var $x = ["STry",10,body,catches,finallyBody]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
-xpde.parser.LocalDefinition = { __ename__ : ["xpde","parser","LocalDefinition"], __constructs__ : ["DVariable","DClass"] }
-xpde.parser.LocalDefinition.DClass = function(identifier) { var $x = ["DClass",1,identifier]; $x.__enum__ = xpde.parser.LocalDefinition; $x.toString = $estr; return $x; }
-xpde.parser.LocalDefinition.DVariable = function(identifier,modifiers,type) { var $x = ["DVariable",0,identifier,modifiers,type]; $x.__enum__ = xpde.parser.LocalDefinition; $x.toString = $estr; return $x; }
-xpde.JavaPackageItem = function() { }
-xpde.JavaPackageItem.__name__ = ["xpde","JavaPackageItem"];
-xpde.JavaPackageItem.prototype.__class__ = xpde.JavaPackageItem;
-xpde.JavaPackage = function(p) { if( p === $_ ) return; {
+xpde.parser.Statement.SExpression = function(expression) { var $x = ["SExpression",4,expression]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
+xpde.parser.Statement.SLabel = function(label,body) { var $x = ["SLabel",5,label,body]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
+xpde.parser.Statement.SLoop = function(condition,body,doLoop) { var $x = ["SLoop",6,condition,body,doLoop]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
+xpde.parser.Statement.SReturn = function(value) { var $x = ["SReturn",7,value]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
+xpde.parser.Statement.SThrow = function(expression) { var $x = ["SThrow",8,expression]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
+xpde.parser.Statement.STry = function(body,catches,finallyBody) { var $x = ["STry",9,body,catches,finallyBody]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
+xpde.JavaPackage = function(identifier) { if( identifier === $_ ) return; {
 	$s.push("xpde.JavaPackage::new");
 	var $spos = $s.length;
+	this.identifier = identifier;
 	this.contents = new Hash();
 	$s.pop();
 }}
 xpde.JavaPackage.__name__ = ["xpde","JavaPackage"];
-xpde.JavaPackage.prototype.addCompilationUnit = function(qualident,unit) {
+xpde.JavaPackage.prototype.addCompilationUnit = function(pack,unit) {
 	$s.push("xpde.JavaPackage::addCompilationUnit");
 	var $spos = $s.length;
-	if(qualident.length == 1) if(this.contents.exists(qualident[0])) throw "redefinition of " + qualident.join(".");
-	else this.contents.set(qualident[0],unit);
+	if(pack.length == 0) if(this.contents.exists(unit.identifier)) throw "redefinition of " + unit.identifier;
+	else this.contents.set(unit.identifier,unit);
 	else {
-		if(this.contents.exists(qualident[0]) && !Std["is"](this.contents.get(qualident[0]),xpde.JavaPackage)) throw qualident.join(".") + " is not a package";
-		else if(!this.contents.exists(qualident[0])) this.contents.set(qualident[0],new xpde.JavaPackage());
+		if(this.contents.exists(pack[0]) && !Std["is"](this.contents.get(pack[0]),xpde.JavaPackage)) throw pack.join(".") + " is not a package";
+		else if(!this.contents.exists(pack[0])) this.contents.set(pack[0],new xpde.JavaPackage(pack[0]));
 		(function($this) {
 			var $r;
-			var tmp = $this.contents.get(qualident[0]);
+			var tmp = $this.contents.get(pack[0]);
 			$r = (Std["is"](tmp,xpde.JavaPackage)?tmp:function($this) {
 				var $r;
 				throw "Class cast error";
 				return $r;
 			}($this));
 			return $r;
-		}(this)).addCompilationUnit(qualident.slice(1),unit);
+		}(this)).addCompilationUnit(pack.slice(1),unit);
 	}
 	$s.pop();
 }
@@ -6921,9 +8007,9 @@ xpde.JavaPackage.prototype.getByQualident = function(qualident) {
 			return $tmp;
 		}
 	}
-	catch( $e18 ) {
+	catch( $e25 ) {
 		{
-			var e = $e18;
+			var e = $e25;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -6934,59 +8020,61 @@ xpde.JavaPackage.prototype.getByQualident = function(qualident) {
 	}
 	$s.pop();
 }
-xpde.JavaPackage.prototype.getClassByQualident = function(qualident) {
-	$s.push("xpde.JavaPackage::getClassByQualident");
+xpde.JavaPackage.prototype.getClass = function(qualident) {
+	$s.push("xpde.JavaPackage::getClass");
+	var $spos = $s.length;
+	var type = this.getCompilationUnit(qualident).types.get(qualident[qualident.length - 1]);
+	var $e = (type);
+	switch( $e[1] ) {
+	case 0:
+	var definition = $e[2];
+	{
+		{
+			$s.pop();
+			return definition;
+		}
+	}break;
+	default:{
+		throw "invalid class name " + qualident.join(".");
+	}break;
+	}
+	$s.pop();
+}
+xpde.JavaPackage.prototype.getCompilationUnit = function(qualident) {
+	$s.push("xpde.JavaPackage::getCompilationUnit");
 	var $spos = $s.length;
 	try {
-		var unit = function($this) {
-			var $r;
-			var tmp = $this.getByQualident(qualident);
-			$r = (Std["is"](tmp,xpde.CompilationUnit)?tmp:function($this) {
-				var $r;
-				throw "Class cast error";
-				return $r;
-			}($this));
-			return $r;
-		}(this);
-		var type = unit.types.get(qualident[qualident.length - 1]);
-		var $e = (type);
-		switch( $e[1] ) {
-		case 0:
-		var definition = $e[2];
 		{
-			{
-				$s.pop();
-				return definition;
-			}
-		}break;
-		default:{
-			throw false;
-		}break;
+			var $tmp = function($this) {
+				var $r;
+				var tmp = $this.getByQualident(qualident);
+				$r = (Std["is"](tmp,xpde.CompilationUnit)?tmp:function($this) {
+					var $r;
+					throw "Class cast error";
+					return $r;
+				}($this));
+				return $r;
+			}(this);
+			$s.pop();
+			return $tmp;
 		}
 	}
-	catch( $e19 ) {
+	catch( $e26 ) {
 		{
-			var e = $e19;
+			var e = $e26;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
 				$s.push($e[0]);
-				throw "invalid class name " + qualident.join(".");
+				throw "invalid compilation unit " + qualident.join(".");
 			}
 		}
 	}
 	$s.pop();
 }
+xpde.JavaPackage.prototype.identifier = null;
 xpde.JavaPackage.prototype.__class__ = xpde.JavaPackage;
 xpde.JavaPackage.__interfaces__ = [xpde.JavaPackageItem];
-xpde.CompilationUnit = function() { }
-xpde.CompilationUnit.__name__ = ["xpde","CompilationUnit"];
-xpde.CompilationUnit.prototype.dependencies = null;
-xpde.CompilationUnit.prototype.initialize = null;
-xpde.CompilationUnit.prototype.packageDeclaration = null;
-xpde.CompilationUnit.prototype.types = null;
-xpde.CompilationUnit.prototype.__class__ = xpde.CompilationUnit;
-xpde.CompilationUnit.__interfaces__ = [xpde.JavaPackageItem];
 xpde.parser.BitSet = function(nbits) { if( nbits === $_ ) return; {
 	$s.push("xpde.parser.BitSet::new");
 	var $spos = $s.length;
@@ -8391,7 +9479,7 @@ xpde.parser.Parser.prototype.PdeProgram = function() {
 	else if(this.StartOf(2)) {
 		this.context.imports.push(["xpde","core","*"]);
 		this.context.imports.push(["xpde","xml","*"]);
-		this.classContexts.unshift(new xpde.parser.ClassContext(new xpde.parser.EnumSet([xpde.Modifier.MPublic]),this.context.packageDeclaration.slice(-1)[0]));
+		this.classContexts.unshift(new xpde.parser.ClassContext(new xpde.parser.EnumSet([xpde.Modifier.MPublic]),this.context.identifier));
 		this.classContexts[0].extend = ["xpde","core","PApplet"];
 		while(this.isLocalVarDecl(false)) {
 			this.LocalVariableDeclaration();
@@ -8670,7 +9758,7 @@ xpde.parser.Parser.prototype.Statement0 = function() {
 		this.Expect(39);
 		var arg = this.Statement0();
 		body = [arg].concat(body);
-		this.blockContexts[0].pushStatement(xpde.parser.Statement.SLoop(conditional,xpde.parser.Statement.SBlock(body),false));
+		this.blockContexts[0].pushStatement(xpde.parser.Statement.SLoop(conditional,xpde.parser.Statement.SBlock(new Hash(),body),false));
 		statement = this.blockContexts.shift().getBlockStatement();
 	}
 	else if(this.la.kind == 60) {
@@ -9107,8 +10195,8 @@ xpde.parser.Parser.prototype.checkModifierAccess = function(set) {
 xpde.parser.Parser.prototype.checkModifierPermission = function(set,permission) {
 	$s.push("xpde.parser.Parser::checkModifierPermission");
 	var $spos = $s.length;
-	{ var $it20 = set.iterator();
-	while( $it20.hasNext() ) { var modifier = $it20.next();
+	{ var $it27 = set.iterator();
+	while( $it27.hasNext() ) { var modifier = $it27.next();
 	if(!permission.contains(modifier)) this.error("modifier(s) " + set + "not allowed here");
 	else this.checkModifierAccess(set);
 	}}
@@ -9922,1076 +11010,6 @@ xpde.parser.FatalError = function(s) { if( s === $_ ) return; {
 xpde.parser.FatalError.__name__ = ["xpde","parser","FatalError"];
 xpde.parser.FatalError.prototype.message = null;
 xpde.parser.FatalError.prototype.__class__ = xpde.parser.FatalError;
-xpde.Modifier = { __ename__ : ["xpde","Modifier"], __constructs__ : ["MPublic","MPrivate","MProtected","MStatic","MFinal","MSynchronized","MVolatile","MTransient","MNative","MAbstract","MStrictfp"] }
-xpde.Modifier.MAbstract = ["MAbstract",9];
-xpde.Modifier.MAbstract.toString = $estr;
-xpde.Modifier.MAbstract.__enum__ = xpde.Modifier;
-xpde.Modifier.MFinal = ["MFinal",4];
-xpde.Modifier.MFinal.toString = $estr;
-xpde.Modifier.MFinal.__enum__ = xpde.Modifier;
-xpde.Modifier.MNative = ["MNative",8];
-xpde.Modifier.MNative.toString = $estr;
-xpde.Modifier.MNative.__enum__ = xpde.Modifier;
-xpde.Modifier.MPrivate = ["MPrivate",1];
-xpde.Modifier.MPrivate.toString = $estr;
-xpde.Modifier.MPrivate.__enum__ = xpde.Modifier;
-xpde.Modifier.MProtected = ["MProtected",2];
-xpde.Modifier.MProtected.toString = $estr;
-xpde.Modifier.MProtected.__enum__ = xpde.Modifier;
-xpde.Modifier.MPublic = ["MPublic",0];
-xpde.Modifier.MPublic.toString = $estr;
-xpde.Modifier.MPublic.__enum__ = xpde.Modifier;
-xpde.Modifier.MStatic = ["MStatic",3];
-xpde.Modifier.MStatic.toString = $estr;
-xpde.Modifier.MStatic.__enum__ = xpde.Modifier;
-xpde.Modifier.MStrictfp = ["MStrictfp",10];
-xpde.Modifier.MStrictfp.toString = $estr;
-xpde.Modifier.MStrictfp.__enum__ = xpde.Modifier;
-xpde.Modifier.MSynchronized = ["MSynchronized",5];
-xpde.Modifier.MSynchronized.toString = $estr;
-xpde.Modifier.MSynchronized.__enum__ = xpde.Modifier;
-xpde.Modifier.MTransient = ["MTransient",7];
-xpde.Modifier.MTransient.toString = $estr;
-xpde.Modifier.MTransient.__enum__ = xpde.Modifier;
-xpde.Modifier.MVolatile = ["MVolatile",6];
-xpde.Modifier.MVolatile.toString = $estr;
-xpde.Modifier.MVolatile.__enum__ = xpde.Modifier;
-xpde.parser.EnumSet = function(enums) { if( enums === $_ ) return; {
-	$s.push("xpde.parser.EnumSet::new");
-	var $spos = $s.length;
-	this.set = [];
-	if(enums != null) {
-		var _g = 0;
-		while(_g < enums.length) {
-			var item = enums[_g];
-			++_g;
-			this.add(item);
-		}
-	}
-	$s.pop();
-}}
-xpde.parser.EnumSet.__name__ = ["xpde","parser","EnumSet"];
-xpde.parser.EnumSet.prototype.add = function(item) {
-	$s.push("xpde.parser.EnumSet::add");
-	var $spos = $s.length;
-	if(!this.contains(item)) this.set.push(item);
-	$s.pop();
-}
-xpde.parser.EnumSet.prototype.contains = function(itemA) {
-	$s.push("xpde.parser.EnumSet::contains");
-	var $spos = $s.length;
-	{
-		var _g = 0, _g1 = this.set;
-		while(_g < _g1.length) {
-			var itemB = _g1[_g];
-			++_g;
-			if(Type.enumEq(itemA,itemB)) {
-				$s.pop();
-				return true;
-			}
-		}
-	}
-	{
-		$s.pop();
-		return false;
-	}
-	$s.pop();
-}
-xpde.parser.EnumSet.prototype.iterator = function() {
-	$s.push("xpde.parser.EnumSet::iterator");
-	var $spos = $s.length;
-	{
-		var $tmp = this.set.iterator();
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-xpde.parser.EnumSet.prototype.set = null;
-xpde.parser.EnumSet.prototype.toString = function() {
-	$s.push("xpde.parser.EnumSet::toString");
-	var $spos = $s.length;
-	{
-		var $tmp = this.set.join(" ");
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-xpde.parser.EnumSet.prototype.__class__ = xpde.parser.EnumSet;
-xpde.parser.ModifierSet = function() { }
-xpde.parser.ModifierSet.__name__ = ["xpde","parser","ModifierSet"];
-xpde.parser.ModifierSet.prototype.__class__ = xpde.parser.ModifierSet;
-xpde.parser.OperationBuilder = function(p) { if( p === $_ ) return; {
-	$s.push("xpde.parser.OperationBuilder::new");
-	var $spos = $s.length;
-	this.operators = [];
-	this.operands = [];
-	$s.pop();
-}}
-xpde.parser.OperationBuilder.__name__ = ["xpde","parser","OperationBuilder"];
-xpde.parser.OperationBuilder.prototype.lookupOperatorPrecedence = function(operator) {
-	$s.push("xpde.parser.OperationBuilder::lookupOperatorPrecedence");
-	var $spos = $s.length;
-	{
-		var $tmp = function($this) {
-			var $r;
-			var $e = (operator);
-			switch( $e[1] ) {
-			case 0:
-			{
-				$r = 3;
-			}break;
-			case 1:
-			{
-				$r = 4;
-			}break;
-			case 2:
-			{
-				$r = 5;
-			}break;
-			case 3:
-			{
-				$r = 6;
-			}break;
-			case 4:
-			{
-				$r = 7;
-			}break;
-			case 5:
-			case 6:
-			{
-				$r = 8;
-			}break;
-			case 7:
-			case 8:
-			case 9:
-			case 10:
-			{
-				$r = 9;
-			}break;
-			case 11:
-			case 12:
-			case 13:
-			{
-				$r = 10;
-			}break;
-			case 14:
-			case 15:
-			{
-				$r = 11;
-			}break;
-			case 16:
-			case 17:
-			case 18:
-			{
-				$r = 12;
-			}break;
-			default:{
-				$r = null;
-			}break;
-			}
-			return $r;
-		}(this);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-xpde.parser.OperationBuilder.prototype.operand = function(operand) {
-	$s.push("xpde.parser.OperationBuilder::operand");
-	var $spos = $s.length;
-	this.operands.push(operand);
-	$s.pop();
-}
-xpde.parser.OperationBuilder.prototype.operands = null;
-xpde.parser.OperationBuilder.prototype.operator = function(operator) {
-	$s.push("xpde.parser.OperationBuilder::operator");
-	var $spos = $s.length;
-	this.reduce(this.lookupOperatorPrecedence(operator));
-	this.operators.push(operator);
-	$s.pop();
-}
-xpde.parser.OperationBuilder.prototype.operators = null;
-xpde.parser.OperationBuilder.prototype.reduce = function(precedence) {
-	$s.push("xpde.parser.OperationBuilder::reduce");
-	var $spos = $s.length;
-	if(precedence == null) precedence = 0;
-	while(this.operators.length > 0 && this.lookupOperatorPrecedence(this.operators[this.operators.length - 1]) >= precedence) this.reduceOperator(this.operators.pop());
-	{
-		var $tmp = this.operands[0];
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-xpde.parser.OperationBuilder.prototype.reduceOperator = function(operator) {
-	$s.push("xpde.parser.OperationBuilder::reduceOperator");
-	var $spos = $s.length;
-	var b = this.operands.pop(), a = this.operands.pop();
-	this.operands.push(xpde.parser.Expression.EInfixOperation(operator,a,b));
-	$s.pop();
-}
-xpde.parser.OperationBuilder.prototype.__class__ = xpde.parser.OperationBuilder;
-xpde.parser.ParsedCompilationUnit = function(packageDeclaration,source) { if( packageDeclaration === $_ ) return; {
-	$s.push("xpde.parser.ParsedCompilationUnit::new");
-	var $spos = $s.length;
-	this.packageDeclaration = packageDeclaration;
-	this.dependencies = [];
-	this.types = new Hash();
-	this.source = source;
-	this.initialized = false;
-	$s.pop();
-}}
-xpde.parser.ParsedCompilationUnit.__name__ = ["xpde","parser","ParsedCompilationUnit"];
-xpde.parser.ParsedCompilationUnit.prototype.ast = null;
-xpde.parser.ParsedCompilationUnit.prototype.dependencies = null;
-xpde.parser.ParsedCompilationUnit.prototype.initialize = function(rootPackage) {
-	$s.push("xpde.parser.ParsedCompilationUnit::initialize");
-	var $spos = $s.length;
-	if(this.initialized) {
-		$s.pop();
-		return;
-	}
-	this.initialized = true;
-	var context = new xpde.parser.CompilationUnitContext(this.packageDeclaration);
-	var scanner = new xpde.parser.Scanner(this.source);
-	var parser = new xpde.parser.Parser(scanner,context);
-	parser.Parse();
-	if(this.packageDeclaration.join(".") != context.packageDeclaration.join(".")) throw "incompatible package declaration " + context.packageDeclaration.join(".");
-	var resolver = new xpde.parser.LexicalResolver(this);
-	resolver.resolve(context,rootPackage);
-	this.ast = context.ast;
-	$s.pop();
-}
-xpde.parser.ParsedCompilationUnit.prototype.initialized = null;
-xpde.parser.ParsedCompilationUnit.prototype.packageDeclaration = null;
-xpde.parser.ParsedCompilationUnit.prototype.source = null;
-xpde.parser.ParsedCompilationUnit.prototype.types = null;
-xpde.parser.ParsedCompilationUnit.prototype.__class__ = xpde.parser.ParsedCompilationUnit;
-xpde.parser.ParsedCompilationUnit.__interfaces__ = [xpde.CompilationUnit];
-xpde.parser.CompilationUnitContext = function(packageDeclaration) { if( packageDeclaration === $_ ) return; {
-	$s.push("xpde.parser.CompilationUnitContext::new");
-	var $spos = $s.length;
-	this.packageDeclaration = packageDeclaration;
-	this.imports = [];
-	this.types = [];
-	this.ast = new Hash();
-	$s.pop();
-}}
-xpde.parser.CompilationUnitContext.__name__ = ["xpde","parser","CompilationUnitContext"];
-xpde.parser.CompilationUnitContext.prototype.ast = null;
-xpde.parser.CompilationUnitContext.prototype.imports = null;
-xpde.parser.CompilationUnitContext.prototype.packageDeclaration = null;
-xpde.parser.CompilationUnitContext.prototype.types = null;
-xpde.parser.CompilationUnitContext.prototype.__class__ = xpde.parser.CompilationUnitContext;
-xpde.parser.TypeContext = function() { }
-xpde.parser.TypeContext.__name__ = ["xpde","parser","TypeContext"];
-xpde.parser.TypeContext.prototype.extend = null;
-xpde.parser.TypeContext.prototype.identifier = null;
-xpde.parser.TypeContext.prototype.implement = null;
-xpde.parser.TypeContext.prototype.__class__ = xpde.parser.TypeContext;
-xpde.parser.ClassContext = function(modifiers,identifier) { if( modifiers === $_ ) return; {
-	$s.push("xpde.parser.ClassContext::new");
-	var $spos = $s.length;
-	this.modifiers = modifiers;
-	this.identifier = identifier;
-	this.implement = [];
-	this.fields = new Hash();
-	this.memberTypes = new Hash();
-	this.methods = [];
-	this.staticConstructor = new xpde.parser.BlockContext();
-	this.objectConstructor = new xpde.parser.BlockContext();
-	this.anonClassID = 0;
-	$s.pop();
-}}
-xpde.parser.ClassContext.__name__ = ["xpde","parser","ClassContext"];
-xpde.parser.ClassContext.prototype.anonClassID = null;
-xpde.parser.ClassContext.prototype.defineField = function(field) {
-	$s.push("xpde.parser.ClassContext::defineField");
-	var $spos = $s.length;
-	if(this.fields.exists(field.identifier)) throw "redeclaration of field " + field.identifier + " in class " + this.identifier;
-	this.fields.set(field.identifier,field);
-	if(field.initialization != null) if(field.modifiers.contains(xpde.Modifier.MStatic)) this.staticConstructor.pushStatement(xpde.parser.Statement.SExpression(xpde.parser.Expression.EAssignment(field.identifier,xpde.parser.Expression.ELexExpression(xpde.parser.LexicalExpression.LReference(this.identifier)),field.initialization)));
-	else this.objectConstructor.pushStatement(xpde.parser.Statement.SExpression(xpde.parser.Expression.EAssignment(field.identifier,xpde.parser.Expression.EThisReference,field.initialization)));
-	$s.pop();
-}
-xpde.parser.ClassContext.prototype.defineMemberType = function(identifier,qualident) {
-	$s.push("xpde.parser.ClassContext::defineMemberType");
-	var $spos = $s.length;
-	if(this.memberTypes.exists(identifier)) throw "redeclaration of member type " + identifier + " in class " + this.identifier;
-	this.memberTypes.set(identifier,qualident);
-	$s.pop();
-}
-xpde.parser.ClassContext.prototype.defineMethod = function(method) {
-	$s.push("xpde.parser.ClassContext::defineMethod");
-	var $spos = $s.length;
-	this.methods.push(method);
-	$s.pop();
-}
-xpde.parser.ClassContext.prototype.definition = null;
-xpde.parser.ClassContext.prototype.extend = null;
-xpde.parser.ClassContext.prototype.fields = null;
-xpde.parser.ClassContext.prototype.identifier = null;
-xpde.parser.ClassContext.prototype.implement = null;
-xpde.parser.ClassContext.prototype.memberTypes = null;
-xpde.parser.ClassContext.prototype.methods = null;
-xpde.parser.ClassContext.prototype.modifiers = null;
-xpde.parser.ClassContext.prototype.objectConstructor = null;
-xpde.parser.ClassContext.prototype.staticConstructor = null;
-xpde.parser.ClassContext.prototype.__class__ = xpde.parser.ClassContext;
-xpde.parser.ClassContext.__interfaces__ = [xpde.parser.TypeContext];
-xpde.parser.DefinesLocalVariables = function() { }
-xpde.parser.DefinesLocalVariables.__name__ = ["xpde","parser","DefinesLocalVariables"];
-xpde.parser.DefinesLocalVariables.prototype.isVariableDefined = null;
-xpde.parser.DefinesLocalVariables.prototype.__class__ = xpde.parser.DefinesLocalVariables;
-xpde.parser.MethodContext = function(modifiers,type,identifier) { if( modifiers === $_ ) return; {
-	$s.push("xpde.parser.MethodContext::new");
-	var $spos = $s.length;
-	this.modifiers = modifiers;
-	this.type = type;
-	this.identifier = identifier;
-	this.throwsList = [];
-	this.parameters = [];
-	$s.pop();
-}}
-xpde.parser.MethodContext.__name__ = ["xpde","parser","MethodContext"];
-xpde.parser.MethodContext.prototype.body = null;
-xpde.parser.MethodContext.prototype.identifier = null;
-xpde.parser.MethodContext.prototype.isVariableDefined = function(identifier) {
-	$s.push("xpde.parser.MethodContext::isVariableDefined");
-	var $spos = $s.length;
-	{
-		var _g = 0, _g1 = this.parameters;
-		while(_g < _g1.length) {
-			var param = _g1[_g];
-			++_g;
-			if(param.identifier == identifier) {
-				$s.pop();
-				return true;
-			}
-		}
-	}
-	{
-		$s.pop();
-		return false;
-	}
-	$s.pop();
-}
-xpde.parser.MethodContext.prototype.modifiers = null;
-xpde.parser.MethodContext.prototype.parameters = null;
-xpde.parser.MethodContext.prototype.throwsList = null;
-xpde.parser.MethodContext.prototype.type = null;
-xpde.parser.MethodContext.prototype.__class__ = xpde.parser.MethodContext;
-xpde.parser.MethodContext.__interfaces__ = [xpde.parser.DefinesLocalVariables];
-xpde.parser.FieldContext = function(modifiers,type,identifier) { if( modifiers === $_ ) return; {
-	$s.push("xpde.parser.FieldContext::new");
-	var $spos = $s.length;
-	this.modifiers = modifiers;
-	this.type = type;
-	this.identifier = identifier;
-	$s.pop();
-}}
-xpde.parser.FieldContext.__name__ = ["xpde","parser","FieldContext"];
-xpde.parser.FieldContext.prototype.identifier = null;
-xpde.parser.FieldContext.prototype.initialization = null;
-xpde.parser.FieldContext.prototype.modifiers = null;
-xpde.parser.FieldContext.prototype.type = null;
-xpde.parser.FieldContext.prototype.__class__ = xpde.parser.FieldContext;
-xpde.parser.BlockContext = function(parent) { if( parent === $_ ) return; {
-	$s.push("xpde.parser.BlockContext::new");
-	var $spos = $s.length;
-	this.parent = parent;
-	this.statements = [];
-	this.variables = new Hash();
-	this.types = new Hash();
-	$s.pop();
-}}
-xpde.parser.BlockContext.__name__ = ["xpde","parser","BlockContext"];
-xpde.parser.BlockContext.prototype.defineVariable = function(variable) {
-	$s.push("xpde.parser.BlockContext::defineVariable");
-	var $spos = $s.length;
-	if(this.isVariableDefined(variable.identifier)) throw "redeclaration of variable " + variable.identifier + " in block scope";
-	this.variables.set(variable.identifier,variable);
-	this.pushStatement(xpde.parser.Statement.SDefinition(xpde.parser.LocalDefinition.DVariable(variable.identifier,variable.modifiers,variable.type)));
-	if(variable.initialization != null) this.pushStatement(xpde.parser.Statement.SExpression(xpde.parser.Expression.ELocalAssignment(variable.identifier,variable.initialization)));
-	$s.pop();
-}
-xpde.parser.BlockContext.prototype.getBlockStatement = function() {
-	$s.push("xpde.parser.BlockContext::getBlockStatement");
-	var $spos = $s.length;
-	{
-		var $tmp = xpde.parser.Statement.SBlock(this.statements);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-xpde.parser.BlockContext.prototype.isVariableDefined = function(identifier) {
-	$s.push("xpde.parser.BlockContext::isVariableDefined");
-	var $spos = $s.length;
-	{
-		var $tmp = this.variables.exists(identifier) || ((this.parent != null?this.parent.isVariableDefined(identifier):false));
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-xpde.parser.BlockContext.prototype.parent = null;
-xpde.parser.BlockContext.prototype.pushStatement = function(statement) {
-	$s.push("xpde.parser.BlockContext::pushStatement");
-	var $spos = $s.length;
-	this.statements.push(statement);
-	$s.pop();
-}
-xpde.parser.BlockContext.prototype.statements = null;
-xpde.parser.BlockContext.prototype.types = null;
-xpde.parser.BlockContext.prototype.variables = null;
-xpde.parser.BlockContext.prototype.__class__ = xpde.parser.BlockContext;
-xpde.parser.BlockContext.__interfaces__ = [xpde.parser.DefinesLocalVariables];
-xpde.parser.LexicalResolver = function(unit) { if( unit === $_ ) return; {
-	$s.push("xpde.parser.LexicalResolver::new");
-	var $spos = $s.length;
-	this.unit = unit;
-	this.qualifiers = new Hash();
-	this.imports = new Hash();
-	$s.pop();
-}}
-xpde.parser.LexicalResolver.__name__ = ["xpde","parser","LexicalResolver"];
-xpde.parser.LexicalResolver.prototype.addDependency = function(qualident) {
-	$s.push("xpde.parser.LexicalResolver::addDependency");
-	var $spos = $s.length;
-	this.unit.dependencies.push(qualident);
-	(function($this) {
-		var $r;
-		var tmp = $this.rootPackage.getByQualident(qualident);
-		$r = (Std["is"](tmp,xpde.CompilationUnit)?tmp:function($this) {
-			var $r;
-			throw "Class cast error";
-			return $r;
-		}($this));
-		return $r;
-	}(this)).initialize(this.rootPackage);
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.context = null;
-xpde.parser.LexicalResolver.prototype.eArr = function(arr) {
-	$s.push("xpde.parser.LexicalResolver::eArr");
-	var $spos = $s.length;
-	var n = new Array();
-	{
-		var _g = 0;
-		while(_g < arr.length) {
-			var e = arr[_g];
-			++_g;
-			n.push(this.resolveExpression(e));
-		}
-	}
-	{
-		$s.pop();
-		return n;
-	}
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.fields = null;
-xpde.parser.LexicalResolver.prototype.generateClassDefinition = function(type) {
-	$s.push("xpde.parser.LexicalResolver::generateClassDefinition");
-	var $spos = $s.length;
-	var definition = { identifier : type.identifier, modifiers : type.modifiers, fields : new Hash(), methods : new Hash(), extend : this.qualifyReference(type.extend), implement : []}
-	if(type.implement != null) {
-		var _g = 0, _g1 = type.implement;
-		while(_g < _g1.length) {
-			var dt = _g1[_g];
-			++_g;
-			definition.implement.push(this.qualifyReference(dt));
-		}
-	}
-	{ var $it21 = type.fields.iterator();
-	while( $it21.hasNext() ) { var field = $it21.next();
-	definition.fields.set(field.identifier,this.generateFieldDefinition(field));
-	}}
-	{
-		var _g = 0, _g1 = type.methods;
-		while(_g < _g1.length) {
-			var method = _g1[_g];
-			++_g;
-			definition.methods.set(method.identifier,this.generateMethodDefinition(method));
-		}
-	}
-	type.definition = definition;
-	{
-		$s.pop();
-		return definition;
-	}
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.generateFieldDefinition = function(field) {
-	$s.push("xpde.parser.LexicalResolver::generateFieldDefinition");
-	var $spos = $s.length;
-	{
-		var $tmp = { identifier : field.identifier, modifiers : field.modifiers, type : this.qualifyDataType(field.type)}
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.generateFormalParameter = function(param) {
-	$s.push("xpde.parser.LexicalResolver::generateFormalParameter");
-	var $spos = $s.length;
-	{
-		var $tmp = { identifier : param.identifier, type : this.qualifyDataType(param.type), modifiers : param.modifiers}
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.generateMethodDefinition = function(method) {
-	$s.push("xpde.parser.LexicalResolver::generateMethodDefinition");
-	var $spos = $s.length;
-	var definition = { identifier : method.identifier, type : this.qualifyDataType(method.type), modifiers : method.modifiers, throwsList : [], parameters : []}
-	if(method.throwsList != null) {
-		var _g = 0, _g1 = method.throwsList;
-		while(_g < _g1.length) {
-			var qualident = _g1[_g];
-			++_g;
-			definition.throwsList.push(this.qualifyReference(qualident));
-		}
-	}
-	{
-		var _g = 0, _g1 = method.parameters;
-		while(_g < _g1.length) {
-			var param = _g1[_g];
-			++_g;
-			definition.parameters.push(this.generateFormalParameter(param));
-		}
-	}
-	{
-		$s.pop();
-		return definition;
-	}
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.imports = null;
-xpde.parser.LexicalResolver.prototype.initializeResolvers = function(definition) {
-	$s.push("xpde.parser.LexicalResolver::initializeResolvers");
-	var $spos = $s.length;
-	if(definition.extend != null) this.initializeResolvers(this.rootPackage.getClassByQualident(definition.extend));
-	{ var $it22 = definition.methods.iterator();
-	while( $it22.hasNext() ) { var method = $it22.next();
-	this.methods.set(method.identifier,method);
-	}}
-	{ var $it23 = definition.fields.iterator();
-	while( $it23.hasNext() ) { var field = $it23.next();
-	this.fields.set(field.identifier,field);
-	}}
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.loadImports = function() {
-	$s.push("xpde.parser.LexicalResolver::loadImports");
-	var $spos = $s.length;
-	var _g = 0, _g1 = this.context.imports;
-	while(_g < _g1.length) {
-		var ident = _g1[_g];
-		++_g;
-		if(ident[ident.length - 1] != "*") {
-			if(!Std["is"](this.rootPackage.getByQualident(ident.slice(0,-1)),xpde.CompilationUnit)) {
-				$s.pop();
-				return;
-			}
-			this.imports.set(ident[ident.length - 1],ident);
-		}
-		else {
-			try {
-				var importPackage = function($this) {
-					var $r;
-					var tmp = $this.rootPackage.getByQualident(ident.slice(0,-1));
-					$r = (Std["is"](tmp,xpde.JavaPackage)?tmp:function($this) {
-						var $r;
-						throw "Class cast error";
-						return $r;
-					}($this));
-					return $r;
-				}(this);
-				{ var $it24 = importPackage.contents.keys();
-				while( $it24.hasNext() ) { var item = $it24.next();
-				if(Std["is"](importPackage.contents.get(item),xpde.CompilationUnit)) this.imports.set(item,ident.slice(0,-1).concat([item]));
-				}}
-			}
-			catch( $e25 ) {
-				{
-					var e = $e25;
-					{
-						$e = [];
-						while($s.length >= $spos) $e.unshift($s.pop());
-						$s.push($e[0]);
-						null;
-					}
-				}
-			}
-		}
-	}
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.memberTypes = null;
-xpde.parser.LexicalResolver.prototype.methods = null;
-xpde.parser.LexicalResolver.prototype.qualifiers = null;
-xpde.parser.LexicalResolver.prototype.qualifyDataType = function(type) {
-	$s.push("xpde.parser.LexicalResolver::qualifyDataType");
-	var $spos = $s.length;
-	if(type == null) {
-		$s.pop();
-		return null;
-	}
-	{
-		var $tmp = function($this) {
-			var $r;
-			var $e = (type);
-			switch( $e[1] ) {
-			case 0:
-			{
-				$r = type;
-			}break;
-			case 2:
-			{
-				$r = type;
-			}break;
-			case 1:
-			var qualident = $e[2];
-			{
-				$r = xpde.DataType.DTReference($this.qualifyReference(qualident));
-			}break;
-			case 3:
-			var dimensions = $e[3], qualident = $e[2];
-			{
-				$r = xpde.DataType.DTReferenceArray($this.qualifyReference(qualident),dimensions);
-			}break;
-			default:{
-				$r = null;
-			}break;
-			}
-			return $r;
-		}(this);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.qualifyReference = function(qualident) {
-	$s.push("xpde.parser.LexicalResolver::qualifyReference");
-	var $spos = $s.length;
-	if(qualident == null) {
-		$s.pop();
-		return null;
-	}
-	if(this.qualifiers.exists(qualident[0])) {
-		var $tmp = this.qualifiers.get(qualident[0]).concat(qualident.slice(1));
-		$s.pop();
-		return $tmp;
-	}
-	if(this.imports.exists(qualident[0])) {
-		this.addDependency(this.imports.get(qualident[0]));
-		this.qualifiers.set(qualident[0],this.imports.get(qualident[0]));
-		{
-			var $tmp = this.imports.get(qualident[0]);
-			$s.pop();
-			return $tmp;
-		}
-	}
-	this.rootPackage.getByQualident(qualident);
-	this.addDependency(qualident);
-	{
-		$s.pop();
-		return qualident;
-	}
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.resolve = function(context,rootPackage) {
-	$s.push("xpde.parser.LexicalResolver::resolve");
-	var $spos = $s.length;
-	this.context = context;
-	this.rootPackage = rootPackage;
-	{
-		var _g = 0, _g1 = context.types;
-		while(_g < _g1.length) {
-			var type = _g1[_g];
-			++_g;
-			this.qualifiers.set(type.identifier,context.packageDeclaration.concat([type.identifier]));
-		}
-	}
-	{
-		var _g = 0, _g1 = context.types;
-		while(_g < _g1.length) {
-			var type = _g1[_g];
-			++_g;
-			if(Std["is"](type,xpde.parser.ClassContext)) this.unit.types.set(type.identifier,xpde.TypeDefinition.TClass(this.generateClassDefinition(function($this) {
-				var $r;
-				var tmp = type;
-				$r = (Std["is"](tmp,xpde.parser.ClassContext)?tmp:function($this) {
-					var $r;
-					throw "Class cast error";
-					return $r;
-				}($this));
-				return $r;
-			}(this))));
-		}
-	}
-	{
-		var _g = 0, _g1 = context.types;
-		while(_g < _g1.length) {
-			var type = _g1[_g];
-			++_g;
-			if(Std["is"](type,xpde.parser.ClassContext)) this.resolveClass(context,function($this) {
-				var $r;
-				var tmp = type;
-				$r = (Std["is"](tmp,xpde.parser.ClassContext)?tmp:function($this) {
-					var $r;
-					throw "Class cast error";
-					return $r;
-				}($this));
-				return $r;
-			}(this));
-		}
-	}
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.resolveClass = function(context,classContext) {
-	$s.push("xpde.parser.LexicalResolver::resolveClass");
-	var $spos = $s.length;
-	this.methods = new Hash();
-	this.fields = new Hash();
-	this.memberTypes = new Hash();
-	this.initializeResolvers(classContext.definition);
-	{
-		var _g = 0, _g1 = classContext.methods;
-		while(_g < _g1.length) {
-			var methodContext = _g1[_g];
-			++_g;
-			if(methodContext.body != null) {
-				context.ast.set(context.packageDeclaration.concat([classContext.identifier]).join(".") + "|" + methodContext.identifier,this.resolveStatement(methodContext.body));
-			}
-		}
-	}
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.resolveExpression = function(expression) {
-	$s.push("xpde.parser.LexicalResolver::resolveExpression");
-	var $spos = $s.length;
-	if(expression == null) {
-		$s.pop();
-		return null;
-	}
-	{
-		var $tmp = function($this) {
-			var $r;
-			var $e = (expression);
-			switch( $e[1] ) {
-			case 0:
-			var sizes = $e[3], type = $e[2];
-			{
-				$r = xpde.parser.Expression.EArrayInstantiation($this.qualifyDataType(type),$this.eArr(sizes));
-			}break;
-			case 1:
-			var args = $e[3], type = $e[2];
-			{
-				$r = xpde.parser.Expression.EObjectInstantiation($this.qualifyReference(type),$this.eArr(args));
-			}break;
-			case 2:
-			var falseExp = $e[4], trueExp = $e[3], condition = $e[2];
-			{
-				$r = xpde.parser.Expression.EConditional($this.resolveExpression(condition),$this.resolveExpression(trueExp),$this.resolveExpression(falseExp));
-			}break;
-			case 3:
-			var base = $e[3], index = $e[2];
-			{
-				$r = xpde.parser.Expression.EArrayAccess($this.resolveExpression(index),$this.resolveExpression(base));
-			}break;
-			case 4:
-			{
-				$r = expression;
-			}break;
-			case 5:
-			var base = $e[3], identifier = $e[2];
-			{
-				$r = xpde.parser.Expression.EReference(identifier,$this.resolveExpression(base));
-			}break;
-			case 6:
-			{
-				$r = expression;
-			}break;
-			case 7:
-			{
-				$r = expression;
-			}break;
-			case 8:
-			{
-				$r = expression;
-			}break;
-			case 9:
-			var args = $e[4], base = $e[3], identifier = $e[2];
-			{
-				$r = xpde.parser.Expression.ECall(identifier,$this.resolveExpression(base),$this.eArr(args));
-			}break;
-			case 10:
-			var args = $e[2];
-			{
-				$r = xpde.parser.Expression.EThisCall($this.eArr(args));
-			}break;
-			case 11:
-			var args = $e[2];
-			{
-				$r = xpde.parser.Expression.ESuperCall($this.eArr(args));
-			}break;
-			case 12:
-			var value = $e[4], base = $e[3], index = $e[2];
-			{
-				$r = xpde.parser.Expression.EArrayAssignment($this.resolveExpression(index),$this.resolveExpression(base),$this.resolveExpression(value));
-			}break;
-			case 13:
-			var value = $e[4], base = $e[3], identifier = $e[2];
-			{
-				$r = xpde.parser.Expression.EAssignment(identifier,$this.resolveExpression(base),$this.resolveExpression(value));
-			}break;
-			case 14:
-			var value = $e[3], identifier = $e[2];
-			{
-				$r = xpde.parser.Expression.ELocalAssignment(identifier,$this.resolveExpression(value));
-			}break;
-			case 15:
-			var value = $e[3], type = $e[2];
-			{
-				$r = xpde.parser.Expression.ECast($this.qualifyDataType(type),$this.resolveExpression(value));
-			}break;
-			case 16:
-			var reference = $e[3], type = $e[2];
-			{
-				$r = xpde.parser.Expression.EPrefixOperation(type,$this.resolveExpression(reference));
-			}break;
-			case 17:
-			var right = $e[4], left = $e[3], type = $e[2];
-			{
-				$r = xpde.parser.Expression.EInfixOperation(type,$this.resolveExpression(left),$this.resolveExpression(right));
-			}break;
-			case 18:
-			var type = $e[3], expression1 = $e[2];
-			{
-				$r = xpde.parser.Expression.EInstanceOf($this.resolveExpression(expression1),$this.qualifyDataType(type));
-			}break;
-			case 19:
-			var reference = $e[3], type = $e[2];
-			{
-				$r = xpde.parser.Expression.EPrefix(type,$this.resolveExpression(reference));
-			}break;
-			case 20:
-			var reference = $e[3], type = $e[2];
-			{
-				$r = xpde.parser.Expression.EPostfix(type,$this.resolveExpression(reference));
-			}break;
-			case 21:
-			var values = $e[2];
-			{
-				$r = xpde.parser.Expression.EArrayLiteral($this.eArr(values));
-			}break;
-			case 22:
-			{
-				$r = expression;
-			}break;
-			case 23:
-			{
-				$r = expression;
-			}break;
-			case 24:
-			{
-				$r = expression;
-			}break;
-			case 25:
-			{
-				$r = expression;
-			}break;
-			case 26:
-			{
-				$r = expression;
-			}break;
-			case 27:
-			{
-				$r = expression;
-			}break;
-			case 28:
-			var expression1 = $e[2];
-			{
-				$r = function($this) {
-					var $r;
-					var $e = (expression1);
-					switch( $e[1] ) {
-					case 0:
-					var identifier = $e[2];
-					{
-						$r = $this.resolveLexicalReference(identifier);
-					}break;
-					case 1:
-					var args = $e[3], identifier = $e[2];
-					{
-						$r = $this.resolveLexicalCall(identifier,args);
-					}break;
-					case 2:
-					var value = $e[3], identifier = $e[2];
-					{
-						$r = $this.resolveLexicalAssignment(identifier,value);
-					}break;
-					default:{
-						$r = null;
-					}break;
-					}
-					return $r;
-				}($this);
-			}break;
-			default:{
-				$r = null;
-			}break;
-			}
-			return $r;
-		}(this);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.resolveLexicalAssignment = function(identifier,value) {
-	$s.push("xpde.parser.LexicalResolver::resolveLexicalAssignment");
-	var $spos = $s.length;
-	if(this.fields.exists(identifier)) {
-		var $tmp = xpde.parser.Expression.EAssignment(identifier,xpde.parser.Expression.EThisReference,value);
-		$s.pop();
-		return $tmp;
-	}
-	throw "assignment to nonexistant variable \"" + identifier + "\"";
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.resolveLexicalCall = function(identifier,args) {
-	$s.push("xpde.parser.LexicalResolver::resolveLexicalCall");
-	var $spos = $s.length;
-	if(this.methods.exists(identifier)) {
-		var $tmp = xpde.parser.Expression.ECall(identifier,xpde.parser.Expression.EThisReference,args);
-		$s.pop();
-		return $tmp;
-	}
-	throw "call to nonexistant method \"" + identifier + "\"";
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.resolveLexicalReference = function(identifier) {
-	$s.push("xpde.parser.LexicalResolver::resolveLexicalReference");
-	var $spos = $s.length;
-	if(this.fields.exists(identifier)) {
-		var $tmp = xpde.parser.Expression.EReference(identifier,xpde.parser.Expression.EThisReference);
-		$s.pop();
-		return $tmp;
-	}
-	throw "reference to nonexistant variable \"" + identifier + "\"";
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.resolveStatement = function(statement) {
-	$s.push("xpde.parser.LexicalResolver::resolveStatement");
-	var $spos = $s.length;
-	if(statement == null) {
-		$s.pop();
-		return null;
-	}
-	{
-		var $tmp = function($this) {
-			var $r;
-			var $e = (statement);
-			switch( $e[1] ) {
-			case 0:
-			var statements = $e[2];
-			{
-				$r = function($this) {
-					var $r;
-					var s = new Array();
-					{
-						var _g = 0;
-						while(_g < statements.length) {
-							var statement1 = statements[_g];
-							++_g;
-							s.push($this.resolveStatement(statement1));
-						}
-					}
-					$r = xpde.parser.Statement.SBlock(s);
-					return $r;
-				}($this);
-			}break;
-			case 1:
-			{
-				$r = statement;
-			}break;
-			case 2:
-			var elseBlock = $e[4], thenBlock = $e[3], condition = $e[2];
-			{
-				$r = xpde.parser.Statement.SConditional($this.resolveExpression(condition),$this.resolveStatement(thenBlock),$this.resolveStatement(elseBlock));
-			}break;
-			case 3:
-			{
-				$r = statement;
-			}break;
-			case 4:
-			var definition = $e[2];
-			{
-				$r = statement;
-			}break;
-			case 5:
-			var expression = $e[2];
-			{
-				$r = xpde.parser.Statement.SExpression($this.resolveExpression(expression));
-			}break;
-			case 6:
-			var body = $e[3], label = $e[2];
-			{
-				$r = xpde.parser.Statement.SLabel(label,$this.resolveStatement(body));
-			}break;
-			case 7:
-			var doLoop = $e[4], body = $e[3], condition = $e[2];
-			{
-				$r = xpde.parser.Statement.SLoop($this.resolveExpression(condition),$this.resolveStatement(body),doLoop);
-			}break;
-			case 8:
-			var value = $e[2];
-			{
-				$r = xpde.parser.Statement.SReturn($this.resolveExpression(value));
-			}break;
-			case 9:
-			var expression = $e[2];
-			{
-				$r = xpde.parser.Statement.SThrow($this.resolveExpression(expression));
-			}break;
-			case 10:
-			var finallyBody = $e[4], catches = $e[3], body = $e[2];
-			{
-				$r = function($this) {
-					var $r;
-					{
-						var _g = 0;
-						while(_g < catches.length) {
-							var catchBlock = catches[_g];
-							++_g;
-							catchBlock.body = $this.resolveStatement(catchBlock.body);
-						}
-					}
-					$r = xpde.parser.Statement.STry($this.resolveStatement(body),catches,$this.resolveStatement(finallyBody));
-					return $r;
-				}($this);
-			}break;
-			default:{
-				$r = null;
-			}break;
-			}
-			return $r;
-		}(this);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-xpde.parser.LexicalResolver.prototype.rootPackage = null;
-xpde.parser.LexicalResolver.prototype.unit = null;
-xpde.parser.LexicalResolver.prototype.__class__ = xpde.parser.LexicalResolver;
 xpde.DataType = { __ename__ : ["xpde","DataType"], __constructs__ : ["DTPrimitive","DTReference","DTPrimitiveArray","DTReferenceArray"] }
 xpde.DataType.DTPrimitive = function(type) { var $x = ["DTPrimitive",0,type]; $x.__enum__ = xpde.DataType; $x.toString = $estr; return $x; }
 xpde.DataType.DTPrimitiveArray = function(type,dimensions) { var $x = ["DTPrimitiveArray",2,type,dimensions]; $x.__enum__ = xpde.DataType; $x.toString = $estr; return $x; }
@@ -11172,6 +11190,15 @@ js.Boot.__init();
 		return f(msg,stack);
 	}
 }
+xpde.parser.ModifierSet.none = new xpde.parser.EnumSet([]);
+xpde.parser.ModifierSet.access = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MProtected,xpde.Modifier.MPrivate]);
+xpde.parser.ModifierSet.classes = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MProtected,xpde.Modifier.MPrivate,xpde.Modifier.MAbstract,xpde.Modifier.MStatic,xpde.Modifier.MFinal,xpde.Modifier.MStrictfp]);
+xpde.parser.ModifierSet.fields = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MProtected,xpde.Modifier.MPrivate,xpde.Modifier.MStatic,xpde.Modifier.MFinal,xpde.Modifier.MTransient,xpde.Modifier.MVolatile]);
+xpde.parser.ModifierSet.methods = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MProtected,xpde.Modifier.MPrivate,xpde.Modifier.MAbstract,xpde.Modifier.MSynchronized,xpde.Modifier.MNative,xpde.Modifier.MStatic,xpde.Modifier.MFinal,xpde.Modifier.MStrictfp]);
+xpde.parser.ModifierSet.constructors = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MProtected,xpde.Modifier.MPrivate]);
+xpde.parser.ModifierSet.interfaces = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MProtected,xpde.Modifier.MPrivate,xpde.Modifier.MAbstract,xpde.Modifier.MStatic,xpde.Modifier.MStrictfp]);
+xpde.parser.ModifierSet.constants = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MStatic,xpde.Modifier.MFinal]);
+xpde.parser.ModifierSet.all = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MProtected,xpde.Modifier.MPrivate,xpde.Modifier.MAbstract,xpde.Modifier.MVolatile,xpde.Modifier.MTransient,xpde.Modifier.MSynchronized,xpde.Modifier.MNative,xpde.Modifier.MStatic,xpde.Modifier.MFinal,xpde.Modifier.MStrictfp]);
 haxe.Serializer.USE_CACHE = false;
 haxe.Serializer.USE_ENUM_INDEX = false;
 haxe.Serializer.BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%:";
@@ -11345,13 +11372,4 @@ xpde.parser.Parser.x = false;
 xpde.parser.Parser.set = [[true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,true,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,true,true,true,true,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,true,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,true,false,true,true,true,true,false,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,true,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,true,false,false,true,true,true,true,false,true,false,false,false,false,false,false,true,true,false,true,true,true,true,false,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,true,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false,true,true,true,true,false,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,true,true,true,false,true,false,false,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,false,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,false,true,false,false,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,true,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,false,true,false,true,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,true,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,false,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false]];
 xpde.parser.Errors.errMsgFormat = "-- line {0} col {1}: {2}";
 xpde.parser.FatalError.serialVersionUID = 1.0;
-xpde.parser.ModifierSet.none = new xpde.parser.EnumSet([]);
-xpde.parser.ModifierSet.access = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MProtected,xpde.Modifier.MPrivate]);
-xpde.parser.ModifierSet.classes = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MProtected,xpde.Modifier.MPrivate,xpde.Modifier.MAbstract,xpde.Modifier.MStatic,xpde.Modifier.MFinal,xpde.Modifier.MStrictfp]);
-xpde.parser.ModifierSet.fields = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MProtected,xpde.Modifier.MPrivate,xpde.Modifier.MStatic,xpde.Modifier.MFinal,xpde.Modifier.MTransient,xpde.Modifier.MVolatile]);
-xpde.parser.ModifierSet.methods = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MProtected,xpde.Modifier.MPrivate,xpde.Modifier.MAbstract,xpde.Modifier.MSynchronized,xpde.Modifier.MNative,xpde.Modifier.MStatic,xpde.Modifier.MFinal,xpde.Modifier.MStrictfp]);
-xpde.parser.ModifierSet.constructors = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MProtected,xpde.Modifier.MPrivate]);
-xpde.parser.ModifierSet.interfaces = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MProtected,xpde.Modifier.MPrivate,xpde.Modifier.MAbstract,xpde.Modifier.MStatic,xpde.Modifier.MStrictfp]);
-xpde.parser.ModifierSet.constants = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MStatic,xpde.Modifier.MFinal]);
-xpde.parser.ModifierSet.all = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpde.Modifier.MProtected,xpde.Modifier.MPrivate,xpde.Modifier.MAbstract,xpde.Modifier.MVolatile,xpde.Modifier.MTransient,xpde.Modifier.MSynchronized,xpde.Modifier.MNative,xpde.Modifier.MStatic,xpde.Modifier.MFinal,xpde.Modifier.MStrictfp]);
 $Main.init = JSMain.main();

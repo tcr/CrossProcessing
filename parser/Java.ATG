@@ -1,6 +1,6 @@
 import xpde.Rtti;
-import xpde.JavaPackage;
 import xpde.parser.Scanner;
+import xpde.parser.Context;
 import xpde.parser.AST;
 import haxe.io.Input;
 
@@ -401,7 +401,7 @@ PdeProgram
 							context.imports.push(['xpde', 'xml', '*']);
 
 							// initialize active program
-							classContexts.unshift(new ClassContext(new EnumSet<Modifier>([MPublic]), context.packageDeclaration.slice( -1)[0]));
+							classContexts.unshift(new ClassContext(new EnumSet<Modifier>([MPublic]), context.identifier));
 							classContexts[0].extend = ['xpde', 'core', 'PApplet'];
 							.)
     { (IF (isLocalVarDecl(false)) LocalVariableDeclaration) ";" }
@@ -828,7 +828,7 @@ Statement0<out statement:Statement>
   [ ForUpdate<.out updates:Array<Statement>.>		(. body = updates; .)
     ] ")"
   Statement0<out arg:Statement>				(. body = [arg].concat(body);
-							   blockContexts[0].pushStatement(SLoop(conditional, SBlock(body), false));
+							   blockContexts[0].pushStatement(SLoop(conditional, SBlock(new Hash<FieldDefinition>(), body), false));
 							   statement = blockContexts.shift().getBlockStatement(); .)
 | "while" ParExpression<out condition:Expression>
   Statement0<out body:Statement>			(. statement = SLoop(condition, body, false); .)
