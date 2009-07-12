@@ -420,33 +420,16 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			classContexts.unshift(new ClassContext(new EnumSet<Modifier>([MPublic]), context.identifier));
 			classContexts[0].extend = ['xpde', 'core', 'PApplet'];
 			
-			while (isLocalVarDecl(false)) {
-				LocalVariableDeclaration();
-				Expect(41);
-			}
-			if (isActiveProgram()) {
+			ClassBodyDeclaration();
+			while (StartOf(2)) {
 				ClassBodyDeclaration();
-				while (StartOf(3)) {
-					ClassBodyDeclaration();
-				}
-			} else if (StartOf(4)) {
-				blockContexts.unshift(new BlockContext());
-				
-				BlockStatement();
-				while (StartOf(4)) {
-					BlockStatement();
-				}
-				var methodContext = new MethodContext(new EnumSet<Modifier>(), null, 'setup');
-				methodContext.body = blockContexts.shift().getBlockStatement();
-				classContexts[0].methods.push(methodContext);
-				
-			} else SynErr(102);
+			}
 			context.types.push(classContexts.shift());
 				// validate script
 			if (la.kind != _EOF)
 				error("unexpected script termination");
 			
-		} else SynErr(103);
+		} else SynErr(102);
 	}
 
 	function ImportDeclaration():Array<String> {
@@ -455,37 +438,24 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		Expect(1);
 		importIdent = [t.val]; 
 		var arg:Array<String> = QualifiedImport();
-		Expect(41);
+		Expect(42);
 		importIdent = importIdent.concat(arg); 
 		return importIdent;
 	}
 
 	function TypeDeclaration():Void {
-		if (StartOf(5)) {
+		if (StartOf(3)) {
 			var typeContext:TypeContext = ClassOrInterfaceDeclaration();
 			context.types.push(typeContext); 
-		} else if (la.kind == 41) {
+		} else if (la.kind == 42) {
 			Get();
-		} else SynErr(104);
-	}
-
-	function LocalVariableDeclaration():Void {
-		var modifiers = new EnumSet<Modifier>(); 
-		if (la.kind == 12) {
-			Get();
-			modifiers.add(MFinal); 
-		}
-		var type:DataType = Type();
-		var fields:Array<FieldContext> = VariableDeclarators(modifiers, type);
-		for (field in fields)
-		blockContexts[0].defineVariable(field);
-		
+		} else SynErr(103);
 	}
 
 	function ClassBodyDeclaration():Void {
-		if (la.kind == 41) {
+		if (la.kind == 42) {
 			Get();
-		} else if (StartOf(6)) {
+		} else if (StartOf(4)) {
 			var modifiers = new EnumSet<Modifier>(); 
 			if (la.kind == 21) {
 				Get();
@@ -494,36 +464,24 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			if (la.kind == 31) {
 				var block:Statement = Block(null);
 				classContexts[0].staticConstructor.pushStatement(block); 
-			} else if (StartOf(7)) {
-				if (StartOf(8)) {
+			} else if (StartOf(5)) {
+				if (StartOf(6)) {
 					Modifier1(modifiers);
-					while (StartOf(9)) {
+					while (StartOf(7)) {
 						Modifier0(modifiers);
 					}
 				}
 				MemberDecl(modifiers);
-			} else SynErr(105);
-		} else SynErr(106);
-	}
-
-	function BlockStatement():Void {
-		if (isLocalVarDecl(false)) {
-			LocalVariableDeclaration();
-			Expect(41);
-		} else if (StartOf(5)) {
-			var typeContext:TypeContext = ClassOrInterfaceDeclaration();
-		} else if (StartOf(10)) {
-			var statement:Statement = Statement0();
-			blockContexts[0].pushStatement(statement); 
-		} else SynErr(107);
+			} else SynErr(104);
+		} else SynErr(105);
 	}
 
 	function CompilationUnit():Void {
-		if (la.kind == 42) {
+		if (la.kind == 41) {
 			Get();
 			var qualident:Array<String> = Qualident();
 			context.packageDeclaration = qualident; 
-			Expect(41);
+			Expect(42);
 		}
 		while (la.kind == 14) {
 			var importIdent:Array<String> = ImportDeclaration();
@@ -561,14 +519,14 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		} else if (la.kind == 43) {
 			Get();
 			importIdent = ['*']; 
-		} else SynErr(108);
+		} else SynErr(106);
 		return importIdent;
 	}
 
 	function ClassOrInterfaceDeclaration():TypeContext {
 		var typeContext:TypeContext = null;
 		var modifiers = new EnumSet<Modifier>(); 
-		while (StartOf(11)) {
+		while (StartOf(8)) {
 			ClassModifier(modifiers);
 		}
 		if (la.kind == 9) {
@@ -577,7 +535,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		} else if (la.kind == 56) {
 			var arg:TypeContext = InterfaceDeclaration(modifiers);
 			typeContext = arg; 
-		} else SynErr(109);
+		} else SynErr(107);
 		return typeContext;
 	}
 
@@ -604,7 +562,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		case 47: 
 			Get();
 			addModifier(modifiers, MStrictfp); 
-		default: SynErr(110);
+		default: SynErr(108);
 		}
 	}
 
@@ -613,7 +571,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		checkModifierPermission(modifiers, ModifierSet.classes); 
 		Expect(9);
 		Expect(1);
-		classContexts.unshift(new ClassContext(modifiers, t.val)); 
+		classContexts.unshift(new ClassContext(modifiers, t.val, classContexts[0])); 
 		if (la.kind == 53) {
 			Get();
 			var arg:Array<String> = Qualident();
@@ -646,9 +604,9 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		if (la.kind == 21) {
 			Get();
 			addModifier(modifiers, MStatic); 
-		} else if (StartOf(8)) {
+		} else if (StartOf(6)) {
 			Modifier1(modifiers);
-		} else SynErr(111);
+		} else SynErr(109);
 	}
 
 	function Modifier1(modifiers:EnumSet<Modifier>):Void {
@@ -683,7 +641,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		case 47: 
 			Get();
 			addModifier(modifiers, MStrictfp); 
-		default: SynErr(112);
+		default: SynErr(110);
 		}
 	}
 
@@ -692,10 +650,10 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		if (la.kind == 1) {
 			var qualident:Array<String> = Qualident();
 			type = DTReference(qualident); 
-		} else if (StartOf(12)) {
+		} else if (StartOf(9)) {
 			var primitive:PrimitiveType = BasicType();
 			type = DTPrimitive(primitive); 
-		} else SynErr(113);
+		} else SynErr(111);
 		var bCount:Int = BracketsOpt();
 		type = compoundBrackets(type, bCount); 
 		return type;
@@ -728,7 +686,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		case 6: 
 			Get();
 			type = PTBoolean; 
-		default: SynErr(114);
+		default: SynErr(112);
 		}
 		return type;
 	}
@@ -796,10 +754,10 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		if (la.kind == 31) {
 			var arg:Expression = ArrayInitializer();
 			expression = arg; 
-		} else if (StartOf(13)) {
+		} else if (StartOf(10)) {
 			var arg:Expression = Expression0();
 			expression = arg; 
-		} else SynErr(115);
+		} else SynErr(113);
 		return expression;
 	}
 
@@ -807,7 +765,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		var expression:Expression = null;
 		var values:Array<Expression> = []; 
 		Expect(31);
-		if (StartOf(14)) {
+		if (StartOf(11)) {
 			var arg:Expression = VariableInitializer();
 			values.push(arg); 
 			while (commaAndNoRBrace()) {
@@ -826,7 +784,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 	function Expression0():Expression {
 		var expression:Expression = null;
 		var expression:Expression = Expression1();
-		while (StartOf(15)) {
+		while (StartOf(12)) {
 			var operator:InfixOperator = AssignmentOperator();
 			var value:Expression = Expression1();
 			if (operator != null)
@@ -850,7 +808,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 
 	function ClassBody():Void {
 		Expect(31);
-		while (StartOf(3)) {
+		while (StartOf(2)) {
 			ClassBodyDeclaration();
 		}
 		Expect(37);
@@ -860,7 +818,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		var statement:Statement = null;
 		blockContexts.unshift(new BlockContext(parent)); 
 		Expect(31);
-		while (StartOf(4)) {
+		while (StartOf(13)) {
 			BlockStatement();
 		}
 		Expect(37);
@@ -875,7 +833,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			// validate constructor name
 			if (identifier != classContexts[0].identifier) error('invalid function declaration'); 
 			ConstructorDeclaratorRest(new MethodContext(modifiers, null, identifier));
-		} else if (StartOf(16)) {
+		} else if (StartOf(14)) {
 			MethodOrFieldDecl(modifiers);
 		} else if (la.kind == 25) {
 			checkModifierPermission(modifiers, ModifierSet.methods); 
@@ -885,9 +843,11 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			VoidMethodDeclaratorRest(new MethodContext(modifiers, null, identifier));
 		} else if (la.kind == 9) {
 			var typeContext:TypeContext = ClassDeclaration(modifiers);
+			classContexts[0].defineMemberType(typeContext); 
 		} else if (la.kind == 56) {
 			var typeContext:TypeContext = InterfaceDeclaration(modifiers);
-		} else SynErr(116);
+			classContexts[0].defineMemberType(typeContext); 
+		} else SynErr(114);
 	}
 
 	function ConstructorDeclaratorRest(methodContext:MethodContext):Void {
@@ -921,21 +881,21 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		if (la.kind == 31) {
 			var block:Statement = Block(methodContext);
 			methodContext.body = block; 
-		} else if (la.kind == 41) {
+		} else if (la.kind == 42) {
 			Get();
-		} else SynErr(117);
+		} else SynErr(115);
 		classContexts[0].defineMethod(methodContext); 
 	}
 
 	function MethodOrFieldRest(modifiers:EnumSet<Modifier>, identifier:String, type:DataType):Void {
-		if (StartOf(17)) {
+		if (StartOf(15)) {
 			checkModifierPermission(modifiers, ModifierSet.fields);  
 			VariableDeclaratorsRest(modifiers, type, identifier);
-			Expect(41);
+			Expect(42);
 		} else if (la.kind == 33) {
 			checkModifierPermission(modifiers, ModifierSet.methods); 
 			MethodDeclaratorRest(new MethodContext(modifiers, type, identifier));
-		} else SynErr(118);
+		} else SynErr(116);
 	}
 
 	function VariableDeclaratorsRest(modifiers:EnumSet<Modifier>, type:DataType, identifier:String):Void {
@@ -961,9 +921,9 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		if (la.kind == 31) {
 			var block:Statement = Block(methodContext);
 			methodContext.body = block; 
-		} else if (la.kind == 41) {
+		} else if (la.kind == 42) {
 			Get();
-		} else SynErr(119);
+		} else SynErr(117);
 		classContexts[0].defineMethod(methodContext); 
 	}
 
@@ -971,7 +931,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		var parameters:Array<FormalParameter> = null;
 		parameters = []; 
 		Expect(33);
-		if (StartOf(18)) {
+		if (StartOf(16)) {
 			var parameter:FormalParameter = FormalParameter0();
 			parameters.push(parameter); 
 			while (la.kind == 27) {
@@ -986,7 +946,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 
 	function InterfaceBody():Void {
 		Expect(31);
-		while (StartOf(19)) {
+		while (StartOf(17)) {
 			InterfaceBodyDeclaration();
 		}
 		Expect(37);
@@ -994,18 +954,18 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 
 	function InterfaceBodyDeclaration():Void {
 		var modifiers = new EnumSet<Modifier>(); 
-		if (la.kind == 41) {
+		if (la.kind == 42) {
 			Get();
-		} else if (StartOf(20)) {
-			while (StartOf(9)) {
+		} else if (StartOf(18)) {
+			while (StartOf(7)) {
 				Modifier0(modifiers);
 			}
 			InterfaceMemberDecl(modifiers);
-		} else SynErr(120);
+		} else SynErr(118);
 	}
 
 	function InterfaceMemberDecl(modifiers:EnumSet<Modifier>):Void {
-		if (StartOf(16)) {
+		if (StartOf(14)) {
 			InterfaceMethodOrFieldDecl(modifiers);
 		} else if (la.kind == 25) {
 			checkModifierPermission(modifiers, ModifierSet.interfaces); 
@@ -1016,7 +976,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			var typeContext:TypeContext = ClassDeclaration(modifiers);
 		} else if (la.kind == 56) {
 			var typeContext:TypeContext = InterfaceDeclaration(modifiers);
-		} else SynErr(121);
+		} else SynErr(119);
 	}
 
 	function InterfaceMethodOrFieldDecl(modifiers:EnumSet<Modifier>):Void {
@@ -1031,18 +991,18 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			Get();
 			var arg:Array<Array<String>> = QualidentList();
 		}
-		Expect(41);
+		Expect(42);
 	}
 
 	function InterfaceMethodOrFieldRest(modifiers:EnumSet<Modifier>):Void {
 		if (la.kind == 32 || la.kind == 52) {
 			checkModifierPermission(modifiers, ModifierSet.constants);  
 			ConstantDeclaratorsRest();
-			Expect(41);
+			Expect(42);
 		} else if (la.kind == 33) {
 			checkModifierPermission(modifiers, ModifierSet.interfaces); 
 			InterfaceMethodDeclaratorRest();
-		} else SynErr(122);
+		} else SynErr(120);
 	}
 
 	function ConstantDeclaratorsRest():Void {
@@ -1060,7 +1020,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			Get();
 			var arg:Array<Array<String>> = QualidentList();
 		}
-		Expect(41);
+		Expect(42);
 	}
 
 	function ConstantDeclaratorRest():Void {
@@ -1094,18 +1054,18 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			Get();
 			Expect(33);
 			blockContexts.unshift(new BlockContext(blockContexts[0])); 
-			if (StartOf(21)) {
+			if (StartOf(19)) {
 				ForInit();
 			}
-			Expect(41);
+			Expect(42);
 			var conditional:Expression = EBooleanLiteral(true); 
-			if (StartOf(13)) {
+			if (StartOf(10)) {
 				var expression:Expression = Expression0();
 				conditional = expression; 
 			}
-			Expect(41);
+			Expect(42);
 			var body:Array<Statement> = []; 
-			if (StartOf(13)) {
+			if (StartOf(10)) {
 				var updates:Array<Statement> = ForUpdate();
 				body = updates; 
 			}
@@ -1124,7 +1084,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			var body:Statement = Statement0();
 			Expect(60);
 			var condition:Expression = ParExpression();
-			Expect(41);
+			Expect(42);
 			statement = SLoop(condition, body, true); 
 		} else if (la.kind == 62) {
 			Get();
@@ -1142,7 +1102,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 				Get();
 				var block:Statement = Block(blockContexts[0]);
 				finallyBody = block; 
-			} else SynErr(123);
+			} else SynErr(121);
 			statement = STry(body, catches, finallyBody); 
 		} else if (la.kind == 64) {
 			Get();
@@ -1157,16 +1117,16 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		} else if (la.kind == 65) {
 			Get();
 			var value:Expression = null; 
-			if (StartOf(13)) {
+			if (StartOf(10)) {
 				var expression:Expression = Expression0();
 				value = expression; 
 			}
-			Expect(41);
+			Expect(42);
 			statement = SReturn(value); 
 		} else if (la.kind == 66) {
 			Get();
 			var expression:Expression = Expression0();
-			Expect(41);
+			Expect(42);
 			statement = SThrow(expression); 
 		} else if (la.kind == 67) {
 			Get();
@@ -1175,7 +1135,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 				Get();
 				label = t.val; 
 			}
-			Expect(41);
+			Expect(42);
 			statement = SBreak(label); 
 		} else if (la.kind == 68) {
 			Get();
@@ -1184,9 +1144,9 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 				Get();
 				label = t.val; 
 			}
-			Expect(41);
+			Expect(42);
 			statement = SContinue(label); 
-		} else if (la.kind == 41) {
+		} else if (la.kind == 42) {
 			Get();
 		} else if (isLabel()) {
 			Expect(1);
@@ -1194,11 +1154,11 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			Expect(26);
 			var body:Statement = Statement0();
 			statement = SLabel(label, body); 
-		} else if (StartOf(13)) {
+		} else if (StartOf(10)) {
 			var arg:Statement = StatementExpression();
-			Expect(41);
+			Expect(42);
 			statement = arg; 
-		} else SynErr(124);
+		} else SynErr(122);
 		return statement;
 	}
 
@@ -1213,14 +1173,14 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 	function ForInit():Void {
 		if (isLocalVarDecl(true)) {
 			LocalVariableDeclaration();
-		} else if (StartOf(13)) {
+		} else if (StartOf(10)) {
 			var statement:Statement = StatementExpression();
 			blockContexts[0].pushStatement(statement); 
 			var statements:Array<Statement> = MoreStatementExpressions();
 			for (statement in statements)
 			blockContexts[0].pushStatement(statement);
 			
-		} else SynErr(125);
+		} else SynErr(123);
 	}
 
 	function ForUpdate():Array<Statement> {
@@ -1256,6 +1216,31 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		checkExprStat(expression);
 		statement = SExpression(expression); 
 		return statement;
+	}
+
+	function BlockStatement():Void {
+		if (isLocalVarDecl(false)) {
+			LocalVariableDeclaration();
+			Expect(42);
+		} else if (StartOf(3)) {
+			var typeContext:TypeContext = ClassOrInterfaceDeclaration();
+		} else if (StartOf(20)) {
+			var statement:Statement = Statement0();
+			blockContexts[0].pushStatement(statement); 
+		} else SynErr(124);
+	}
+
+	function LocalVariableDeclaration():Void {
+		var modifiers = new EnumSet<Modifier>(); 
+		if (la.kind == 12) {
+			Get();
+			modifiers.add(MFinal); 
+		}
+		var type:DataType = Type();
+		var fields:Array<FieldContext> = VariableDeclarators(modifiers, type);
+		for (field in fields)
+		blockContexts[0].defineVariable(field);
+		
 	}
 
 	function VariableDeclarators(modifiers:EnumSet<Modifier>, type:DataType):Array<FieldContext> {
@@ -1294,7 +1279,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 
 	function SwitchBlockStatementGroup():Void {
 		SwitchLabel();
-		while (StartOf(4)) {
+		while (StartOf(13)) {
 			BlockStatement();
 		}
 	}
@@ -1307,7 +1292,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		} else if (la.kind == 71) {
 			Get();
 			Expect(26);
-		} else SynErr(126);
+		} else SynErr(125);
 	}
 
 	function Expression1():Expression {
@@ -1359,7 +1344,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		case 84: 
 			Get();
 			operator = OpZeroRightShift; 
-		default: SynErr(127);
+		default: SynErr(126);
 		}
 		return operator;
 	}
@@ -1367,7 +1352,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 	function Expression2():Expression {
 		var expression:Expression = null;
 		var expression:Expression = Expression3();
-		if (StartOf(22)) {
+		if (StartOf(21)) {
 			var rest:Expression = Expression2Rest(expression);
 			expression = rest; 
 		}
@@ -1386,7 +1371,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 
 	function Expression3():Expression {
 		var expression:Expression = null;
-		if (StartOf(23)) {
+		if (StartOf(22)) {
 			if (la.kind == 28 || la.kind == 30) {
 				var type:IncrementType = Increment();
 				var rest:Expression = Expression3();
@@ -1402,7 +1387,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			Expect(39);
 			var rest:Expression = Expression3();
 			expression = ECast(type, rest); 
-		} else if (StartOf(24)) {
+		} else if (StartOf(23)) {
 			var rest:Expression = Primary();
 			expression = rest; 
 			while (la.kind == 29 || la.kind == 32) {
@@ -1413,19 +1398,19 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 				var type:IncrementType = Increment();
 				expression = EPostfix(type, expression); 
 			}
-		} else SynErr(128);
+		} else SynErr(127);
 		return expression;
 	}
 
 	function Expression2Rest(operand:Expression):Expression {
 		var expression:Expression = null;
-		if (StartOf(25)) {
+		if (StartOf(24)) {
 			var builder = new OperationBuilder(); builder.operand(operand); 
 			var operator:InfixOperator = Infixop();
 			builder.operator(operator); 
 			var operand:Expression = Expression3();
 			builder.operand(operand); 
-			while (StartOf(25)) {
+			while (StartOf(24)) {
 				var operator:InfixOperator = Infixop();
 				builder.operator(operator); 
 				var operand:Expression = Expression3();
@@ -1436,7 +1421,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			Get();
 			var type:DataType = Type();
 			expression = EInstanceOf(expression, type); 
-		} else SynErr(129);
+		} else SynErr(128);
 		return expression;
 	}
 
@@ -1500,7 +1485,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		case 100: 
 			Get();
 			operator = OpModulus; 
-		default: SynErr(130);
+		default: SynErr(129);
 		}
 		return operator;
 	}
@@ -1513,7 +1498,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		} else if (la.kind == 28) {
 			Get();
 			type = IDecrement; 
-		} else SynErr(131);
+		} else SynErr(130);
 		return type;
 	}
 
@@ -1531,7 +1516,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		} else if (la.kind == 34) {
 			Get();
 			operator = OpUnaryMinus; 
-		} else SynErr(132);
+		} else SynErr(131);
 		return operator;
 	}
 
@@ -1586,7 +1571,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			Get();
 			Expect(29);
 			Expect(9);
-		default: SynErr(133);
+		default: SynErr(132);
 		}
 		return expression;
 	}
@@ -1607,13 +1592,13 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			} else if (la.kind == 17) {
 				Get();
 				InnerCreator();
-			} else SynErr(134);
+			} else SynErr(133);
 		} else if (la.kind == 32) {
 			Get();
 			var index:Expression = Expression0();
 			Expect(38);
 			expression = EArrayAccess(index, base); 
-		} else SynErr(135);
+		} else SynErr(134);
 		return expression;
 	}
 
@@ -1621,7 +1606,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		var arguments:Array<Expression> = null;
 		arguments = []; 
 		Expect(33);
-		if (StartOf(13)) {
+		if (StartOf(10)) {
 			var expression:Expression = Expression0();
 			arguments.push(expression); 
 			while (la.kind == 27) {
@@ -1645,7 +1630,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			var identifier:String = t.val; 
 			var arg:Expression = ArgumentsOpt(identifier, ESuperReference);
 			expression = arg; 
-		} else SynErr(136);
+		} else SynErr(135);
 		return expression;
 	}
 
@@ -1673,14 +1658,14 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		case 18: 
 			Get();
 			expression = ENull; 
-		default: SynErr(137);
+		default: SynErr(136);
 		}
 		return expression;
 	}
 
 	function Creator():Expression {
 		var expression:Expression = null;
-		if (StartOf(12)) {
+		if (StartOf(9)) {
 			var type:PrimitiveType = BasicType();
 			var arg:Expression = ArrayCreatorRest(DTPrimitive(type));
 			expression = arg; 
@@ -1692,8 +1677,8 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			} else if (la.kind == 33) {
 				var arg:Expression = ClassCreatorRest(qualifier);
 				expression = arg; 
-			} else SynErr(138);
-		} else SynErr(139);
+			} else SynErr(137);
+		} else SynErr(138);
 		return expression;
 	}
 
@@ -1720,9 +1705,9 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 				Expect(29);
 				Expect(1);
 				var dummy:Expression = ArgumentsOpt(null, null);
-			} else SynErr(140);
+			} else SynErr(139);
 			
-		} else SynErr(141);
+		} else SynErr(140);
 		return expression;
 	}
 
@@ -1743,7 +1728,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			Get();
 			var bCount:Int = BracketsOpt();
 			var expression:Expression = ArrayInitializer();
-		} else if (StartOf(13)) {
+		} else if (StartOf(10)) {
 			var dummy:Expression = Expression0();
 			Expect(38);
 			while (nonEmptyBracket()) {
@@ -1755,7 +1740,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 				Expect(32);
 				Expect(38);
 			}
-		} else SynErr(142);
+		} else SynErr(141);
 		return expression;
 	}
 
@@ -1792,27 +1777,26 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 	inline static var x:Bool = false;
 	private static var set:Array<Array<Bool>> = [
 		[T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,x,x,x, x,x,x,x, x,T,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,T,x,x, T,T,T,T, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,T,T, T,T,T,T, T,T,T,T, T,T,x,T, T,T,T,T, T,T,T,T, T,T,x,x, T,x,T,T, x,T,T,T, T,x,x,x, T,T,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,T,x,T, T,T,T,x, T,T,T,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,T,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,T,T, T,T,T,T, T,T,T,T, T,T,x,T, T,T,T,T, T,T,T,T, T,T,x,x, T,x,T,T, x,T,T,T, T,x,x,x, T,T,x,x, T,T,T,T, x,T,x,x, x,x,x,x, T,T,x,T, T,T,T,x, T,T,T,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
+		[x,x,x,x, x,x,x,x, x,T,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,x, T,T,T,T, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
+		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,T,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,x,x,x, x,x,x,x, x,T,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,T,T, T,T,T,T, T,x,T,T, x,T,x,T, T,T,T,x, T,x,T,T, T,T,x,x, T,x,T,T, x,T,T,T, T,x,x,x, T,T,x,x, x,x,x,x, x,T,x,x, x,x,x,x, x,T,x,T, T,T,T,x, T,T,T,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,x,x,x, x,x,T,T, T,x,T,x, x,T,x,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,T,T,T, T,T,T,T, T,x,T,T, x,T,x,T, T,T,T,x, T,x,T,T, T,T,x,x, T,x,T,x, x,T,T,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,T,T,T, T,T,T,T, T,x,T,T, x,T,x,T, T,T,T,x, T,x,T,T, T,T,x,x, T,x,T,T, x,T,T,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,T, T,T,T,T, T,T,T,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
+		[x,T,T,T, T,T,T,T, T,T,T,T, T,T,x,T, T,T,T,T, T,T,T,T, T,T,x,x, T,x,T,T, x,T,T,T, T,x,x,x, T,x,T,x, T,T,T,T, x,T,x,x, x,x,x,x, T,T,x,T, T,T,T,x, T,T,T,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,T,x,x, x,x,T,T, T,x,T,x, x,T,x,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,T, x,x,x,x, T,x,x,x, x,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
+		[x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,T,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,T,x,x, x,x,T,T, T,x,T,x, T,T,x,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,T,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
+		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,T,T,T, T,T,T,T, T,x,T,T, T,T,x,T, T,T,T,x, T,x,T,T, T,T,x,x, T,x,T,x, x,T,T,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
+		[x,T,T,T, T,T,T,T, T,x,T,T, x,T,x,T, T,T,T,x, T,x,T,T, T,T,x,x, T,x,T,T, x,T,T,T, T,x,x,x, T,x,T,x, x,x,x,x, x,T,x,x, x,x,x,x, x,T,x,T, T,T,T,x, T,T,T,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,x, T,x,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,x,x],
 		[x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,x,T,x, x,x,T,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,T,T,T, T,T,T,T, T,x,T,T, x,T,x,T, T,T,T,x, T,x,T,T, T,T,x,x, x,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
@@ -1882,8 +1866,8 @@ class Errors
 			case 38: s = "rbrack expected";
 			case 39: s = "rpar expected";
 			case 40: s = "tilde expected";
-			case 41: s = "\";\" expected";
-			case 42: s = "\"package\" expected";
+			case 41: s = "\"package\" expected";
+			case 42: s = "\";\" expected";
 			case 43: s = "\"*\" expected";
 			case 44: s = "\"protected\" expected";
 			case 45: s = "\"private\" expected";
@@ -1944,46 +1928,45 @@ class Errors
 			case 100: s = "\"%\" expected";
 			case 101: s = "??? expected";
 			case 102: s = "invalid PdeProgram";
-			case 103: s = "invalid PdeProgram";
-			case 104: s = "invalid TypeDeclaration";
+			case 103: s = "invalid TypeDeclaration";
+			case 104: s = "invalid ClassBodyDeclaration";
 			case 105: s = "invalid ClassBodyDeclaration";
-			case 106: s = "invalid ClassBodyDeclaration";
-			case 107: s = "invalid BlockStatement";
-			case 108: s = "invalid QualifiedImport";
-			case 109: s = "invalid ClassOrInterfaceDeclaration";
-			case 110: s = "invalid ClassModifier";
-			case 111: s = "invalid Modifier0";
-			case 112: s = "invalid Modifier1";
-			case 113: s = "invalid Type";
-			case 114: s = "invalid BasicType";
-			case 115: s = "invalid VariableInitializer";
-			case 116: s = "invalid MemberDecl";
-			case 117: s = "invalid VoidMethodDeclaratorRest";
-			case 118: s = "invalid MethodOrFieldRest";
-			case 119: s = "invalid MethodDeclaratorRest";
-			case 120: s = "invalid InterfaceBodyDeclaration";
-			case 121: s = "invalid InterfaceMemberDecl";
-			case 122: s = "invalid InterfaceMethodOrFieldRest";
-			case 123: s = "invalid Statement0";
-			case 124: s = "invalid Statement0";
-			case 125: s = "invalid ForInit";
-			case 126: s = "invalid SwitchLabel";
-			case 127: s = "invalid AssignmentOperator";
-			case 128: s = "invalid Expression3";
-			case 129: s = "invalid Expression2Rest";
-			case 130: s = "invalid Infixop";
-			case 131: s = "invalid Increment";
-			case 132: s = "invalid PrefixOp";
-			case 133: s = "invalid Primary";
+			case 106: s = "invalid QualifiedImport";
+			case 107: s = "invalid ClassOrInterfaceDeclaration";
+			case 108: s = "invalid ClassModifier";
+			case 109: s = "invalid Modifier0";
+			case 110: s = "invalid Modifier1";
+			case 111: s = "invalid Type";
+			case 112: s = "invalid BasicType";
+			case 113: s = "invalid VariableInitializer";
+			case 114: s = "invalid MemberDecl";
+			case 115: s = "invalid VoidMethodDeclaratorRest";
+			case 116: s = "invalid MethodOrFieldRest";
+			case 117: s = "invalid MethodDeclaratorRest";
+			case 118: s = "invalid InterfaceBodyDeclaration";
+			case 119: s = "invalid InterfaceMemberDecl";
+			case 120: s = "invalid InterfaceMethodOrFieldRest";
+			case 121: s = "invalid Statement0";
+			case 122: s = "invalid Statement0";
+			case 123: s = "invalid ForInit";
+			case 124: s = "invalid BlockStatement";
+			case 125: s = "invalid SwitchLabel";
+			case 126: s = "invalid AssignmentOperator";
+			case 127: s = "invalid Expression3";
+			case 128: s = "invalid Expression2Rest";
+			case 129: s = "invalid Infixop";
+			case 130: s = "invalid Increment";
+			case 131: s = "invalid PrefixOp";
+			case 132: s = "invalid Primary";
+			case 133: s = "invalid Selector";
 			case 134: s = "invalid Selector";
-			case 135: s = "invalid Selector";
-			case 136: s = "invalid SuperSuffix";
-			case 137: s = "invalid Literal";
+			case 135: s = "invalid SuperSuffix";
+			case 136: s = "invalid Literal";
+			case 137: s = "invalid Creator";
 			case 138: s = "invalid Creator";
-			case 139: s = "invalid Creator";
+			case 139: s = "invalid IdentifierSuffix";
 			case 140: s = "invalid IdentifierSuffix";
-			case 141: s = "invalid IdentifierSuffix";
-			case 142: s = "invalid ArrayCreatorRest";
+			case 141: s = "invalid ArrayCreatorRest";
 			default: s = "error " + n;
 		}
 		printMsg(line, col, s);

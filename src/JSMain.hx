@@ -54,7 +54,14 @@ class JSMain
 		
 		// source compiler
 		var compiler = new JSCompiler();
-		compiler.compileClass([], Type.enumParameters(sketch.types.get('Sketch'))[0], sketch.ast);
+		for (type in sketch.types)
+			switch (type) {
+			case TClass(definition):
+			compiler.compileClass([], definition, sketch.ast);
+			default:
+			}
+		
+		trace(compiler.output.toString());
 		
 		// compile main sketch
 //		var interpreter:IInterpreter = new JSInterpreter();

@@ -11,6 +11,7 @@ import xpde.parser.Parser;
 
 class JSCompiler implements ICompiler
 {
+	public
 	var output:StringBuf;
 
 	public function new() 
@@ -61,8 +62,6 @@ class JSCompiler implements ICompiler
 			output.add('static ');
 			compileStatement(clinit);
 		}*/
-		
-		trace(output.toString());
 	}
 	
 	function compileMethod(definition:MethodDefinition)

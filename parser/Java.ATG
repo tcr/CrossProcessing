@@ -404,18 +404,18 @@ PdeProgram
 							classContexts.unshift(new ClassContext(new EnumSet<Modifier>([MPublic]), context.identifier));
 							classContexts[0].extend = ['xpde', 'core', 'PApplet'];
 							.)
-    { (IF (isLocalVarDecl(false)) LocalVariableDeclaration) ";" }
-    ( IF (isActiveProgram())
+/*    { (IF (isLocalVarDecl(false)) LocalVariableDeclaration) ";" }
+    ( IF (isActiveProgram())*/
       ClassBodyDeclaration { ClassBodyDeclaration }
-      |							(.
+/*      |							(.
 //[TODO] this in some graceful manner
 							// move field declarations to setup method
-/*							blockContext = FieldDefinable = new BlockContext();
+							blockContext = FieldDefinable = new BlockContext();
 							for (identifier in tempContext.definitions.keys())
 							{
 								methodContext.definitions.set(identifier, tempContext.definitions.get(identifier));
 								tempContext.definitions.remove(identifier);
-							}*/
+							}
 							
 							// initialize setup scope
 							blockContexts.unshift(new BlockContext());
@@ -426,7 +426,7 @@ PdeProgram
 							methodContext.body = blockContexts.shift().getBlockStatement();
 							classContexts[0].methods.push(methodContext);
 							.)
-      )							(.
+      )*/						(.
 							// add class
 							context.types.push(classContexts.shift());
 
@@ -615,7 +615,7 @@ VariableInitializer<out expression:Expression>
 
 ClassDeclaration<.out typeContext:TypeContext, modifiers:EnumSet<Modifier>.>
 = 							(. checkModifierPermission(modifiers, ModifierSet.classes); .)
-  "class" ident						(. classContexts.unshift(new ClassContext(modifiers, t.val)); .)
+  "class" ident						(. classContexts.unshift(new ClassContext(modifiers, t.val, classContexts[0])); .)
   [ "extends" Qualident<.out arg:Array<String>.>	(. classContexts[0].extend = arg; .)
     ]
   [ "implements" QualidentList<.out arg:Array<Array<String>>.>	(. classContexts[0].implement = arg; .)
@@ -652,8 +652,8 @@ MemberDecl<.modifiers:EnumSet<Modifier>.>
 |							(. checkModifierPermission(modifiers, ModifierSet.methods); .)
   "void" ident						(. var identifier:String = t.val; .)
   VoidMethodDeclaratorRest<new MethodContext(modifiers, null, identifier)>
-| ClassDeclaration<out typeContext:TypeContext, modifiers>
-| InterfaceDeclaration<out typeContext:TypeContext, modifiers>
+| ClassDeclaration<out typeContext:TypeContext, modifiers>	(. classContexts[0].defineMemberType(typeContext); .)
+| InterfaceDeclaration<out typeContext:TypeContext, modifiers>	(. classContexts[0].defineMemberType(typeContext); .)
 .
 
 /*---------------------------------------------------------------------------*/

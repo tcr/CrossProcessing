@@ -174,7 +174,7 @@ class ClassContext implements TypeContext
 	public var modifiers:EnumSet<Modifier>;
 	public var extend:Qualident;
 	public var implement:Array<Qualident>;
-	public var memberTypes:Hash<Qualident>;
+	public var memberTypes:Hash<TypeContext>;
 	public var fields:Hash<FieldContext>;
 	public var methods:Array<MethodContext>; // array, because we can't resolve similar types until second pass
 //[TODO] can we resolve similar types before second pass!?	
@@ -185,16 +185,20 @@ class ClassContext implements TypeContext
 	
 	// anonymous class uniqid
 	public var anonClassID:Int;
+	
+	// owner class context
+	public var ownerClass:ClassContext;
 
-	public function new(modifiers:EnumSet<Modifier>, identifier:String)
+	public function new(modifiers:EnumSet<Modifier>, identifier:String, ?ownerClass:ClassContext)
 	{
 		// definition defaults
 		this.modifiers = modifiers;
 		this.identifier = identifier;	
 		implement = [];
 		fields = new Hash<FieldContext>();
-		memberTypes = new Hash<Qualident>();
+		memberTypes = new Hash<TypeContext>();
 		methods = [];
+		this.ownerClass = ownerClass;
 		
 		// constructors
 		staticConstructor = new BlockContext();
@@ -225,12 +229,12 @@ class ClassContext implements TypeContext
 		methods.push(method);
 	}
 	
-	public function defineMemberType(identifier:String, qualident:Qualident)
+	public function defineMemberType(type:TypeContext)
 	{
 		// prevent redefinition
-		if (memberTypes.exists(identifier))
-			throw "redeclaration of member type " + identifier + " in class " + this.identifier;
-		memberTypes.set(identifier, qualident);
+		if (memberTypes.exists(type.identifier))
+			throw "redeclaration of member type " + type.identifier + " in class " + this.identifier;
+		memberTypes.set(type.identifier, type);
 	}
 }
 
@@ -347,6 +351,7 @@ class LexicalResolver
 		this.unit = unit;
 		qualifiers = new Hash<Qualident>();
 		imports = new Hash<Qualident>();
+		classPrefix = '';
 	}
 	
 	/* imports */
@@ -450,8 +455,7 @@ class LexicalResolver
 			qualifiers.set(type.identifier, context.packageDeclaration.concat([type.identifier]));
 		// generate definitions
 		for (type in context.types)
-			if (Std.is(type, ClassContext))
-				unit.types.set(type.identifier, TClass(generateClassDefinition(cast(type, ClassContext))));
+			addTypeDefinition(type);
 
 //[TODO] we could find competing method names here; better, when definitions are generated!
 				
@@ -461,24 +465,59 @@ class LexicalResolver
 				resolveClass(context, cast(type, ClassContext));
 	}
 	
+	var classPrefix:String;
+	
+	function addTypeDefinition(type:TypeContext)
+	{
+		// class definition
+		if (Std.is(type, ClassContext))
+		{
+			// cast class type
+			var classType:ClassContext = untyped type;
+			
+			// add type definition
+			unit.types.set(type.identifier, TClass(generateClassDefinition(classType)));
+			// add member types
+			var tmpClassPrefix = classPrefix;
+			classPrefix += type.identifier + '$';
+			for (memberType in classType.memberTypes)
+				addTypeDefinition(memberType);
+			classPrefix = tmpClassPrefix;
+		}
+//		else
+//			unit.types.set(type.identifier, TClass(generateClassDefinition(cast(type, ClassContext))));
+	}
+	
 	function generateClassDefinition(type:ClassContext):ClassDefinition 
 	{
+		var tmpQualifiers = qualifiers;
+		
 		var definition = {
-		    identifier: type.identifier,
+		    identifier: classPrefix + type.identifier,
 		    modifiers: type.modifiers,
 		    fields: new Hash<FieldDefinition>(),
 		    methods: new Hash<MethodDefinition>(),
+		    types: new Hash<String>(),
 		    extend: qualifyReference(type.extend),
 		    implement: [],
 		};
 		if (type.implement != null)
 			for (dt in type.implement)
 				definition.implement.push(qualifyReference(dt));
+		for (type in type.memberTypes) {
+			definition.types.set(type.identifier, classPrefix + type.identifier + '$' + type.identifier);
+//[TODO] unit.getQualifiedReference(type.identifier)
+			qualifiers.set(type.identifier, [definition.types.get(type.identifier)]);
+		}
 		for (field in type.fields)
 			definition.fields.set(field.identifier, generateFieldDefinition(field));
 		for (method in type.methods)
 			definition.methods.set(method.identifier, generateMethodDefinition(method));
 		type.definition = definition;
+		
+		// restore qualifier list
+		qualifiers = tmpQualifiers;
+		
 		return definition;
 	}
 	
@@ -521,7 +560,7 @@ class LexicalResolver
 	
 	var methods:Hash<MethodDefinition>;
 	var fields:Hash<FieldDefinition>;
-	var memberTypes:Hash<Qualident>;
+	var memberTypes:Hash<String>;
 	
 	function initializeResolvers(definition:ClassDefinition)
 	{
@@ -531,6 +570,9 @@ class LexicalResolver
 			methods.set(method.identifier, method);
 		for (field in definition.fields)
 			fields.set(field.identifier, field);
+		for (type in definition.types.keys())
+//[TODO] this should be recursive descent, compounding all member types of parents &c.
+			memberTypes.set(type, definition.types.get(type));
 	}
 	
 	function resolveClass(context:CompilationUnitContext, classContext:ClassContext)
@@ -538,7 +580,7 @@ class LexicalResolver
 		// initialize resolvers
 		methods = new Hash<MethodDefinition>();
 		fields = new Hash<FieldDefinition>();
-		memberTypes = new Hash<Qualident>();
+		memberTypes = new Hash<String>();
 		// walk inheritance tree
 		initializeResolvers(classContext.definition);
 		
@@ -565,7 +607,7 @@ class LexicalResolver
 			var v = new Hash<FieldDefinition>();
 			for (key in variables.keys()) {
 				var variable = variables.get(key);
-				v.set(key, { identifier: variable.identifier, type: qualifyDataType(variable.type), modifiers: variable.modifiers } );
+				v.set(key, { identifier: variable.identifier, type: resolveLexicalDataType(variable.type), modifiers: variable.modifiers } );
 			}
 			var s = new Array<Statement>();
 			for (statement in statements)
@@ -620,10 +662,10 @@ class LexicalResolver
 		{
 		    // instantiation
 		    case EArrayInstantiation(type, sizes):
-			EArrayInstantiation(qualifyDataType(type), eArr(sizes));
+			EArrayInstantiation(resolveLexicalDataType(type), eArr(sizes));
 				
 		    case EObjectInstantiation(type, args):
-			EObjectInstantiation(qualifyReference(type), eArr(args));
+			EObjectInstantiation(resolveQualifiedReference(type), eArr(args));
 		
 		    // control
 		    case EConditional(condition, trueExp, falseExp):
@@ -664,7 +706,7 @@ class LexicalResolver
 			
 		    // operations
 		    case ECast(type, value):
-			ECast(qualifyDataType(type), resolveExpression(value));
+			ECast(resolveLexicalDataType(type), resolveExpression(value));
 			
 		    case EPrefixOperation(type, reference):
 			EPrefixOperation(type, resolveExpression(reference));
@@ -673,7 +715,7 @@ class LexicalResolver
 			EInfixOperation(type, resolveExpression(left), resolveExpression(right));
 			
 		    case EInstanceOf(expression, type):
-			EInstanceOf(resolveExpression(expression), qualifyDataType(type));
+			EInstanceOf(resolveExpression(expression), resolveLexicalDataType(type));
 			
 		    case EPrefix(type, reference):
 			EPrefix(type, resolveExpression(reference));
@@ -737,6 +779,32 @@ class LexicalResolver
 			
 		// no method found
 		throw 'call to nonexistant method "' + identifier + '"';
+	}
+	
+	function resolveLexicalDataType(?type:DataType):DataType
+	{
+		if (type == null)
+			return null;
+		return switch (type) {
+		    case DTPrimitive(_):
+			type;
+		    case DTPrimitiveArray(_, _):
+			type;
+		    case DTReference(qualident):
+			DTReference(resolveQualifiedReference(qualident));
+		    case DTReferenceArray(qualident, dimensions):
+			DTReferenceArray(resolveQualifiedReference(qualident), dimensions);
+		}
+	}
+	
+	function resolveQualifiedReference(?qualident:Qualident):Qualident
+	{
+		if (qualident == null)
+			return null;
+		if (qualident.length == 0 && memberTypes.exists(qualident[0]))
+//[TODO] return unit.getQualifiedReference(qualident[0])
+			return [memberTypes.get(qualident[0])];
+		return qualifyReference(qualident);
 	}
 	
 /* unit-level lexical resolution 

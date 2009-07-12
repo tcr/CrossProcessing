@@ -860,7 +860,7 @@ xpde.parser.TypeContext.prototype.extend = null;
 xpde.parser.TypeContext.prototype.identifier = null;
 xpde.parser.TypeContext.prototype.implement = null;
 xpde.parser.TypeContext.prototype.__class__ = xpde.parser.TypeContext;
-xpde.parser.ClassContext = function(modifiers,identifier) { if( modifiers === $_ ) return; {
+xpde.parser.ClassContext = function(modifiers,identifier,ownerClass) { if( modifiers === $_ ) return; {
 	$s.push("xpde.parser.ClassContext::new");
 	var $spos = $s.length;
 	this.modifiers = modifiers;
@@ -869,6 +869,7 @@ xpde.parser.ClassContext = function(modifiers,identifier) { if( modifiers === $_
 	this.fields = new Hash();
 	this.memberTypes = new Hash();
 	this.methods = [];
+	this.ownerClass = ownerClass;
 	this.staticConstructor = new xpde.parser.BlockContext();
 	this.objectConstructor = new xpde.parser.BlockContext();
 	this.anonClassID = 0;
@@ -885,11 +886,11 @@ xpde.parser.ClassContext.prototype.defineField = function(field) {
 	else this.objectConstructor.pushStatement(xpde.parser.Statement.SExpression(xpde.parser.Expression.EAssignment(field.identifier,xpde.parser.Expression.EThisReference,field.initialization)));
 	$s.pop();
 }
-xpde.parser.ClassContext.prototype.defineMemberType = function(identifier,qualident) {
+xpde.parser.ClassContext.prototype.defineMemberType = function(type) {
 	$s.push("xpde.parser.ClassContext::defineMemberType");
 	var $spos = $s.length;
-	if(this.memberTypes.exists(identifier)) throw "redeclaration of member type " + identifier + " in class " + this.identifier;
-	this.memberTypes.set(identifier,qualident);
+	if(this.memberTypes.exists(type.identifier)) throw "redeclaration of member type " + type.identifier + " in class " + this.identifier;
+	this.memberTypes.set(type.identifier,type);
 	$s.pop();
 }
 xpde.parser.ClassContext.prototype.defineMethod = function(method) {
@@ -907,6 +908,7 @@ xpde.parser.ClassContext.prototype.memberTypes = null;
 xpde.parser.ClassContext.prototype.methods = null;
 xpde.parser.ClassContext.prototype.modifiers = null;
 xpde.parser.ClassContext.prototype.objectConstructor = null;
+xpde.parser.ClassContext.prototype.ownerClass = null;
 xpde.parser.ClassContext.prototype.staticConstructor = null;
 xpde.parser.ClassContext.prototype.__class__ = xpde.parser.ClassContext;
 xpde.parser.ClassContext.__interfaces__ = [xpde.parser.TypeContext];
@@ -1031,6 +1033,7 @@ xpde.parser.LexicalResolver = function(unit) { if( unit === $_ ) return; {
 	this.unit = unit;
 	this.qualifiers = new Hash();
 	this.imports = new Hash();
+	this.classPrefix = "";
 	$s.pop();
 }}
 xpde.parser.LexicalResolver.__name__ = ["xpde","parser","LexicalResolver"];
@@ -1050,6 +1053,23 @@ xpde.parser.LexicalResolver.prototype.addDependency = function(qualident) {
 	}(this)).initialize(this.rootPackage);
 	$s.pop();
 }
+xpde.parser.LexicalResolver.prototype.addTypeDefinition = function(type) {
+	$s.push("xpde.parser.LexicalResolver::addTypeDefinition");
+	var $spos = $s.length;
+	if(Std["is"](type,xpde.parser.ClassContext)) {
+		var classType = type;
+		this.unit.types.set(type.identifier,xpde.TypeDefinition.TClass(this.generateClassDefinition(classType)));
+		var tmpClassPrefix = this.classPrefix;
+		this.classPrefix += type.identifier + "$";
+		{ var $it2 = classType.memberTypes.iterator();
+		while( $it2.hasNext() ) { var memberType = $it2.next();
+		this.addTypeDefinition(memberType);
+		}}
+		this.classPrefix = tmpClassPrefix;
+	}
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.classPrefix = null;
 xpde.parser.LexicalResolver.prototype.context = null;
 xpde.parser.LexicalResolver.prototype.eArr = function(arr) {
 	$s.push("xpde.parser.LexicalResolver::eArr");
@@ -1073,7 +1093,8 @@ xpde.parser.LexicalResolver.prototype.fields = null;
 xpde.parser.LexicalResolver.prototype.generateClassDefinition = function(type) {
 	$s.push("xpde.parser.LexicalResolver::generateClassDefinition");
 	var $spos = $s.length;
-	var definition = { identifier : type.identifier, modifiers : type.modifiers, fields : new Hash(), methods : new Hash(), extend : this.qualifyReference(type.extend), implement : []}
+	var tmpQualifiers = this.qualifiers;
+	var definition = { identifier : this.classPrefix + type.identifier, modifiers : type.modifiers, fields : new Hash(), methods : new Hash(), types : new Hash(), extend : this.qualifyReference(type.extend), implement : []}
 	if(type.implement != null) {
 		var _g = 0, _g1 = type.implement;
 		while(_g < _g1.length) {
@@ -1082,8 +1103,15 @@ xpde.parser.LexicalResolver.prototype.generateClassDefinition = function(type) {
 			definition.implement.push(this.qualifyReference(dt));
 		}
 	}
-	{ var $it2 = type.fields.iterator();
-	while( $it2.hasNext() ) { var field = $it2.next();
+	{ var $it3 = type.memberTypes.iterator();
+	while( $it3.hasNext() ) { var type1 = $it3.next();
+	{
+		definition.types.set(type1.identifier,this.classPrefix + type1.identifier + "$" + type1.identifier);
+		this.qualifiers.set(type1.identifier,[definition.types.get(type1.identifier)]);
+	}
+	}}
+	{ var $it4 = type.fields.iterator();
+	while( $it4.hasNext() ) { var field = $it4.next();
 	definition.fields.set(field.identifier,this.generateFieldDefinition(field));
 	}}
 	{
@@ -1095,6 +1123,7 @@ xpde.parser.LexicalResolver.prototype.generateClassDefinition = function(type) {
 		}
 	}
 	type.definition = definition;
+	this.qualifiers = tmpQualifiers;
 	{
 		$s.pop();
 		return definition;
@@ -1152,13 +1181,17 @@ xpde.parser.LexicalResolver.prototype.initializeResolvers = function(definition)
 	$s.push("xpde.parser.LexicalResolver::initializeResolvers");
 	var $spos = $s.length;
 	if(definition.extend != null) this.initializeResolvers(this.rootPackage.getClass(definition.extend));
-	{ var $it3 = definition.methods.iterator();
-	while( $it3.hasNext() ) { var method = $it3.next();
+	{ var $it5 = definition.methods.iterator();
+	while( $it5.hasNext() ) { var method = $it5.next();
 	this.methods.set(method.identifier,method);
 	}}
-	{ var $it4 = definition.fields.iterator();
-	while( $it4.hasNext() ) { var field = $it4.next();
+	{ var $it6 = definition.fields.iterator();
+	while( $it6.hasNext() ) { var field = $it6.next();
 	this.fields.set(field.identifier,field);
+	}}
+	{ var $it7 = definition.types.keys();
+	while( $it7.hasNext() ) { var type = $it7.next();
+	this.memberTypes.set(type,definition.types.get(type));
 	}}
 	$s.pop();
 }
@@ -1188,14 +1221,14 @@ xpde.parser.LexicalResolver.prototype.loadImports = function() {
 					}($this));
 					return $r;
 				}(this);
-				{ var $it5 = importPackage.contents.keys();
-				while( $it5.hasNext() ) { var item = $it5.next();
+				{ var $it8 = importPackage.contents.keys();
+				while( $it8.hasNext() ) { var item = $it8.next();
 				if(Std["is"](importPackage.contents.get(item),xpde.CompilationUnit)) this.imports.set(item,ident.slice(0,-1).concat([item]));
 				}}
 			}
-			catch( $e6 ) {
+			catch( $e9 ) {
 				{
-					var e = $e6;
+					var e = $e9;
 					{
 						$e = [];
 						while($s.length >= $spos) $e.unshift($s.pop());
@@ -1299,16 +1332,7 @@ xpde.parser.LexicalResolver.prototype.resolve = function(context,rootPackage) {
 		while(_g < _g1.length) {
 			var type = _g1[_g];
 			++_g;
-			if(Std["is"](type,xpde.parser.ClassContext)) this.unit.types.set(type.identifier,xpde.TypeDefinition.TClass(this.generateClassDefinition(function($this) {
-				var $r;
-				var tmp = type;
-				$r = (Std["is"](tmp,xpde.parser.ClassContext)?tmp:function($this) {
-					var $r;
-					throw "Class cast error";
-					return $r;
-				}($this));
-				return $r;
-			}(this))));
+			this.addTypeDefinition(type);
 		}
 	}
 	{
@@ -1364,12 +1388,12 @@ xpde.parser.LexicalResolver.prototype.resolveExpression = function(expression) {
 			case 0:
 			var sizes = $e[3], type = $e[2];
 			{
-				$r = xpde.parser.Expression.EArrayInstantiation($this.qualifyDataType(type),$this.eArr(sizes));
+				$r = xpde.parser.Expression.EArrayInstantiation($this.resolveLexicalDataType(type),$this.eArr(sizes));
 			}break;
 			case 1:
 			var args = $e[3], type = $e[2];
 			{
-				$r = xpde.parser.Expression.EObjectInstantiation($this.qualifyReference(type),$this.eArr(args));
+				$r = xpde.parser.Expression.EObjectInstantiation($this.resolveQualifiedReference(type),$this.eArr(args));
 			}break;
 			case 2:
 			var falseExp = $e[4], trueExp = $e[3], condition = $e[2];
@@ -1435,7 +1459,7 @@ xpde.parser.LexicalResolver.prototype.resolveExpression = function(expression) {
 			case 15:
 			var value = $e[3], type = $e[2];
 			{
-				$r = xpde.parser.Expression.ECast($this.qualifyDataType(type),$this.resolveExpression(value));
+				$r = xpde.parser.Expression.ECast($this.resolveLexicalDataType(type),$this.resolveExpression(value));
 			}break;
 			case 16:
 			var reference = $e[3], type = $e[2];
@@ -1450,7 +1474,7 @@ xpde.parser.LexicalResolver.prototype.resolveExpression = function(expression) {
 			case 18:
 			var type = $e[3], expression1 = $e[2];
 			{
-				$r = xpde.parser.Expression.EInstanceOf($this.resolveExpression(expression1),$this.qualifyDataType(type));
+				$r = xpde.parser.Expression.EInstanceOf($this.resolveExpression(expression1),$this.resolveLexicalDataType(type));
 			}break;
 			case 19:
 			var reference = $e[3], type = $e[2];
@@ -1553,6 +1577,47 @@ xpde.parser.LexicalResolver.prototype.resolveLexicalCall = function(identifier,a
 	throw "call to nonexistant method \"" + identifier + "\"";
 	$s.pop();
 }
+xpde.parser.LexicalResolver.prototype.resolveLexicalDataType = function(type) {
+	$s.push("xpde.parser.LexicalResolver::resolveLexicalDataType");
+	var $spos = $s.length;
+	if(type == null) {
+		$s.pop();
+		return null;
+	}
+	{
+		var $tmp = function($this) {
+			var $r;
+			var $e = (type);
+			switch( $e[1] ) {
+			case 0:
+			{
+				$r = type;
+			}break;
+			case 2:
+			{
+				$r = type;
+			}break;
+			case 1:
+			var qualident = $e[2];
+			{
+				$r = xpde.DataType.DTReference($this.resolveQualifiedReference(qualident));
+			}break;
+			case 3:
+			var dimensions = $e[3], qualident = $e[2];
+			{
+				$r = xpde.DataType.DTReferenceArray($this.resolveQualifiedReference(qualident),dimensions);
+			}break;
+			default:{
+				$r = null;
+			}break;
+			}
+			return $r;
+		}(this);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
 xpde.parser.LexicalResolver.prototype.resolveLexicalReference = function(identifier) {
 	$s.push("xpde.parser.LexicalResolver::resolveLexicalReference");
 	var $spos = $s.length;
@@ -1562,6 +1627,25 @@ xpde.parser.LexicalResolver.prototype.resolveLexicalReference = function(identif
 		return $tmp;
 	}
 	throw "reference to nonexistant variable \"" + identifier + "\"";
+	$s.pop();
+}
+xpde.parser.LexicalResolver.prototype.resolveQualifiedReference = function(qualident) {
+	$s.push("xpde.parser.LexicalResolver::resolveQualifiedReference");
+	var $spos = $s.length;
+	if(qualident == null) {
+		$s.pop();
+		return null;
+	}
+	if(qualident.length == 0 && this.memberTypes.exists(qualident[0])) {
+		var $tmp = [this.memberTypes.get(qualident[0])];
+		$s.pop();
+		return $tmp;
+	}
+	{
+		var $tmp = this.qualifyReference(qualident);
+		$s.pop();
+		return $tmp;
+	}
 	$s.pop();
 }
 xpde.parser.LexicalResolver.prototype.resolveStatement = function(statement) {
@@ -1582,11 +1666,11 @@ xpde.parser.LexicalResolver.prototype.resolveStatement = function(statement) {
 				$r = function($this) {
 					var $r;
 					var v = new Hash();
-					{ var $it7 = variables.keys();
-					while( $it7.hasNext() ) { var key = $it7.next();
+					{ var $it10 = variables.keys();
+					while( $it10.hasNext() ) { var key = $it10.next();
 					{
 						var variable = variables.get(key);
-						v.set(key,{ identifier : variable.identifier, type : $this.qualifyDataType(variable.type), modifiers : variable.modifiers});
+						v.set(key,{ identifier : variable.identifier, type : $this.resolveLexicalDataType(variable.type), modifiers : variable.modifiers});
 					}
 					}}
 					var s = new Array();
@@ -1682,8 +1766,8 @@ Reflect.hasField = function(o,field) {
 		return $tmp;
 	}
 	var arr = Reflect.fields(o);
-	{ var $it8 = arr.iterator();
-	while( $it8.hasNext() ) { var t = $it8.next();
+	{ var $it11 = arr.iterator();
+	while( $it11.hasNext() ) { var t = $it11.next();
 	if(t == field) {
 		$s.pop();
 		return true;
@@ -1702,9 +1786,9 @@ Reflect.field = function(o,field) {
 	try {
 		v = o[field];
 	}
-	catch( $e9 ) {
+	catch( $e12 ) {
 		{
-			var e = $e9;
+			var e = $e12;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -1756,9 +1840,9 @@ Reflect.fields = function(o) {
 		try {
 			t = o.__proto__;
 		}
-		catch( $e10 ) {
+		catch( $e13 ) {
 			{
-				var e = $e10;
+				var e = $e13;
 				{
 					$e = [];
 					while($s.length >= $spos) $e.unshift($s.pop());
@@ -1943,7 +2027,21 @@ JSMain.interpret = function() {
 	rootPackage.addCompilationUnit([],sketch);
 	sketch.initialize(rootPackage);
 	var compiler = new xpde.compiler.JSCompiler();
-	compiler.compileClass([],Type.enumParameters(sketch.types.get("Sketch"))[0],sketch.ast);
+	{ var $it14 = sketch.types.iterator();
+	while( $it14.hasNext() ) { var type = $it14.next();
+	var $e = (type);
+	switch( $e[1] ) {
+	case 0:
+	var definition = $e[2];
+	{
+		compiler.compileClass([],definition,sketch.ast);
+	}break;
+	default:{
+		null;
+	}break;
+	}
+	}}
+	haxe.Log.trace(compiler.output.b.join(""),{ fileName : "JSMain.hx", lineNumber : 64, className : "JSMain", methodName : "interpret"});
 	$s.pop();
 }
 JSMain.prototype.__class__ = JSMain;
@@ -2189,13 +2287,12 @@ xpde.compiler.JSCompiler.prototype.compileClass = function(packageDeclaration,de
 	this.output.add("};\n");
 	this.output.add(this.qualident.join(".") + ".__name__ = [\"" + this.qualident.join("\",\"") + "\"];\n");
 	this.output.add(this.qualident.join(".") + ".prototype.__class__ = " + this.qualident.join(".") + ";\n");
-	{ var $it11 = definition.methods.iterator();
-	while( $it11.hasNext() ) { var method = $it11.next();
+	{ var $it15 = definition.methods.iterator();
+	while( $it15.hasNext() ) { var method = $it15.next();
 	{
 		this.compileMethod(method);
 	}
 	}}
-	haxe.Log.trace(this.output.b.join(""),{ fileName : "JSCompiler.hx", lineNumber : 65, className : "xpde.compiler.JSCompiler", methodName : "compileClass"});
 	$s.pop();
 }
 xpde.compiler.JSCompiler.prototype.compileExpression = function(expression) {
@@ -2579,8 +2676,8 @@ xpde.compiler.JSCompiler.prototype.compileMethod = function(definition) {
 xpde.compiler.JSCompiler.prototype.compileModifiers = function(modifiers) {
 	$s.push("xpde.compiler.JSCompiler::compileModifiers");
 	var $spos = $s.length;
-	{ var $it12 = modifiers.iterator();
-	while( $it12.hasNext() ) { var modifier = $it12.next();
+	{ var $it16 = modifiers.iterator();
+	while( $it16.hasNext() ) { var modifier = $it16.next();
 	var $e = (modifier);
 	switch( $e[1] ) {
 	case 0:
@@ -2671,8 +2768,8 @@ xpde.compiler.JSCompiler.prototype.compileStatement = function(statement) {
 	var statements = $e[3], variables = $e[2];
 	{
 		this.output.add("{\n");
-		{ var $it13 = variables.iterator();
-		while( $it13.hasNext() ) { var variable = $it13.next();
+		{ var $it17 = variables.iterator();
+		while( $it17.hasNext() ) { var variable = $it17.next();
 		this.output.add("var " + variable.identifier + " = 0;\n");
 		}}
 		{
@@ -3506,8 +3603,8 @@ haxe.Serializer.prototype.serialize = function(v) {
 		case List:{
 			this.buf.add("l");
 			var v1 = v;
-			{ var $it14 = v1.iterator();
-			while( $it14.hasNext() ) { var i = $it14.next();
+			{ var $it18 = v1.iterator();
+			while( $it18.hasNext() ) { var i = $it18.next();
 			this.serialize(i);
 			}}
 			this.buf.add("h");
@@ -3520,8 +3617,8 @@ haxe.Serializer.prototype.serialize = function(v) {
 		case Hash:{
 			this.buf.add("b");
 			var v1 = v;
-			{ var $it15 = v1.keys();
-			while( $it15.hasNext() ) { var k = $it15.next();
+			{ var $it19 = v1.keys();
+			while( $it19.hasNext() ) { var k = $it19.next();
 			{
 				this.serializeString(k);
 				this.serialize(v1.get(k));
@@ -3532,8 +3629,8 @@ haxe.Serializer.prototype.serialize = function(v) {
 		case IntHash:{
 			this.buf.add("q");
 			var v1 = v;
-			{ var $it16 = v1.keys();
-			while( $it16.hasNext() ) { var k = $it16.next();
+			{ var $it20 = v1.keys();
+			while( $it20.hasNext() ) { var k = $it20.next();
 			{
 				this.buf.add(":");
 				this.buf.add(k);
@@ -3806,9 +3903,9 @@ Type.resolveClass = function(name) {
 	try {
 		cl = eval(name);
 	}
-	catch( $e17 ) {
+	catch( $e21 ) {
 		{
-			var e = $e17;
+			var e = $e21;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -3834,9 +3931,9 @@ Type.resolveEnum = function(name) {
 	try {
 		e = eval(name);
 	}
-	catch( $e18 ) {
+	catch( $e22 ) {
 		{
-			var err = $e18;
+			var err = $e22;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -5875,16 +5972,16 @@ xpde.parser.Buffer.prototype.Read = function() {
 	try {
 		this.bufChar = this.stream.readByte();
 	}
-	catch( $e19 ) {
-		if( js.Boot.__instanceof($e19,haxe.io.Eof) ) {
-			var e = $e19;
+	catch( $e23 ) {
+		if( js.Boot.__instanceof($e23,haxe.io.Eof) ) {
+			var e = $e23;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
 				$s.push($e[0]);
 				this.bufChar = xpde.parser.Buffer.EOF;
 			}
-		} else throw($e19);
+		} else throw($e23);
 	}
 	{
 		$s.pop();
@@ -5971,9 +6068,9 @@ Hash.prototype.exists = function(key) {
 			return $tmp;
 		}
 	}
-	catch( $e20 ) {
+	catch( $e24 ) {
 		{
-			var e = $e20;
+			var e = $e24;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -6072,8 +6169,8 @@ Hash.prototype.toString = function() {
 	var s = new StringBuf();
 	s.b[s.b.length] = "{";
 	var it = this.keys();
-	{ var $it21 = it;
-	while( $it21.hasNext() ) { var i = $it21.next();
+	{ var $it25 = it;
+	while( $it25.hasNext() ) { var i = $it25.next();
 	{
 		s.b[s.b.length] = i;
 		s.b[s.b.length] = " => ";
@@ -6923,7 +7020,7 @@ xpde.parser.Scanner.prototype.NextToken = function() {
 			}break;
 			case 54:{
 				{
-					this.t.kind = 41;
+					this.t.kind = 42;
 					throw "__break__";
 				}
 			}break;
@@ -7411,9 +7508,9 @@ js.Boot.__string_rec = function(o,s) {
 		try {
 			tostr = o.toString;
 		}
-		catch( $e22 ) {
+		catch( $e26 ) {
 			{
-				var e = $e22;
+				var e = $e26;
 				{
 					$e = [];
 					while($s.length >= $spos) $e.unshift($s.pop());
@@ -7521,9 +7618,9 @@ js.Boot.__instanceof = function(o,cl) {
 			return true;
 		}
 	}
-	catch( $e23 ) {
+	catch( $e27 ) {
 		{
-			var e = $e23;
+			var e = $e27;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -7805,8 +7902,8 @@ IntHash.prototype.toString = function() {
 	var s = new StringBuf();
 	s.b[s.b.length] = "{";
 	var it = this.keys();
-	{ var $it24 = it;
-	while( $it24.hasNext() ) { var i = $it24.next();
+	{ var $it28 = it;
+	while( $it28.hasNext() ) { var i = $it28.next();
 	{
 		s.b[s.b.length] = i;
 		s.b[s.b.length] = " => ";
@@ -8007,9 +8104,9 @@ xpde.JavaPackage.prototype.getByQualident = function(qualident) {
 			return $tmp;
 		}
 	}
-	catch( $e25 ) {
+	catch( $e29 ) {
 		{
-			var e = $e25;
+			var e = $e29;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -8059,9 +8156,9 @@ xpde.JavaPackage.prototype.getCompilationUnit = function(qualident) {
 			return $tmp;
 		}
 	}
-	catch( $e26 ) {
+	catch( $e30 ) {
 		{
-			var e = $e26;
+			var e = $e30;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
@@ -8162,7 +8259,7 @@ xpde.parser.Parser.prototype.Arguments = function() {
 	var arguments = null;
 	arguments = [];
 	this.Expect(33);
-	if(this.StartOf(13)) {
+	if(this.StartOf(10)) {
 		var expression = this.Expression0();
 		arguments.push(expression);
 		while(this.la.kind == 27) {
@@ -8203,7 +8300,7 @@ xpde.parser.Parser.prototype.ArrayCreatorRest = function(type) {
 		var bCount = this.BracketsOpt();
 		var expression1 = this.ArrayInitializer();
 	}
-	else if(this.StartOf(13)) {
+	else if(this.StartOf(10)) {
 		var dummy = this.Expression0();
 		this.Expect(38);
 		while(this.nonEmptyBracket()) {
@@ -8216,7 +8313,7 @@ xpde.parser.Parser.prototype.ArrayCreatorRest = function(type) {
 			this.Expect(38);
 		}
 	}
-	else this.SynErr(142);
+	else this.SynErr(141);
 	{
 		$s.pop();
 		return expression;
@@ -8229,7 +8326,7 @@ xpde.parser.Parser.prototype.ArrayInitializer = function() {
 	var expression = null;
 	var values = [];
 	this.Expect(31);
-	if(this.StartOf(14)) {
+	if(this.StartOf(11)) {
 		var arg = this.VariableInitializer();
 		values.push(arg);
 		while(this.commaAndNoRBrace()) {
@@ -8302,7 +8399,7 @@ xpde.parser.Parser.prototype.AssignmentOperator = function() {
 		operator = xpde.parser.InfixOperator.OpZeroRightShift;
 	}break;
 	default:{
-		this.SynErr(127);
+		this.SynErr(126);
 	}break;
 	}
 	{
@@ -8349,7 +8446,7 @@ xpde.parser.Parser.prototype.BasicType = function() {
 		type = xpde.PrimitiveType.PTBoolean;
 	}break;
 	default:{
-		this.SynErr(114);
+		this.SynErr(112);
 	}break;
 	}
 	{
@@ -8364,7 +8461,7 @@ xpde.parser.Parser.prototype.Block = function(parent) {
 	var statement = null;
 	this.blockContexts.unshift(new xpde.parser.BlockContext(parent));
 	this.Expect(31);
-	while(this.StartOf(4)) {
+	while(this.StartOf(13)) {
 		this.BlockStatement();
 	}
 	this.Expect(37);
@@ -8380,16 +8477,16 @@ xpde.parser.Parser.prototype.BlockStatement = function() {
 	var $spos = $s.length;
 	if(this.isLocalVarDecl(false)) {
 		this.LocalVariableDeclaration();
-		this.Expect(41);
+		this.Expect(42);
 	}
-	else if(this.StartOf(5)) {
+	else if(this.StartOf(3)) {
 		var typeContext = this.ClassOrInterfaceDeclaration();
 	}
-	else if(this.StartOf(10)) {
+	else if(this.StartOf(20)) {
 		var statement = this.Statement0();
 		this.blockContexts[0].pushStatement(statement);
 	}
-	else this.SynErr(107);
+	else this.SynErr(124);
 	$s.pop();
 }
 xpde.parser.Parser.prototype.BracketsOpt = function() {
@@ -8445,7 +8542,7 @@ xpde.parser.Parser.prototype.ClassBody = function() {
 	$s.push("xpde.parser.Parser::ClassBody");
 	var $spos = $s.length;
 	this.Expect(31);
-	while(this.StartOf(3)) {
+	while(this.StartOf(2)) {
 		this.ClassBodyDeclaration();
 	}
 	this.Expect(37);
@@ -8454,10 +8551,10 @@ xpde.parser.Parser.prototype.ClassBody = function() {
 xpde.parser.Parser.prototype.ClassBodyDeclaration = function() {
 	$s.push("xpde.parser.Parser::ClassBodyDeclaration");
 	var $spos = $s.length;
-	if(this.la.kind == 41) {
+	if(this.la.kind == 42) {
 		this.Get();
 	}
-	else if(this.StartOf(6)) {
+	else if(this.StartOf(4)) {
 		var modifiers = new xpde.parser.EnumSet();
 		if(this.la.kind == 21) {
 			this.Get();
@@ -8467,18 +8564,18 @@ xpde.parser.Parser.prototype.ClassBodyDeclaration = function() {
 			var block = this.Block(null);
 			this.classContexts[0].staticConstructor.pushStatement(block);
 		}
-		else if(this.StartOf(7)) {
-			if(this.StartOf(8)) {
+		else if(this.StartOf(5)) {
+			if(this.StartOf(6)) {
 				this.Modifier1(modifiers);
-				while(this.StartOf(9)) {
+				while(this.StartOf(7)) {
 					this.Modifier0(modifiers);
 				}
 			}
 			this.MemberDecl(modifiers);
 		}
-		else this.SynErr(105);
+		else this.SynErr(104);
 	}
-	else this.SynErr(106);
+	else this.SynErr(105);
 	$s.pop();
 }
 xpde.parser.Parser.prototype.ClassCreatorRest = function(qualifier) {
@@ -8503,7 +8600,7 @@ xpde.parser.Parser.prototype.ClassDeclaration = function(modifiers) {
 	this.checkModifierPermission(modifiers,xpde.parser.ModifierSet.classes);
 	this.Expect(9);
 	this.Expect(1);
-	this.classContexts.unshift(new xpde.parser.ClassContext(modifiers,this.t.val));
+	this.classContexts.unshift(new xpde.parser.ClassContext(modifiers,this.t.val,this.classContexts[0]));
 	if(this.la.kind == 53) {
 		this.Get();
 		var arg = this.Qualident();
@@ -8555,7 +8652,7 @@ xpde.parser.Parser.prototype.ClassModifier = function(modifiers) {
 		this.addModifier(modifiers,xpde.Modifier.MStrictfp);
 	}break;
 	default:{
-		this.SynErr(110);
+		this.SynErr(108);
 	}break;
 	}
 	$s.pop();
@@ -8565,7 +8662,7 @@ xpde.parser.Parser.prototype.ClassOrInterfaceDeclaration = function() {
 	var $spos = $s.length;
 	var typeContext = null;
 	var modifiers = new xpde.parser.EnumSet();
-	while(this.StartOf(11)) {
+	while(this.StartOf(8)) {
 		this.ClassModifier(modifiers);
 	}
 	if(this.la.kind == 9) {
@@ -8576,7 +8673,7 @@ xpde.parser.Parser.prototype.ClassOrInterfaceDeclaration = function() {
 		var arg = this.InterfaceDeclaration(modifiers);
 		typeContext = arg;
 	}
-	else this.SynErr(109);
+	else this.SynErr(107);
 	{
 		$s.pop();
 		return typeContext;
@@ -8586,11 +8683,11 @@ xpde.parser.Parser.prototype.ClassOrInterfaceDeclaration = function() {
 xpde.parser.Parser.prototype.CompilationUnit = function() {
 	$s.push("xpde.parser.Parser::CompilationUnit");
 	var $spos = $s.length;
-	if(this.la.kind == 42) {
+	if(this.la.kind == 41) {
 		this.Get();
 		var qualident = this.Qualident();
 		this.context.packageDeclaration = qualident;
-		this.Expect(41);
+		this.Expect(42);
 	}
 	while(this.la.kind == 14) {
 		var importIdent = this.ImportDeclaration();
@@ -8661,7 +8758,7 @@ xpde.parser.Parser.prototype.Creator = function() {
 	$s.push("xpde.parser.Parser::Creator");
 	var $spos = $s.length;
 	var expression = null;
-	if(this.StartOf(12)) {
+	if(this.StartOf(9)) {
 		var type = this.BasicType();
 		var arg = this.ArrayCreatorRest(xpde.DataType.DTPrimitive(type));
 		expression = arg;
@@ -8676,9 +8773,9 @@ xpde.parser.Parser.prototype.Creator = function() {
 			var arg = this.ClassCreatorRest(qualifier);
 			expression = arg;
 		}
-		else this.SynErr(138);
+		else this.SynErr(137);
 	}
-	else this.SynErr(139);
+	else this.SynErr(138);
 	{
 		$s.pop();
 		return expression;
@@ -8709,7 +8806,7 @@ xpde.parser.Parser.prototype.Expression0 = function() {
 	var $spos = $s.length;
 	var expression = null;
 	var expression1 = this.Expression1();
-	while(this.StartOf(15)) {
+	while(this.StartOf(12)) {
 		var operator = this.AssignmentOperator();
 		var value = this.Expression1();
 		if(operator != null) value = xpde.parser.Expression.EInfixOperation(operator,expression1,value);
@@ -8776,7 +8873,7 @@ xpde.parser.Parser.prototype.Expression2 = function() {
 	var $spos = $s.length;
 	var expression = null;
 	var expression1 = this.Expression3();
-	if(this.StartOf(22)) {
+	if(this.StartOf(21)) {
 		var rest = this.Expression2Rest(expression1);
 		expression1 = rest;
 	}
@@ -8790,14 +8887,14 @@ xpde.parser.Parser.prototype.Expression2Rest = function(operand) {
 	$s.push("xpde.parser.Parser::Expression2Rest");
 	var $spos = $s.length;
 	var expression = null;
-	if(this.StartOf(25)) {
+	if(this.StartOf(24)) {
 		var builder = new xpde.parser.OperationBuilder();
 		builder.operand(operand);
 		var operator = this.Infixop();
 		builder.operator(operator);
 		var operand1 = this.Expression3();
 		builder.operand(operand1);
-		while(this.StartOf(25)) {
+		while(this.StartOf(24)) {
 			var operator1 = this.Infixop();
 			builder.operator(operator1);
 			var operand2 = this.Expression3();
@@ -8810,7 +8907,7 @@ xpde.parser.Parser.prototype.Expression2Rest = function(operand) {
 		var type = this.Type();
 		expression = xpde.parser.Expression.EInstanceOf(expression,type);
 	}
-	else this.SynErr(129);
+	else this.SynErr(128);
 	{
 		$s.pop();
 		return expression;
@@ -8821,7 +8918,7 @@ xpde.parser.Parser.prototype.Expression3 = function() {
 	$s.push("xpde.parser.Parser::Expression3");
 	var $spos = $s.length;
 	var expression = null;
-	if(this.StartOf(23)) {
+	if(this.StartOf(22)) {
 		if(this.la.kind == 28 || this.la.kind == 30) {
 			var type = this.Increment();
 			var rest = this.Expression3();
@@ -8840,7 +8937,7 @@ xpde.parser.Parser.prototype.Expression3 = function() {
 		var rest = this.Expression3();
 		expression = xpde.parser.Expression.ECast(type,rest);
 	}
-	else if(this.StartOf(24)) {
+	else if(this.StartOf(23)) {
 		var rest = this.Primary();
 		expression = rest;
 		while(this.la.kind == 29 || this.la.kind == 32) {
@@ -8852,7 +8949,7 @@ xpde.parser.Parser.prototype.Expression3 = function() {
 			expression = xpde.parser.Expression.EPostfix(type,expression);
 		}
 	}
-	else this.SynErr(128);
+	else this.SynErr(127);
 	{
 		$s.pop();
 		return expression;
@@ -8865,7 +8962,7 @@ xpde.parser.Parser.prototype.ForInit = function() {
 	if(this.isLocalVarDecl(true)) {
 		this.LocalVariableDeclaration();
 	}
-	else if(this.StartOf(13)) {
+	else if(this.StartOf(10)) {
 		var statement = this.StatementExpression();
 		this.blockContexts[0].pushStatement(statement);
 		var statements = this.MoreStatementExpressions();
@@ -8878,7 +8975,7 @@ xpde.parser.Parser.prototype.ForInit = function() {
 			}
 		}
 	}
-	else this.SynErr(125);
+	else this.SynErr(123);
 	$s.pop();
 }
 xpde.parser.Parser.prototype.ForUpdate = function() {
@@ -8922,7 +9019,7 @@ xpde.parser.Parser.prototype.FormalParameters = function() {
 	var parameters = null;
 	parameters = [];
 	this.Expect(33);
-	if(this.StartOf(18)) {
+	if(this.StartOf(16)) {
 		var parameter = this.FormalParameter0();
 		parameters.push(parameter);
 		while(this.la.kind == 27) {
@@ -8981,9 +9078,9 @@ xpde.parser.Parser.prototype.IdentifierSuffix = function(identifier,base) {
 			this.Expect(1);
 			var dummy = this.ArgumentsOpt(null,null);
 		}
-		else this.SynErr(140);
+		else this.SynErr(139);
 	}
-	else this.SynErr(141);
+	else this.SynErr(140);
 	{
 		$s.pop();
 		return expression;
@@ -8998,7 +9095,7 @@ xpde.parser.Parser.prototype.ImportDeclaration = function() {
 	this.Expect(1);
 	importIdent = [this.t.val];
 	var arg = this.QualifiedImport();
-	this.Expect(41);
+	this.Expect(42);
 	importIdent = importIdent.concat(arg);
 	{
 		$s.pop();
@@ -9018,7 +9115,7 @@ xpde.parser.Parser.prototype.Increment = function() {
 		this.Get();
 		type = xpde.parser.IncrementType.IDecrement;
 	}
-	else this.SynErr(131);
+	else this.SynErr(130);
 	{
 		$s.pop();
 		return type;
@@ -9107,7 +9204,7 @@ xpde.parser.Parser.prototype.Infixop = function() {
 		operator = xpde.parser.InfixOperator.OpModulus;
 	}break;
 	default:{
-		this.SynErr(130);
+		this.SynErr(129);
 	}break;
 	}
 	{
@@ -9128,7 +9225,7 @@ xpde.parser.Parser.prototype.InterfaceBody = function() {
 	$s.push("xpde.parser.Parser::InterfaceBody");
 	var $spos = $s.length;
 	this.Expect(31);
-	while(this.StartOf(19)) {
+	while(this.StartOf(17)) {
 		this.InterfaceBodyDeclaration();
 	}
 	this.Expect(37);
@@ -9138,16 +9235,16 @@ xpde.parser.Parser.prototype.InterfaceBodyDeclaration = function() {
 	$s.push("xpde.parser.Parser::InterfaceBodyDeclaration");
 	var $spos = $s.length;
 	var modifiers = new xpde.parser.EnumSet();
-	if(this.la.kind == 41) {
+	if(this.la.kind == 42) {
 		this.Get();
 	}
-	else if(this.StartOf(20)) {
-		while(this.StartOf(9)) {
+	else if(this.StartOf(18)) {
+		while(this.StartOf(7)) {
 			this.Modifier0(modifiers);
 		}
 		this.InterfaceMemberDecl(modifiers);
 	}
-	else this.SynErr(120);
+	else this.SynErr(118);
 	$s.pop();
 }
 xpde.parser.Parser.prototype.InterfaceDeclaration = function(modifiers) {
@@ -9171,7 +9268,7 @@ xpde.parser.Parser.prototype.InterfaceDeclaration = function(modifiers) {
 xpde.parser.Parser.prototype.InterfaceMemberDecl = function(modifiers) {
 	$s.push("xpde.parser.Parser::InterfaceMemberDecl");
 	var $spos = $s.length;
-	if(this.StartOf(16)) {
+	if(this.StartOf(14)) {
 		this.InterfaceMethodOrFieldDecl(modifiers);
 	}
 	else if(this.la.kind == 25) {
@@ -9186,7 +9283,7 @@ xpde.parser.Parser.prototype.InterfaceMemberDecl = function(modifiers) {
 	else if(this.la.kind == 56) {
 		var typeContext = this.InterfaceDeclaration(modifiers);
 	}
-	else this.SynErr(121);
+	else this.SynErr(119);
 	$s.pop();
 }
 xpde.parser.Parser.prototype.InterfaceMethodDeclaratorRest = function() {
@@ -9198,7 +9295,7 @@ xpde.parser.Parser.prototype.InterfaceMethodDeclaratorRest = function() {
 		this.Get();
 		var arg = this.QualidentList();
 	}
-	this.Expect(41);
+	this.Expect(42);
 	$s.pop();
 }
 xpde.parser.Parser.prototype.InterfaceMethodOrFieldDecl = function(modifiers) {
@@ -9215,13 +9312,13 @@ xpde.parser.Parser.prototype.InterfaceMethodOrFieldRest = function(modifiers) {
 	if(this.la.kind == 32 || this.la.kind == 52) {
 		this.checkModifierPermission(modifiers,xpde.parser.ModifierSet.constants);
 		this.ConstantDeclaratorsRest();
-		this.Expect(41);
+		this.Expect(42);
 	}
 	else if(this.la.kind == 33) {
 		this.checkModifierPermission(modifiers,xpde.parser.ModifierSet.interfaces);
 		this.InterfaceMethodDeclaratorRest();
 	}
-	else this.SynErr(122);
+	else this.SynErr(120);
 	$s.pop();
 }
 xpde.parser.Parser.prototype.Literal = function() {
@@ -9258,7 +9355,7 @@ xpde.parser.Parser.prototype.Literal = function() {
 		expression = xpde.parser.Expression.ENull;
 	}break;
 	default:{
-		this.SynErr(137);
+		this.SynErr(136);
 	}break;
 	}
 	{
@@ -9296,7 +9393,7 @@ xpde.parser.Parser.prototype.MemberDecl = function(modifiers) {
 		if(identifier != this.classContexts[0].identifier) this.error("invalid function declaration");
 		this.ConstructorDeclaratorRest(new xpde.parser.MethodContext(modifiers,null,identifier));
 	}
-	else if(this.StartOf(16)) {
+	else if(this.StartOf(14)) {
 		this.MethodOrFieldDecl(modifiers);
 	}
 	else if(this.la.kind == 25) {
@@ -9308,11 +9405,13 @@ xpde.parser.Parser.prototype.MemberDecl = function(modifiers) {
 	}
 	else if(this.la.kind == 9) {
 		var typeContext = this.ClassDeclaration(modifiers);
+		this.classContexts[0].defineMemberType(typeContext);
 	}
 	else if(this.la.kind == 56) {
 		var typeContext = this.InterfaceDeclaration(modifiers);
+		this.classContexts[0].defineMemberType(typeContext);
 	}
-	else this.SynErr(116);
+	else this.SynErr(114);
 	$s.pop();
 }
 xpde.parser.Parser.prototype.MethodDeclaratorRest = function(methodContext) {
@@ -9330,10 +9429,10 @@ xpde.parser.Parser.prototype.MethodDeclaratorRest = function(methodContext) {
 		var block = this.Block(methodContext);
 		methodContext.body = block;
 	}
-	else if(this.la.kind == 41) {
+	else if(this.la.kind == 42) {
 		this.Get();
 	}
-	else this.SynErr(119);
+	else this.SynErr(117);
 	this.classContexts[0].defineMethod(methodContext);
 	$s.pop();
 }
@@ -9349,16 +9448,16 @@ xpde.parser.Parser.prototype.MethodOrFieldDecl = function(modifiers) {
 xpde.parser.Parser.prototype.MethodOrFieldRest = function(modifiers,identifier,type) {
 	$s.push("xpde.parser.Parser::MethodOrFieldRest");
 	var $spos = $s.length;
-	if(this.StartOf(17)) {
+	if(this.StartOf(15)) {
 		this.checkModifierPermission(modifiers,xpde.parser.ModifierSet.fields);
 		this.VariableDeclaratorsRest(modifiers,type,identifier);
-		this.Expect(41);
+		this.Expect(42);
 	}
 	else if(this.la.kind == 33) {
 		this.checkModifierPermission(modifiers,xpde.parser.ModifierSet.methods);
 		this.MethodDeclaratorRest(new xpde.parser.MethodContext(modifiers,type,identifier));
 	}
-	else this.SynErr(118);
+	else this.SynErr(116);
 	$s.pop();
 }
 xpde.parser.Parser.prototype.Modifier0 = function(modifiers) {
@@ -9368,10 +9467,10 @@ xpde.parser.Parser.prototype.Modifier0 = function(modifiers) {
 		this.Get();
 		this.addModifier(modifiers,xpde.Modifier.MStatic);
 	}
-	else if(this.StartOf(8)) {
+	else if(this.StartOf(6)) {
 		this.Modifier1(modifiers);
 	}
-	else this.SynErr(111);
+	else this.SynErr(109);
 	$s.pop();
 }
 xpde.parser.Parser.prototype.Modifier1 = function(modifiers) {
@@ -9419,7 +9518,7 @@ xpde.parser.Parser.prototype.Modifier1 = function(modifiers) {
 		this.addModifier(modifiers,xpde.Modifier.MStrictfp);
 	}break;
 	default:{
-		this.SynErr(112);
+		this.SynErr(110);
 	}break;
 	}
 	$s.pop();
@@ -9481,31 +9580,14 @@ xpde.parser.Parser.prototype.PdeProgram = function() {
 		this.context.imports.push(["xpde","xml","*"]);
 		this.classContexts.unshift(new xpde.parser.ClassContext(new xpde.parser.EnumSet([xpde.Modifier.MPublic]),this.context.identifier));
 		this.classContexts[0].extend = ["xpde","core","PApplet"];
-		while(this.isLocalVarDecl(false)) {
-			this.LocalVariableDeclaration();
-			this.Expect(41);
-		}
-		if(this.isActiveProgram()) {
+		this.ClassBodyDeclaration();
+		while(this.StartOf(2)) {
 			this.ClassBodyDeclaration();
-			while(this.StartOf(3)) {
-				this.ClassBodyDeclaration();
-			}
 		}
-		else if(this.StartOf(4)) {
-			this.blockContexts.unshift(new xpde.parser.BlockContext());
-			this.BlockStatement();
-			while(this.StartOf(4)) {
-				this.BlockStatement();
-			}
-			var methodContext = new xpde.parser.MethodContext(new xpde.parser.EnumSet(),null,"setup");
-			methodContext.body = this.blockContexts.shift().getBlockStatement();
-			this.classContexts[0].methods.push(methodContext);
-		}
-		else this.SynErr(102);
 		this.context.types.push(this.classContexts.shift());
 		if(this.la.kind != xpde.parser.Parser._EOF) this.error("unexpected script termination");
 	}
-	else this.SynErr(103);
+	else this.SynErr(102);
 	$s.pop();
 }
 xpde.parser.Parser.prototype.PrefixOp = function() {
@@ -9528,7 +9610,7 @@ xpde.parser.Parser.prototype.PrefixOp = function() {
 		this.Get();
 		operator = xpde.parser.PrefixOperator.OpUnaryMinus;
 	}
-	else this.SynErr(132);
+	else this.SynErr(131);
 	{
 		$s.pop();
 		return operator;
@@ -9595,7 +9677,7 @@ xpde.parser.Parser.prototype.Primary = function() {
 		this.Expect(9);
 	}break;
 	default:{
-		this.SynErr(133);
+		this.SynErr(132);
 	}break;
 	}
 	{
@@ -9657,7 +9739,7 @@ xpde.parser.Parser.prototype.QualifiedImport = function() {
 		this.Get();
 		importIdent = ["*"];
 	}
-	else this.SynErr(108);
+	else this.SynErr(106);
 	{
 		$s.pop();
 		return importIdent;
@@ -9684,7 +9766,7 @@ xpde.parser.Parser.prototype.Selector = function(base) {
 			this.Get();
 			this.InnerCreator();
 		}
-		else this.SynErr(134);
+		else this.SynErr(133);
 	}
 	else if(this.la.kind == 32) {
 		this.Get();
@@ -9692,7 +9774,7 @@ xpde.parser.Parser.prototype.Selector = function(base) {
 		this.Expect(38);
 		expression = xpde.parser.Expression.EArrayAccess(index,base);
 	}
-	else this.SynErr(135);
+	else this.SynErr(134);
 	{
 		$s.pop();
 		return expression;
@@ -9740,18 +9822,18 @@ xpde.parser.Parser.prototype.Statement0 = function() {
 		this.Get();
 		this.Expect(33);
 		this.blockContexts.unshift(new xpde.parser.BlockContext(this.blockContexts[0]));
-		if(this.StartOf(21)) {
+		if(this.StartOf(19)) {
 			this.ForInit();
 		}
-		this.Expect(41);
+		this.Expect(42);
 		var conditional = xpde.parser.Expression.EBooleanLiteral(true);
-		if(this.StartOf(13)) {
+		if(this.StartOf(10)) {
 			var expression = this.Expression0();
 			conditional = expression;
 		}
-		this.Expect(41);
+		this.Expect(42);
 		var body = [];
-		if(this.StartOf(13)) {
+		if(this.StartOf(10)) {
 			var updates = this.ForUpdate();
 			body = updates;
 		}
@@ -9772,7 +9854,7 @@ xpde.parser.Parser.prototype.Statement0 = function() {
 		var body = this.Statement0();
 		this.Expect(60);
 		var condition = this.ParExpression();
-		this.Expect(41);
+		this.Expect(42);
 		statement = xpde.parser.Statement.SLoop(condition,body,true);
 	}
 	else if(this.la.kind == 62) {
@@ -9793,7 +9875,7 @@ xpde.parser.Parser.prototype.Statement0 = function() {
 			var block = this.Block(this.blockContexts[0]);
 			finallyBody = block;
 		}
-		else this.SynErr(123);
+		else this.SynErr(121);
 		statement = xpde.parser.Statement.STry(body,catches,finallyBody);
 	}
 	else if(this.la.kind == 64) {
@@ -9811,17 +9893,17 @@ xpde.parser.Parser.prototype.Statement0 = function() {
 	else if(this.la.kind == 65) {
 		this.Get();
 		var value = null;
-		if(this.StartOf(13)) {
+		if(this.StartOf(10)) {
 			var expression = this.Expression0();
 			value = expression;
 		}
-		this.Expect(41);
+		this.Expect(42);
 		statement = xpde.parser.Statement.SReturn(value);
 	}
 	else if(this.la.kind == 66) {
 		this.Get();
 		var expression = this.Expression0();
-		this.Expect(41);
+		this.Expect(42);
 		statement = xpde.parser.Statement.SThrow(expression);
 	}
 	else if(this.la.kind == 67) {
@@ -9831,7 +9913,7 @@ xpde.parser.Parser.prototype.Statement0 = function() {
 			this.Get();
 			label = this.t.val;
 		}
-		this.Expect(41);
+		this.Expect(42);
 		statement = xpde.parser.Statement.SBreak(label);
 	}
 	else if(this.la.kind == 68) {
@@ -9841,10 +9923,10 @@ xpde.parser.Parser.prototype.Statement0 = function() {
 			this.Get();
 			label = this.t.val;
 		}
-		this.Expect(41);
+		this.Expect(42);
 		statement = xpde.parser.Statement.SContinue(label);
 	}
-	else if(this.la.kind == 41) {
+	else if(this.la.kind == 42) {
 		this.Get();
 	}
 	else if(this.isLabel()) {
@@ -9854,12 +9936,12 @@ xpde.parser.Parser.prototype.Statement0 = function() {
 		var body = this.Statement0();
 		statement = xpde.parser.Statement.SLabel(label,body);
 	}
-	else if(this.StartOf(13)) {
+	else if(this.StartOf(10)) {
 		var arg = this.StatementExpression();
-		this.Expect(41);
+		this.Expect(42);
 		statement = arg;
 	}
-	else this.SynErr(124);
+	else this.SynErr(122);
 	{
 		$s.pop();
 		return statement;
@@ -9894,7 +9976,7 @@ xpde.parser.Parser.prototype.SuperSuffix = function() {
 		var arg = this.ArgumentsOpt(identifier,xpde.parser.Expression.ESuperReference);
 		expression = arg;
 	}
-	else this.SynErr(136);
+	else this.SynErr(135);
 	{
 		$s.pop();
 		return expression;
@@ -9905,7 +9987,7 @@ xpde.parser.Parser.prototype.SwitchBlockStatementGroup = function() {
 	$s.push("xpde.parser.Parser::SwitchBlockStatementGroup");
 	var $spos = $s.length;
 	this.SwitchLabel();
-	while(this.StartOf(4)) {
+	while(this.StartOf(13)) {
 		this.BlockStatement();
 	}
 	$s.pop();
@@ -9930,7 +10012,7 @@ xpde.parser.Parser.prototype.SwitchLabel = function() {
 		this.Get();
 		this.Expect(26);
 	}
-	else this.SynErr(126);
+	else this.SynErr(125);
 	$s.pop();
 }
 xpde.parser.Parser.prototype.SynErr = function(n) {
@@ -9948,11 +10030,11 @@ xpde.parser.Parser.prototype.Type = function() {
 		var qualident = this.Qualident();
 		type = xpde.DataType.DTReference(qualident);
 	}
-	else if(this.StartOf(12)) {
+	else if(this.StartOf(9)) {
 		var primitive = this.BasicType();
 		type = xpde.DataType.DTPrimitive(primitive);
 	}
-	else this.SynErr(113);
+	else this.SynErr(111);
 	var bCount = this.BracketsOpt();
 	type = this.compoundBrackets(type,bCount);
 	{
@@ -9964,14 +10046,14 @@ xpde.parser.Parser.prototype.Type = function() {
 xpde.parser.Parser.prototype.TypeDeclaration = function() {
 	$s.push("xpde.parser.Parser::TypeDeclaration");
 	var $spos = $s.length;
-	if(this.StartOf(5)) {
+	if(this.StartOf(3)) {
 		var typeContext = this.ClassOrInterfaceDeclaration();
 		this.context.types.push(typeContext);
 	}
-	else if(this.la.kind == 41) {
+	else if(this.la.kind == 42) {
 		this.Get();
 	}
-	else this.SynErr(104);
+	else this.SynErr(103);
 	$s.pop();
 }
 xpde.parser.Parser.prototype.VariableDeclarator = function(modifiers,type) {
@@ -10037,11 +10119,11 @@ xpde.parser.Parser.prototype.VariableInitializer = function() {
 		var arg = this.ArrayInitializer();
 		expression = arg;
 	}
-	else if(this.StartOf(13)) {
+	else if(this.StartOf(10)) {
 		var arg = this.Expression0();
 		expression = arg;
 	}
-	else this.SynErr(115);
+	else this.SynErr(113);
 	{
 		$s.pop();
 		return expression;
@@ -10056,7 +10138,7 @@ xpde.parser.Parser.prototype.VoidInterfaceMethodDeclaratorRest = function() {
 		this.Get();
 		var arg = this.QualidentList();
 	}
-	this.Expect(41);
+	this.Expect(42);
 	$s.pop();
 }
 xpde.parser.Parser.prototype.VoidMethodDeclaratorRest = function(methodContext) {
@@ -10073,10 +10155,10 @@ xpde.parser.Parser.prototype.VoidMethodDeclaratorRest = function(methodContext) 
 		var block = this.Block(methodContext);
 		methodContext.body = block;
 	}
-	else if(this.la.kind == 41) {
+	else if(this.la.kind == 42) {
 		this.Get();
 	}
-	else this.SynErr(117);
+	else this.SynErr(115);
 	this.classContexts[0].defineMethod(methodContext);
 	$s.pop();
 }
@@ -10195,8 +10277,8 @@ xpde.parser.Parser.prototype.checkModifierAccess = function(set) {
 xpde.parser.Parser.prototype.checkModifierPermission = function(set,permission) {
 	$s.push("xpde.parser.Parser::checkModifierPermission");
 	var $spos = $s.length;
-	{ var $it27 = set.iterator();
-	while( $it27.hasNext() ) { var modifier = $it27.next();
+	{ var $it31 = set.iterator();
+	while( $it31.hasNext() ) { var modifier = $it31.next();
 	if(!permission.contains(modifier)) this.error("modifier(s) " + set + "not allowed here");
 	else this.checkModifierAccess(set);
 	}}
@@ -10534,7 +10616,7 @@ xpde.parser.Errors.prototype.SemErr = function(line,col,s) {
 	$s.push("xpde.parser.Errors::SemErr");
 	var $spos = $s.length;
 	if(line == null) this.printMsg(line,col,s);
-	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 1995, className : "xpde.parser.Errors", methodName : "SemErr"});
+	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 1978, className : "xpde.parser.Errors", methodName : "SemErr"});
 	this.count++;
 	throw new xpde.parser.FatalError(s);
 	$s.pop();
@@ -10668,10 +10750,10 @@ xpde.parser.Errors.prototype.SynErr = function(line,col,n) {
 		s = "tilde expected";
 	}break;
 	case 41:{
-		s = "\";\" expected";
+		s = "\"package\" expected";
 	}break;
 	case 42:{
-		s = "\"package\" expected";
+		s = "\";\" expected";
 	}break;
 	case 43:{
 		s = "\"*\" expected";
@@ -10854,123 +10936,120 @@ xpde.parser.Errors.prototype.SynErr = function(line,col,n) {
 		s = "invalid PdeProgram";
 	}break;
 	case 103:{
-		s = "invalid PdeProgram";
+		s = "invalid TypeDeclaration";
 	}break;
 	case 104:{
-		s = "invalid TypeDeclaration";
+		s = "invalid ClassBodyDeclaration";
 	}break;
 	case 105:{
 		s = "invalid ClassBodyDeclaration";
 	}break;
 	case 106:{
-		s = "invalid ClassBodyDeclaration";
-	}break;
-	case 107:{
-		s = "invalid BlockStatement";
-	}break;
-	case 108:{
 		s = "invalid QualifiedImport";
 	}break;
-	case 109:{
+	case 107:{
 		s = "invalid ClassOrInterfaceDeclaration";
 	}break;
-	case 110:{
+	case 108:{
 		s = "invalid ClassModifier";
 	}break;
-	case 111:{
+	case 109:{
 		s = "invalid Modifier0";
 	}break;
-	case 112:{
+	case 110:{
 		s = "invalid Modifier1";
 	}break;
-	case 113:{
+	case 111:{
 		s = "invalid Type";
 	}break;
-	case 114:{
+	case 112:{
 		s = "invalid BasicType";
 	}break;
-	case 115:{
+	case 113:{
 		s = "invalid VariableInitializer";
 	}break;
-	case 116:{
+	case 114:{
 		s = "invalid MemberDecl";
 	}break;
-	case 117:{
+	case 115:{
 		s = "invalid VoidMethodDeclaratorRest";
 	}break;
-	case 118:{
+	case 116:{
 		s = "invalid MethodOrFieldRest";
 	}break;
-	case 119:{
+	case 117:{
 		s = "invalid MethodDeclaratorRest";
 	}break;
-	case 120:{
+	case 118:{
 		s = "invalid InterfaceBodyDeclaration";
 	}break;
-	case 121:{
+	case 119:{
 		s = "invalid InterfaceMemberDecl";
 	}break;
-	case 122:{
+	case 120:{
 		s = "invalid InterfaceMethodOrFieldRest";
 	}break;
+	case 121:{
+		s = "invalid Statement0";
+	}break;
+	case 122:{
+		s = "invalid Statement0";
+	}break;
 	case 123:{
-		s = "invalid Statement0";
-	}break;
-	case 124:{
-		s = "invalid Statement0";
-	}break;
-	case 125:{
 		s = "invalid ForInit";
 	}break;
-	case 126:{
+	case 124:{
+		s = "invalid BlockStatement";
+	}break;
+	case 125:{
 		s = "invalid SwitchLabel";
 	}break;
-	case 127:{
+	case 126:{
 		s = "invalid AssignmentOperator";
 	}break;
-	case 128:{
+	case 127:{
 		s = "invalid Expression3";
 	}break;
-	case 129:{
+	case 128:{
 		s = "invalid Expression2Rest";
 	}break;
-	case 130:{
+	case 129:{
 		s = "invalid Infixop";
 	}break;
-	case 131:{
+	case 130:{
 		s = "invalid Increment";
 	}break;
-	case 132:{
+	case 131:{
 		s = "invalid PrefixOp";
 	}break;
-	case 133:{
+	case 132:{
 		s = "invalid Primary";
+	}break;
+	case 133:{
+		s = "invalid Selector";
 	}break;
 	case 134:{
 		s = "invalid Selector";
 	}break;
 	case 135:{
-		s = "invalid Selector";
-	}break;
-	case 136:{
 		s = "invalid SuperSuffix";
 	}break;
-	case 137:{
+	case 136:{
 		s = "invalid Literal";
+	}break;
+	case 137:{
+		s = "invalid Creator";
 	}break;
 	case 138:{
 		s = "invalid Creator";
 	}break;
 	case 139:{
-		s = "invalid Creator";
+		s = "invalid IdentifierSuffix";
 	}break;
 	case 140:{
 		s = "invalid IdentifierSuffix";
 	}break;
 	case 141:{
-		s = "invalid IdentifierSuffix";
-	}break;
-	case 142:{
 		s = "invalid ArrayCreatorRest";
 	}break;
 	default:{
@@ -10986,7 +11065,7 @@ xpde.parser.Errors.prototype.Warning = function(line,col,s) {
 	$s.push("xpde.parser.Errors::Warning");
 	var $spos = $s.length;
 	if(line == null) this.printMsg(line,col,s);
-	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 2001, className : "xpde.parser.Errors", methodName : "Warning"});
+	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 1984, className : "xpde.parser.Errors", methodName : "Warning"});
 	$s.pop();
 }
 xpde.parser.Errors.prototype.count = null;
@@ -10997,7 +11076,7 @@ xpde.parser.Errors.prototype.printMsg = function(line,column,msg) {
 	b = StringTools.replace(b,"{0}",Std.string(line));
 	b = StringTools.replace(b,"{1}",Std.string(column));
 	b = StringTools.replace(b,"{2}",msg);
-	haxe.Log.trace(b,{ fileName : "Parser.hx", lineNumber : 1838, className : "xpde.parser.Errors", methodName : "printMsg"});
+	haxe.Log.trace(b,{ fileName : "Parser.hx", lineNumber : 1822, className : "xpde.parser.Errors", methodName : "printMsg"});
 	$s.pop();
 }
 xpde.parser.Errors.prototype.__class__ = xpde.parser.Errors;
@@ -11285,7 +11364,7 @@ xpde.parser.Scanner.literals = function($this) {
 	literals.set("this",23);
 	literals.set("true",24);
 	literals.set("void",25);
-	literals.set("package",42);
+	literals.set("package",41);
 	literals.set("protected",44);
 	literals.set("private",45);
 	literals.set("abstract",46);
@@ -11369,7 +11448,7 @@ xpde.parser.Parser.castFollower = xpde.parser.Parser.or(xpde.parser.Parser.newSe
 xpde.parser.Parser.prefix = xpde.parser.Parser.newSet(xpde.parser.Parser.prefixArr);
 xpde.parser.Parser.T = true;
 xpde.parser.Parser.x = false;
-xpde.parser.Parser.set = [[true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,true,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,true,true,true,true,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,true,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,true,false,true,true,true,true,false,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,true,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,true,false,false,true,true,true,true,false,true,false,false,false,false,false,false,true,true,false,true,true,true,true,false,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,true,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false,true,true,true,true,false,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,true,true,true,false,true,false,false,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,false,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,false,true,false,false,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,true,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,false,true,false,true,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,true,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,false,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false]];
+xpde.parser.Parser.set = [[true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,true,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,true,true,true,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,true,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,true,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,true,true,true,false,true,false,false,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,false,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,false,true,false,true,true,true,true,false,true,false,false,false,false,false,false,true,true,false,true,true,true,true,false,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,false,true,false,false,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,false,true,false,true,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,true,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,false,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false,true,true,true,true,false,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false]];
 xpde.parser.Errors.errMsgFormat = "-- line {0} col {1}: {2}";
 xpde.parser.FatalError.serialVersionUID = 1.0;
 $Main.init = JSMain.main();

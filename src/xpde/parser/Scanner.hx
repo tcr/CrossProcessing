@@ -172,7 +172,7 @@ class Scanner {
 		literals.set("this", 23);
 		literals.set("true", 24);
 		literals.set("void", 25);
-		literals.set("package", 42);
+		literals.set("package", 41);
 		literals.set("protected", 44);
 		literals.set("private", 45);
 		literals.set("abstract", 46);
@@ -504,7 +504,7 @@ class Scanner {
 					else if (ch == 68 || ch == 70 || ch == 100 || ch == 102) {AddCh(); state = 17;}
 					else {t.kind = 2; break;}
 				case 54:
-					{t.kind = 41; break;}
+					{t.kind = 42; break;}
 				case 55:
 					{t.kind = 72; break;}
 				case 56:
