@@ -4,887 +4,396 @@ Graph nodes:
                                val  code
 ----------------------------------------------------
    0 eps                   0                       0
-   1 nt   ImportDeclar     2                     395
-   2 sem                  -3              11262    0
+   1 nt   ImportDeclar     2                     403
+   2 sem                  -3              11438    0
    3 iter                 13     0     1           0
-   4 rslv                  5   397
-   5 nt   TypeDeclarat     7                     397
-   6 nt   TypeDeclarat    -7                     397
+   4 rslv                  5   405
+   5 nt   TypeDeclarat     7                     405
+   6 nt   TypeDeclarat    -7                     405
    7 iter                 -0     0     6           0
-   8 sem                   9              11419    0
-   9 nt   ClassBodyDec    11                     409
-  10 nt   ClassBodyDec   -11                     409
+   8 sem                   9              11595    0
+   9 nt   ClassBodyDec    11                     417
+  10 nt   ClassBodyDec   -11                     417
   11 iter                 12     0    10           0
-  12 sem                  -0              12742    0
-  13 alt                   0    14     4         397
+  12 sem                  -0              12918    0
+  13 alt                   0    14     4         405
   14 alt                  -0     0     8           0
-  15 t    "package"       16                     443
-  16 nt   Qualident       17                     443
-  17 sem                  18              13074    0
-  18 t    ";"            -22                     444
+  15 t    "package"       16                     451
+  16 nt   Qualident       17                     451
+  17 sem                  18              13250    0
+  18 t    ";"            -22                     452
   19 opt                  22     0    15           0
-  20 nt   ImportDeclar    21                     445
-  21 sem                 -22              13187    0
+  20 nt   ImportDeclar    21                     453
+  21 sem                 -22              13363    0
   22 iter                 24     0    20           0
-  23 nt   TypeDeclarat   -24                     447
+  23 nt   TypeDeclarat   -24                     455
   24 iter                 25     0    23           0
-  25 sem                   0              13269    0
-  26 t    ident           27                     454
-  27 sem                  31              13506    0
-  28 t    dot             29                     455
-  29 t    ident           30                     455
-  30 sem                 -31              13555    0
-  31 iter                  0     0    28           0
-  32 t    import_         33                     462
-  33 t    ident           34                     462
-  34 sem                  35              13753    0
-  35 nt   QualifiedImp    36                     463
-  36 t    ";"             37                     463
-  37 sem                   0              13831    0
-  38 t    dot             46                     469
-  39 t    ident           40                     469
-  40 sem                  43              14033    0
-  41 nt   QualifiedImp    42                     470
-  42 sem                  -0              14114    0
-  43 opt                  -0     0    41           0
-  44 t    "*"             45                     471
-  45 sem                  -0              14175    0
-  46 alt                   0    47    39         469
-  47 alt                  -0     0    44         471
-  48 nt   ClassOrInter    49                     478
-  49 sem                  -0              14381    0
-  50 t    ";"             -0                     479
-  51 alt                   0    52    48         478
-  52 alt                  -0     0    50         479
-  53 nt   ClassModifie   -54              14637  485
-  54 iter                 59     0    53           0
-  55 nt   ClassDeclara    56              14694  486
-  56 sem                  -0              14709    0
-  57 nt   InterfaceDec    58              14780  487
-  58 sem                  -0              14794    0
-  59 alt                   0    60    55         486
-  60 alt                  -0     0    57         487
-  61 t    public          62                     494
-  62 sem                  -0              14975    0
-  63 t    "protected"     64                     495
-  64 sem                  -0              15034    0
-  65 alt                   0    66    61         494
-  66 alt                  -0    69    63         495
-  67 t    "private"       68                     496
-  68 sem                  -0              15094    0
-  69 alt                  -0    72    67         496
-  70 t    "abstract"      71                     497
-  71 sem                  -0              15153    0
-  72 alt                  -0    75    70         497
-  73 t    static          74                     498
-  74 sem                  -0              15211    0
-  75 alt                  -0    78    73         498
-  76 t    final           77                     499
-  77 sem                  -0              15266    0
-  78 alt                  -0    81    76         499
-  79 t    "strictfp"      80                     500
-  80 sem                  -0              15323    0
-  81 alt                  -0     0    79         500
-  82 t    static          83                     506
-  83 sem                  -0              15511    0
-  84 nt   Modifier1       -0              15561  507
-  85 alt                   0    86    82         506
-  86 alt                  -0     0    84         507
-  87 t    public          88                     513
-  88 sem                  -0              15722    0
-  89 t    "protected"     90                     514
-  90 sem                  -0              15781    0
-  91 alt                   0    92    87         513
-  92 alt                  -0    95    89         514
-  93 t    "private"       94                     515
-  94 sem                  -0              15841    0
-  95 alt                  -0    98    93         515
-  96 t    "abstract"      97                     516
-  97 sem                  -0              15900    0
-  98 alt                  -0   101    96         516
-  99 t    final          100                     517
- 100 sem                  -0              15957    0
- 101 alt                  -0   104    99         517
- 102 t    "native"       103                     518
- 103 sem                  -0              16012    0
- 104 alt                  -0   107   102         518
- 105 t    "synchronize   106                     519
- 106 sem                  -0              16073    0
- 107 alt                  -0   110   105         519
- 108 t    "transient"    109                     520
- 109 sem                  -0              16138    0
- 110 alt                  -0   113   108         520
- 111 t    "volatile"     112                     521
- 112 sem                  -0              16199    0
- 113 alt                  -0   116   111         521
- 114 t    "strictfp"     115                     522
- 115 sem                  -0              16259    0
- 116 alt                  -0     0   114         522
- 117 nt   Qualident      118                     528
- 118 sem                -123              16546    0
- 119 nt   BasicType      120                     529
- 120 sem                -123              16628    0
- 121 alt                 123   122   117         528
- 122 alt                -123     0   119         529
- 123 nt   BracketsOpt    124                     530
- 124 sem                   0              16702    0
- 125 t    byte           126                     536
- 126 sem                  -0              16885    0
- 127 t    short          128                     537
- 128 sem                  -0              16922    0
- 129 alt                   0   130   125         536
- 130 alt                  -0   133   127         537
- 131 t    char           132                     538
- 132 sem                  -0              16959    0
- 133 alt                  -0   136   131         538
- 134 t    int            135                     539
- 135 sem                  -0              16995    0
- 136 alt                  -0   139   134         539
- 137 t    long           138                     540
- 138 sem                  -0              17030    0
- 139 alt                  -0   142   137         540
- 140 t    float          141                     541
- 141 sem                  -0              17067    0
- 142 alt                  -0   145   140         541
- 143 t    double         144                     542
- 144 sem                  -0              17106    0
- 145 alt                  -0   148   143         542
- 146 t    boolean        147                     543
- 147 sem                  -0              17147    0
- 148 alt                  -0     0   146         543
- 149 t    lbrack         150                     549
- 150 t    rbrack         151                     549
- 151 sem                -152              17327    0
- 152 iter                  0     0   149           0
- 153 t    final          154                     569
- 154 sem                -156              17966    0
- 155 opt                 156     0   153           0
- 156 nt   Type           157                     570
- 157 t    ident          158                     570
- 158 sem                 159              18034    0
- 159 nt   BracketsOpt    160                     571
- 160 sem                 161              18105    0
- 161 sem                   0              18158    0
- 162 nt   Qualident      163                     578
- 163 sem                 167              18435    0
- 164 t    comma          165                     579
- 165 nt   Qualident      166                     579
- 166 sem                -167              18513    0
- 167 iter                  0     0   164           0
- 168 t    ident          169                     586
- 169 sem                 170              18743    0
- 170 nt   VariableDecl     0              18824  587
- 171 nt   BracketsOpt    172                     600
- 172 sem                 176              19141    0
- 173 t    "="            174                     601
- 174 nt   VariableInit   175                     601
- 175 sem                  -0              19258    0
- 176 opt                   0     0   173           0
- 177 nt   ArrayInitial   178                     608
- 178 sem                  -0              19486    0
- 179 nt   Expression0    180                     609
- 180 sem                  -0              19547    0
- 181 alt                   0   182   177         608
- 182 alt                  -0     0   179         609
- 183 sem                 184              19907    0
- 184 t    class          185                     618
- 185 t    ident          186                     618
- 186 sem                 190              19992    0
- 187 t    "extends"      188                     619
- 188 nt   Qualident      189                     619
- 189 sem                -194              20125    0
- 190 opt                 194     0   187           0
- 191 t    "implements"   192                     621
- 192 nt   QualidentLis   193                     621
- 193 sem                -195              20233    0
- 194 opt                 195     0   191           0
- 195 nt   ClassBody      196                     623
- 196 sem                   0              20298    0
- 197 t    lbrace         199                     629
- 198 nt   ClassBodyDec  -199                     629
- 199 iter                200     0   198           0
- 200 t    rbrace           0                     630
- 201 t    ";"             -0                     636
- 202 sem                 205              20612    0
- 203 t    static         204                     638
- 204 sem                -213              20677    0
- 205 opt                 213     0   203           0
- 206 nt   Block          207              20747  639
- 207 sem                  -0              20758    0
- 208 nt   Modifier1      210              20837  640
- 209 nt   Modifier0     -210              20860  640
- 210 iter               -212     0   209           0
- 211 opt                 212     0   208           0
- 212 nt   MemberDecl      -0              20886  640
- 213 alt                  -0   214   206         639
- 214 alt                  -0     0   211           0
- 215 alt                   0   216   201         636
- 216 alt                  -0     0   202           0
- 217 rslv                218   647
- 218 t    ident          219                     647
- 219 sem                 220              21070    0
- 220 nt   ConstructorD    -0              21270  650
- 221 nt   MethodOrFiel    -0              21339  651
- 222 alt                   0   223   217         647
- 223 alt                  -0   229   221         651
- 224 sem                 225              21362    0
- 225 t    void           226                     653
- 226 t    ident          227                     653
- 227 sem                 228              21446    0
- 228 nt   VoidMethodDe    -0              21508  654
- 229 alt                  -0   232   224           0
- 230 nt   ClassDeclara   231              21605  655
- 231 sem                  -0              21619    0
- 232 alt                  -0   235   230         655
- 233 nt   InterfaceDec   234              21723  656
- 234 sem                  -0              21737    0
- 235 alt                  -0     0   233         656
- 236 nt   Type           237                     662
- 237 t    ident          238                     662
- 238 sem                 239              21965    0
- 239 nt   MethodOrFiel     0              22020  663
- 240 sem                 241              22233    0
- 241 nt   VariableDecl   242              22321  670
- 242 t    ";"             -0                     670
- 243 sem                 244              22366    0
- 244 nt   MethodDeclar    -0              22450  672
- 245 alt                   0   246   240           0
- 246 alt                  -0     0   243           0
- 247 sem                 248              22690    0
- 248 nt   VariableDecl   249              22780  679
- 249 sem                 253              22796    0
- 250 t    comma          251                     680
- 251 nt   VariableDecl   252              22891  680
- 252 sem                -253              22911    0
- 253 iter                  0     0   250           0
- 254 t    lbrace         262                     687
- 255 nt   VariableInit   256                     687
- 256 sem                 261              23188    0
- 257 rslv                258   688
- 258 t    comma          259                     688
- 259 nt   VariableInit   260                     689
- 260 sem                -261              23295    0
- 261 iter               -264     0   257           0
- 262 opt                 264     0   255           0
- 263 t    comma         -265                     691
- 264 opt                 265     0   263           0
- 265 t    rbrace           0                     692
- 266 nt   FormalParame   267                     698
- 267 sem                 268              23553    0
- 268 nt   BracketsOpt    272                     699
- 269 t    "throws"       270                     700
- 270 nt   QualidentLis   271                     700
- 271 sem                -276              23706    0
- 272 opt                 276     0   269           0
- 273 nt   Block          274              23780  702
- 274 sem                -278              23800    0
- 275 t    ";"           -278                     703
- 276 alt                 278   277   273         702
- 277 alt                -278     0   275         703
- 278 sem                   0              23855    0
- 279 nt   FormalParame   280                     710
- 280 sem                 284              24107    0
- 281 t    "throws"       282                     711
- 282 nt   QualidentLis   283                     711
- 283 sem                -288              24206    0
- 284 opt                 288     0   281           0
- 285 nt   Block          286              24279  713
- 286 sem                -290              24299    0
- 287 t    ";"           -290                     714
- 288 alt                 290   289   285         713
- 289 alt                -290     0   287         714
- 290 sem                   0              24351    0
- 291 sem                 292              24559    0
- 292 nt   FormalParame   293                     721
- 293 sem                 297              24696    0
- 294 t    "throws"       295                     722
- 295 nt   QualidentLis   296                     722
- 296 sem                -298              24794    0
- 297 opt                 298     0   294           0
- 298 nt   Block          299              24865  724
- 299 sem                   0              24885    0
- 300 t    lpar           307                     730
- 301 nt   FormalParame   302                     730
- 302 sem                 306              25165    0
- 303 t    comma          304                     731
- 304 nt   FormalParame   305                     731
- 305 sem                -306              25262    0
- 306 iter               -308     0   303           0
- 307 opt                 308     0   301           0
- 308 t    rpar             0                     732
- 309 sem                 310              25647    0
- 310 t    "interface"    311                     741
- 311 t    ident          314                     741
- 312 t    "extends"      313                     741
- 313 nt   QualidentLis  -315                     741
- 314 opt                 315     0   312           0
- 315 nt   InterfaceBod     0                     741
- 316 t    lbrace         318                     747
- 317 nt   InterfaceBod  -318                     747
- 318 iter                319     0   317           0
- 319 t    rbrace           0                     747
- 320 t    ";"             -0                     753
- 321 nt   Modifier0     -322              26138  754
- 322 iter                323     0   321           0
- 323 nt   InterfaceMem    -0              26171  754
- 324 alt                   0   325   320         753
- 325 alt                  -0     0   322           0
- 326 nt   InterfaceMet    -0              26352  760
- 327 sem                 328              26375    0
- 328 t    void           329                     762
- 329 t    ident          330                     762
- 330 nt   VoidInterfac    -0                     762
- 331 alt                   0   332   326         760
- 332 alt                  -0   334   327           0
- 333 nt   ClassDeclara    -0              26537  763
- 334 alt                  -0   336   333         763
- 335 nt   InterfaceDec    -0              26601  764
- 336 alt                  -0     0   335         764
- 337 nt   Type           338                     770
- 338 t    ident          339                     770
- 339 nt   InterfaceMet     0              26819  770
- 340 sem                 341              26989    0
- 341 nt   ConstantDecl   342                     777
- 342 t    ";"             -0                     777
- 343 sem                 344              27096    0
- 344 nt   InterfaceMet    -0                     779
- 345 alt                   0   346   340           0
- 346 alt                  -0     0   343           0
- 347 nt   ConstantDecl   350                     785
- 348 t    comma          349                     785
- 349 nt   ConstantDecl  -350                     785
- 350 iter                  0     0   348           0
- 351 nt   BracketsOpt    352                     791
- 352 t    "="            353                     791
- 353 nt   VariableInit     0                     791
- 354 t    ident          355                     797
- 355 nt   ConstantDecl     0                     797
- 356 nt   FormalParame   357                     803
- 357 nt   BracketsOpt    360                     803
- 358 t    "throws"       359                     803
- 359 nt   QualidentLis  -361                     803
- 360 opt                 361     0   358           0
- 361 t    ";"              0                     803
- 362 nt   FormalParame   365                     809
- 363 t    "throws"       364                     809
- 364 nt   QualidentLis  -366                     809
- 365 opt                 366     0   363           0
- 366 t    ";"              0                     809
- 367 nt   Block          368              28607  819
- 368 sem                  -0              28629    0
- 369 t    "if"           370                     820
- 370 nt   ParExpressio   371                     820
- 371 nt   Statement0     372                     821
- 372 sem                 376              28747    0
- 373 t    "else"         374                     822
- 374 nt   Statement0     375                     822
- 375 sem                -377              28834    0
- 376 opt                 377     0   373           0
- 377 sem                  -0              28876    0
- 378 alt                   0   379   367         819
- 379 alt                  -0   398   369         820
- 380 t    "for"          381                     824
- 381 t    lpar           382                     824
- 382 sem                 384              28967    0
- 383 nt   ForInit       -385                     825
- 384 opt                 385     0   383           0
- 385 t    ";"            386                     825
- 386 sem                 389              29055    0
- 387 nt   Expression0    388                     826
- 388 sem                -390              29158    0
- 389 opt                 390     0   387           0
- 390 t    ";"            391                     827
- 391 sem                 394              29206    0
- 392 nt   ForUpdate      393                     828
- 393 sem                -395              29292    0
- 394 opt                 395     0   392           0
- 395 t    rpar           396                     829
- 396 nt   Statement0     397                     830
- 397 sem                  -0              29361    0
- 398 alt                  -0   403   380         824
- 399 t    "while"        400                     833
- 400 nt   ParExpressio   401                     833
- 401 nt   Statement0     402                     834
- 402 sem                  -0              29660    0
- 403 alt                  -0   410   399         833
- 404 t    "do"           405                     835
- 405 nt   Statement0     406                     835
- 406 t    "while"        407                     836
- 407 nt   ParExpressio   408                     836
- 408 t    ";"            409                     836
- 409 sem                  -0              29803    0
- 410 alt                  -0   426   404         835
- 411 t    "try"          412                     837
- 412 nt   Block          413              29883  837
- 413 sem                 423              29904    0
- 414 nt   Catches        415                     838
- 415 sem                 419              30014    0
- 416 t    "finally"      417                     839
- 417 nt   Block          418              30081  839
- 418 sem                -425              30102    0
- 419 opt                -425     0   416           0
- 420 t    "finally"      421                     841
- 421 nt   Block          422              30179  841
- 422 sem                -425              30200    0
- 423 alt                 425   424   414         838
- 424 alt                -425     0   420         841
- 425 sem                  -0              30242    0
- 426 alt                  -0   432   411         837
- 427 t    "switch"       428                     843
- 428 nt   ParExpressio   429                     843
- 429 t    lbrace         430                     843
- 430 nt   SwitchBlockS   431                     843
- 431 t    rbrace          -0                     843
- 432 alt                  -0   436   427         843
- 433 t    "synchronize   434                     844
- 434 nt   ParExpressio   435                     844
- 435 nt   Block           -0              30479  845
- 436 alt                  -0   444   433         844
- 437 t    "return"       438                     846
- 438 sem                 441              30529    0
- 439 nt   Expression0    440                     847
- 440 sem                -442              30609    0
- 441 opt                 442     0   439           0
- 442 t    ";"            443                     848
- 443 sem                  -0              30651    0
- 444 alt                  -0   449   437         846
- 445 t    "throw"        446                     849
- 446 nt   Expression0    447                     849
- 447 t    ";"            448                     849
- 448 sem                  -0              30739    0
- 449 alt                  -0   457   445         849
- 450 t    "break"        451                     850
- 451 sem                 454              30793    0
- 452 t    ident          453                     851
- 453 sem                -455              30840    0
- 454 opt                 455     0   452           0
- 455 t    ";"            456                     852
- 456 sem                  -0              30877    0
- 457 alt                  -0   465   450         850
- 458 t    "continue"     459                     853
- 459 sem                 462              30929    0
- 460 t    ident          461                     854
- 461 sem                -463              30976    0
- 462 opt                 463     0   460           0
- 463 t    ";"            464                     855
- 464 sem                  -0              31013    0
- 465 alt                  -0   467   458         853
- 466 t    ";"             -0                     856
- 467 alt                  -0   474   466         856
- 468 rslv                469   857
- 469 t    ident          470                     857
- 470 sem                 471              31084    0
- 471 t    colon          472                     858
- 472 nt   Statement0     473                     858
- 473 sem                  -0              31156    0
- 474 alt                  -0   478   468         857
- 475 nt   StatementExp   476                     859
- 476 t    ";"            477                     859
- 477 sem                  -0              31242    0
- 478 alt                  -0     0   475         859
- 479 t    lbrace         481                     865
- 480 nt   BlockStateme  -481                     865
- 481 iter                482     0   480           0
- 482 t    rbrace         483                     865
- 483 sem                   0              31504    0
- 484 rslv                485   871
- 485 nt   LocalVariabl   486                     871
- 486 t    ";"             -0                     871
- 487 nt   ClassOrInter    -0                     872
- 488 alt                   0   489   484         871
- 489 alt                  -0   492   487         872
- 490 nt   Statement0     491                     873
- 491 sem                  -0              31866    0
- 492 alt                  -0     0   490         873
- 493 t    final          494                     879
- 494 sem                -496              32099    0
- 495 opt                 496     0   493           0
- 496 nt   Type           497                     880
- 497 nt   VariableDecl   498              32209  880
- 498 sem                   0              32248    0
- 499 nt   VariableDecl   500              32565  890
- 500 sem                 504              32586    0
- 501 t    comma          502                     891
- 502 nt   VariableDecl   503              32659  891
- 503 sem                -504              32679    0
- 504 iter                  0     0   501           0
- 505 rslv                506   898
- 506 nt   LocalVariabl    -0                     898
- 507 nt   StatementExp   508                     899
- 508 sem                 509              32913    0
- 509 nt   MoreStatemen   510                     900
- 510 sem                  -0              33034    0
- 511 alt                   0   512   505         898
- 512 alt                  -0     0   507         899
- 513 nt   StatementExp   514                     909
- 514 sem                 515              33316    0
- 515 nt   MoreStatemen   516                     910
- 516 sem                   0              33405    0
- 517 nt   Expression0    518                     916
- 518 sem                   0              33625    0
- 519 sem                 523              33864    0
- 520 t    comma          521                     924
- 521 nt   StatementExp   522                     924
- 522 sem                -523              33941    0
- 523 iter                  0     0   520           0
- 524 nt   CatchClause    525                     931
- 525 sem                 528              34168    0
- 526 nt   CatchClause    527                     932
- 527 sem                -528              34241    0
- 528 iter                  0     0   526           0
- 529 t    "catch"        530                     939
- 530 t    lpar           531                     939
- 531 nt   FormalParame   532                     939
- 532 t    rpar           533                     939
- 533 nt   Block          534              34493  940
- 534 sem                   0              34515    0
- 535 nt   SwitchBlockS  -536                     946
- 536 iter                  0     0   535           0
- 537 nt   SwitchLabel    539                     952
- 538 nt   BlockStateme  -539                     952
- 539 iter                  0     0   538           0
- 540 t    "case"         541                     958
- 541 nt   Expression0    542                     958
- 542 t    colon           -0                     958
- 543 t    "default"      544                     959
- 544 t    colon           -0                     959
- 545 alt                   0   546   540         958
- 546 alt                  -0     0   543         959
- 547 nt   Expression1    551                     967
- 548 nt   AssignmentOp   549                     969
- 549 nt   Expression1    550                     970
- 550 sem                -551              35527    0
- 551 iter                  0     0   548           0
- 552 nt   Expression2    555                     993
- 553 nt   ConditionalE   554              36526  994
- 554 sem                  -0              36541    0
- 555 opt                   0     0   553           0
- 556 t    "?"            557                    1001
- 557 nt   Expression0    558                    1001
- 558 t    colon          559                    1002
- 559 nt   Expression1    560                    1002
- 560 sem                   0              36829    0
- 561 nt   Expression3    564                    1008
- 562 nt   Expression2R   563              37116 1009
- 563 sem                  -0              37131    0
- 564 opt                   0     0   562           0
- 565 sem                 566              37324    0
- 566 nt   Infixop        567                    1017
- 567 sem                 568              37435    0
- 568 nt   Expression3    569                    1018
- 569 sem                 574              37510    0
- 570 nt   Infixop        571                    1019
- 571 sem                 572              37585    0
- 572 nt   Expression3    573                    1020
- 573 sem                -574              37662    0
- 574 iter                575     0   570           0
- 575 sem                  -0              37707    0
- 576 t    "instanceof"   577                    1022
- 577 nt   Type           578                    1022
- 578 sem                  -0              37786    0
- 579 alt                   0   580   565           0
- 580 alt                  -0     0   576        1022
- 581 nt   Increment      582                    1039
- 582 nt   Expression3    583                    1040
- 583 sem                  -0              38503    0
- 584 nt   PrefixOp       585                    1041
- 585 nt   Expression3    586                    1042
- 586 sem                  -0              38630    0
- 587 alt                  -0   588   581        1039
- 588 alt                  -0     0   584        1041
- 589 rslv                590  1044
- 590 t    lpar           591                    1044
- 591 nt   Type           592                    1044
- 592 t    rpar           593                    1044
- 593 nt   Expression3    594                    1045
- 594 sem                  -0              38778    0
- 595 alt                   0   596   587        1039
- 596 alt                  -0   605   589        1044
- 597 nt   Primary        598                    1046
- 598 sem                 601              38851    0
- 599 nt   Selector       600              38908 1047
- 600 sem                -601              38924    0
- 601 iter                604     0   599           0
- 602 nt   Increment      603                    1049
- 603 sem                -604              38997    0
- 604 iter                 -0     0   602           0
- 605 alt                  -0     0   597        1046
- 606 t    lpar           607                    1056
- 607 nt   Expression0    608                    1056
- 608 t    rpar           609                    1056
- 609 sem                  -0              39220    0
- 610 t    this           611                    1057
- 611 sem                 614              39260    0
- 612 nt   Arguments      613                    1058
- 613 sem                  -0              39345    0
- 614 opt                  -0     0   612           0
- 615 alt                   0   616   606        1056
- 616 alt                  -0   620   610        1057
- 617 t    super          618                    1060
- 618 nt   SuperSuffix    619                    1060
- 619 sem                  -0              39438    0
- 620 alt                  -0   623   617        1060
- 621 nt   Literal        622                    1061
- 622 sem                  -0              39497    0
- 623 alt                  -0   627   621        1061
- 624 t    new            625                    1062
- 625 nt   Creator        626                    1062
- 626 sem                  -0              39561    0
- 627 alt                  -0   640   624        1062
- 628 t    ident          629                    1063
- 629 sem                 634              39600    0
- 630 rslv                631  1064
- 631 t    dot            632                    1064
- 632 t    ident          633                    1064
- 633 sem                -634              39697    0
- 634 iter                635     0   630           0
- 635 sem                 639              39928    0
- 636 rslv                637  1069
- 637 nt   IdentifierSu   638              40180 1069
- 638 sem                  -0              40202    0
- 639 opt                  -0     0   636           0
- 640 alt                  -0   645   628        1063
- 641 nt   BasicType      642                    1071
- 642 nt   BracketsOpt    643                    1072
- 643 t    dot            644                    1072
- 644 t    class           -0                    1072
- 645 alt                  -0   649   641        1071
- 646 t    void           647                    1073
- 647 t    dot            648                    1073
- 648 t    class           -0                    1073
- 649 alt                  -0     0   646        1073
- 650 t    lpar           657                    1079
- 651 nt   Expression0    652                    1079
- 652 sem                 656              40633    0
- 653 t    comma          654                    1080
- 654 nt   Expression0    655                    1080
- 655 sem                -656              40722    0
- 656 iter               -658     0   653           0
- 657 opt                 658     0   651           0
- 658 t    rpar             0                    1081
- 659 sem                 662              40942    0
- 660 nt   Arguments      661                    1088
- 661 sem                  -0              41041    0
- 662 opt                   0     0   660           0
- 663 nt   Arguments      664                    1095
- 664 sem                  -0              41280    0
- 665 t    dot            666                    1096
- 666 t    ident          667                    1096
- 667 sem                 668              41340    0
- 668 nt   ArgumentsOpt   669              41410 1097
- 669 sem                  -0              41442    0
- 670 alt                   0   671   663        1095
- 671 alt                  -0     0   665        1096
- 672 t    intLit         673                    1103
- 673 sem                  -0              41605    0
- 674 t    floatLit       675                    1104
- 675 sem                  -0              41679    0
- 676 alt                   0   677   672        1103
- 677 alt                  -0   680   674        1104
- 678 t    charLit        679                    1105
- 679 sem                  -0              41752    0
- 680 alt                  -0   683   678        1105
- 681 t    stringLit      682                    1106
- 682 sem                  -0              41824    0
- 683 alt                  -0   686   681        1106
- 684 t    true           685                    1107
- 685 sem                  -0              41881    0
- 686 alt                  -0   689   684        1107
- 687 t    false          688                    1108
- 688 sem                  -0              41939    0
- 689 alt                  -0   692   687        1108
- 690 t    null           691                    1109
- 691 sem                  -0              41997    0
- 692 alt                  -0     0   690        1109
- 693 nt   BasicType      694                    1115
- 694 nt   ArrayCreator   695              42221 1116
- 695 sem                  -0              42244    0
- 696 nt   Qualident      701                    1117
- 697 nt   ArrayCreator   698              42389 1118
- 698 sem                  -0              42416    0
- 699 nt   ClassCreator   700              42479 1119
- 700 sem                  -0              42495    0
- 701 alt                  -0   702   697        1118
- 702 alt                  -0     0   699        1119
- 703 alt                   0   704   693        1115
- 704 alt                  -0     0   696        1117
- 705 t    lbrack         720                    1126
- 706 t    rbrack         707                    1127
- 707 nt   BracketsOpt    708                    1127
- 708 nt   ArrayInitial    -0                    1127
- 709 nt   Expression0    710                    1128
- 710 t    rbrack         715                    1128
- 711 rslv                712  1129
- 712 t    lbrack         713                    1129
- 713 nt   Expression0    714                    1129
- 714 t    rbrack        -715                    1129
- 715 iter                719     0   711           0
- 716 rslv                717  1130
- 717 t    lbrack         718                    1130
- 718 t    rbrack        -719                    1130
- 719 iter                 -0     0   716           0
- 720 alt                   0   721   706        1127
- 721 alt                  -0     0   709        1128
- 722 nt   Arguments      723                    1137
- 723 sem                 725              43136    0
- 724 nt   ClassBody     -726                    1138
- 725 opt                 726     0   724           0
- 726 sem                   0              43232    0
- 727 t    lbrack         728                    1144
- 728 t    rbrack         729                    1144
- 729 nt   BracketsOpt    730                    1144
- 730 t    dot            731                    1144
- 731 t    class          732                    1144
- 732 sem                  -0              43495    0
- 733 nt   Arguments      734                    1145
- 734 sem                  -0              43551    0
- 735 alt                   0   736   727        1144
- 736 alt                  -0   748   733        1145
- 737 t    dot            740                    1146
- 738 t    class         -747                    1146
- 739 t    this          -747                    1146
- 740 alt                 747   741   738        1146
- 741 alt                -747   746   739        1146
- 742 t    super          743                    1147
- 743 t    dot            744                    1147
- 744 t    ident          745                    1147
- 745 nt   ArgumentsOpt  -747              43760 1148
- 746 alt                -747     0   742        1147
- 747 sem                  -0              43787    0
- 748 alt                  -0     0   737        1146
- 749 t    dot            757                    1154
- 750 t    ident          751                    1154
- 751 sem                 752              43956    0
- 752 nt   ArgumentsOpt   753              44025 1155
- 753 sem                  -0              44046    0
- 754 t    super          755                    1156
- 755 nt   Arguments      756                    1156
- 756 sem                  -0              44143    0
- 757 alt                  -0   758   750        1154
- 758 alt                  -0   761   754        1156
- 759 t    new            760                    1157
- 760 nt   InnerCreator    -0                    1157
- 761 alt                  -0     0   759        1157
- 762 t    lbrack         763                    1159
- 763 nt   Expression0    764                    1159
- 764 t    rbrack         765                    1159
- 765 sem                  -0              44233    0
- 766 alt                   0   767   749        1154
- 767 alt                  -0     0   762        1159
- 768 t    ident          769                    1165
- 769 nt   ClassCreator     0              44476 1165
- 770 t    lpar           771                    1171
- 771 nt   Expression0    772                    1171
- 772 t    rpar             0                    1171
- 773 t    "="            774                    1177
- 774 sem                  -0              44821    0
- 775 t    "+="           776                    1178
- 776 sem                  -0              44857    0
- 777 alt                   0   778   773        1177
- 778 alt                  -0   781   775        1178
- 779 t    "-="           780                    1179
- 780 sem                  -0              44894    0
- 781 alt                  -0   784   779        1179
- 782 t    "*="           783                    1180
- 783 sem                  -0              44936    0
- 784 alt                  -0   787   782        1180
- 785 t    "/="           786                    1181
- 786 sem                  -0              44978    0
- 787 alt                  -0   790   785        1181
- 788 t    "&="           789                    1182
- 789 sem                  -0              45018    0
- 790 alt                  -0   793   788        1182
- 791 t    "|="           792                    1183
- 792 sem                  -0              45062    0
- 793 alt                  -0   796   791        1183
- 794 t    "^="           795                    1184
- 795 sem                  -0              45105    0
- 796 alt                  -0   799   794        1184
- 797 t    "%="           798                    1185
- 798 sem                  -0              45149    0
- 799 alt                  -0   802   797        1185
- 800 t    "<<="          801                    1186
- 801 sem                  -0              45191    0
- 802 alt                  -0   805   800        1186
- 803 t    ">>="          804                    1187
- 804 sem                  -0              45235    0
- 805 alt                  -0   808   803        1187
- 806 t    ">>>="         807                    1188
- 807 sem                  -0              45280    0
- 808 alt                  -0     0   806        1188
- 809 t    "||"           810                    1194
- 810 sem                  -0              45453    0
- 811 t    "&&"           812                    1195
- 812 sem                  -0              45489    0
- 813 alt                   0   814   809        1194
- 814 alt                  -0   817   811        1195
- 815 t    "|"            816                    1196
- 816 sem                  -0              45525    0
- 817 alt                  -0   820   815        1196
- 818 t    "^"            819                    1197
- 819 sem                  -0              45567    0
- 820 alt                  -0   823   818        1197
- 821 t    "&"            822                    1198
- 822 sem                  -0              45610    0
- 823 alt                  -0   826   821        1198
- 824 t    "=="           825                    1199
- 825 sem                  -0              45654    0
- 826 alt                  -0   829   824        1199
- 827 t    "!="           828                    1200
- 828 sem                  -0              45693    0
- 829 alt                  -0   832   827        1200
- 830 t    "<"            831                    1201
- 831 sem                  -0              45733    0
- 832 alt                  -0   835   830        1201
- 833 t    ">"            834                    1202
- 834 sem                  -0              45774    0
- 835 alt                  -0   838   833        1202
- 836 t    "<="           837                    1203
- 837 sem                  -0              45819    0
- 838 alt                  -0   841   836        1203
- 839 t    ">="           840                    1204
- 840 sem                  -0              45868    0
- 841 alt                  -0   844   839        1204
- 842 t    "<<"           843                    1205
- 843 sem                  -0              45920    0
- 844 alt                  -0   847   842        1205
- 845 t    ">>"           846                    1206
- 846 sem                  -0              45963    0
- 847 alt                  -0   850   845        1206
- 848 t    ">>>"          849                    1207
- 849 sem                  -0              46008    0
- 850 alt                  -0   853   848        1207
- 851 t    plus           852                    1208
- 852 sem                  -0              46055    0
- 853 alt                  -0   856   851        1208
- 854 t    minus          855                    1209
- 855 sem                  -0              46091    0
- 856 alt                  -0   859   854        1209
- 857 t    "*"            858                    1210
- 858 sem                  -0              46132    0
- 859 alt                  -0   862   857        1210
- 860 t    "/"            861                    1211
- 861 sem                  -0              46173    0
- 862 alt                  -0   865   860        1211
- 863 t    "%"            864                    1212
- 864 sem                  -0              46212    0
- 865 alt                  -0     0   863        1212
- 866 t    not            867                    1220
- 867 sem                  -0              46399    0
- 868 t    tilde          869                    1221
- 869 sem                  -0              46435    0
- 870 alt                   0   871   866        1220
- 871 alt                  -0   874   868        1221
- 872 t    plus           873                    1222
- 873 sem                  -0              46478    0
- 874 alt                  -0   877   872        1222
- 875 t    minus          876                    1223
- 876 sem                  -0              46520    0
- 877 alt                  -0     0   875        1223
- 878 t    inc            879                    1229
- 879 sem                  -0              46687    0
- 880 t    dec            881                    1230
- 881 sem                  -0              46725    0
- 882 alt                   0   883   878        1229
- 883 alt                  -0     0   880        1230
+  25 sem                   0              13445    0
+  26 t    lpar            27                     462
+  27 sem                  33              13651    0
+  28 nt   UnparsedSegm   -33              13692  463
+  29 any                  30                       0
+  30 sem                 -33              13712    0
+  31 alt                 -33    32    28         463
+  32 alt                 -33     0    29           0
+  33 iter                 34     0    31           0
+  34 t    rpar            35                     464
+  35 sem                  -0              13754    0
+  36 t    lbrack          37                     465
+  37 sem                  43              13791    0
+  38 nt   UnparsedSegm   -43              13832  466
+  39 any                  40                       0
+  40 sem                 -43              13852    0
+  41 alt                 -43    42    38         466
+  42 alt                 -43     0    39           0
+  43 iter                 44     0    41           0
+  44 t    rbrack          45                     467
+  45 sem                  -0              13894    0
+  46 alt                   0    47    26         462
+  47 alt                  -0    49    36         465
+  48 nt   UnparsedBloc    -0              13931  468
+  49 alt                  -0    52    48         468
+  50 t    stringLit       51                     469
+  51 sem                  -0              13961    0
+  52 alt                  -0     0    50         469
+  53 t    lbrace          54                     473
+  54 sem                  60              14038    0
+  55 nt   UnparsedSegm   -60              14079  474
+  56 any                  57                       0
+  57 sem                 -60              14099    0
+  58 alt                 -60    59    55         474
+  59 alt                 -60     0    56           0
+  60 iter                 61     0    58           0
+  61 t    rbrace          62                     475
+  62 sem                   0              14141    0
+  63 nt   UnparsedSegm   -68              14225  479
+  64 any                  65                       0
+  65 sem                 -68              14245    0
+  66 alt                 -68    67    63         479
+  67 alt                 -68     0    64           0
+  68 iter                 69     0    66           0
+  69 t    ";"              0                     480
+  70 t    ident           71                     486
+  71 sem                  75              14449    0
+  72 t    dot             73                     487
+  73 t    ident           74                     487
+  74 sem                 -75              14498    0
+  75 iter                  0     0    72           0
+  76 t    import_         77                     494
+  77 t    ident           78                     494
+  78 sem                  79              14696    0
+  79 nt   QualifiedImp    80                     495
+  80 t    ";"             81                     495
+  81 sem                   0              14774    0
+  82 t    dot             90                     501
+  83 t    ident           84                     501
+  84 sem                  87              14976    0
+  85 nt   QualifiedImp    86                     502
+  86 sem                  -0              15057    0
+  87 opt                  -0     0    85           0
+  88 t    "*"             89                     503
+  89 sem                  -0              15118    0
+  90 alt                   0    91    83         501
+  91 alt                  -0     0    88         503
+  92 nt   ClassOrInter    93                     510
+  93 sem                  -0              15324    0
+  94 t    ";"             -0                     511
+  95 alt                   0    96    92         510
+  96 alt                  -0     0    94         511
+  97 nt   ClassModifie   -98              15580  517
+  98 iter                103     0    97           0
+  99 nt   ClassDeclara   100              15637  518
+ 100 sem                  -0              15652    0
+ 101 nt   InterfaceDec   102              15723  519
+ 102 sem                  -0              15737    0
+ 103 alt                   0   104    99         518
+ 104 alt                  -0     0   101         519
+ 105 t    public         106                     526
+ 106 sem                  -0              15918    0
+ 107 t    "protected"    108                     527
+ 108 sem                  -0              15977    0
+ 109 alt                   0   110   105         526
+ 110 alt                  -0   113   107         527
+ 111 t    "private"      112                     528
+ 112 sem                  -0              16037    0
+ 113 alt                  -0   116   111         528
+ 114 t    "abstract"     115                     529
+ 115 sem                  -0              16096    0
+ 116 alt                  -0   119   114         529
+ 117 t    static         118                     530
+ 118 sem                  -0              16154    0
+ 119 alt                  -0   122   117         530
+ 120 t    final          121                     531
+ 121 sem                  -0              16209    0
+ 122 alt                  -0   125   120         531
+ 123 t    "strictfp"     124                     532
+ 124 sem                  -0              16266    0
+ 125 alt                  -0     0   123         532
+ 126 t    static         127                     538
+ 127 sem                  -0              16454    0
+ 128 nt   Modifier1       -0              16504  539
+ 129 alt                   0   130   126         538
+ 130 alt                  -0     0   128         539
+ 131 t    public         132                     545
+ 132 sem                  -0              16665    0
+ 133 t    "protected"    134                     546
+ 134 sem                  -0              16724    0
+ 135 alt                   0   136   131         545
+ 136 alt                  -0   139   133         546
+ 137 t    "private"      138                     547
+ 138 sem                  -0              16784    0
+ 139 alt                  -0   142   137         547
+ 140 t    "abstract"     141                     548
+ 141 sem                  -0              16843    0
+ 142 alt                  -0   145   140         548
+ 143 t    final          144                     549
+ 144 sem                  -0              16900    0
+ 145 alt                  -0   148   143         549
+ 146 t    "native"       147                     550
+ 147 sem                  -0              16955    0
+ 148 alt                  -0   151   146         550
+ 149 t    "synchronize   150                     551
+ 150 sem                  -0              17016    0
+ 151 alt                  -0   154   149         551
+ 152 t    "transient"    153                     552
+ 153 sem                  -0              17081    0
+ 154 alt                  -0   157   152         552
+ 155 t    "volatile"     156                     553
+ 156 sem                  -0              17142    0
+ 157 alt                  -0   160   155         553
+ 158 t    "strictfp"     159                     554
+ 159 sem                  -0              17202    0
+ 160 alt                  -0     0   158         554
+ 161 nt   Qualident      162                     560
+ 162 sem                -167              17494    0
+ 163 nt   BasicType      164                     561
+ 164 sem                -167              17575    0
+ 165 alt                 167   166   161         560
+ 166 alt                -167     0   163         561
+ 167 nt   BracketsOpt    168                     562
+ 168 sem                   0              17648    0
+ 169 t    byte           170                     568
+ 170 sem                  -0              17837    0
+ 171 t    short          172                     569
+ 172 sem                  -0              17874    0
+ 173 alt                   0   174   169         568
+ 174 alt                  -0   177   171         569
+ 175 t    char           176                     570
+ 176 sem                  -0              17911    0
+ 177 alt                  -0   180   175         570
+ 178 t    int            179                     571
+ 179 sem                  -0              17947    0
+ 180 alt                  -0   183   178         571
+ 181 t    long           182                     572
+ 182 sem                  -0              17982    0
+ 183 alt                  -0   186   181         572
+ 184 t    float          185                     573
+ 185 sem                  -0              18019    0
+ 186 alt                  -0   189   184         573
+ 187 t    double         188                     574
+ 188 sem                  -0              18058    0
+ 189 alt                  -0   192   187         574
+ 190 t    boolean        191                     575
+ 191 sem                  -0              18099    0
+ 192 alt                  -0     0   190         575
+ 193 t    lbrack         194                     581
+ 194 t    rbrack         195                     581
+ 195 sem                -196              18279    0
+ 196 iter                  0     0   193           0
+ 197 t    final          198                     601
+ 198 sem                -200              18936    0
+ 199 opt                 200     0   197           0
+ 200 nt   Type           201                     602
+ 201 t    ident          202                     602
+ 202 sem                 203              19009    0
+ 203 nt   BracketsOpt    204                     603
+ 204 sem                 205              19080    0
+ 205 sem                   0              19139    0
+ 206 nt   Qualident      207                     610
+ 207 sem                 211              19413    0
+ 208 t    comma          209                     611
+ 209 nt   Qualident      210                     611
+ 210 sem                -211              19491    0
+ 211 iter                  0     0   208           0
+ 212 t    ident          213                     618
+ 213 sem                 214              19727    0
+ 214 nt   VariableDecl     0              19808  619
+ 215 nt   BracketsOpt    216                     632
+ 216 sem                 219              20125    0
+ 217 t    "="            218                     633
+ 218 nt   UnparsedExpr    -0              20222  634
+ 219 opt                   0     0   217           0
+ 220 sem                 221              20686    0
+ 221 t    class          222                     645
+ 222 t    ident          223                     645
+ 223 sem                 227              20771    0
+ 224 t    "extends"      225                     646
+ 225 nt   Qualident      226                     646
+ 226 sem                -231              20904    0
+ 227 opt                 231     0   224           0
+ 228 t    "implements"   229                     648
+ 229 nt   QualidentLis   230                     648
+ 230 sem                -232              21012    0
+ 231 opt                 232     0   228           0
+ 232 nt   ClassBody      233                     650
+ 233 sem                   0              21077    0
+ 234 t    lbrace         236                     656
+ 235 nt   ClassBodyDec  -236                     656
+ 236 iter                237     0   235           0
+ 237 t    rbrace           0                     657
+ 238 t    ";"             -0                     663
+ 239 sem                 242              21391    0
+ 240 t    static         241                     665
+ 241 sem                -249              21456    0
+ 242 opt                 249     0   240           0
+ 243 nt   UnparsedSegm    -0              21515  666
+ 244 nt   Modifier1      246              21662  668
+ 245 nt   Modifier0     -246              21685  668
+ 246 iter               -248     0   245           0
+ 247 opt                 248     0   244           0
+ 248 nt   MemberDecl      -0              21711  668
+ 249 alt                  -0   250   243         666
+ 250 alt                  -0     0   247           0
+ 251 alt                   0   252   238         663
+ 252 alt                  -0     0   239           0
+ 253 rslv                254   675
+ 254 t    ident          255                     675
+ 255 sem                 256              21897    0
+ 256 nt   ConstructorD    -0              22097  678
+ 257 nt   MethodOrFiel    -0              22166  679
+ 258 alt                   0   259   253         675
+ 259 alt                  -0   265   257         679
+ 260 sem                 261              22189    0
+ 261 t    void           262                     681
+ 262 t    ident          263                     681
+ 263 sem                 264              22273    0
+ 264 nt   VoidMethodDe    -0              22335  682
+ 265 alt                  -0   268   260           0
+ 266 nt   ClassDeclara   267              22432  683
+ 267 sem                  -0              22446    0
+ 268 alt                  -0   271   266         683
+ 269 nt   InterfaceDec   270              22544  684
+ 270 sem                  -0              22558    0
+ 271 alt                  -0     0   269         684
+ 272 nt   Type           273                     690
+ 273 t    ident          274                     690
+ 274 sem                 275              22786    0
+ 275 nt   MethodOrFiel     0              22841  691
+ 276 sem                 277              23060    0
+ 277 nt   VariableDecl   278              23148  698
+ 278 t    ";"             -0                     698
+ 279 sem                 280              23193    0
+ 280 nt   MethodDeclar    -0              23277  700
+ 281 alt                   0   282   276           0
+ 282 alt                  -0     0   279           0
+ 283 sem                 284              23523    0
+ 284 nt   VariableDecl   285              23613  707
+ 285 sem                 289              23629    0
+ 286 t    comma          287                     708
+ 287 nt   VariableDecl   288              23724  708
+ 288 sem                -289              23744    0
+ 289 iter                  0     0   286           0
+ 290 nt   FormalParame   291                     715
+ 291 sem                 292              23998    0
+ 292 nt   BracketsOpt    296                     716
+ 293 t    "throws"       294                     717
+ 294 nt   QualidentLis   295                     717
+ 295 sem                -301              24151    0
+ 296 opt                 301     0   293           0
+ 297 sem                 298              24208    0
+ 298 nt   UnparsedBloc   299              24270  720
+ 299 sem                -303              24285    0
+ 300 t    ";"           -303                     722
+ 301 alt                 303   302   297           0
+ 302 alt                -303     0   300         722
+ 303 sem                   0              24412    0
+ 304 nt   FormalParame   305                     729
+ 305 sem                 309              24670    0
+ 306 t    "throws"       307                     730
+ 307 nt   QualidentLis   308                     730
+ 308 sem                -314              24769    0
+ 309 opt                 314     0   306           0
+ 310 sem                 311              24826    0
+ 311 nt   UnparsedBloc   312              24888  733
+ 312 sem                -316              24903    0
+ 313 t    ";"           -316                     735
+ 314 alt                 316   315   310           0
+ 315 alt                -316     0   313         735
+ 316 sem                   0              25029    0
+ 317 sem                 318              25237    0
+ 318 nt   FormalParame   319                     742
+ 319 sem                 323              25380    0
+ 320 t    "throws"       321                     743
+ 321 nt   QualidentLis   322                     743
+ 322 sem                -324              25478    0
+ 323 opt                 324     0   320           0
+ 324 nt   UnparsedBloc   325              25537  745
+ 325 sem                   0              25607    0
+ 326 t    lpar           333                     752
+ 327 nt   FormalParame   328                     752
+ 328 sem                 332              25901    0
+ 329 t    comma          330                     753
+ 330 nt   FormalParame   331                     753
+ 331 sem                -332              26005    0
+ 332 iter               -334     0   329           0
+ 333 opt                 334     0   327           0
+ 334 t    rpar             0                     754
+ 335 sem                 336              26390    0
+ 336 t    "interface"    337                     763
+ 337 t    ident          340                     763
+ 338 t    "extends"      339                     763
+ 339 nt   QualidentLis  -341                     763
+ 340 opt                 341     0   338           0
+ 341 nt   InterfaceBod     0                     763
+ 342 t    lbrace         344                     769
+ 343 nt   InterfaceBod  -344                     769
+ 344 iter                345     0   343           0
+ 345 t    rbrace           0                     769
+ 346 t    ";"             -0                     775
+ 347 nt   Modifier0     -348              26881  776
+ 348 iter                349     0   347           0
+ 349 nt   InterfaceMem    -0              26914  776
+ 350 alt                   0   351   346         775
+ 351 alt                  -0     0   348           0
+ 352 nt   InterfaceMet    -0              27095  782
+ 353 sem                 354              27118    0
+ 354 t    void           355                     784
+ 355 t    ident          356                     784
+ 356 nt   VoidInterfac    -0                     784
+ 357 alt                   0   358   352         782
+ 358 alt                  -0   360   353           0
+ 359 nt   ClassDeclara    -0              27280  785
+ 360 alt                  -0   362   359         785
+ 361 nt   InterfaceDec    -0              27344  786
+ 362 alt                  -0     0   361         786
+ 363 nt   Type           364                     792
+ 364 t    ident          365                     792
+ 365 nt   InterfaceMet     0              27568  792
+ 366 sem                 367              27738    0
+ 367 nt   ConstantDecl   368                     799
+ 368 t    ";"             -0                     799
+ 369 sem                 370              27845    0
+ 370 nt   InterfaceMet    -0                     801
+ 371 alt                   0   372   366           0
+ 372 alt                  -0     0   369           0
+ 373 nt   ConstantDecl   376                     807
+ 374 t    comma          375                     807
+ 375 nt   ConstantDecl  -376                     807
+ 376 iter                  0     0   374           0
+ 377 nt   BracketsOpt    378                     813
+ 378 t    "="            379                     813
+ 379 nt   UnparsedExpr     0              28274  813
+ 380 t    ident          381                     820
+ 381 nt   ConstantDecl     0                     820
+ 382 nt   FormalParame   383                     826
+ 383 nt   BracketsOpt    386                     826
+ 384 t    "throws"       385                     826
+ 385 nt   QualidentLis  -387                     826
+ 386 opt                 387     0   384           0
+ 387 t    ";"              0                     826
+ 388 nt   FormalParame   391                     832
+ 389 t    "throws"       390                     832
+ 390 nt   QualidentLis  -392                     832
+ 391 opt                 392     0   389           0
+ 392 t    ";"              0                     832
 

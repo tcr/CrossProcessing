@@ -11,6 +11,14 @@ import xpde.parser.Parser;
 import xpde.parser.AST;
 import haxe.io.Input;
 
+/*------------------------- definition tokenizing -----------------------------*/
+
+enum ParserDataType {
+	PPrimitive(type:PrimitiveType);
+	PReference(reference:Qualident);
+	PArray(type:ParserDataType, dimensions:Int);
+}
+
 /*------------------------- modifier handling -----------------------------*/
 
 class ModifierSet
@@ -129,16 +137,22 @@ class ParsedCompilationUnit implements CompilationUnit
 			throw "incompatible package declaration " + context.packageDeclaration.join('.');
 		}*/
 		
+		// create type qualifier
+		var qualifier:TypeQualifier = new TypeQualifier(context, rootPackage);
+		// generate type definitions
+		for (type in context.types)
+			type.generate(qualifier, types);
+		
 		// parser second pass
-		var resolver = new LexicalResolver(this);
-		resolver.resolve(context, rootPackage);
+//		var resolver = new LexicalResolver(this);
+//		resolver.resolve(context, rootPackage);
 		
 		// save passed AST
-		ast = context.ast;
+//		ast = context.ast;
 	}
 }
 
-/*-------------------- parsing contexts ----------------------------------*/
+/*-------------------- definition parsing ----------------------------------*/
 
 class CompilationUnitContext
 {
@@ -146,7 +160,8 @@ class CompilationUnitContext
 	public var packageDeclaration:Array<String>;
 	public var imports:Array<Array<String>>;
 	public var types:Array<TypeContext>;
-	public var ast:Hash<Statement>;
+	public var code:Hash<String>;
+//	public var ast:Hash<Statement>;
 	
 	public function new(identifier:String)
 	{
@@ -154,7 +169,8 @@ class CompilationUnitContext
 		packageDeclaration = [];
 		imports = [];
 		types = [];
-		ast = new Hash<Statement>();
+		code = new Hash<String>();
+//		ast = new Hash<Statement>();
 	}
 }
 
@@ -162,29 +178,29 @@ interface TypeContext {
 	public var identifier:String;
 	public var extend:Qualident;
 	public var implement:Array<Qualident>;
+	public function generate(qualifier:TypeQualifier, types:Hash<TypeDefinition>, ?prefix:String):Void;
 }
 
 class ClassContext implements TypeContext
 {
 	// reference
-	public var definition:ClassDefinition;
+//	public var definition:ClassDefinition;
 
 	// public
 	public var identifier:String;
 	public var modifiers:EnumSet<Modifier>;
 	public var extend:Qualident;
 	public var implement:Array<Qualident>;
-	public var memberTypes:Hash<TypeContext>;
-	public var fields:Hash<FieldContext>;
-	public var methods:Array<MethodContext>; // array, because we can't resolve similar types until second pass
-//[TODO] can we resolve similar types before second pass!?	
+	public var types:Array<TypeContext>;
+	public var fields:Array<FieldContext>;
+	public var methods:Array<MethodContext>;
 
 	// constructors
-	public var staticConstructor:BlockContext;
-	public var objectConstructor:BlockContext;
+//	public var staticConstructor:String;
+//	public var objectConstructor:String;
 	
 	// anonymous class uniqid
-	public var anonClassID:Int;
+//	public var anonClassID:Int;
 	
 	// owner class context
 	public var ownerClass:ClassContext;
@@ -195,19 +211,60 @@ class ClassContext implements TypeContext
 		this.modifiers = modifiers;
 		this.identifier = identifier;	
 		implement = [];
-		fields = new Hash<FieldContext>();
-		memberTypes = new Hash<TypeContext>();
+		fields = [];
+		types = [];
 		methods = [];
 		this.ownerClass = ownerClass;
 		
 		// constructors
-		staticConstructor = new BlockContext();
-		objectConstructor = new BlockContext();
+//		staticConstructor = '';
+//		objectConstructor = '';
 		
 		// anonymous class ID
-		anonClassID = 0;
+//		anonClassID = 0;
 	}
 	
+	public function generate(qualifier:TypeQualifier, types:Hash<TypeDefinition>, ?prefix:String)
+	{
+		// normalize prefix
+		var identifier = (prefix != null ? prefix : '') + this.identifier;
+
+		// create definition
+		var definition = {
+		    identifier: identifier,
+		    modifiers: modifiers,
+		    fields: new Hash<FieldDefinition>(),
+		    methods: new Hash<MethodDefinition>(),
+		    types: new Hash<String>(),
+		    extend: qualifier.qualifyReference(extend),
+		    implement: [],
+		};
+		
+		// add implemented classes
+		if (implement != null)
+			for (type in implement)
+				definition.implement.push(qualifier.qualifyReference(type));
+		
+		// create class-specific qualifier with member types
+		var classQualifier:TypeQualifier = qualifier.copy();
+		for (type in this.types)
+			classQualifier.set(type.identifier, [definition.types.get(type.identifier)]);
+
+		// complete definition
+		for (field in fields)
+			field.generate(classQualifier, definition.fields);
+		for (method in methods)
+			method.generate(classQualifier, definition.methods);
+		for (type in this.types)
+			type.generate(classQualifier, types, identifier + '$');
+			
+		// add definition
+		if (types.exists(identifier))
+			throw "redefinition of type " + identifier;
+		types.set(identifier, TypeDefinition.TClass(definition));
+	}
+	
+/*
 	public function defineField(field:FieldContext)
 	{
 		// prevent redefinition
@@ -235,22 +292,22 @@ class ClassContext implements TypeContext
 		if (memberTypes.exists(type.identifier))
 			throw "redeclaration of member type " + type.identifier + " in class " + this.identifier;
 		memberTypes.set(type.identifier, type);
-	}
+	}*/
 }
 
-class MethodContext implements DefinesLocalVariables
+class MethodContext
 {
 	// typedef: MethodDefinition
 	public var identifier:String;
-	public var type:Null<DataType>;
+	public var type:Null<ParserDataType>;
 	public var modifiers:EnumSet<Modifier>;
 	public var throwsList:Array<Qualident>;
-	public var parameters:Array<FormalParameter>;
+	public var parameters:Array<FormalParameterContext>;
 	
 	// method body
 	public var body:Statement;
 	
-	public function new(modifiers:EnumSet<Modifier>, type:Null<DataType>, identifier:String)
+	public function new(modifiers:EnumSet<Modifier>, type:Null<ParserDataType>, identifier:String)
 	{
 		// definition defaults
 		this.modifiers = modifiers;
@@ -260,23 +317,47 @@ class MethodContext implements DefinesLocalVariables
 		parameters = [];
 	}
 	
+	public function generate(qualifier:TypeQualifier, methods:Hash<MethodDefinition>)
+	{
+		// create definition
+		var definition = {
+		    identifier: identifier,
+		    type: qualifier.qualifyDataType(type),
+		    modifiers: modifiers,
+		    throwsList: [],
+		    parameters: [],
+		};
+		
+		// add throws
+		if (throwsList != null)
+			for (qualident in throwsList)
+				definition.throwsList.push(qualifier.qualifyReference(qualident));
+		for (parameter in parameters)
+			parameter.generate(qualifier, definition.parameters);
+		
+		// add definition
+		if (methods.exists(identifier))
+			throw "redefinition of method " + identifier;
+		methods.set(identifier, definition);
+	}
+	
+/*	
 	public function isVariableDefined(identifier:String):Bool
 	{
 		for (param in parameters)
 			if (param.identifier == identifier)
 				return true;
 		return false;
-	}
+	}*/
 }
 
-class FieldContext
+class FormalParameterContext
 {
 	public var identifier:String;
-	public var type:Null<DataType>;
+	public var type:ParserDataType;
 	public var modifiers:EnumSet<Modifier>;
-	public var initialization:Expression;
 	
-	public function new(modifiers:EnumSet<Modifier>, type:Null<DataType>, identifier:String)
+	public function new(modifiers:EnumSet<Modifier>, type:ParserDataType, identifier:String)
 	{
 		// definition defaults
 		this.modifiers = modifiers;
@@ -284,11 +365,48 @@ class FieldContext
 		this.identifier = identifier;
 	}
 	
-	public function getDefinition():FieldDefinition
+	public function generate(qualifier:TypeQualifier, parameters:Array<FormalParameter>)
 	{
-		return { modifiers: modifiers, type: type, identifier: identifier };
+		parameters.push({
+		    modifiers: modifiers,
+		    type: qualifier.qualifyDataType(type),
+		    identifier: identifier
+		});
 	}
 }
+
+class FieldContext
+{
+	public var identifier:String;
+	public var type:ParserDataType;
+	public var modifiers:EnumSet<Modifier>;
+//	public var initialization:Expression;
+	
+	public function new(modifiers:EnumSet<Modifier>, type:ParserDataType, identifier:String)
+	{
+		// definition defaults
+		this.modifiers = modifiers;
+		this.type = type;
+		this.identifier = identifier;
+	}
+	
+	public function generate(qualifier:TypeQualifier, fields:Hash<FieldDefinition>)
+	{
+		// create definition
+		var definition = {
+		    modifiers: modifiers,
+		    type: qualifier.qualifyDataType(type),
+		    identifier: identifier
+		};
+		
+		// add definition
+		if (fields.exists(identifier))
+			throw "redefinition of field " + identifier;
+		fields.set(identifier, definition);
+	}
+}
+
+/*-------------------- AST parsing ----------------------------------*
 
 interface DefinesLocalVariables
 {
@@ -338,10 +456,107 @@ class BlockContext implements DefinesLocalVariables
 		if (variable.initialization != null)
 			pushStatement(SExpression(ELocalAssignment(variable.identifier, variable.initialization)));
 	}
-}
+}*/
 
 /*-------------------- lexical resolution (second pass) ----------------------------------*/
 
+class TypeQualifier extends Hash<Qualident>
+{	
+	var context:CompilationUnitContext;
+	var rootPackage:JavaPackage;
+	
+	public function new(context:CompilationUnitContext, rootPackage:JavaPackage)
+	{
+		// initialize qualifier hash
+		super();
+		
+		// save variables
+		this.context = context;
+		this.rootPackage = rootPackage;
+		
+		// initialize imports
+		for (ident in context.imports)
+		{
+			// check ident type
+			if (ident[ident.length - 1] != '*')
+			{
+				// check that the compilation unit exists
+				if (!Std.is(rootPackage.getByQualident(ident.slice(0, -1)), CompilationUnit))
+					return;
+				set(ident[ident.length - 1], ident);
+			}
+			else
+			{
+				// iterate namespace
+				try {
+					var importPackage = cast(rootPackage.getByQualident(ident.slice(0, -1)), JavaPackage);
+					for (item in importPackage.contents.keys())
+						if (Std.is(importPackage.contents.get(item), CompilationUnit))
+							set(item, ident.slice(0, -1).concat([item]));
+				}
+				catch (e:Dynamic) { }
+			}
+		}
+		
+		// initialize compilation unit type qualifiers
+//[TODO] package qualifier
+		for (type in context.types)
+			set(type.identifier, [type.identifier]);
+	}
+
+	public function qualifyDataType(?type:ParserDataType):DataType
+	{
+		if (type == null)
+			return null;
+		return switch (type) {
+		    case PPrimitive(type): DTPrimitive(type);
+		    case PReference(qualident): DTReference(qualifyReference(qualident));
+		    case PArray(type, dimensions):
+			switch (type) {
+			    case PPrimitive(type): DTPrimitiveArray(type, dimensions);
+			    case PReference(qualident): DTReferenceArray(qualifyReference(qualident), dimensions);
+			    case PArray(type, dimensions2): qualifyDataType(PArray(type, dimensions + dimensions2));
+			}
+		}
+	}
+	
+	public function qualifyReference(qualident:Qualident):Qualident
+	{
+//[TODO] should this be?
+		if (qualident == null)
+			return null;
+		
+		// check qualifier map
+		if (exists(qualident[0])) {
+			// add dependency
+			addDependency(qualident);
+			// return qualified reference
+			return get(qualident[0]).concat(qualident.slice(1));
+		}
+		
+		// assuming qualified reference, ensure type exists (or throw exception)
+		rootPackage.getByQualident(qualident);
+		// add dependency
+		addDependency(qualident);
+		// return qualifier
+		return qualident;
+	}
+	
+	function addDependency(qualident:Qualident)
+	{
+		// add dependency
+//		unit.dependencies.push(qualident);
+		// initialize
+		(cast(rootPackage.getByQualident(qualident), CompilationUnit)).initialize(rootPackage);
+	}
+	
+	public function copy():TypeQualifier
+	{
+		return new TypeQualifier(context, rootPackage);		
+	}
+}
+
+/*
 class LexicalResolver
 {
 	private var unit:ParsedCompilationUnit;
@@ -354,7 +569,7 @@ class LexicalResolver
 		classPrefix = '';
 	}
 	
-	/* imports */
+	/* imports *
 	
 	private var qualifiers:Hash<Qualident>;
 	
@@ -439,7 +654,7 @@ class LexicalResolver
 		}
 	}
 	
-	/* resolvers */
+	/* resolvers *
 	
 	private var context:CompilationUnitContext;
 	private var rootPackage:JavaPackage;
@@ -556,7 +771,7 @@ class LexicalResolver
 		};
 	}
 	
-	/* lexical resolution */
+	/* lexical resolution *
 	
 	var methods:Hash<MethodDefinition>;
 	var fields:Hash<FieldDefinition>;
@@ -744,7 +959,7 @@ class LexicalResolver
 		}
 	}
 	
-	/* lexical resolution */
+	/* lexical resolution *
 	
 //TODO:
 // resolve class fields to this.variable accessors
@@ -835,5 +1050,5 @@ class LexicalResolver
 	{
 		// lexical setter
 		return ELexAssignment(identifier, value);
-	}*/
-}
+	}*
+}*/

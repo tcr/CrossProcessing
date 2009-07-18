@@ -2,10 +2,15 @@ $estr = function() { return js.Boot.__string_rec(this,''); }
 haxe = {}
 haxe.io = {}
 haxe.io.BytesBuffer = function(p) { if( p === $_ ) return; {
+	$s.push("haxe.io.BytesBuffer::new");
+	var $spos = $s.length;
 	this.b = new Array();
+	$s.pop();
 }}
 haxe.io.BytesBuffer.__name__ = ["haxe","io","BytesBuffer"];
 haxe.io.BytesBuffer.prototype.add = function(src) {
+	$s.push("haxe.io.BytesBuffer::add");
+	var $spos = $s.length;
 	var b1 = this.b;
 	var b2 = src.b;
 	{
@@ -15,11 +20,17 @@ haxe.io.BytesBuffer.prototype.add = function(src) {
 			this.b.push(b2[i]);
 		}
 	}
+	$s.pop();
 }
 haxe.io.BytesBuffer.prototype.addByte = function($byte) {
+	$s.push("haxe.io.BytesBuffer::addByte");
+	var $spos = $s.length;
 	this.b.push($byte);
+	$s.pop();
 }
 haxe.io.BytesBuffer.prototype.addBytes = function(src,pos,len) {
+	$s.push("haxe.io.BytesBuffer::addBytes");
+	var $spos = $s.length;
 	if(pos < 0 || len < 0 || pos + len > src.length) throw haxe.io.Error.OutsideBounds;
 	var b1 = this.b;
 	var b2 = src.b;
@@ -30,21 +41,33 @@ haxe.io.BytesBuffer.prototype.addBytes = function(src,pos,len) {
 			this.b.push(b2[i]);
 		}
 	}
+	$s.pop();
 }
 haxe.io.BytesBuffer.prototype.b = null;
 haxe.io.BytesBuffer.prototype.getBytes = function() {
+	$s.push("haxe.io.BytesBuffer::getBytes");
+	var $spos = $s.length;
 	var bytes = new haxe.io.Bytes(this.b.length,this.b);
 	this.b = null;
-	return bytes;
+	{
+		$s.pop();
+		return bytes;
+	}
+	$s.pop();
 }
 haxe.io.BytesBuffer.prototype.__class__ = haxe.io.BytesBuffer;
 haxe.io.Input = function() { }
 haxe.io.Input.__name__ = ["haxe","io","Input"];
 haxe.io.Input.prototype.bigEndian = null;
 haxe.io.Input.prototype.close = function() {
+	$s.push("haxe.io.Input::close");
+	var $spos = $s.length;
 	null;
+	$s.pop();
 }
 haxe.io.Input.prototype.read = function(nbytes) {
+	$s.push("haxe.io.Input::read");
+	var $spos = $s.length;
 	var s = haxe.io.Bytes.alloc(nbytes);
 	var p = 0;
 	while(nbytes > 0) {
@@ -53,10 +76,16 @@ haxe.io.Input.prototype.read = function(nbytes) {
 		p += k;
 		nbytes -= k;
 	}
-	return s;
+	{
+		$s.pop();
+		return s;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readAll = function(bufsize) {
-	if(bufsize == null) bufsize = (1 << 14);
+	$s.push("haxe.io.Input::readAll");
+	var $spos = $s.length;
+	if(bufsize == null) bufsize = (16384);
 	var buf = haxe.io.Bytes.alloc(bufsize);
 	var total = new haxe.io.BytesBuffer();
 	try {
@@ -69,19 +98,38 @@ haxe.io.Input.prototype.readAll = function(bufsize) {
 	catch( $e0 ) {
 		if( js.Boot.__instanceof($e0,haxe.io.Eof) ) {
 			var e = $e0;
-			null;
+			{
+				$e = [];
+				while($s.length >= $spos) $e.unshift($s.pop());
+				$s.push($e[0]);
+				null;
+			}
 		} else throw($e0);
 	}
-	return total.getBytes();
+	{
+		var $tmp = total.getBytes();
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readByte = function() {
-	return function($this) {
-		var $r;
-		throw "Not implemented";
-		return $r;
-	}(this);
+	$s.push("haxe.io.Input::readByte");
+	var $spos = $s.length;
+	{
+		var $tmp = function($this) {
+			var $r;
+			throw "Not implemented";
+			return $r;
+		}(this);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readBytes = function(s,pos,len) {
+	$s.push("haxe.io.Input::readBytes");
+	var $spos = $s.length;
 	var k = len;
 	var b = s.b;
 	if(pos < 0 || len < 0 || pos + len > s.length) throw haxe.io.Error.OutsideBounds;
@@ -90,39 +138,80 @@ haxe.io.Input.prototype.readBytes = function(s,pos,len) {
 		pos++;
 		k--;
 	}
-	return len;
+	{
+		$s.pop();
+		return len;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readDouble = function() {
+	$s.push("haxe.io.Input::readDouble");
+	var $spos = $s.length;
 	throw "Not implemented";
-	return 0;
+	{
+		$s.pop();
+		return 0;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readFloat = function() {
+	$s.push("haxe.io.Input::readFloat");
+	var $spos = $s.length;
 	throw "Not implemented";
-	return 0;
+	{
+		$s.pop();
+		return 0;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readFullBytes = function(s,pos,len) {
+	$s.push("haxe.io.Input::readFullBytes");
+	var $spos = $s.length;
 	while(len > 0) {
 		var k = this.readBytes(s,pos,len);
 		pos += k;
 		len -= k;
 	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readInt16 = function() {
+	$s.push("haxe.io.Input::readInt16");
+	var $spos = $s.length;
 	var ch1 = this.readByte();
 	var ch2 = this.readByte();
 	var n = (this.bigEndian?ch2 | (ch1 << 8):ch1 | (ch2 << 8));
-	if((n & 32768) != 0) return n - 65536;
-	return n;
+	if((n & 32768) != 0) {
+		var $tmp = n - 65536;
+		$s.pop();
+		return $tmp;
+	}
+	{
+		$s.pop();
+		return n;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readInt24 = function() {
+	$s.push("haxe.io.Input::readInt24");
+	var $spos = $s.length;
 	var ch1 = this.readByte();
 	var ch2 = this.readByte();
 	var ch3 = this.readByte();
 	var n = (this.bigEndian?(ch3 | (ch2 << 8)) | (ch1 << 16):(ch1 | (ch2 << 8)) | (ch3 << 16));
-	if((n & 8388608) != 0) return n - 16777216;
-	return n;
+	if((n & 8388608) != 0) {
+		var $tmp = n - 16777216;
+		$s.pop();
+		return $tmp;
+	}
+	{
+		$s.pop();
+		return n;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readInt31 = function() {
+	$s.push("haxe.io.Input::readInt31");
+	var $spos = $s.length;
 	var ch1, ch2, ch3, ch4;
 	if(this.bigEndian) {
 		ch4 = this.readByte();
@@ -137,73 +226,145 @@ haxe.io.Input.prototype.readInt31 = function() {
 		ch4 = this.readByte();
 	}
 	if(((ch4 & 128) == 0) != ((ch4 & 64) == 0)) throw haxe.io.Error.Overflow;
-	return ((ch1 | (ch2 << 8)) | (ch3 << 16)) | (ch4 << 24);
+	{
+		var $tmp = ((ch1 | (ch2 << 8)) | (ch3 << 16)) | (ch4 << 24);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readInt32 = function() {
+	$s.push("haxe.io.Input::readInt32");
+	var $spos = $s.length;
 	var ch1 = this.readByte();
 	var ch2 = this.readByte();
 	var ch3 = this.readByte();
 	var ch4 = this.readByte();
-	return (this.bigEndian?(((ch1 << 8) | ch2) << 16) | ((ch3 << 8) | ch4):(((ch4 << 8) | ch3) << 16) | ((ch2 << 8) | ch1));
+	{
+		var $tmp = (this.bigEndian?(((ch1 << 8) | ch2) << 16) | ((ch3 << 8) | ch4):(((ch4 << 8) | ch3) << 16) | ((ch2 << 8) | ch1));
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readInt8 = function() {
+	$s.push("haxe.io.Input::readInt8");
+	var $spos = $s.length;
 	var n = this.readByte();
-	if(n >= 128) return n - 256;
-	return n;
+	if(n >= 128) {
+		var $tmp = n - 256;
+		$s.pop();
+		return $tmp;
+	}
+	{
+		$s.pop();
+		return n;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readLine = function() {
+	$s.push("haxe.io.Input::readLine");
+	var $spos = $s.length;
 	var buf = new StringBuf();
 	var last;
 	var s;
 	try {
-		while((last = this.readByte()) != 10) buf.b += String.fromCharCode(last);
-		s = buf.b;
+		while((last = this.readByte()) != 10) buf.b[buf.b.length] = String.fromCharCode(last);
+		s = buf.b.join("");
 		if(s.charCodeAt(s.length - 1) == 13) s = s.substr(0,-1);
 	}
 	catch( $e1 ) {
 		if( js.Boot.__instanceof($e1,haxe.io.Eof) ) {
 			var e = $e1;
 			{
-				s = buf.b;
+				$e = [];
+				while($s.length >= $spos) $e.unshift($s.pop());
+				$s.push($e[0]);
+				s = buf.b.join("");
 				if(s.length == 0) throw (e);
 			}
 		} else throw($e1);
 	}
-	return s;
+	{
+		$s.pop();
+		return s;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readString = function(len) {
+	$s.push("haxe.io.Input::readString");
+	var $spos = $s.length;
 	var b = haxe.io.Bytes.alloc(len);
 	this.readFullBytes(b,0,len);
-	return b.toString();
+	{
+		var $tmp = b.toString();
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readUInt16 = function() {
+	$s.push("haxe.io.Input::readUInt16");
+	var $spos = $s.length;
 	var ch1 = this.readByte();
 	var ch2 = this.readByte();
-	return (this.bigEndian?ch2 | (ch1 << 8):ch1 | (ch2 << 8));
+	{
+		var $tmp = (this.bigEndian?ch2 | (ch1 << 8):ch1 | (ch2 << 8));
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readUInt24 = function() {
+	$s.push("haxe.io.Input::readUInt24");
+	var $spos = $s.length;
 	var ch1 = this.readByte();
 	var ch2 = this.readByte();
 	var ch3 = this.readByte();
-	return (this.bigEndian?(ch3 | (ch2 << 8)) | (ch1 << 16):(ch1 | (ch2 << 8)) | (ch3 << 16));
+	{
+		var $tmp = (this.bigEndian?(ch3 | (ch2 << 8)) | (ch1 << 16):(ch1 | (ch2 << 8)) | (ch3 << 16));
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readUInt30 = function() {
+	$s.push("haxe.io.Input::readUInt30");
+	var $spos = $s.length;
 	var ch1 = this.readByte();
 	var ch2 = this.readByte();
 	var ch3 = this.readByte();
 	var ch4 = this.readByte();
 	if(((this.bigEndian?ch1:ch4)) >= 64) throw haxe.io.Error.Overflow;
-	return (this.bigEndian?((ch4 | (ch3 << 8)) | (ch2 << 16)) | (ch1 << 24):((ch1 | (ch2 << 8)) | (ch3 << 16)) | (ch4 << 24));
+	{
+		var $tmp = (this.bigEndian?((ch4 | (ch3 << 8)) | (ch2 << 16)) | (ch1 << 24):((ch1 | (ch2 << 8)) | (ch3 << 16)) | (ch4 << 24));
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.readUntil = function(end) {
+	$s.push("haxe.io.Input::readUntil");
+	var $spos = $s.length;
 	var buf = new StringBuf();
 	var last;
-	while((last = this.readByte()) != end) buf.b += String.fromCharCode(last);
-	return buf.b;
+	while((last = this.readByte()) != end) buf.b[buf.b.length] = String.fromCharCode(last);
+	{
+		var $tmp = buf.b.join("");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.setEndian = function(b) {
+	$s.push("haxe.io.Input::setEndian");
+	var $spos = $s.length;
 	this.bigEndian = b;
-	return b;
+	{
+		$s.pop();
+		return b;
+	}
+	$s.pop();
 }
 haxe.io.Input.prototype.__class__ = haxe.io.Input;
 xpde = {}
@@ -215,55 +376,133 @@ xpde.compiler.ICompiler.prototype.__class__ = xpde.compiler.ICompiler;
 StringTools = function() { }
 StringTools.__name__ = ["StringTools"];
 StringTools.urlEncode = function(s) {
-	return encodeURIComponent(s);
+	$s.push("StringTools::urlEncode");
+	var $spos = $s.length;
+	{
+		var $tmp = encodeURIComponent(s);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 StringTools.urlDecode = function(s) {
-	return decodeURIComponent(s.split("+").join(" "));
+	$s.push("StringTools::urlDecode");
+	var $spos = $s.length;
+	{
+		var $tmp = decodeURIComponent(s.split("+").join(" "));
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 StringTools.htmlEscape = function(s) {
-	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
+	$s.push("StringTools::htmlEscape");
+	var $spos = $s.length;
+	{
+		var $tmp = s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 StringTools.htmlUnescape = function(s) {
-	return s.split("&gt;").join(">").split("&lt;").join("<").split("&amp;").join("&");
+	$s.push("StringTools::htmlUnescape");
+	var $spos = $s.length;
+	{
+		var $tmp = s.split("&gt;").join(">").split("&lt;").join("<").split("&amp;").join("&");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 StringTools.startsWith = function(s,start) {
-	return (s.length >= start.length && s.substr(0,start.length) == start);
+	$s.push("StringTools::startsWith");
+	var $spos = $s.length;
+	{
+		var $tmp = (s.length >= start.length && s.substr(0,start.length) == start);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 StringTools.endsWith = function(s,end) {
+	$s.push("StringTools::endsWith");
+	var $spos = $s.length;
 	var elen = end.length;
 	var slen = s.length;
-	return (slen >= elen && s.substr(slen - elen,elen) == end);
+	{
+		var $tmp = (slen >= elen && s.substr(slen - elen,elen) == end);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 StringTools.isSpace = function(s,pos) {
+	$s.push("StringTools::isSpace");
+	var $spos = $s.length;
 	var c = s.charCodeAt(pos);
-	return (c >= 9 && c <= 13) || c == 32;
+	{
+		var $tmp = (c >= 9 && c <= 13) || c == 32;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 StringTools.ltrim = function(s) {
+	$s.push("StringTools::ltrim");
+	var $spos = $s.length;
 	var l = s.length;
 	var r = 0;
 	while(r < l && StringTools.isSpace(s,r)) {
 		r++;
 	}
-	if(r > 0) return s.substr(r,l - r);
-	else return s;
+	if(r > 0) {
+		var $tmp = s.substr(r,l - r);
+		$s.pop();
+		return $tmp;
+	}
+	else {
+		$s.pop();
+		return s;
+	}
+	$s.pop();
 }
 StringTools.rtrim = function(s) {
+	$s.push("StringTools::rtrim");
+	var $spos = $s.length;
 	var l = s.length;
 	var r = 0;
 	while(r < l && StringTools.isSpace(s,l - r - 1)) {
 		r++;
 	}
 	if(r > 0) {
-		return s.substr(0,l - r);
+		{
+			var $tmp = s.substr(0,l - r);
+			$s.pop();
+			return $tmp;
+		}
 	}
 	else {
-		return s;
+		{
+			$s.pop();
+			return s;
+		}
 	}
+	$s.pop();
 }
 StringTools.trim = function(s) {
-	return StringTools.ltrim(StringTools.rtrim(s));
+	$s.push("StringTools::trim");
+	var $spos = $s.length;
+	{
+		var $tmp = StringTools.ltrim(StringTools.rtrim(s));
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 StringTools.rpad = function(s,c,l) {
+	$s.push("StringTools::rpad");
+	var $spos = $s.length;
 	var sl = s.length;
 	var cl = c.length;
 	while(sl < l) {
@@ -276,12 +515,21 @@ StringTools.rpad = function(s,c,l) {
 			sl += cl;
 		}
 	}
-	return s;
+	{
+		$s.pop();
+		return s;
+	}
+	$s.pop();
 }
 StringTools.lpad = function(s,c,l) {
+	$s.push("StringTools::lpad");
+	var $spos = $s.length;
 	var ns = "";
 	var sl = s.length;
-	if(sl >= l) return s;
+	if(sl >= l) {
+		$s.pop();
+		return s;
+	}
 	var cl = c.length;
 	while(sl < l) {
 		if(l - sl < cl) {
@@ -293,12 +541,26 @@ StringTools.lpad = function(s,c,l) {
 			sl += cl;
 		}
 	}
-	return ns + s;
+	{
+		var $tmp = ns + s;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 StringTools.replace = function(s,sub,by) {
-	return s.split(sub).join(by);
+	$s.push("StringTools::replace");
+	var $spos = $s.length;
+	{
+		var $tmp = s.split(sub).join(by);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 StringTools.hex = function(n,digits) {
+	$s.push("StringTools::hex");
+	var $spos = $s.length;
 	var neg = false;
 	if(n < 0) {
 		neg = true;
@@ -308,9 +570,18 @@ StringTools.hex = function(n,digits) {
 	s = s.toUpperCase();
 	if(digits != null) while(s.length < digits) s = "0" + s;
 	if(neg) s = "-" + s;
-	return s;
+	{
+		$s.pop();
+		return s;
+	}
+	$s.pop();
 }
 StringTools.prototype.__class__ = StringTools;
+xpde.parser = {}
+xpde.parser.ParserDataType = { __ename__ : ["xpde","parser","ParserDataType"], __constructs__ : ["PPrimitive","PReference","PArray"] }
+xpde.parser.ParserDataType.PArray = function(type,dimensions) { var $x = ["PArray",2,type,dimensions]; $x.__enum__ = xpde.parser.ParserDataType; $x.toString = $estr; return $x; }
+xpde.parser.ParserDataType.PPrimitive = function(type) { var $x = ["PPrimitive",0,type]; $x.__enum__ = xpde.parser.ParserDataType; $x.toString = $estr; return $x; }
+xpde.parser.ParserDataType.PReference = function(reference) { var $x = ["PReference",1,reference]; $x.__enum__ = xpde.parser.ParserDataType; $x.toString = $estr; return $x; }
 xpde.Modifier = { __ename__ : ["xpde","Modifier"], __constructs__ : ["MPublic","MPrivate","MProtected","MStatic","MFinal","MSynchronized","MVolatile","MTransient","MNative","MAbstract","MStrictfp"] }
 xpde.Modifier.MAbstract = ["MAbstract",9];
 xpde.Modifier.MAbstract.toString = $estr;
@@ -345,8 +616,9 @@ xpde.Modifier.MTransient.__enum__ = xpde.Modifier;
 xpde.Modifier.MVolatile = ["MVolatile",6];
 xpde.Modifier.MVolatile.toString = $estr;
 xpde.Modifier.MVolatile.__enum__ = xpde.Modifier;
-xpde.parser = {}
 xpde.parser.EnumSet = function(enums) { if( enums === $_ ) return; {
+	$s.push("xpde.parser.EnumSet::new");
+	var $spos = $s.length;
 	this.set = [];
 	if(enums != null) {
 		var _g = 0;
@@ -356,116 +628,169 @@ xpde.parser.EnumSet = function(enums) { if( enums === $_ ) return; {
 			this.add(item);
 		}
 	}
+	$s.pop();
 }}
 xpde.parser.EnumSet.__name__ = ["xpde","parser","EnumSet"];
 xpde.parser.EnumSet.prototype.add = function(item) {
+	$s.push("xpde.parser.EnumSet::add");
+	var $spos = $s.length;
 	if(!this.contains(item)) this.set.push(item);
+	$s.pop();
 }
 xpde.parser.EnumSet.prototype.contains = function(itemA) {
+	$s.push("xpde.parser.EnumSet::contains");
+	var $spos = $s.length;
 	{
 		var _g = 0, _g1 = this.set;
 		while(_g < _g1.length) {
 			var itemB = _g1[_g];
 			++_g;
-			if(Type.enumEq(itemA,itemB)) return true;
+			if(Type.enumEq(itemA,itemB)) {
+				$s.pop();
+				return true;
+			}
 		}
 	}
-	return false;
+	{
+		$s.pop();
+		return false;
+	}
+	$s.pop();
 }
 xpde.parser.EnumSet.prototype.iterator = function() {
-	return this.set.iterator();
+	$s.push("xpde.parser.EnumSet::iterator");
+	var $spos = $s.length;
+	{
+		var $tmp = this.set.iterator();
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.EnumSet.prototype.set = null;
 xpde.parser.EnumSet.prototype.toString = function() {
-	return this.set.join(" ");
+	$s.push("xpde.parser.EnumSet::toString");
+	var $spos = $s.length;
+	{
+		var $tmp = this.set.join(" ");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.EnumSet.prototype.__class__ = xpde.parser.EnumSet;
 xpde.parser.ModifierSet = function() { }
 xpde.parser.ModifierSet.__name__ = ["xpde","parser","ModifierSet"];
 xpde.parser.ModifierSet.prototype.__class__ = xpde.parser.ModifierSet;
 xpde.parser.OperationBuilder = function(p) { if( p === $_ ) return; {
+	$s.push("xpde.parser.OperationBuilder::new");
+	var $spos = $s.length;
 	this.operators = [];
 	this.operands = [];
+	$s.pop();
 }}
 xpde.parser.OperationBuilder.__name__ = ["xpde","parser","OperationBuilder"];
 xpde.parser.OperationBuilder.prototype.lookupOperatorPrecedence = function(operator) {
-	return function($this) {
-		var $r;
-		var $e = (operator);
-		switch( $e[1] ) {
-		case 0:
-		{
-			$r = 3;
-		}break;
-		case 1:
-		{
-			$r = 4;
-		}break;
-		case 2:
-		{
-			$r = 5;
-		}break;
-		case 3:
-		{
-			$r = 6;
-		}break;
-		case 4:
-		{
-			$r = 7;
-		}break;
-		case 5:
-		case 6:
-		{
-			$r = 8;
-		}break;
-		case 7:
-		case 8:
-		case 9:
-		case 10:
-		{
-			$r = 9;
-		}break;
-		case 11:
-		case 12:
-		case 13:
-		{
-			$r = 10;
-		}break;
-		case 14:
-		case 15:
-		{
-			$r = 11;
-		}break;
-		case 16:
-		case 17:
-		case 18:
-		{
-			$r = 12;
-		}break;
-		default:{
-			$r = null;
-		}break;
-		}
-		return $r;
-	}(this);
+	$s.push("xpde.parser.OperationBuilder::lookupOperatorPrecedence");
+	var $spos = $s.length;
+	{
+		var $tmp = function($this) {
+			var $r;
+			var $e = (operator);
+			switch( $e[1] ) {
+			case 0:
+			{
+				$r = 3;
+			}break;
+			case 1:
+			{
+				$r = 4;
+			}break;
+			case 2:
+			{
+				$r = 5;
+			}break;
+			case 3:
+			{
+				$r = 6;
+			}break;
+			case 4:
+			{
+				$r = 7;
+			}break;
+			case 5:
+			case 6:
+			{
+				$r = 8;
+			}break;
+			case 7:
+			case 8:
+			case 9:
+			case 10:
+			{
+				$r = 9;
+			}break;
+			case 11:
+			case 12:
+			case 13:
+			{
+				$r = 10;
+			}break;
+			case 14:
+			case 15:
+			{
+				$r = 11;
+			}break;
+			case 16:
+			case 17:
+			case 18:
+			{
+				$r = 12;
+			}break;
+			default:{
+				$r = null;
+			}break;
+			}
+			return $r;
+		}(this);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.OperationBuilder.prototype.operand = function(operand) {
+	$s.push("xpde.parser.OperationBuilder::operand");
+	var $spos = $s.length;
 	this.operands.push(operand);
+	$s.pop();
 }
 xpde.parser.OperationBuilder.prototype.operands = null;
 xpde.parser.OperationBuilder.prototype.operator = function(operator) {
+	$s.push("xpde.parser.OperationBuilder::operator");
+	var $spos = $s.length;
 	this.reduce(this.lookupOperatorPrecedence(operator));
 	this.operators.push(operator);
+	$s.pop();
 }
 xpde.parser.OperationBuilder.prototype.operators = null;
 xpde.parser.OperationBuilder.prototype.reduce = function(precedence) {
+	$s.push("xpde.parser.OperationBuilder::reduce");
+	var $spos = $s.length;
 	if(precedence == null) precedence = 0;
 	while(this.operators.length > 0 && this.lookupOperatorPrecedence(this.operators[this.operators.length - 1]) >= precedence) this.reduceOperator(this.operators.pop());
-	return this.operands[0];
+	{
+		var $tmp = this.operands[0];
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.OperationBuilder.prototype.reduceOperator = function(operator) {
+	$s.push("xpde.parser.OperationBuilder::reduceOperator");
+	var $spos = $s.length;
 	var b = this.operands.pop(), a = this.operands.pop();
 	this.operands.push(xpde.parser.Expression.EInfixOperation(operator,a,b));
+	$s.pop();
 }
 xpde.parser.OperationBuilder.prototype.__class__ = xpde.parser.OperationBuilder;
 xpde.JavaPackageItem = function() { }
@@ -481,26 +806,41 @@ xpde.CompilationUnit.prototype.types = null;
 xpde.CompilationUnit.prototype.__class__ = xpde.CompilationUnit;
 xpde.CompilationUnit.__interfaces__ = [xpde.JavaPackageItem];
 xpde.parser.ParsedCompilationUnit = function(identifier,source) { if( identifier === $_ ) return; {
+	$s.push("xpde.parser.ParsedCompilationUnit::new");
+	var $spos = $s.length;
 	this.identifier = identifier;
 	this.dependencies = [];
 	this.types = new Hash();
 	this.source = source;
 	this.initialized = false;
+	$s.pop();
 }}
 xpde.parser.ParsedCompilationUnit.__name__ = ["xpde","parser","ParsedCompilationUnit"];
 xpde.parser.ParsedCompilationUnit.prototype.ast = null;
 xpde.parser.ParsedCompilationUnit.prototype.dependencies = null;
 xpde.parser.ParsedCompilationUnit.prototype.identifier = null;
 xpde.parser.ParsedCompilationUnit.prototype.initialize = function(rootPackage) {
-	if(this.initialized) return;
+	$s.push("xpde.parser.ParsedCompilationUnit::initialize");
+	var $spos = $s.length;
+	if(this.initialized) {
+		$s.pop();
+		return;
+	}
 	this.initialized = true;
 	var context = new xpde.parser.CompilationUnitContext(this.identifier);
 	var scanner = new xpde.parser.Scanner(this.source);
 	var parser = new xpde.parser.Parser(scanner,context);
 	parser.Parse();
-	var resolver = new xpde.parser.LexicalResolver(this);
-	resolver.resolve(context,rootPackage);
-	this.ast = context.ast;
+	var qualifier = new xpde.parser.TypeQualifier(context,rootPackage);
+	{
+		var _g = 0, _g1 = context.types;
+		while(_g < _g1.length) {
+			var type = _g1[_g];
+			++_g;
+			type.generate(qualifier,this.types);
+		}
+	}
+	$s.pop();
 }
 xpde.parser.ParsedCompilationUnit.prototype.initialized = null;
 xpde.parser.ParsedCompilationUnit.prototype.source = null;
@@ -508,14 +848,17 @@ xpde.parser.ParsedCompilationUnit.prototype.types = null;
 xpde.parser.ParsedCompilationUnit.prototype.__class__ = xpde.parser.ParsedCompilationUnit;
 xpde.parser.ParsedCompilationUnit.__interfaces__ = [xpde.CompilationUnit];
 xpde.parser.CompilationUnitContext = function(identifier) { if( identifier === $_ ) return; {
+	$s.push("xpde.parser.CompilationUnitContext::new");
+	var $spos = $s.length;
 	this.identifier = identifier;
 	this.packageDeclaration = [];
 	this.imports = [];
 	this.types = [];
-	this.ast = new Hash();
+	this.code = new Hash();
+	$s.pop();
 }}
 xpde.parser.CompilationUnitContext.__name__ = ["xpde","parser","CompilationUnitContext"];
-xpde.parser.CompilationUnitContext.prototype.ast = null;
+xpde.parser.CompilationUnitContext.prototype.code = null;
 xpde.parser.CompilationUnitContext.prototype.identifier = null;
 xpde.parser.CompilationUnitContext.prototype.imports = null;
 xpde.parser.CompilationUnitContext.prototype.packageDeclaration = null;
@@ -524,128 +867,372 @@ xpde.parser.CompilationUnitContext.prototype.__class__ = xpde.parser.Compilation
 xpde.parser.TypeContext = function() { }
 xpde.parser.TypeContext.__name__ = ["xpde","parser","TypeContext"];
 xpde.parser.TypeContext.prototype.extend = null;
+xpde.parser.TypeContext.prototype.generate = null;
 xpde.parser.TypeContext.prototype.identifier = null;
 xpde.parser.TypeContext.prototype.implement = null;
 xpde.parser.TypeContext.prototype.__class__ = xpde.parser.TypeContext;
 xpde.parser.ClassContext = function(modifiers,identifier,ownerClass) { if( modifiers === $_ ) return; {
+	$s.push("xpde.parser.ClassContext::new");
+	var $spos = $s.length;
 	this.modifiers = modifiers;
 	this.identifier = identifier;
 	this.implement = [];
-	this.fields = new Hash();
-	this.memberTypes = new Hash();
+	this.fields = [];
+	this.types = [];
 	this.methods = [];
 	this.ownerClass = ownerClass;
-	this.staticConstructor = new xpde.parser.BlockContext();
-	this.objectConstructor = new xpde.parser.BlockContext();
-	this.anonClassID = 0;
+	$s.pop();
 }}
 xpde.parser.ClassContext.__name__ = ["xpde","parser","ClassContext"];
-xpde.parser.ClassContext.prototype.anonClassID = null;
-xpde.parser.ClassContext.prototype.defineField = function(field) {
-	if(this.fields.exists(field.identifier)) throw "redeclaration of field " + field.identifier + " in class " + this.identifier;
-	this.fields.set(field.identifier,field);
-	if(field.initialization != null) if(field.modifiers.contains(xpde.Modifier.MStatic)) this.staticConstructor.pushStatement(xpde.parser.Statement.SExpression(xpde.parser.Expression.EAssignment(field.identifier,xpde.parser.Expression.ELexExpression(xpde.parser.LexicalExpression.LReference(this.identifier)),field.initialization)));
-	else this.objectConstructor.pushStatement(xpde.parser.Statement.SExpression(xpde.parser.Expression.EAssignment(field.identifier,xpde.parser.Expression.EThisReference,field.initialization)));
-}
-xpde.parser.ClassContext.prototype.defineMemberType = function(type) {
-	if(this.memberTypes.exists(type.identifier)) throw "redeclaration of member type " + type.identifier + " in class " + this.identifier;
-	this.memberTypes.set(type.identifier,type);
-}
-xpde.parser.ClassContext.prototype.defineMethod = function(method) {
-	this.methods.push(method);
-}
-xpde.parser.ClassContext.prototype.definition = null;
 xpde.parser.ClassContext.prototype.extend = null;
 xpde.parser.ClassContext.prototype.fields = null;
+xpde.parser.ClassContext.prototype.generate = function(qualifier,types,prefix) {
+	$s.push("xpde.parser.ClassContext::generate");
+	var $spos = $s.length;
+	var identifier = ((prefix != null?prefix:"")) + this.identifier;
+	var definition = { identifier : identifier, modifiers : this.modifiers, fields : new Hash(), methods : new Hash(), types : new Hash(), extend : qualifier.qualifyReference(this.extend), implement : []}
+	if(this.implement != null) {
+		var _g = 0, _g1 = this.implement;
+		while(_g < _g1.length) {
+			var type = _g1[_g];
+			++_g;
+			definition.implement.push(qualifier.qualifyReference(type));
+		}
+	}
+	var classQualifier = qualifier.copy();
+	{
+		var _g = 0, _g1 = this.types;
+		while(_g < _g1.length) {
+			var type = _g1[_g];
+			++_g;
+			classQualifier.set(type.identifier,[definition.types.get(type.identifier)]);
+		}
+	}
+	{
+		var _g = 0, _g1 = this.fields;
+		while(_g < _g1.length) {
+			var field = _g1[_g];
+			++_g;
+			field.generate(classQualifier,definition.fields);
+		}
+	}
+	{
+		var _g = 0, _g1 = this.methods;
+		while(_g < _g1.length) {
+			var method = _g1[_g];
+			++_g;
+			method.generate(classQualifier,definition.methods);
+		}
+	}
+	{
+		var _g = 0, _g1 = this.types;
+		while(_g < _g1.length) {
+			var type = _g1[_g];
+			++_g;
+			type.generate(classQualifier,types,identifier + "$");
+		}
+	}
+	if(types.exists(identifier)) throw "redefinition of type " + identifier;
+	types.set(identifier,xpde.TypeDefinition.TClass(definition));
+	$s.pop();
+}
 xpde.parser.ClassContext.prototype.identifier = null;
 xpde.parser.ClassContext.prototype.implement = null;
-xpde.parser.ClassContext.prototype.memberTypes = null;
 xpde.parser.ClassContext.prototype.methods = null;
 xpde.parser.ClassContext.prototype.modifiers = null;
-xpde.parser.ClassContext.prototype.objectConstructor = null;
 xpde.parser.ClassContext.prototype.ownerClass = null;
-xpde.parser.ClassContext.prototype.staticConstructor = null;
+xpde.parser.ClassContext.prototype.types = null;
 xpde.parser.ClassContext.prototype.__class__ = xpde.parser.ClassContext;
 xpde.parser.ClassContext.__interfaces__ = [xpde.parser.TypeContext];
-xpde.parser.DefinesLocalVariables = function() { }
-xpde.parser.DefinesLocalVariables.__name__ = ["xpde","parser","DefinesLocalVariables"];
-xpde.parser.DefinesLocalVariables.prototype.isVariableDefined = null;
-xpde.parser.DefinesLocalVariables.prototype.__class__ = xpde.parser.DefinesLocalVariables;
 xpde.parser.MethodContext = function(modifiers,type,identifier) { if( modifiers === $_ ) return; {
+	$s.push("xpde.parser.MethodContext::new");
+	var $spos = $s.length;
 	this.modifiers = modifiers;
 	this.type = type;
 	this.identifier = identifier;
 	this.throwsList = [];
 	this.parameters = [];
+	$s.pop();
 }}
 xpde.parser.MethodContext.__name__ = ["xpde","parser","MethodContext"];
 xpde.parser.MethodContext.prototype.body = null;
-xpde.parser.MethodContext.prototype.identifier = null;
-xpde.parser.MethodContext.prototype.isVariableDefined = function(identifier) {
+xpde.parser.MethodContext.prototype.generate = function(qualifier,methods) {
+	$s.push("xpde.parser.MethodContext::generate");
+	var $spos = $s.length;
+	var definition = { identifier : this.identifier, type : qualifier.qualifyDataType(this.type), modifiers : this.modifiers, throwsList : [], parameters : []}
+	if(this.throwsList != null) {
+		var _g = 0, _g1 = this.throwsList;
+		while(_g < _g1.length) {
+			var qualident = _g1[_g];
+			++_g;
+			definition.throwsList.push(qualifier.qualifyReference(qualident));
+		}
+	}
 	{
 		var _g = 0, _g1 = this.parameters;
 		while(_g < _g1.length) {
-			var param = _g1[_g];
+			var parameter = _g1[_g];
 			++_g;
-			if(param.identifier == identifier) return true;
+			parameter.generate(qualifier,definition.parameters);
 		}
 	}
-	return false;
+	if(methods.exists(this.identifier)) throw "redefinition of method " + this.identifier;
+	methods.set(this.identifier,definition);
+	$s.pop();
 }
+xpde.parser.MethodContext.prototype.identifier = null;
 xpde.parser.MethodContext.prototype.modifiers = null;
 xpde.parser.MethodContext.prototype.parameters = null;
 xpde.parser.MethodContext.prototype.throwsList = null;
 xpde.parser.MethodContext.prototype.type = null;
 xpde.parser.MethodContext.prototype.__class__ = xpde.parser.MethodContext;
-xpde.parser.MethodContext.__interfaces__ = [xpde.parser.DefinesLocalVariables];
-xpde.parser.FieldContext = function(modifiers,type,identifier) { if( modifiers === $_ ) return; {
+xpde.parser.FormalParameterContext = function(modifiers,type,identifier) { if( modifiers === $_ ) return; {
+	$s.push("xpde.parser.FormalParameterContext::new");
+	var $spos = $s.length;
 	this.modifiers = modifiers;
 	this.type = type;
 	this.identifier = identifier;
+	$s.pop();
+}}
+xpde.parser.FormalParameterContext.__name__ = ["xpde","parser","FormalParameterContext"];
+xpde.parser.FormalParameterContext.prototype.generate = function(qualifier,parameters) {
+	$s.push("xpde.parser.FormalParameterContext::generate");
+	var $spos = $s.length;
+	parameters.push({ modifiers : this.modifiers, type : qualifier.qualifyDataType(this.type), identifier : this.identifier});
+	$s.pop();
+}
+xpde.parser.FormalParameterContext.prototype.identifier = null;
+xpde.parser.FormalParameterContext.prototype.modifiers = null;
+xpde.parser.FormalParameterContext.prototype.type = null;
+xpde.parser.FormalParameterContext.prototype.__class__ = xpde.parser.FormalParameterContext;
+xpde.parser.FieldContext = function(modifiers,type,identifier) { if( modifiers === $_ ) return; {
+	$s.push("xpde.parser.FieldContext::new");
+	var $spos = $s.length;
+	this.modifiers = modifiers;
+	this.type = type;
+	this.identifier = identifier;
+	$s.pop();
 }}
 xpde.parser.FieldContext.__name__ = ["xpde","parser","FieldContext"];
-xpde.parser.FieldContext.prototype.getDefinition = function() {
-	return { modifiers : this.modifiers, type : this.type, identifier : this.identifier}
+xpde.parser.FieldContext.prototype.generate = function(qualifier,fields) {
+	$s.push("xpde.parser.FieldContext::generate");
+	var $spos = $s.length;
+	var definition = { modifiers : this.modifiers, type : qualifier.qualifyDataType(this.type), identifier : this.identifier}
+	if(fields.exists(this.identifier)) throw "redefinition of field " + this.identifier;
+	fields.set(this.identifier,definition);
+	$s.pop();
 }
 xpde.parser.FieldContext.prototype.identifier = null;
-xpde.parser.FieldContext.prototype.initialization = null;
 xpde.parser.FieldContext.prototype.modifiers = null;
 xpde.parser.FieldContext.prototype.type = null;
 xpde.parser.FieldContext.prototype.__class__ = xpde.parser.FieldContext;
-xpde.parser.BlockContext = function(parent) { if( parent === $_ ) return; {
-	this.parent = parent;
-	this.statements = [];
-	this.variables = new Hash();
+Hash = function(p) { if( p === $_ ) return; {
+	$s.push("Hash::new");
+	var $spos = $s.length;
+	this.h = {}
+	if(this.h.__proto__ != null) {
+		this.h.__proto__ = null;
+		delete(this.h.__proto__);
+	}
+	else null;
+	$s.pop();
 }}
-xpde.parser.BlockContext.__name__ = ["xpde","parser","BlockContext"];
-xpde.parser.BlockContext.prototype.defineVariable = function(variable) {
-	if(this.isVariableDefined(variable.identifier)) throw "redeclaration of variable " + variable.identifier + " in block scope";
-	this.variables.set(variable.identifier,variable.getDefinition());
-	if(variable.initialization != null) this.pushStatement(xpde.parser.Statement.SExpression(xpde.parser.Expression.ELocalAssignment(variable.identifier,variable.initialization)));
+Hash.__name__ = ["Hash"];
+Hash.prototype.exists = function(key) {
+	$s.push("Hash::exists");
+	var $spos = $s.length;
+	try {
+		key = "$" + key;
+		{
+			var $tmp = this.hasOwnProperty.call(this.h,key);
+			$s.pop();
+			return $tmp;
+		}
+	}
+	catch( $e2 ) {
+		{
+			var e = $e2;
+			{
+				$e = [];
+				while($s.length >= $spos) $e.unshift($s.pop());
+				$s.push($e[0]);
+				
+				for(var i in this.h)
+					if( i == key ) return true;
+			;
+				{
+					$s.pop();
+					return false;
+				}
+			}
+		}
+	}
+	$s.pop();
 }
-xpde.parser.BlockContext.prototype.getBlockStatement = function() {
-	return xpde.parser.Statement.SBlock(this.variables,this.statements);
+Hash.prototype.get = function(key) {
+	$s.push("Hash::get");
+	var $spos = $s.length;
+	{
+		var $tmp = this.h["$" + key];
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
-xpde.parser.BlockContext.prototype.isVariableDefined = function(identifier) {
-	return this.variables.exists(identifier) || ((this.parent != null?this.parent.isVariableDefined(identifier):false));
+Hash.prototype.h = null;
+Hash.prototype.iterator = function() {
+	$s.push("Hash::iterator");
+	var $spos = $s.length;
+	{
+		var $tmp = { ref : this.h, it : this.keys(), hasNext : function() {
+			$s.push("Hash::iterator@200");
+			var $spos = $s.length;
+			{
+				var $tmp = this.it.hasNext();
+				$s.pop();
+				return $tmp;
+			}
+			$s.pop();
+		}, next : function() {
+			$s.push("Hash::iterator@201");
+			var $spos = $s.length;
+			var i = this.it.next();
+			{
+				var $tmp = this.ref["$" + i];
+				$s.pop();
+				return $tmp;
+			}
+			$s.pop();
+		}}
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
-xpde.parser.BlockContext.prototype.parent = null;
-xpde.parser.BlockContext.prototype.pushStatement = function(statement) {
-	this.statements.push(statement);
+Hash.prototype.keys = function() {
+	$s.push("Hash::keys");
+	var $spos = $s.length;
+	var a = new Array();
+	
+			for(var i in this.h)
+				a.push(i.substr(1));
+		;
+	{
+		var $tmp = a.iterator();
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
-xpde.parser.BlockContext.prototype.statements = null;
-xpde.parser.BlockContext.prototype.variables = null;
-xpde.parser.BlockContext.prototype.__class__ = xpde.parser.BlockContext;
-xpde.parser.BlockContext.__interfaces__ = [xpde.parser.DefinesLocalVariables];
-xpde.parser.LexicalResolver = function(unit) { if( unit === $_ ) return; {
-	this.unit = unit;
-	this.qualifiers = new Hash();
-	this.imports = new Hash();
-	this.classPrefix = "";
+Hash.prototype.remove = function(key) {
+	$s.push("Hash::remove");
+	var $spos = $s.length;
+	if(!this.exists(key)) {
+		$s.pop();
+		return false;
+	}
+	delete(this.h["$" + key]);
+	{
+		$s.pop();
+		return true;
+	}
+	$s.pop();
+}
+Hash.prototype.set = function(key,value) {
+	$s.push("Hash::set");
+	var $spos = $s.length;
+	this.h["$" + key] = value;
+	$s.pop();
+}
+Hash.prototype.toString = function() {
+	$s.push("Hash::toString");
+	var $spos = $s.length;
+	var s = new StringBuf();
+	s.b[s.b.length] = "{";
+	var it = this.keys();
+	{ var $it3 = it;
+	while( $it3.hasNext() ) { var i = $it3.next();
+	{
+		s.b[s.b.length] = i;
+		s.b[s.b.length] = " => ";
+		s.b[s.b.length] = Std.string(this.get(i));
+		if(it.hasNext()) s.b[s.b.length] = ", ";
+	}
+	}}
+	s.b[s.b.length] = "}";
+	{
+		var $tmp = s.b.join("");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+Hash.prototype.__class__ = Hash;
+xpde.parser.TypeQualifier = function(context,rootPackage) { if( context === $_ ) return; {
+	$s.push("xpde.parser.TypeQualifier::new");
+	var $spos = $s.length;
+	Hash.apply(this,[]);
+	this.context = context;
+	this.rootPackage = rootPackage;
+	{
+		var _g = 0, _g1 = context.imports;
+		while(_g < _g1.length) {
+			var ident = _g1[_g];
+			++_g;
+			if(ident[ident.length - 1] != "*") {
+				if(!Std["is"](rootPackage.getByQualident(ident.slice(0,-1)),xpde.CompilationUnit)) {
+					$s.pop();
+					return;
+				}
+				this.set(ident[ident.length - 1],ident);
+			}
+			else {
+				try {
+					var importPackage = function($this) {
+						var $r;
+						var tmp = rootPackage.getByQualident(ident.slice(0,-1));
+						$r = (Std["is"](tmp,xpde.JavaPackage)?tmp:function($this) {
+							var $r;
+							throw "Class cast error";
+							return $r;
+						}($this));
+						return $r;
+					}(this);
+					{ var $it4 = importPackage.contents.keys();
+					while( $it4.hasNext() ) { var item = $it4.next();
+					if(Std["is"](importPackage.contents.get(item),xpde.CompilationUnit)) this.set(item,ident.slice(0,-1).concat([item]));
+					}}
+				}
+				catch( $e5 ) {
+					{
+						var e = $e5;
+						{
+							$e = [];
+							while($s.length >= $spos) $e.unshift($s.pop());
+							$s.push($e[0]);
+							null;
+						}
+					}
+				}
+			}
+		}
+	}
+	{
+		var _g = 0, _g1 = context.types;
+		while(_g < _g1.length) {
+			var type = _g1[_g];
+			++_g;
+			this.set(type.identifier,[type.identifier]);
+		}
+	}
+	$s.pop();
 }}
-xpde.parser.LexicalResolver.__name__ = ["xpde","parser","LexicalResolver"];
-xpde.parser.LexicalResolver.prototype.addDependency = function(qualident) {
-	this.unit.dependencies.push(qualident);
+xpde.parser.TypeQualifier.__name__ = ["xpde","parser","TypeQualifier"];
+xpde.parser.TypeQualifier.__super__ = Hash;
+for(var k in Hash.prototype ) xpde.parser.TypeQualifier.prototype[k] = Hash.prototype[k];
+xpde.parser.TypeQualifier.prototype.addDependency = function(qualident) {
+	$s.push("xpde.parser.TypeQualifier::addDependency");
+	var $spos = $s.length;
 	(function($this) {
 		var $r;
 		var tmp = $this.rootPackage.getByQualident(qualident);
@@ -656,594 +1243,178 @@ xpde.parser.LexicalResolver.prototype.addDependency = function(qualident) {
 		}($this));
 		return $r;
 	}(this)).initialize(this.rootPackage);
+	$s.pop();
 }
-xpde.parser.LexicalResolver.prototype.addTypeDefinition = function(type) {
-	if(Std["is"](type,xpde.parser.ClassContext)) {
-		var classType = type;
-		this.unit.types.set(type.identifier,xpde.TypeDefinition.TClass(this.generateClassDefinition(classType)));
-		var tmpClassPrefix = this.classPrefix;
-		this.classPrefix += type.identifier + "$";
-		{ var $it2 = classType.memberTypes.iterator();
-		while( $it2.hasNext() ) { var memberType = $it2.next();
-		this.addTypeDefinition(memberType);
-		}}
-		this.classPrefix = tmpClassPrefix;
-	}
-}
-xpde.parser.LexicalResolver.prototype.classPrefix = null;
-xpde.parser.LexicalResolver.prototype.context = null;
-xpde.parser.LexicalResolver.prototype.eArr = function(arr) {
-	var n = new Array();
+xpde.parser.TypeQualifier.prototype.context = null;
+xpde.parser.TypeQualifier.prototype.copy = function() {
+	$s.push("xpde.parser.TypeQualifier::copy");
+	var $spos = $s.length;
 	{
-		var _g = 0;
-		while(_g < arr.length) {
-			var e = arr[_g];
-			++_g;
-			n.push(this.resolveExpression(e));
-		}
+		var $tmp = new xpde.parser.TypeQualifier(this.context,this.rootPackage);
+		$s.pop();
+		return $tmp;
 	}
-	return n;
+	$s.pop();
 }
-xpde.parser.LexicalResolver.prototype.fields = null;
-xpde.parser.LexicalResolver.prototype.generateClassDefinition = function(type) {
-	var tmpQualifiers = this.qualifiers;
-	var definition = { identifier : this.classPrefix + type.identifier, modifiers : type.modifiers, fields : new Hash(), methods : new Hash(), types : new Hash(), extend : this.qualifyReference(type.extend), implement : []}
-	if(type.implement != null) {
-		var _g = 0, _g1 = type.implement;
-		while(_g < _g1.length) {
-			var dt = _g1[_g];
-			++_g;
-			definition.implement.push(this.qualifyReference(dt));
-		}
-	}
-	{ var $it3 = type.memberTypes.iterator();
-	while( $it3.hasNext() ) { var type1 = $it3.next();
-	{
-		definition.types.set(type1.identifier,this.classPrefix + type1.identifier + "$" + type1.identifier);
-		this.qualifiers.set(type1.identifier,[definition.types.get(type1.identifier)]);
-	}
-	}}
-	{ var $it4 = type.fields.iterator();
-	while( $it4.hasNext() ) { var field = $it4.next();
-	definition.fields.set(field.identifier,this.generateFieldDefinition(field));
-	}}
-	{
-		var _g = 0, _g1 = type.methods;
-		while(_g < _g1.length) {
-			var method = _g1[_g];
-			++_g;
-			definition.methods.set(method.identifier,this.generateMethodDefinition(method));
-		}
-	}
-	type.definition = definition;
-	this.qualifiers = tmpQualifiers;
-	return definition;
-}
-xpde.parser.LexicalResolver.prototype.generateFieldDefinition = function(field) {
-	return { identifier : field.identifier, modifiers : field.modifiers, type : this.qualifyDataType(field.type)}
-}
-xpde.parser.LexicalResolver.prototype.generateFormalParameter = function(param) {
-	return { identifier : param.identifier, type : this.qualifyDataType(param.type), modifiers : param.modifiers}
-}
-xpde.parser.LexicalResolver.prototype.generateMethodDefinition = function(method) {
-	var definition = { identifier : method.identifier, type : this.qualifyDataType(method.type), modifiers : method.modifiers, throwsList : [], parameters : []}
-	if(method.throwsList != null) {
-		var _g = 0, _g1 = method.throwsList;
-		while(_g < _g1.length) {
-			var qualident = _g1[_g];
-			++_g;
-			definition.throwsList.push(this.qualifyReference(qualident));
-		}
+xpde.parser.TypeQualifier.prototype.qualifyDataType = function(type) {
+	$s.push("xpde.parser.TypeQualifier::qualifyDataType");
+	var $spos = $s.length;
+	if(type == null) {
+		$s.pop();
+		return null;
 	}
 	{
-		var _g = 0, _g1 = method.parameters;
-		while(_g < _g1.length) {
-			var param = _g1[_g];
-			++_g;
-			definition.parameters.push(this.generateFormalParameter(param));
-		}
-	}
-	return definition;
-}
-xpde.parser.LexicalResolver.prototype.imports = null;
-xpde.parser.LexicalResolver.prototype.initializeResolvers = function(definition) {
-	if(definition.extend != null) this.initializeResolvers(this.rootPackage.getClass(definition.extend));
-	{ var $it5 = definition.methods.iterator();
-	while( $it5.hasNext() ) { var method = $it5.next();
-	this.methods.set(method.identifier,method);
-	}}
-	{ var $it6 = definition.fields.iterator();
-	while( $it6.hasNext() ) { var field = $it6.next();
-	this.fields.set(field.identifier,field);
-	}}
-	{ var $it7 = definition.types.keys();
-	while( $it7.hasNext() ) { var type = $it7.next();
-	this.memberTypes.set(type,definition.types.get(type));
-	}}
-}
-xpde.parser.LexicalResolver.prototype.loadImports = function() {
-	var _g = 0, _g1 = this.context.imports;
-	while(_g < _g1.length) {
-		var ident = _g1[_g];
-		++_g;
-		if(ident[ident.length - 1] != "*") {
-			if(!Std["is"](this.rootPackage.getByQualident(ident.slice(0,-1)),xpde.CompilationUnit)) return;
-			this.imports.set(ident[ident.length - 1],ident);
-		}
-		else {
-			try {
-				var importPackage = function($this) {
+		var $tmp = function($this) {
+			var $r;
+			var $e = (type);
+			switch( $e[1] ) {
+			case 0:
+			var type1 = $e[2];
+			{
+				$r = xpde.DataType.DTPrimitive(type1);
+			}break;
+			case 1:
+			var qualident = $e[2];
+			{
+				$r = xpde.DataType.DTReference($this.qualifyReference(qualident));
+			}break;
+			case 2:
+			var dimensions = $e[3], type1 = $e[2];
+			{
+				$r = function($this) {
 					var $r;
-					var tmp = $this.rootPackage.getByQualident(ident.slice(0,-1));
-					$r = (Std["is"](tmp,xpde.JavaPackage)?tmp:function($this) {
-						var $r;
-						throw "Class cast error";
-						return $r;
-					}($this));
+					var $e = (type1);
+					switch( $e[1] ) {
+					case 0:
+					var type2 = $e[2];
+					{
+						$r = xpde.DataType.DTPrimitiveArray(type2,dimensions);
+					}break;
+					case 1:
+					var qualident = $e[2];
+					{
+						$r = xpde.DataType.DTReferenceArray($this.qualifyReference(qualident),dimensions);
+					}break;
+					case 2:
+					var dimensions2 = $e[3], type2 = $e[2];
+					{
+						$r = $this.qualifyDataType(xpde.parser.ParserDataType.PArray(type2,dimensions + dimensions2));
+					}break;
+					default:{
+						$r = null;
+					}break;
+					}
 					return $r;
-				}(this);
-				{ var $it8 = importPackage.contents.keys();
-				while( $it8.hasNext() ) { var item = $it8.next();
-				if(Std["is"](importPackage.contents.get(item),xpde.CompilationUnit)) this.imports.set(item,ident.slice(0,-1).concat([item]));
-				}}
+				}($this);
+			}break;
+			default:{
+				$r = null;
+			}break;
 			}
-			catch( $e9 ) {
-				{
-					var e = $e9;
-					null;
-				}
-			}
-		}
+			return $r;
+		}(this);
+		$s.pop();
+		return $tmp;
 	}
+	$s.pop();
 }
-xpde.parser.LexicalResolver.prototype.memberTypes = null;
-xpde.parser.LexicalResolver.prototype.methods = null;
-xpde.parser.LexicalResolver.prototype.qualifiers = null;
-xpde.parser.LexicalResolver.prototype.qualifyDataType = function(type) {
-	if(type == null) return null;
-	return function($this) {
-		var $r;
-		var $e = (type);
-		switch( $e[1] ) {
-		case 0:
+xpde.parser.TypeQualifier.prototype.qualifyReference = function(qualident) {
+	$s.push("xpde.parser.TypeQualifier::qualifyReference");
+	var $spos = $s.length;
+	if(qualident == null) {
+		$s.pop();
+		return null;
+	}
+	if(this.exists(qualident[0])) {
+		this.addDependency(qualident);
 		{
-			$r = type;
-		}break;
-		case 2:
-		{
-			$r = type;
-		}break;
-		case 1:
-		var qualident = $e[2];
-		{
-			$r = xpde.DataType.DTReference($this.qualifyReference(qualident));
-		}break;
-		case 3:
-		var dimensions = $e[3], qualident = $e[2];
-		{
-			$r = xpde.DataType.DTReferenceArray($this.qualifyReference(qualident),dimensions);
-		}break;
-		default:{
-			$r = null;
-		}break;
+			var $tmp = this.get(qualident[0]).concat(qualident.slice(1));
+			$s.pop();
+			return $tmp;
 		}
-		return $r;
-	}(this);
-}
-xpde.parser.LexicalResolver.prototype.qualifyReference = function(qualident) {
-	if(qualident == null) return null;
-	if(this.qualifiers.exists(qualident[0])) return this.qualifiers.get(qualident[0]).concat(qualident.slice(1));
-	if(this.imports.exists(qualident[0])) {
-		this.addDependency(this.imports.get(qualident[0]));
-		this.qualifiers.set(qualident[0],this.imports.get(qualident[0]));
-		return this.imports.get(qualident[0]);
 	}
 	this.rootPackage.getByQualident(qualident);
 	this.addDependency(qualident);
-	return qualident;
-}
-xpde.parser.LexicalResolver.prototype.resolve = function(context,rootPackage) {
-	this.context = context;
-	this.rootPackage = rootPackage;
 	{
-		var _g = 0, _g1 = context.types;
-		while(_g < _g1.length) {
-			var type = _g1[_g];
-			++_g;
-			this.qualifiers.set(type.identifier,context.packageDeclaration.concat([type.identifier]));
-		}
+		$s.pop();
+		return qualident;
 	}
-	{
-		var _g = 0, _g1 = context.types;
-		while(_g < _g1.length) {
-			var type = _g1[_g];
-			++_g;
-			this.addTypeDefinition(type);
-		}
-	}
-	{
-		var _g = 0, _g1 = context.types;
-		while(_g < _g1.length) {
-			var type = _g1[_g];
-			++_g;
-			if(Std["is"](type,xpde.parser.ClassContext)) this.resolveClass(context,function($this) {
-				var $r;
-				var tmp = type;
-				$r = (Std["is"](tmp,xpde.parser.ClassContext)?tmp:function($this) {
-					var $r;
-					throw "Class cast error";
-					return $r;
-				}($this));
-				return $r;
-			}(this));
-		}
-	}
+	$s.pop();
 }
-xpde.parser.LexicalResolver.prototype.resolveClass = function(context,classContext) {
-	this.methods = new Hash();
-	this.fields = new Hash();
-	this.memberTypes = new Hash();
-	this.initializeResolvers(classContext.definition);
-	{
-		var _g = 0, _g1 = classContext.methods;
-		while(_g < _g1.length) {
-			var methodContext = _g1[_g];
-			++_g;
-			if(methodContext.body != null) {
-				context.ast.set(context.packageDeclaration.concat([classContext.identifier]).join(".") + "|" + methodContext.identifier,this.resolveStatement(methodContext.body));
-			}
-		}
-	}
-}
-xpde.parser.LexicalResolver.prototype.resolveExpression = function(expression) {
-	if(expression == null) return null;
-	return function($this) {
-		var $r;
-		var $e = (expression);
-		switch( $e[1] ) {
-		case 0:
-		var sizes = $e[3], type = $e[2];
-		{
-			$r = xpde.parser.Expression.EArrayInstantiation($this.resolveLexicalDataType(type),$this.eArr(sizes));
-		}break;
-		case 1:
-		var args = $e[3], type = $e[2];
-		{
-			$r = xpde.parser.Expression.EObjectInstantiation($this.resolveQualifiedReference(type),$this.eArr(args));
-		}break;
-		case 2:
-		var falseExp = $e[4], trueExp = $e[3], condition = $e[2];
-		{
-			$r = xpde.parser.Expression.EConditional($this.resolveExpression(condition),$this.resolveExpression(trueExp),$this.resolveExpression(falseExp));
-		}break;
-		case 3:
-		var base = $e[3], index = $e[2];
-		{
-			$r = xpde.parser.Expression.EArrayAccess($this.resolveExpression(index),$this.resolveExpression(base));
-		}break;
-		case 4:
-		{
-			$r = expression;
-		}break;
-		case 5:
-		var base = $e[3], identifier = $e[2];
-		{
-			$r = xpde.parser.Expression.EReference(identifier,$this.resolveExpression(base));
-		}break;
-		case 6:
-		{
-			$r = expression;
-		}break;
-		case 7:
-		{
-			$r = expression;
-		}break;
-		case 8:
-		{
-			$r = expression;
-		}break;
-		case 9:
-		var args = $e[4], base = $e[3], identifier = $e[2];
-		{
-			$r = xpde.parser.Expression.ECall(identifier,$this.resolveExpression(base),$this.eArr(args));
-		}break;
-		case 10:
-		var args = $e[2];
-		{
-			$r = xpde.parser.Expression.EThisCall($this.eArr(args));
-		}break;
-		case 11:
-		var args = $e[2];
-		{
-			$r = xpde.parser.Expression.ESuperCall($this.eArr(args));
-		}break;
-		case 12:
-		var value = $e[4], base = $e[3], index = $e[2];
-		{
-			$r = xpde.parser.Expression.EArrayAssignment($this.resolveExpression(index),$this.resolveExpression(base),$this.resolveExpression(value));
-		}break;
-		case 13:
-		var value = $e[4], base = $e[3], identifier = $e[2];
-		{
-			$r = xpde.parser.Expression.EAssignment(identifier,$this.resolveExpression(base),$this.resolveExpression(value));
-		}break;
-		case 14:
-		var value = $e[3], identifier = $e[2];
-		{
-			$r = xpde.parser.Expression.ELocalAssignment(identifier,$this.resolveExpression(value));
-		}break;
-		case 15:
-		var value = $e[3], type = $e[2];
-		{
-			$r = xpde.parser.Expression.ECast($this.resolveLexicalDataType(type),$this.resolveExpression(value));
-		}break;
-		case 16:
-		var reference = $e[3], type = $e[2];
-		{
-			$r = xpde.parser.Expression.EPrefixOperation(type,$this.resolveExpression(reference));
-		}break;
-		case 17:
-		var right = $e[4], left = $e[3], type = $e[2];
-		{
-			$r = xpde.parser.Expression.EInfixOperation(type,$this.resolveExpression(left),$this.resolveExpression(right));
-		}break;
-		case 18:
-		var type = $e[3], expression1 = $e[2];
-		{
-			$r = xpde.parser.Expression.EInstanceOf($this.resolveExpression(expression1),$this.resolveLexicalDataType(type));
-		}break;
-		case 19:
-		var reference = $e[3], type = $e[2];
-		{
-			$r = xpde.parser.Expression.EPrefix(type,$this.resolveExpression(reference));
-		}break;
-		case 20:
-		var reference = $e[3], type = $e[2];
-		{
-			$r = xpde.parser.Expression.EPostfix(type,$this.resolveExpression(reference));
-		}break;
-		case 21:
-		var values = $e[2];
-		{
-			$r = xpde.parser.Expression.EArrayLiteral($this.eArr(values));
-		}break;
-		case 22:
-		{
-			$r = expression;
-		}break;
-		case 23:
-		{
-			$r = expression;
-		}break;
-		case 24:
-		{
-			$r = expression;
-		}break;
-		case 25:
-		{
-			$r = expression;
-		}break;
-		case 26:
-		{
-			$r = expression;
-		}break;
-		case 27:
-		{
-			$r = expression;
-		}break;
-		case 28:
-		var expression1 = $e[2];
-		{
-			$r = function($this) {
-				var $r;
-				var $e = (expression1);
-				switch( $e[1] ) {
-				case 0:
-				var identifier = $e[2];
-				{
-					$r = $this.resolveLexicalReference(identifier);
-				}break;
-				case 1:
-				var args = $e[3], identifier = $e[2];
-				{
-					$r = $this.resolveLexicalCall(identifier,args);
-				}break;
-				case 2:
-				var value = $e[3], identifier = $e[2];
-				{
-					$r = $this.resolveLexicalAssignment(identifier,value);
-				}break;
-				default:{
-					$r = null;
-				}break;
-				}
-				return $r;
-			}($this);
-		}break;
-		default:{
-			$r = null;
-		}break;
-		}
-		return $r;
-	}(this);
-}
-xpde.parser.LexicalResolver.prototype.resolveLexicalAssignment = function(identifier,value) {
-	if(this.fields.exists(identifier)) return xpde.parser.Expression.EAssignment(identifier,xpde.parser.Expression.EThisReference,value);
-	throw "assignment to nonexistant variable \"" + identifier + "\"";
-}
-xpde.parser.LexicalResolver.prototype.resolveLexicalCall = function(identifier,args) {
-	if(this.methods.exists(identifier)) return xpde.parser.Expression.ECall(identifier,xpde.parser.Expression.EThisReference,args);
-	throw "call to nonexistant method \"" + identifier + "\"";
-}
-xpde.parser.LexicalResolver.prototype.resolveLexicalDataType = function(type) {
-	if(type == null) return null;
-	return function($this) {
-		var $r;
-		var $e = (type);
-		switch( $e[1] ) {
-		case 0:
-		{
-			$r = type;
-		}break;
-		case 2:
-		{
-			$r = type;
-		}break;
-		case 1:
-		var qualident = $e[2];
-		{
-			$r = xpde.DataType.DTReference($this.resolveQualifiedReference(qualident));
-		}break;
-		case 3:
-		var dimensions = $e[3], qualident = $e[2];
-		{
-			$r = xpde.DataType.DTReferenceArray($this.resolveQualifiedReference(qualident),dimensions);
-		}break;
-		default:{
-			$r = null;
-		}break;
-		}
-		return $r;
-	}(this);
-}
-xpde.parser.LexicalResolver.prototype.resolveLexicalReference = function(identifier) {
-	if(this.fields.exists(identifier)) return xpde.parser.Expression.EReference(identifier,xpde.parser.Expression.EThisReference);
-	throw "reference to nonexistant variable \"" + identifier + "\"";
-}
-xpde.parser.LexicalResolver.prototype.resolveQualifiedReference = function(qualident) {
-	if(qualident == null) return null;
-	if(qualident.length == 0 && this.memberTypes.exists(qualident[0])) return [this.memberTypes.get(qualident[0])];
-	return this.qualifyReference(qualident);
-}
-xpde.parser.LexicalResolver.prototype.resolveStatement = function(statement) {
-	if(statement == null) return null;
-	return function($this) {
-		var $r;
-		var $e = (statement);
-		switch( $e[1] ) {
-		case 0:
-		var statements = $e[3], variables = $e[2];
-		{
-			$r = function($this) {
-				var $r;
-				var v = new Hash();
-				{ var $it10 = variables.keys();
-				while( $it10.hasNext() ) { var key = $it10.next();
-				{
-					var variable = variables.get(key);
-					v.set(key,{ identifier : variable.identifier, type : $this.resolveLexicalDataType(variable.type), modifiers : variable.modifiers});
-				}
-				}}
-				var s = new Array();
-				{
-					var _g = 0;
-					while(_g < statements.length) {
-						var statement1 = statements[_g];
-						++_g;
-						s.push($this.resolveStatement(statement1));
-					}
-				}
-				$r = xpde.parser.Statement.SBlock(v,s);
-				return $r;
-			}($this);
-		}break;
-		case 1:
-		{
-			$r = statement;
-		}break;
-		case 2:
-		var elseBlock = $e[4], thenBlock = $e[3], condition = $e[2];
-		{
-			$r = xpde.parser.Statement.SConditional($this.resolveExpression(condition),$this.resolveStatement(thenBlock),$this.resolveStatement(elseBlock));
-		}break;
-		case 3:
-		{
-			$r = statement;
-		}break;
-		case 4:
-		var expression = $e[2];
-		{
-			$r = xpde.parser.Statement.SExpression($this.resolveExpression(expression));
-		}break;
-		case 5:
-		var body = $e[3], label = $e[2];
-		{
-			$r = xpde.parser.Statement.SLabel(label,$this.resolveStatement(body));
-		}break;
-		case 6:
-		var doLoop = $e[4], body = $e[3], condition = $e[2];
-		{
-			$r = xpde.parser.Statement.SLoop($this.resolveExpression(condition),$this.resolveStatement(body),doLoop);
-		}break;
-		case 7:
-		var value = $e[2];
-		{
-			$r = xpde.parser.Statement.SReturn($this.resolveExpression(value));
-		}break;
-		case 8:
-		var expression = $e[2];
-		{
-			$r = xpde.parser.Statement.SThrow($this.resolveExpression(expression));
-		}break;
-		case 9:
-		var finallyBody = $e[4], catches = $e[3], body = $e[2];
-		{
-			$r = function($this) {
-				var $r;
-				{
-					var _g = 0;
-					while(_g < catches.length) {
-						var catchBlock = catches[_g];
-						++_g;
-						catchBlock.body = $this.resolveStatement(catchBlock.body);
-					}
-				}
-				$r = xpde.parser.Statement.STry($this.resolveStatement(body),catches,$this.resolveStatement(finallyBody));
-				return $r;
-			}($this);
-		}break;
-		default:{
-			$r = null;
-		}break;
-		}
-		return $r;
-	}(this);
-}
-xpde.parser.LexicalResolver.prototype.rootPackage = null;
-xpde.parser.LexicalResolver.prototype.unit = null;
-xpde.parser.LexicalResolver.prototype.__class__ = xpde.parser.LexicalResolver;
+xpde.parser.TypeQualifier.prototype.rootPackage = null;
+xpde.parser.TypeQualifier.prototype.__class__ = xpde.parser.TypeQualifier;
 Reflect = function() { }
 Reflect.__name__ = ["Reflect"];
 Reflect.hasField = function(o,field) {
-	if(o.hasOwnProperty != null) return o.hasOwnProperty(field);
+	$s.push("Reflect::hasField");
+	var $spos = $s.length;
+	if(o.hasOwnProperty != null) {
+		var $tmp = o.hasOwnProperty(field);
+		$s.pop();
+		return $tmp;
+	}
 	var arr = Reflect.fields(o);
-	{ var $it11 = arr.iterator();
-	while( $it11.hasNext() ) { var t = $it11.next();
-	if(t == field) return true;
+	{ var $it6 = arr.iterator();
+	while( $it6.hasNext() ) { var t = $it6.next();
+	if(t == field) {
+		$s.pop();
+		return true;
+	}
 	}}
-	return false;
+	{
+		$s.pop();
+		return false;
+	}
+	$s.pop();
 }
 Reflect.field = function(o,field) {
+	$s.push("Reflect::field");
+	var $spos = $s.length;
 	var v = null;
 	try {
 		v = o[field];
 	}
-	catch( $e12 ) {
+	catch( $e7 ) {
 		{
-			var e = $e12;
-			null;
+			var e = $e7;
+			{
+				$e = [];
+				while($s.length >= $spos) $e.unshift($s.pop());
+				$s.push($e[0]);
+				null;
+			}
 		}
 	}
-	return v;
+	{
+		$s.pop();
+		return v;
+	}
+	$s.pop();
 }
 Reflect.setField = function(o,field,value) {
+	$s.push("Reflect::setField");
+	var $spos = $s.length;
 	o[field] = value;
+	$s.pop();
 }
 Reflect.callMethod = function(o,func,args) {
-	return func.apply(o,args);
+	$s.push("Reflect::callMethod");
+	var $spos = $s.length;
+	{
+		var $tmp = func.apply(o,args);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Reflect.fields = function(o) {
-	if(o == null) return new Array();
+	$s.push("Reflect::fields");
+	var $spos = $s.length;
+	if(o == null) {
+		var $tmp = new Array();
+		$s.pop();
+		return $tmp;
+	}
 	var a = new Array();
 	if(o.hasOwnProperty) {
 		
@@ -1257,10 +1428,13 @@ Reflect.fields = function(o) {
 		try {
 			t = o.__proto__;
 		}
-		catch( $e13 ) {
+		catch( $e8 ) {
 			{
-				var e = $e13;
+				var e = $e8;
 				{
+					$e = [];
+					while($s.length >= $spos) $e.unshift($s.pop());
+					$s.push($e[0]);
 					t = null;
 				}
 			}
@@ -1273,30 +1447,82 @@ Reflect.fields = function(o) {
 				;
 		if(t != null) o.__proto__ = t;
 	}
-	return a;
+	{
+		$s.pop();
+		return a;
+	}
+	$s.pop();
 }
 Reflect.isFunction = function(f) {
-	return typeof(f) == "function" && f.__name__ == null;
+	$s.push("Reflect::isFunction");
+	var $spos = $s.length;
+	{
+		var $tmp = typeof(f) == "function" && f.__name__ == null;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Reflect.compare = function(a,b) {
-	return ((a == b)?0:((((a) > (b))?1:-1)));
+	$s.push("Reflect::compare");
+	var $spos = $s.length;
+	{
+		var $tmp = ((a == b)?0:((((a) > (b))?1:-1)));
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Reflect.compareMethods = function(f1,f2) {
-	if(f1 == f2) return true;
-	if(!Reflect.isFunction(f1) || !Reflect.isFunction(f2)) return false;
-	return f1.scope == f2.scope && f1.method == f2.method && f1.method != null;
+	$s.push("Reflect::compareMethods");
+	var $spos = $s.length;
+	if(f1 == f2) {
+		$s.pop();
+		return true;
+	}
+	if(!Reflect.isFunction(f1) || !Reflect.isFunction(f2)) {
+		$s.pop();
+		return false;
+	}
+	{
+		var $tmp = f1.scope == f2.scope && f1.method == f2.method && f1.method != null;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Reflect.isObject = function(v) {
-	if(v == null) return false;
+	$s.push("Reflect::isObject");
+	var $spos = $s.length;
+	if(v == null) {
+		$s.pop();
+		return false;
+	}
 	var t = typeof(v);
-	return (t == "string" || (t == "object" && !v.__enum__) || (t == "function" && v.__name__ != null));
+	{
+		var $tmp = (t == "string" || (t == "object" && !v.__enum__) || (t == "function" && v.__name__ != null));
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Reflect.deleteField = function(o,f) {
-	if(!Reflect.hasField(o,f)) return false;
+	$s.push("Reflect::deleteField");
+	var $spos = $s.length;
+	if(!Reflect.hasField(o,f)) {
+		$s.pop();
+		return false;
+	}
 	delete(o[f]);
-	return true;
+	{
+		$s.pop();
+		return true;
+	}
+	$s.pop();
 }
 Reflect.copy = function(o) {
+	$s.push("Reflect::copy");
+	var $spos = $s.length;
 	var o2 = { }
 	{
 		var _g = 0, _g1 = Reflect.fields(o);
@@ -1306,43 +1532,82 @@ Reflect.copy = function(o) {
 			o2[f] = Reflect.field(o,f);
 		}
 	}
-	return o2;
+	{
+		$s.pop();
+		return o2;
+	}
+	$s.pop();
 }
 Reflect.makeVarArgs = function(f) {
-	return function() {
-		var a = new Array();
-		{
-			var _g1 = 0, _g = arguments.length;
-			while(_g1 < _g) {
-				var i = _g1++;
-				a.push(arguments[i]);
+	$s.push("Reflect::makeVarArgs");
+	var $spos = $s.length;
+	{
+		var $tmp = function() {
+			$s.push("Reflect::makeVarArgs@345");
+			var $spos = $s.length;
+			var a = new Array();
+			{
+				var _g1 = 0, _g = arguments.length;
+				while(_g1 < _g) {
+					var i = _g1++;
+					a.push(arguments[i]);
+				}
 			}
+			{
+				var $tmp = f(a);
+				$s.pop();
+				return $tmp;
+			}
+			$s.pop();
 		}
-		return f(a);
+		$s.pop();
+		return $tmp;
 	}
+	$s.pop();
 }
 Reflect.prototype.__class__ = Reflect;
 haxe.Log = function() { }
 haxe.Log.__name__ = ["haxe","Log"];
 haxe.Log.trace = function(v,infos) {
+	$s.push("haxe.Log::trace");
+	var $spos = $s.length;
 	js.Boot.__trace(v,infos);
+	$s.pop();
 }
 haxe.Log.clear = function() {
+	$s.push("haxe.Log::clear");
+	var $spos = $s.length;
 	js.Boot.__clear_trace();
+	$s.pop();
 }
 haxe.Log.prototype.__class__ = haxe.Log;
 JSMain = function() { }
 JSMain.__name__ = ["JSMain"];
 JSMain.main = function() {
+	$s.push("JSMain::main");
+	var $spos = $s.length;
 	null;
+	$s.pop();
 }
 JSMain.getSource = function() {
-	return js.Lib.document.getElementById("script").value;
+	$s.push("JSMain::getSource");
+	var $spos = $s.length;
+	{
+		var $tmp = js.Lib.document.getElementById("script").value;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 JSMain.compile = function() {
+	$s.push("JSMain::compile");
+	var $spos = $s.length;
 	null;
+	$s.pop();
 }
 JSMain.interpret = function() {
+	$s.push("JSMain::interpret");
+	var $spos = $s.length;
 	var rootPackage = new xpde.JavaPackage();
 	var papplet = new xpde.parser.ParsedCompilationUnit("PApplet",new haxe.io.StringInput(xpde.core.js.PApplet.__javartti__));
 	rootPackage.addCompilationUnit(["xpde","core"],papplet);
@@ -1350,8 +1615,8 @@ JSMain.interpret = function() {
 	rootPackage.addCompilationUnit([],sketch);
 	sketch.initialize(rootPackage);
 	var compiler = new xpde.compiler.JSCompiler();
-	{ var $it14 = sketch.types.iterator();
-	while( $it14.hasNext() ) { var type = $it14.next();
+	{ var $it9 = sketch.types.iterator();
+	while( $it9.hasNext() ) { var type = $it9.next();
 	var $e = (type);
 	switch( $e[1] ) {
 	case 0:
@@ -1364,80 +1629,227 @@ JSMain.interpret = function() {
 	}break;
 	}
 	}}
-	haxe.Log.trace(compiler.output.b,{ fileName : "JSMain.hx", lineNumber : 64, className : "JSMain", methodName : "interpret"});
+	haxe.Log.trace(compiler.output.b.join(""),{ fileName : "JSMain.hx", lineNumber : 64, className : "JSMain", methodName : "interpret"});
+	$s.pop();
 }
 JSMain.prototype.__class__ = JSMain;
 StringBuf = function(p) { if( p === $_ ) return; {
-	this.b = "";
+	$s.push("StringBuf::new");
+	var $spos = $s.length;
+	this.b = new Array();
+	$s.pop();
 }}
 StringBuf.__name__ = ["StringBuf"];
 StringBuf.prototype.add = function(x) {
-	this.b += x;
+	$s.push("StringBuf::add");
+	var $spos = $s.length;
+	this.b[this.b.length] = x;
+	$s.pop();
 }
 StringBuf.prototype.addChar = function(c) {
-	this.b += String.fromCharCode(c);
+	$s.push("StringBuf::addChar");
+	var $spos = $s.length;
+	this.b[this.b.length] = String.fromCharCode(c);
+	$s.pop();
 }
 StringBuf.prototype.addSub = function(s,pos,len) {
-	this.b += s.substr(pos,len);
+	$s.push("StringBuf::addSub");
+	var $spos = $s.length;
+	this.b[this.b.length] = s.substr(pos,len);
+	$s.pop();
 }
 StringBuf.prototype.b = null;
 StringBuf.prototype.toString = function() {
-	return this.b;
+	$s.push("StringBuf::toString");
+	var $spos = $s.length;
+	{
+		var $tmp = this.b.join("");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 StringBuf.prototype.__class__ = StringBuf;
 haxe.Int32 = function() { }
 haxe.Int32.__name__ = ["haxe","Int32"];
 haxe.Int32.make = function(a,b) {
-	return (a << 16) | b;
+	$s.push("haxe.Int32::make");
+	var $spos = $s.length;
+	{
+		var $tmp = (a << 16) | b;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.ofInt = function(x) {
-	return x;
+	$s.push("haxe.Int32::ofInt");
+	var $spos = $s.length;
+	{
+		$s.pop();
+		return x;
+	}
+	$s.pop();
 }
 haxe.Int32.toInt = function(x) {
+	$s.push("haxe.Int32::toInt");
+	var $spos = $s.length;
 	if((((x) >> 30) & 1) != ((x) >>> 31)) throw "Overflow " + x;
-	return ((x) & -1);
+	{
+		var $tmp = (x) & -1;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+haxe.Int32.toNativeInt = function(x) {
+	$s.push("haxe.Int32::toNativeInt");
+	var $spos = $s.length;
+	{
+		$s.pop();
+		return x;
+	}
+	$s.pop();
 }
 haxe.Int32.add = function(a,b) {
-	return (a) + (b);
+	$s.push("haxe.Int32::add");
+	var $spos = $s.length;
+	{
+		var $tmp = (a) + (b);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.sub = function(a,b) {
-	return (a) - (b);
+	$s.push("haxe.Int32::sub");
+	var $spos = $s.length;
+	{
+		var $tmp = (a) - (b);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.mul = function(a,b) {
-	return (a) * (b);
+	$s.push("haxe.Int32::mul");
+	var $spos = $s.length;
+	{
+		var $tmp = (a) * (b);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.div = function(a,b) {
-	return Std["int"]((a) / (b));
+	$s.push("haxe.Int32::div");
+	var $spos = $s.length;
+	{
+		var $tmp = Std["int"]((a) / (b));
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.mod = function(a,b) {
-	return (a) % (b);
+	$s.push("haxe.Int32::mod");
+	var $spos = $s.length;
+	{
+		var $tmp = (a) % (b);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.shl = function(a,b) {
-	return (a) << b;
+	$s.push("haxe.Int32::shl");
+	var $spos = $s.length;
+	{
+		var $tmp = (a) << b;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.shr = function(a,b) {
-	return (a) >> b;
+	$s.push("haxe.Int32::shr");
+	var $spos = $s.length;
+	{
+		var $tmp = (a) >> b;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.ushr = function(a,b) {
-	return (a) >>> b;
+	$s.push("haxe.Int32::ushr");
+	var $spos = $s.length;
+	{
+		var $tmp = (a) >>> b;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.and = function(a,b) {
-	return (a) & (b);
+	$s.push("haxe.Int32::and");
+	var $spos = $s.length;
+	{
+		var $tmp = (a) & (b);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.or = function(a,b) {
-	return (a) | (b);
+	$s.push("haxe.Int32::or");
+	var $spos = $s.length;
+	{
+		var $tmp = (a) | (b);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.xor = function(a,b) {
-	return (a) ^ (b);
+	$s.push("haxe.Int32::xor");
+	var $spos = $s.length;
+	{
+		var $tmp = (a) ^ (b);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.neg = function(a) {
-	return -(a);
+	$s.push("haxe.Int32::neg");
+	var $spos = $s.length;
+	{
+		var $tmp = -(a);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.complement = function(a) {
-	return ~(a);
+	$s.push("haxe.Int32::complement");
+	var $spos = $s.length;
+	{
+		var $tmp = ~(a);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.compare = function(a,b) {
-	return (a) - (b);
+	$s.push("haxe.Int32::compare");
+	var $spos = $s.length;
+	{
+		var $tmp = a - b;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Int32.prototype.__class__ = haxe.Int32;
 haxe.rtti = {}
@@ -1445,36 +1857,44 @@ haxe.rtti.Infos = function() { }
 haxe.rtti.Infos.__name__ = ["haxe","rtti","Infos"];
 haxe.rtti.Infos.prototype.__class__ = haxe.rtti.Infos;
 xpde.compiler.JSCompiler = function(p) { if( p === $_ ) return; {
+	$s.push("xpde.compiler.JSCompiler::new");
+	var $spos = $s.length;
 	this.output = new StringBuf();
+	$s.pop();
 }}
 xpde.compiler.JSCompiler.__name__ = ["xpde","compiler","JSCompiler"];
 xpde.compiler.JSCompiler.prototype.ast = null;
 xpde.compiler.JSCompiler.prototype.classDef = null;
 xpde.compiler.JSCompiler.prototype.compileClass = function(packageDeclaration,definition,ast) {
+	$s.push("xpde.compiler.JSCompiler::compileClass");
+	var $spos = $s.length;
 	this.packageDeclaration = packageDeclaration;
 	this.qualident = packageDeclaration.concat([definition.identifier]);
 	this.ast = ast;
-	this.output.b += this.qualident.join(".") + " = function () {\n";
-	this.output.b += "};\n";
-	this.output.b += this.qualident.join(".") + ".__name__ = [\"" + this.qualident.join("\",\"") + "\"];\n";
-	this.output.b += this.qualident.join(".") + ".prototype.__class__ = " + this.qualident.join(".") + ";\n";
-	{ var $it15 = definition.methods.iterator();
-	while( $it15.hasNext() ) { var method = $it15.next();
+	this.output.add(this.qualident.join(".") + " = function () {\n");
+	this.output.add("};\n");
+	this.output.add(this.qualident.join(".") + ".__name__ = [\"" + this.qualident.join("\",\"") + "\"];\n");
+	this.output.add(this.qualident.join(".") + ".prototype.__class__ = " + this.qualident.join(".") + ";\n");
+	{ var $it10 = definition.methods.iterator();
+	while( $it10.hasNext() ) { var method = $it10.next();
 	{
 		this.compileMethod(method);
 	}
 	}}
+	$s.pop();
 }
 xpde.compiler.JSCompiler.prototype.compileExpression = function(expression) {
+	$s.push("xpde.compiler.JSCompiler::compileExpression");
+	var $spos = $s.length;
 	var $e = (expression);
 	switch( $e[1] ) {
 	case 3:
 	var base = $e[3], index = $e[2];
 	{
 		this.compileExpression(base);
-		this.output.b += "[";
+		this.output.add("[");
 		this.compileExpression(index);
-		this.output.b += "]";
+		this.output.add("]");
 	}break;
 	case 0:
 	var sizes = $e[3], type = $e[2];
@@ -1485,227 +1905,233 @@ xpde.compiler.JSCompiler.prototype.compileExpression = function(expression) {
 	var value = $e[4], base = $e[3], index = $e[2];
 	{
 		this.compileExpression(base);
-		this.output.b += "[";
+		this.output.add("[");
 		this.compileExpression(index);
-		this.output.b += "]";
-		this.output.b += " = ";
+		this.output.add("]");
+		this.output.add(" = ");
 		this.compileExpression(value);
 	}break;
 	case 14:
 	var value = $e[3], identifier = $e[2];
 	{
-		this.output.b += identifier;
-		this.output.b += " = ";
+		this.output.add(identifier);
+		this.output.add(" = ");
 		this.compileExpression(value);
 	}break;
 	case 13:
 	var value = $e[4], base = $e[3], identifier = $e[2];
 	{
 		this.compileExpression(base);
-		this.output.b += ".";
-		this.output.b += identifier;
-		this.output.b += " = ";
+		this.output.add(".");
+		this.output.add(identifier);
+		this.output.add(" = ");
 		this.compileExpression(value);
 	}break;
 	case 9:
 	var args = $e[4], base = $e[3], identifier = $e[2];
 	{
 		this.compileExpression(base);
-		this.output.b += "." + identifier;
-		this.output.b += "(";
+		this.output.add("." + identifier);
+		this.output.add("(");
 		{
 			var _g1 = 0, _g = args.length;
 			while(_g1 < _g) {
 				var i = _g1++;
 				this.compileExpression(args[i]);
-				if(i < args.length - 1) this.output.b += ", ";
+				if(i < args.length - 1) this.output.add(", ");
 			}
 		}
-		this.output.b += ")";
+		this.output.add(")");
 	}break;
 	case 10:
 	var args = $e[2];
 	{
-		this.output.b += "this";
-		this.output.b += "(";
+		this.output.add("this");
+		this.output.add("(");
 		{
 			var _g1 = 0, _g = args.length;
 			while(_g1 < _g) {
 				var i = _g1++;
 				this.compileExpression(args[i]);
-				if(i < args.length - 1) this.output.b += ", ";
+				if(i < args.length - 1) this.output.add(", ");
 			}
 		}
-		this.output.b += ")";
+		this.output.add(")");
 	}break;
 	case 11:
 	var args = $e[2];
 	{
-		this.output.b += "super";
-		this.output.b += "(";
+		this.output.add("super");
+		this.output.add("(");
 		{
 			var _g1 = 0, _g = args.length;
 			while(_g1 < _g) {
 				var i = _g1++;
 				this.compileExpression(args[i]);
-				if(i < args.length - 1) this.output.b += ", ";
+				if(i < args.length - 1) this.output.add(", ");
 			}
 		}
-		this.output.b += ")";
+		this.output.add(")");
 	}break;
 	case 15:
 	var expression1 = $e[3], type = $e[2];
 	{
-		this.output.b += "(";
+		this.output.add("(");
 		this.compileType(type);
-		this.output.b += ") (";
+		this.output.add(") (");
 		this.compileExpression(expression1);
-		this.output.b += ")";
+		this.output.add(")");
 	}break;
 	case 2:
 	var elseExpression = $e[4], thenExpression = $e[3], condition = $e[2];
 	{
-		this.output.b += "(";
+		this.output.add("(");
 		this.compileExpression(condition);
-		this.output.b += " ? ";
+		this.output.add(" ? ");
 		this.compileExpression(thenExpression);
-		this.output.b += " : ";
+		this.output.add(" : ");
 		this.compileExpression(elseExpression);
-		this.output.b += ")";
+		this.output.add(")");
 	}break;
 	case 18:
 	var type = $e[3], expression1 = $e[2];
 	{
 		this.compileExpression(expression1);
-		this.output.b += " instanceof ";
+		this.output.add(" instanceof ");
 		this.compileType(type);
 	}break;
 	case 1:
 	var args = $e[3], qualifier = $e[2];
 	{
-		this.output.b += "new " + qualifier.join(".") + "(";
+		this.output.add("new " + qualifier.join(".") + "(");
 		{
 			var _g1 = 0, _g = args.length;
 			while(_g1 < _g) {
 				var i = _g1++;
 				this.compileExpression(args[i]);
-				if(i < args.length - 1) this.output.b += ", ";
+				if(i < args.length - 1) this.output.add(", ");
 			}
 		}
-		this.output.b += ")";
+		this.output.add(")");
 	}break;
 	case 19:
 	var reference = $e[3], type = $e[2];
 	{
 		this.compileIncrementType(type);
-		this.output.b += "(";
+		this.output.add("(");
 		this.compileExpression(reference);
-		this.output.b += ")";
+		this.output.add(")");
 	}break;
 	case 20:
 	var reference = $e[3], type = $e[2];
 	{
-		this.output.b += "(";
+		this.output.add("(");
 		this.compileExpression(reference);
-		this.output.b += ")";
+		this.output.add(")");
 		this.compileIncrementType(type);
 	}break;
 	case 4:
 	var identifier = $e[2];
 	{
-		this.output.b += identifier;
+		this.output.add(identifier);
 	}break;
 	case 6:
 	var qualident = $e[2];
 	{
-		this.output.b += qualident.join(".");
+		this.output.add(qualident.join("."));
 	}break;
 	case 5:
 	var base = $e[3], identifier = $e[2];
 	{
 		this.compileExpression(base);
-		this.output.b += ".";
-		this.output.b += identifier;
+		this.output.add(".");
+		this.output.add(identifier);
 	}break;
 	case 7:
 	{
-		this.output.b += "super";
+		this.output.add("super");
 	}break;
 	case 8:
 	{
-		this.output.b += "this";
+		this.output.add("this");
 	}break;
 	case 17:
 	var rightOperand = $e[4], leftOperand = $e[3], operator = $e[2];
 	{
-		this.output.b += "(";
+		this.output.add("(");
 		this.compileExpression(leftOperand);
 		this.compileInfixOperator(operator);
 		this.compileExpression(rightOperand);
-		this.output.b += ")";
+		this.output.add(")");
 	}break;
 	case 16:
 	var operand = $e[3], operator = $e[2];
 	{
 		this.compilePrefixOperator(operator);
-		this.output.b += "(";
+		this.output.add("(");
 		this.compileExpression(operand);
-		this.output.b += ")";
+		this.output.add(")");
 	}break;
 	case 21:
 	var values = $e[2];
 	{
-		this.output.b += "{";
+		this.output.add("{");
 		{
 			var _g1 = 0, _g = values.length;
 			while(_g1 < _g) {
 				var i = _g1++;
 				this.compileExpression(values[i]);
-				if(i < values.length - 1) this.output.b += ", ";
+				if(i < values.length - 1) this.output.add(", ");
 			}
 		}
-		this.output.b += "}";
+		this.output.add("}");
 	}break;
 	case 22:
 	var value = $e[2];
 	{
-		this.output.b += "\"" + StringTools.replace(value,"\"","\\\"") + "\"";
+		this.output.add("\"" + StringTools.replace(value,"\"","\\\"") + "\"");
 	}break;
 	case 23:
 	var value = $e[2];
 	{
-		this.output.b += Std.string(value);
+		this.output.add(Std.string(value));
 	}break;
 	case 24:
 	var value = $e[2];
 	{
-		this.output.b += Std.string(value);
+		this.output.add(Std.string(value));
 	}break;
 	case 25:
 	var value = $e[2];
 	{
-		this.output.b += "'" + String.fromCharCode(value) + "'";
+		this.output.add("'" + String.fromCharCode(value) + "'");
 	}break;
 	case 26:
 	var value = $e[2];
 	{
-		this.output.b += (value?"true":"false");
+		this.output.add((value?"true":"false"));
 	}break;
 	case 27:
 	{
-		this.output.b += "null";
+		this.output.add("null");
 	}break;
 	case 28:
 	{
 		throw "Invalid compiler expression " + expression;
 	}break;
 	}
+	$s.pop();
 }
 xpde.compiler.JSCompiler.prototype.compileFormalParameter = function(parameter) {
-	this.output.b += parameter.identifier;
+	$s.push("xpde.compiler.JSCompiler::compileFormalParameter");
+	var $spos = $s.length;
+	this.output.add(parameter.identifier);
+	$s.pop();
 }
 xpde.compiler.JSCompiler.prototype.compileIncrementType = function(type) {
-	this.output.b += function($this) {
+	$s.push("xpde.compiler.JSCompiler::compileIncrementType");
+	var $spos = $s.length;
+	this.output.add(function($this) {
 		var $r;
 		var $e = (type);
 		switch( $e[1] ) {
@@ -1722,10 +2148,13 @@ xpde.compiler.JSCompiler.prototype.compileIncrementType = function(type) {
 		}break;
 		}
 		return $r;
-	}(this);
+	}(this));
+	$s.pop();
 }
 xpde.compiler.JSCompiler.prototype.compileInfixOperator = function(operator) {
-	this.output.b += function($this) {
+	$s.push("xpde.compiler.JSCompiler::compileInfixOperator");
+	var $spos = $s.length;
+	this.output.add(function($this) {
 		var $r;
 		var $e = (operator);
 		switch( $e[1] ) {
@@ -1810,78 +2239,87 @@ xpde.compiler.JSCompiler.prototype.compileInfixOperator = function(operator) {
 		}break;
 		}
 		return $r;
-	}(this);
+	}(this));
+	$s.pop();
 }
 xpde.compiler.JSCompiler.prototype.compileMethod = function(definition) {
+	$s.push("xpde.compiler.JSCompiler::compileMethod");
+	var $spos = $s.length;
 	if(this.ast.exists(this.qualident.join(".") + "|" + definition.identifier)) {
-		this.output.b += this.qualident.join(".") + ".prototype." + definition.identifier + " = function (";
+		this.output.add(this.qualident.join(".") + ".prototype." + definition.identifier + " = function (");
 		{
 			var _g1 = 0, _g = definition.parameters.length;
 			while(_g1 < _g) {
 				var i = _g1++;
 				this.compileFormalParameter(definition.parameters[i]);
-				if(i < definition.parameters.length - 1) this.output.b += ", ";
+				if(i < definition.parameters.length - 1) this.output.add(", ");
 			}
 		}
-		this.output.b += ") ";
+		this.output.add(") ");
 		this.compileStatement(this.ast.get(this.qualident.join(".") + "|" + definition.identifier));
-		this.output.b += ";\n";
+		this.output.add(";\n");
 	}
+	$s.pop();
 }
 xpde.compiler.JSCompiler.prototype.compileModifiers = function(modifiers) {
-	{ var $it16 = modifiers.iterator();
-	while( $it16.hasNext() ) { var modifier = $it16.next();
+	$s.push("xpde.compiler.JSCompiler::compileModifiers");
+	var $spos = $s.length;
+	{ var $it11 = modifiers.iterator();
+	while( $it11.hasNext() ) { var modifier = $it11.next();
 	var $e = (modifier);
 	switch( $e[1] ) {
 	case 0:
 	{
-		this.output.b += "public ";
+		this.output.add("public ");
 	}break;
 	case 1:
 	{
-		this.output.b += "private ";
+		this.output.add("private ");
 	}break;
 	case 2:
 	{
-		this.output.b += "protected ";
+		this.output.add("protected ");
 	}break;
 	case 3:
 	{
-		this.output.b += "static ";
+		this.output.add("static ");
 	}break;
 	case 4:
 	{
-		this.output.b += "final ";
+		this.output.add("final ");
 	}break;
 	case 5:
 	{
-		this.output.b += "synchronized ";
+		this.output.add("synchronized ");
 	}break;
 	case 6:
 	{
-		this.output.b += "volatile ";
+		this.output.add("volatile ");
 	}break;
 	case 7:
 	{
-		this.output.b += "transient ";
+		this.output.add("transient ");
 	}break;
 	case 8:
 	{
-		this.output.b += "native ";
+		this.output.add("native ");
 	}break;
 	case 9:
 	{
-		this.output.b += "abstract ";
+		this.output.add("abstract ");
 	}break;
 	case 10:
 	{
-		this.output.b += "strictfp ";
+		this.output.add("strictfp ");
 	}break;
 	}
 	}}
+	$s.pop();
 }
 xpde.compiler.JSCompiler.prototype.compilePrefixOperator = function(operator) {
-	this.output.b += function($this) {
+	$s.push("xpde.compiler.JSCompiler::compilePrefixOperator");
+	var $spos = $s.length;
+	this.output.add(function($this) {
 		var $r;
 		var $e = (operator);
 		switch( $e[1] ) {
@@ -1906,18 +2344,21 @@ xpde.compiler.JSCompiler.prototype.compilePrefixOperator = function(operator) {
 		}break;
 		}
 		return $r;
-	}(this);
+	}(this));
+	$s.pop();
 }
 xpde.compiler.JSCompiler.prototype.compileStatement = function(statement) {
+	$s.push("xpde.compiler.JSCompiler::compileStatement");
+	var $spos = $s.length;
 	var $e = (statement);
 	switch( $e[1] ) {
 	case 0:
 	var statements = $e[3], variables = $e[2];
 	{
-		this.output.b += "{\n";
-		{ var $it17 = variables.iterator();
-		while( $it17.hasNext() ) { var variable = $it17.next();
-		this.output.b += "var " + variable.identifier + " = 0;\n";
+		this.output.add("{\n");
+		{ var $it12 = variables.iterator();
+		while( $it12.hasNext() ) { var variable = $it12.next();
+		this.output.add("var " + variable.identifier + " = 0;\n");
 		}}
 		{
 			var _g = 0;
@@ -1927,84 +2368,84 @@ xpde.compiler.JSCompiler.prototype.compileStatement = function(statement) {
 				this.compileStatement(statement1);
 			}
 		}
-		this.output.b += "}\n";
+		this.output.add("}\n");
 	}break;
 	case 1:
 	var label = $e[2];
 	{
-		this.output.b += "break";
-		if(label != null) this.output.b += " " + label;
-		this.output.b += ";\n";
+		this.output.add("break");
+		if(label != null) this.output.add(" " + label);
+		this.output.add(";\n");
 	}break;
 	case 2:
 	var elseBlock = $e[4], thenBlock = $e[3], condition = $e[2];
 	{
-		this.output.b += "if (";
+		this.output.add("if (");
 		this.compileExpression(condition);
-		this.output.b += ") ";
+		this.output.add(") ");
 		this.compileStatement(thenBlock);
 		if(elseBlock != null) {
-			this.output.b += "else ";
+			this.output.add("else ");
 			this.compileStatement(elseBlock);
 		}
 	}break;
 	case 3:
 	var label = $e[2];
 	{
-		this.output.b += "continue";
-		if(label != null) this.output.b += " " + label;
-		this.output.b += ";\n";
+		this.output.add("continue");
+		if(label != null) this.output.add(" " + label);
+		this.output.add(";\n");
 	}break;
 	case 4:
 	var expression = $e[2];
 	{
 		this.compileExpression(expression);
-		this.output.b += ";\n";
+		this.output.add(";\n");
 	}break;
 	case 5:
 	var body = $e[3], label = $e[2];
 	{
-		this.output.b += label + ": ";
+		this.output.add(label + ": ");
 		this.compileStatement(body);
 	}break;
 	case 6:
 	var doLoop = $e[4], body = $e[3], condition = $e[2];
 	{
 		if(doLoop) {
-			this.output.b += "do ";
+			this.output.add("do ");
 			this.compileStatement(body);
-			this.output.b += "while (";
+			this.output.add("while (");
 			this.compileExpression(condition);
-			this.output.b += ");\n";
+			this.output.add(");\n");
 		}
 		else {
-			this.output.b += "while (";
+			this.output.add("while (");
 			this.compileExpression(condition);
-			this.output.b += ") ";
+			this.output.add(") ");
 			this.compileStatement(body);
 		}
 	}break;
 	case 7:
 	var value = $e[2];
 	{
-		this.output.b += "return";
+		this.output.add("return");
 		if(value != null) {
-			this.output.b += " ";
+			this.output.add(" ");
 			this.compileExpression(value);
 		}
-		this.output.b += ";\n";
+		this.output.add(";\n");
 	}break;
 	case 8:
 	var expression = $e[2];
 	{
-		this.output.b += "throw";
+		this.output.add("throw");
 		this.compileExpression(expression);
-		this.output.b += ";\n";
+		this.output.add(";\n");
 	}break;
 	case 9:
 	var finallyBody = $e[4], catches = $e[3], body = $e[2];
 	{
-		this.output.b += "try ";
+		this.output.add("try ");
 		this.compileStatement(body);
 		if(catches != null) {
 			{
@@ -2012,25 +2453,32 @@ xpde.compiler.JSCompiler.prototype.compileStatement = function(statement) {
 				while(_g < catches.length) {
 					var katch = catches[_g];
 					++_g;
-					this.output.b += "catch (";
+					this.output.add("catch (");
 					this.compileFormalParameter(katch.parameter);
-					this.output.b += ")";
+					this.output.add(")");
 					this.compileStatement(katch.body);
 				}
 			}
 		}
 		if(finallyBody != null) {
-			this.output.b += "finally\n";
+			this.output.add("finally\n");
 			this.compileStatement(finallyBody);
 		}
 	}break;
 	}
+	$s.pop();
 }
 xpde.compiler.JSCompiler.prototype.compileType = function(type) {
+	$s.push("xpde.compiler.JSCompiler::compileType");
+	var $spos = $s.length;
 	if(type == null) {
-		this.output.b += "void";
-		return;
+		this.output.add("void");
+		{
+			$s.pop();
+			return;
+		}
 	}
+	$s.pop();
 }
 xpde.compiler.JSCompiler.prototype.output = null;
 xpde.compiler.JSCompiler.prototype.packageDeclaration = null;
@@ -2040,12 +2488,15 @@ xpde.compiler.JSCompiler.prototype.qualident = null;
 xpde.compiler.JSCompiler.prototype.__class__ = xpde.compiler.JSCompiler;
 xpde.compiler.JSCompiler.__interfaces__ = [xpde.compiler.ICompiler];
 haxe.io.BytesInput = function(b,pos,len) { if( b === $_ ) return; {
+	$s.push("haxe.io.BytesInput::new");
+	var $spos = $s.length;
 	if(pos == null) pos = 0;
 	if(len == null) len = b.length - pos;
 	if(pos < 0 || len < 0 || pos + len > b.length) throw haxe.io.Error.OutsideBounds;
 	this.b = b.b;
 	this.pos = pos;
 	this.len = len;
+	$s.pop();
 }}
 haxe.io.BytesInput.__name__ = ["haxe","io","BytesInput"];
 haxe.io.BytesInput.__super__ = haxe.io.Input;
@@ -2054,12 +2505,21 @@ haxe.io.BytesInput.prototype.b = null;
 haxe.io.BytesInput.prototype.len = null;
 haxe.io.BytesInput.prototype.pos = null;
 haxe.io.BytesInput.prototype.readByte = function() {
+	$s.push("haxe.io.BytesInput::readByte");
+	var $spos = $s.length;
 	if(this.len == 0) throw new haxe.io.Eof();
 	this.len--;
-	return this.b[this.pos++];
+	{
+		var $tmp = this.b[this.pos++];
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.BytesInput.prototype.readBytes = function(buf,pos,len) {
-	if(pos < 0 || len < 0 || pos + len > this.b.length) throw haxe.io.Error.OutsideBounds;
+	$s.push("haxe.io.BytesInput::readBytes");
+	var $spos = $s.length;
+	if(pos < 0 || len < 0 || pos + len > buf.length) throw haxe.io.Error.OutsideBounds;
 	if(this.len == 0 && len > 0) throw new haxe.io.Eof();
 	if(this.len < len) len = this.len;
 	var b1 = this.b;
@@ -2073,22 +2533,34 @@ haxe.io.BytesInput.prototype.readBytes = function(buf,pos,len) {
 	}
 	this.pos += len;
 	this.len -= len;
-	return len;
+	{
+		$s.pop();
+		return len;
+	}
+	$s.pop();
 }
 haxe.io.BytesInput.prototype.__class__ = haxe.io.BytesInput;
 haxe.io.StringInput = function(s) { if( s === $_ ) return; {
+	$s.push("haxe.io.StringInput::new");
+	var $spos = $s.length;
 	haxe.io.BytesInput.apply(this,[haxe.io.Bytes.ofString(s)]);
+	$s.pop();
 }}
 haxe.io.StringInput.__name__ = ["haxe","io","StringInput"];
 haxe.io.StringInput.__super__ = haxe.io.BytesInput;
 for(var k in haxe.io.BytesInput.prototype ) haxe.io.StringInput.prototype[k] = haxe.io.BytesInput.prototype[k];
 haxe.io.StringInput.prototype.__class__ = haxe.io.StringInput;
 haxe.io.Bytes = function(length,b) { if( length === $_ ) return; {
+	$s.push("haxe.io.Bytes::new");
+	var $spos = $s.length;
 	this.length = length;
 	this.b = b;
+	$s.pop();
 }}
 haxe.io.Bytes.__name__ = ["haxe","io","Bytes"];
 haxe.io.Bytes.alloc = function(length) {
+	$s.push("haxe.io.Bytes::alloc");
+	var $spos = $s.length;
 	var a = new Array();
 	{
 		var _g = 0;
@@ -2097,9 +2569,16 @@ haxe.io.Bytes.alloc = function(length) {
 			a.push(0);
 		}
 	}
-	return new haxe.io.Bytes(length,a);
+	{
+		var $tmp = new haxe.io.Bytes(length,a);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Bytes.ofString = function(s) {
+	$s.push("haxe.io.Bytes::ofString");
+	var $spos = $s.length;
 	var a = new Array();
 	{
 		var _g1 = 0, _g = s.length;
@@ -2124,13 +2603,27 @@ haxe.io.Bytes.ofString = function(s) {
 			}
 		}
 	}
-	return new haxe.io.Bytes(a.length,a);
+	{
+		var $tmp = new haxe.io.Bytes(a.length,a);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Bytes.ofData = function(b) {
-	return new haxe.io.Bytes(b.length,b);
+	$s.push("haxe.io.Bytes::ofData");
+	var $spos = $s.length;
+	{
+		var $tmp = new haxe.io.Bytes(b.length,b);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Bytes.prototype.b = null;
 haxe.io.Bytes.prototype.blit = function(pos,src,srcpos,len) {
+	$s.push("haxe.io.Bytes::blit");
+	var $spos = $s.length;
 	if(pos < 0 || srcpos < 0 || len < 0 || pos + len > this.length || srcpos + len > src.length) throw haxe.io.Error.OutsideBounds;
 	var b1 = this.b;
 	var b2 = src.b;
@@ -2140,7 +2633,10 @@ haxe.io.Bytes.prototype.blit = function(pos,src,srcpos,len) {
 			i--;
 			b1[i + pos] = b2[i + srcpos];
 		}
-		return;
+		{
+			$s.pop();
+			return;
+		}
 	}
 	{
 		var _g = 0;
@@ -2149,8 +2645,11 @@ haxe.io.Bytes.prototype.blit = function(pos,src,srcpos,len) {
 			b1[i + pos] = b2[i + srcpos];
 		}
 	}
+	$s.pop();
 }
 haxe.io.Bytes.prototype.compare = function(other) {
+	$s.push("haxe.io.Bytes::compare");
+	var $spos = $s.length;
 	var b1 = this.b;
 	var b2 = other.b;
 	var len = ((this.length < other.length)?this.length:other.length);
@@ -2158,19 +2657,44 @@ haxe.io.Bytes.prototype.compare = function(other) {
 		var _g = 0;
 		while(_g < len) {
 			var i = _g++;
-			if(b1[i] != b2[i]) return b1[i] - b2[i];
+			if(b1[i] != b2[i]) {
+				var $tmp = b1[i] - b2[i];
+				$s.pop();
+				return $tmp;
+			}
 		}
 	}
-	return this.length - other.length;
+	{
+		var $tmp = this.length - other.length;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Bytes.prototype.get = function(pos) {
-	return this.b[pos];
+	$s.push("haxe.io.Bytes::get");
+	var $spos = $s.length;
+	{
+		var $tmp = this.b[pos];
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Bytes.prototype.getData = function() {
-	return this.b;
+	$s.push("haxe.io.Bytes::getData");
+	var $spos = $s.length;
+	{
+		var $tmp = this.b;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Bytes.prototype.length = null;
 haxe.io.Bytes.prototype.readString = function(pos,len) {
+	$s.push("haxe.io.Bytes::readString");
+	var $spos = $s.length;
 	if(pos < 0 || len < 0 || pos + len > this.length) throw haxe.io.Error.OutsideBounds;
 	var s = "";
 	var b = this.b;
@@ -2194,31 +2718,69 @@ haxe.io.Bytes.prototype.readString = function(pos,len) {
 			s += fcc(((((c & 15) << 18) | ((c2 & 127) << 12)) | ((c3 << 6) & 127)) | (b[i++] & 127));
 		}
 	}
-	return s;
+	{
+		$s.pop();
+		return s;
+	}
+	$s.pop();
 }
 haxe.io.Bytes.prototype.set = function(pos,v) {
+	$s.push("haxe.io.Bytes::set");
+	var $spos = $s.length;
 	this.b[pos] = v;
+	$s.pop();
 }
 haxe.io.Bytes.prototype.sub = function(pos,len) {
+	$s.push("haxe.io.Bytes::sub");
+	var $spos = $s.length;
 	if(pos < 0 || len < 0 || pos + len > this.length) throw haxe.io.Error.OutsideBounds;
-	return new haxe.io.Bytes(len,this.b.slice(pos,pos + len));
+	{
+		var $tmp = new haxe.io.Bytes(len,this.b.slice(pos,pos + len));
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Bytes.prototype.toString = function() {
-	return this.readString(0,this.length);
+	$s.push("haxe.io.Bytes::toString");
+	var $spos = $s.length;
+	{
+		var $tmp = this.readString(0,this.length);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.io.Bytes.prototype.__class__ = haxe.io.Bytes;
 IntIter = function(min,max) { if( min === $_ ) return; {
+	$s.push("IntIter::new");
+	var $spos = $s.length;
 	this.min = min;
 	this.max = max;
+	$s.pop();
 }}
 IntIter.__name__ = ["IntIter"];
 IntIter.prototype.hasNext = function() {
-	return this.min < this.max;
+	$s.push("IntIter::hasNext");
+	var $spos = $s.length;
+	{
+		var $tmp = this.min < this.max;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 IntIter.prototype.max = null;
 IntIter.prototype.min = null;
 IntIter.prototype.next = function() {
-	return this.min++;
+	$s.push("IntIter::next");
+	var $spos = $s.length;
+	{
+		var $tmp = this.min++;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 IntIter.prototype.__class__ = IntIter;
 haxe.io.Error = { __ename__ : ["haxe","io","Error"], __constructs__ : ["Blocked","Overflow","OutsideBounds","Custom"] }
@@ -2235,44 +2797,103 @@ haxe.io.Error.Overflow.__enum__ = haxe.io.Error;
 Std = function() { }
 Std.__name__ = ["Std"];
 Std["is"] = function(v,t) {
-	return js.Boot.__instanceof(v,t);
+	$s.push("Std::is");
+	var $spos = $s.length;
+	{
+		var $tmp = js.Boot.__instanceof(v,t);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Std.string = function(s) {
-	return js.Boot.__string_rec(s,"");
+	$s.push("Std::string");
+	var $spos = $s.length;
+	{
+		var $tmp = js.Boot.__string_rec(s,"");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Std["int"] = function(x) {
-	if(x < 0) return Math.ceil(x);
-	return Math.floor(x);
+	$s.push("Std::int");
+	var $spos = $s.length;
+	if(x < 0) {
+		var $tmp = Math.ceil(x);
+		$s.pop();
+		return $tmp;
+	}
+	{
+		var $tmp = Math.floor(x);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Std.parseInt = function(x) {
+	$s.push("Std::parseInt");
+	var $spos = $s.length;
 	var v = parseInt(x);
-	if(Math.isNaN(v)) return null;
-	return v;
+	if(Math.isNaN(v)) {
+		$s.pop();
+		return null;
+	}
+	{
+		$s.pop();
+		return v;
+	}
+	$s.pop();
 }
 Std.parseFloat = function(x) {
-	return parseFloat(x);
+	$s.push("Std::parseFloat");
+	var $spos = $s.length;
+	{
+		var $tmp = parseFloat(x);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Std.random = function(x) {
-	return Math.floor(Math.random() * x);
+	$s.push("Std::random");
+	var $spos = $s.length;
+	{
+		var $tmp = Math.floor(Math.random() * x);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Std.prototype.__class__ = Std;
 List = function(p) { if( p === $_ ) return; {
+	$s.push("List::new");
+	var $spos = $s.length;
 	this.length = 0;
+	$s.pop();
 }}
 List.__name__ = ["List"];
 List.prototype.add = function(item) {
+	$s.push("List::add");
+	var $spos = $s.length;
 	var x = [item];
 	if(this.h == null) this.h = x;
 	else this.q[1] = x;
 	this.q = x;
 	this.length++;
+	$s.pop();
 }
 List.prototype.clear = function() {
+	$s.push("List::clear");
+	var $spos = $s.length;
 	this.h = null;
 	this.q = null;
 	this.length = 0;
+	$s.pop();
 }
 List.prototype.filter = function(f) {
+	$s.push("List::filter");
+	var $spos = $s.length;
 	var l2 = new List();
 	var l = this.h;
 	while(l != null) {
@@ -2280,42 +2901,99 @@ List.prototype.filter = function(f) {
 		l = l[1];
 		if(f(v)) l2.add(v);
 	}
-	return l2;
+	{
+		$s.pop();
+		return l2;
+	}
+	$s.pop();
 }
 List.prototype.first = function() {
-	return (this.h == null?null:this.h[0]);
+	$s.push("List::first");
+	var $spos = $s.length;
+	{
+		var $tmp = (this.h == null?null:this.h[0]);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 List.prototype.h = null;
 List.prototype.isEmpty = function() {
-	return (this.h == null);
+	$s.push("List::isEmpty");
+	var $spos = $s.length;
+	{
+		var $tmp = (this.h == null);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 List.prototype.iterator = function() {
-	return { h : this.h, hasNext : function() {
-		return (this.h != null);
-	}, next : function() {
-		if(this.h == null) return null;
-		var x = this.h[0];
-		this.h = this.h[1];
-		return x;
-	}}
+	$s.push("List::iterator");
+	var $spos = $s.length;
+	{
+		var $tmp = { h : this.h, hasNext : function() {
+			$s.push("List::iterator@210");
+			var $spos = $s.length;
+			{
+				var $tmp = (this.h != null);
+				$s.pop();
+				return $tmp;
+			}
+			$s.pop();
+		}, next : function() {
+			$s.push("List::iterator@213");
+			var $spos = $s.length;
+			if(this.h == null) {
+				$s.pop();
+				return null;
+			}
+			var x = this.h[0];
+			this.h = this.h[1];
+			{
+				$s.pop();
+				return x;
+			}
+			$s.pop();
+		}}
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 List.prototype.join = function(sep) {
+	$s.push("List::join");
+	var $spos = $s.length;
 	var s = new StringBuf();
 	var first = true;
 	var l = this.h;
 	while(l != null) {
 		if(first) first = false;
-		else s.b += sep;
-		s.b += l[0];
+		else s.b[s.b.length] = sep;
+		s.b[s.b.length] = l[0];
 		l = l[1];
 	}
-	return s.b;
+	{
+		var $tmp = s.b.join("");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 List.prototype.last = function() {
-	return (this.q == null?null:this.q[0]);
+	$s.push("List::last");
+	var $spos = $s.length;
+	{
+		var $tmp = (this.q == null?null:this.q[0]);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 List.prototype.length = null;
 List.prototype.map = function(f) {
+	$s.push("List::map");
+	var $spos = $s.length;
 	var b = new List();
 	var l = this.h;
 	while(l != null) {
@@ -2323,24 +3001,42 @@ List.prototype.map = function(f) {
 		l = l[1];
 		b.add(f(v));
 	}
-	return b;
+	{
+		$s.pop();
+		return b;
+	}
+	$s.pop();
 }
 List.prototype.pop = function() {
-	if(this.h == null) return null;
+	$s.push("List::pop");
+	var $spos = $s.length;
+	if(this.h == null) {
+		$s.pop();
+		return null;
+	}
 	var x = this.h[0];
 	this.h = this.h[1];
 	if(this.h == null) this.q = null;
 	this.length--;
-	return x;
+	{
+		$s.pop();
+		return x;
+	}
+	$s.pop();
 }
 List.prototype.push = function(item) {
+	$s.push("List::push");
+	var $spos = $s.length;
 	var x = [item,this.h];
 	this.h = x;
 	if(this.q == null) this.q = x;
 	this.length++;
+	$s.pop();
 }
 List.prototype.q = null;
 List.prototype.remove = function(v) {
+	$s.push("List::remove");
+	var $spos = $s.length;
 	var prev = null;
 	var l = this.h;
 	while(l != null) {
@@ -2349,86 +3045,121 @@ List.prototype.remove = function(v) {
 			else prev[1] = l[1];
 			if(this.q == l) this.q = prev;
 			this.length--;
-			return true;
+			{
+				$s.pop();
+				return true;
+			}
 		}
 		prev = l;
 		l = l[1];
 	}
-	return false;
+	{
+		$s.pop();
+		return false;
+	}
+	$s.pop();
 }
 List.prototype.toString = function() {
+	$s.push("List::toString");
+	var $spos = $s.length;
 	var s = new StringBuf();
 	var first = true;
 	var l = this.h;
-	s.b += "{";
+	s.b[s.b.length] = "{";
 	while(l != null) {
 		if(first) first = false;
-		else s.b += ", ";
-		s.b += l[0];
+		else s.b[s.b.length] = ", ";
+		s.b[s.b.length] = l[0];
 		l = l[1];
 	}
-	s.b += "}";
-	return s.b;
+	s.b[s.b.length] = "}";
+	{
+		var $tmp = s.b.join("");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 List.prototype.__class__ = List;
 haxe.Serializer = function(p) { if( p === $_ ) return; {
+	$s.push("haxe.Serializer::new");
+	var $spos = $s.length;
 	this.buf = new StringBuf();
 	this.cache = new Array();
 	this.useCache = haxe.Serializer.USE_CACHE;
 	this.useEnumIndex = haxe.Serializer.USE_ENUM_INDEX;
 	this.shash = new Hash();
 	this.scount = 0;
+	$s.pop();
 }}
 haxe.Serializer.__name__ = ["haxe","Serializer"];
 haxe.Serializer.run = function(v) {
+	$s.push("haxe.Serializer::run");
+	var $spos = $s.length;
 	var s = new haxe.Serializer();
 	s.serialize(v);
-	return s.toString();
+	{
+		var $tmp = s.toString();
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Serializer.prototype.buf = null;
 haxe.Serializer.prototype.cache = null;
 haxe.Serializer.prototype.scount = null;
 haxe.Serializer.prototype.serialize = function(v) {
+	$s.push("haxe.Serializer::serialize");
+	var $spos = $s.length;
 	var $e = (Type["typeof"](v));
 	switch( $e[1] ) {
 	case 0:
 	{
-		this.buf.b += "n";
+		this.buf.add("n");
 	}break;
 	case 1:
 	{
 		if(v == 0) {
-			this.buf.b += "z";
-			return;
+			this.buf.add("z");
+			{
+				$s.pop();
+				return;
+			}
 		}
-		this.buf.b += "i";
-		this.buf.b += v;
+		this.buf.add("i");
+		this.buf.add(v);
 	}break;
 	case 2:
 	{
-		if(Math.isNaN(v)) this.buf.b += "k";
-		else if(!Math.isFinite(v)) this.buf.b += (v < 0?"m":"p");
+		if(Math.isNaN(v)) this.buf.add("k");
+		else if(!Math.isFinite(v)) this.buf.add((v < 0?"m":"p"));
 		else {
-			this.buf.b += "d";
-			this.buf.b += v;
+			this.buf.add("d");
+			this.buf.add(v);
 		}
 	}break;
 	case 3:
 	{
-		this.buf.b += (v?"t":"f");
+		this.buf.add((v?"t":"f"));
 	}break;
 	case 6:
 	var c = $e[2];
 	{
 		if(c == String) {
 			this.serializeString(v);
+			{
+				$s.pop();
+				return;
+			}
+		}
+		if(this.useCache && this.serializeRef(v)) {
+			$s.pop();
 			return;
 		}
-		if(this.useCache && this.serializeRef(v)) return;
 		switch(c) {
 		case Array:{
 			var ucount = 0;
-			this.buf.b += "a";
+			this.buf.add("a");
 			var l = v["length"];
 			{
 				var _g = 0;
@@ -2437,10 +3168,10 @@ haxe.Serializer.prototype.serialize = function(v) {
 					if(v[i] == null) ucount++;
 					else {
 						if(ucount > 0) {
-							if(ucount == 1) this.buf.b += "n";
+							if(ucount == 1) this.buf.add("n");
 							else {
-								this.buf.b += "u";
-								this.buf.b += ucount;
+								this.buf.add("u");
+								this.buf.add(ucount);
 							}
 							ucount = 0;
 						}
@@ -2449,52 +3180,52 @@ haxe.Serializer.prototype.serialize = function(v) {
 				}
 			}
 			if(ucount > 0) {
-				if(ucount == 1) this.buf.b += "n";
+				if(ucount == 1) this.buf.add("n");
 				else {
-					this.buf.b += "u";
-					this.buf.b += ucount;
+					this.buf.add("u");
+					this.buf.add(ucount);
 				}
 			}
-			this.buf.b += "h";
+			this.buf.add("h");
 		}break;
 		case List:{
-			this.buf.b += "l";
+			this.buf.add("l");
 			var v1 = v;
-			{ var $it18 = v1.iterator();
-			while( $it18.hasNext() ) { var i = $it18.next();
+			{ var $it13 = v1.iterator();
+			while( $it13.hasNext() ) { var i = $it13.next();
 			this.serialize(i);
 			}}
-			this.buf.b += "h";
+			this.buf.add("h");
 		}break;
 		case Date:{
 			var d = v;
-			this.buf.b += "v";
-			this.buf.b += d.toString();
+			this.buf.add("v");
+			this.buf.add(d.toString());
 		}break;
 		case Hash:{
-			this.buf.b += "b";
+			this.buf.add("b");
 			var v1 = v;
-			{ var $it19 = v1.keys();
-			while( $it19.hasNext() ) { var k = $it19.next();
+			{ var $it14 = v1.keys();
+			while( $it14.hasNext() ) { var k = $it14.next();
 			{
 				this.serializeString(k);
 				this.serialize(v1.get(k));
 			}
 			}}
-			this.buf.b += "h";
+			this.buf.add("h");
 		}break;
 		case IntHash:{
-			this.buf.b += "q";
+			this.buf.add("q");
 			var v1 = v;
-			{ var $it20 = v1.keys();
-			while( $it20.hasNext() ) { var k = $it20.next();
+			{ var $it15 = v1.keys();
+			while( $it15.hasNext() ) { var k = $it15.next();
 			{
-				this.buf.b += ":";
-				this.buf.b += k;
+				this.buf.add(":");
+				this.buf.add(k);
 				this.serialize(v1.get(k));
 			}
 			}}
-			this.buf.b += "h";
+			this.buf.add("h");
 		}break;
 		case haxe.io.Bytes:{
 			var v1 = v;
@@ -2517,14 +3248,14 @@ haxe.Serializer.prototype.serialize = function(v) {
 				var b1 = v1.b[i++];
 				chars += b64.charAt(b1 >> 2) + b64.charAt((b1 << 4) & 63);
 			}
-			this.buf.b += "s";
-			this.buf.b += chars.length;
-			this.buf.b += ":";
-			this.buf.b += chars;
+			this.buf.add("s");
+			this.buf.add(chars.length);
+			this.buf.add(":");
+			this.buf.add(chars);
 		}break;
 		default:{
 			this.cache.pop();
-			this.buf.b += "c";
+			this.buf.add("c");
 			this.serializeString(Type.getClassName(c));
 			this.cache.push(v);
 			this.serializeFields(v);
@@ -2533,25 +3264,31 @@ haxe.Serializer.prototype.serialize = function(v) {
 	}break;
 	case 4:
 	{
-		if(this.useCache && this.serializeRef(v)) return;
-		this.buf.b += "o";
+		if(this.useCache && this.serializeRef(v)) {
+			$s.pop();
+			return;
+		}
+		this.buf.add("o");
 		this.serializeFields(v);
 	}break;
 	case 7:
 	var e = $e[2];
 	{
-		if(this.useCache && this.serializeRef(v)) return;
+		if(this.useCache && this.serializeRef(v)) {
+			$s.pop();
+			return;
+		}
 		this.cache.pop();
-		this.buf.b += (this.useEnumIndex?"j":"w");
+		this.buf.add((this.useEnumIndex?"j":"w"));
 		this.serializeString(Type.getEnumName(e));
 		if(this.useEnumIndex) {
-			this.buf.b += ":";
-			this.buf.b += v[1];
+			this.buf.add(":");
+			this.buf.add(v[1]);
 		}
 		else this.serializeString(v[0]);
-		this.buf.b += ":";
+		this.buf.add(":");
 		var l = v["length"];
-		this.buf.b += l - 2;
+		this.buf.add(l - 2);
 		{
 			var _g = 2;
 			while(_g < l) {
@@ -2569,12 +3306,18 @@ haxe.Serializer.prototype.serialize = function(v) {
 		throw "Cannot serialize " + Std.string(v);
 	}break;
 	}
+	$s.pop();
 }
 haxe.Serializer.prototype.serializeException = function(e) {
-	this.buf.b += "x";
+	$s.push("haxe.Serializer::serializeException");
+	var $spos = $s.length;
+	this.buf.add("x");
 	this.serialize(e);
+	$s.pop();
 }
 haxe.Serializer.prototype.serializeFields = function(v) {
+	$s.push("haxe.Serializer::serializeFields");
+	var $spos = $s.length;
 	{
 		var _g = 0, _g1 = Reflect.fields(v);
 		while(_g < _g1.length) {
@@ -2584,9 +3327,12 @@ haxe.Serializer.prototype.serializeFields = function(v) {
 			this.serialize(Reflect.field(v,f));
 		}
 	}
-	this.buf.b += "g";
+	this.buf.add("g");
+	$s.pop();
 }
 haxe.Serializer.prototype.serializeRef = function(v) {
+	$s.push("haxe.Serializer::serializeRef");
+	var $spos = $s.length;
 	var vt = typeof(v);
 	{
 		var _g1 = 0, _g = this.cache.length;
@@ -2594,32 +3340,52 @@ haxe.Serializer.prototype.serializeRef = function(v) {
 			var i = _g1++;
 			var ci = this.cache[i];
 			if(typeof(ci) == vt && ci == v) {
-				this.buf.b += "r";
-				this.buf.b += i;
-				return true;
+				this.buf.add("r");
+				this.buf.add(i);
+				{
+					$s.pop();
+					return true;
+				}
 			}
 		}
 	}
 	this.cache.push(v);
-	return false;
+	{
+		$s.pop();
+		return false;
+	}
+	$s.pop();
 }
 haxe.Serializer.prototype.serializeString = function(s) {
+	$s.push("haxe.Serializer::serializeString");
+	var $spos = $s.length;
 	var x = this.shash.get(s);
 	if(x != null) {
-		this.buf.b += "R";
-		this.buf.b += x;
-		return;
+		this.buf.add("R");
+		this.buf.add(x);
+		{
+			$s.pop();
+			return;
+		}
 	}
 	this.shash.set(s,this.scount++);
-	this.buf.b += "y";
+	this.buf.add("y");
 	s = StringTools.urlEncode(s);
-	this.buf.b += s.length;
-	this.buf.b += ":";
-	this.buf.b += s;
+	this.buf.add(s.length);
+	this.buf.add(":");
+	this.buf.add(s);
+	$s.pop();
 }
 haxe.Serializer.prototype.shash = null;
 haxe.Serializer.prototype.toString = function() {
-	return this.buf.b;
+	$s.push("haxe.Serializer::toString");
+	var $spos = $s.length;
+	{
+		var $tmp = this.buf.b.join("");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 haxe.Serializer.prototype.useCache = null;
 haxe.Serializer.prototype.useEnumIndex = null;
@@ -2651,151 +3417,361 @@ ValueType.TUnknown.__enum__ = ValueType;
 Type = function() { }
 Type.__name__ = ["Type"];
 Type.getClass = function(o) {
-	if(o == null) return null;
-	if(o.__enum__ != null) return null;
-	return o.__class__;
+	$s.push("Type::getClass");
+	var $spos = $s.length;
+	if(o == null) {
+		$s.pop();
+		return null;
+	}
+	if(o.__enum__ != null) {
+		$s.pop();
+		return null;
+	}
+	{
+		var $tmp = o.__class__;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Type.getEnum = function(o) {
-	if(o == null) return null;
-	return o.__enum__;
+	$s.push("Type::getEnum");
+	var $spos = $s.length;
+	if(o == null) {
+		$s.pop();
+		return null;
+	}
+	{
+		var $tmp = o.__enum__;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Type.getSuperClass = function(c) {
-	return c.__super__;
+	$s.push("Type::getSuperClass");
+	var $spos = $s.length;
+	{
+		var $tmp = c.__super__;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Type.getClassName = function(c) {
-	if(c == null) return null;
+	$s.push("Type::getClassName");
+	var $spos = $s.length;
+	if(c == null) {
+		$s.pop();
+		return null;
+	}
 	var a = c.__name__;
-	return a.join(".");
+	{
+		var $tmp = a.join(".");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Type.getEnumName = function(e) {
+	$s.push("Type::getEnumName");
+	var $spos = $s.length;
 	var a = e.__ename__;
-	return a.join(".");
+	{
+		var $tmp = a.join(".");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Type.resolveClass = function(name) {
+	$s.push("Type::resolveClass");
+	var $spos = $s.length;
 	var cl;
 	try {
 		cl = eval(name);
 	}
-	catch( $e21 ) {
+	catch( $e16 ) {
 		{
-			var e = $e21;
+			var e = $e16;
 			{
+				$e = [];
+				while($s.length >= $spos) $e.unshift($s.pop());
+				$s.push($e[0]);
 				cl = null;
 			}
 		}
 	}
-	if(cl == null || cl.__name__ == null) return null;
-	return cl;
+	if(cl == null || cl.__name__ == null) {
+		$s.pop();
+		return null;
+	}
+	{
+		$s.pop();
+		return cl;
+	}
+	$s.pop();
 }
 Type.resolveEnum = function(name) {
+	$s.push("Type::resolveEnum");
+	var $spos = $s.length;
 	var e;
 	try {
 		e = eval(name);
 	}
-	catch( $e22 ) {
+	catch( $e17 ) {
 		{
-			var err = $e22;
+			var err = $e17;
 			{
+				$e = [];
+				while($s.length >= $spos) $e.unshift($s.pop());
+				$s.push($e[0]);
 				e = null;
 			}
 		}
 	}
-	if(e == null || e.__ename__ == null) return null;
-	return e;
+	if(e == null || e.__ename__ == null) {
+		$s.pop();
+		return null;
+	}
+	{
+		$s.pop();
+		return e;
+	}
+	$s.pop();
 }
 Type.createInstance = function(cl,args) {
-	if(args.length <= 3) return new cl(args[0],args[1],args[2]);
+	$s.push("Type::createInstance");
+	var $spos = $s.length;
+	if(args.length <= 3) {
+		var $tmp = new cl(args[0],args[1],args[2]);
+		$s.pop();
+		return $tmp;
+	}
 	if(args.length > 8) throw "Too many arguments";
-	return new cl(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7]);
+	{
+		var $tmp = new cl(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7]);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Type.createEmptyInstance = function(cl) {
-	return new cl($_);
+	$s.push("Type::createEmptyInstance");
+	var $spos = $s.length;
+	{
+		var $tmp = new cl($_);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Type.createEnum = function(e,constr,params) {
+	$s.push("Type::createEnum");
+	var $spos = $s.length;
 	var f = Reflect.field(e,constr);
 	if(f == null) throw "No such constructor " + constr;
 	if(Reflect.isFunction(f)) {
 		if(params == null) throw "Constructor " + constr + " need parameters";
-		return f.apply(e,params);
+		{
+			var $tmp = f.apply(e,params);
+			$s.pop();
+			return $tmp;
+		}
 	}
 	if(params != null && params.length != 0) throw "Constructor " + constr + " does not need parameters";
-	return f;
+	{
+		$s.pop();
+		return f;
+	}
+	$s.pop();
 }
 Type.getInstanceFields = function(c) {
+	$s.push("Type::getInstanceFields");
+	var $spos = $s.length;
 	var a = Reflect.fields(c.prototype);
 	a.remove("__class__");
-	return a;
+	{
+		$s.pop();
+		return a;
+	}
+	$s.pop();
 }
 Type.getClassFields = function(c) {
+	$s.push("Type::getClassFields");
+	var $spos = $s.length;
 	var a = Reflect.fields(c);
 	a.remove("__name__");
 	a.remove("__interfaces__");
 	a.remove("__super__");
 	a.remove("prototype");
-	return a;
+	{
+		$s.pop();
+		return a;
+	}
+	$s.pop();
 }
 Type.getEnumConstructs = function(e) {
-	return e.__constructs__;
+	$s.push("Type::getEnumConstructs");
+	var $spos = $s.length;
+	{
+		var $tmp = e.__constructs__;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Type["typeof"] = function(v) {
+	$s.push("Type::typeof");
+	var $spos = $s.length;
 	switch(typeof(v)) {
 	case "boolean":{
-		return ValueType.TBool;
+		{
+			var $tmp = ValueType.TBool;
+			$s.pop();
+			return $tmp;
+		}
 	}break;
 	case "string":{
-		return ValueType.TClass(String);
+		{
+			var $tmp = ValueType.TClass(String);
+			$s.pop();
+			return $tmp;
+		}
 	}break;
 	case "number":{
-		if(Math.ceil(v) == v % 2147483648.0) return ValueType.TInt;
-		return ValueType.TFloat;
+		if(Math.ceil(v) == v % 2147483648.0) {
+			var $tmp = ValueType.TInt;
+			$s.pop();
+			return $tmp;
+		}
+		{
+			var $tmp = ValueType.TFloat;
+			$s.pop();
+			return $tmp;
+		}
 	}break;
 	case "object":{
-		if(v == null) return ValueType.TNull;
+		if(v == null) {
+			var $tmp = ValueType.TNull;
+			$s.pop();
+			return $tmp;
+		}
 		var e = v.__enum__;
-		if(e != null) return ValueType.TEnum(e);
+		if(e != null) {
+			var $tmp = ValueType.TEnum(e);
+			$s.pop();
+			return $tmp;
+		}
 		var c = v.__class__;
-		if(c != null) return ValueType.TClass(c);
-		return ValueType.TObject;
+		if(c != null) {
+			var $tmp = ValueType.TClass(c);
+			$s.pop();
+			return $tmp;
+		}
+		{
+			var $tmp = ValueType.TObject;
+			$s.pop();
+			return $tmp;
+		}
 	}break;
 	case "function":{
-		if(v.__name__ != null) return ValueType.TObject;
-		return ValueType.TFunction;
+		if(v.__name__ != null) {
+			var $tmp = ValueType.TObject;
+			$s.pop();
+			return $tmp;
+		}
+		{
+			var $tmp = ValueType.TFunction;
+			$s.pop();
+			return $tmp;
+		}
 	}break;
 	case "undefined":{
-		return ValueType.TNull;
+		{
+			var $tmp = ValueType.TNull;
+			$s.pop();
+			return $tmp;
+		}
 	}break;
 	default:{
-		return ValueType.TUnknown;
+		{
+			var $tmp = ValueType.TUnknown;
+			$s.pop();
+			return $tmp;
+		}
 	}break;
 	}
+	$s.pop();
 }
 Type.enumEq = function(a,b) {
-	if(a == b) return true;
-	if(a[0] != b[0]) return false;
+	$s.push("Type::enumEq");
+	var $spos = $s.length;
+	if(a == b) {
+		$s.pop();
+		return true;
+	}
+	if(a[0] != b[0]) {
+		$s.pop();
+		return false;
+	}
 	{
 		var _g1 = 2, _g = a.length;
 		while(_g1 < _g) {
 			var i = _g1++;
-			if(!Type.enumEq(a[i],b[i])) return false;
+			if(!Type.enumEq(a[i],b[i])) {
+				$s.pop();
+				return false;
+			}
 		}
 	}
 	var e = a.__enum__;
-	if(e != b.__enum__ || e == null) return false;
-	return true;
+	if(e != b.__enum__ || e == null) {
+		$s.pop();
+		return false;
+	}
+	{
+		$s.pop();
+		return true;
+	}
+	$s.pop();
 }
 Type.enumConstructor = function(e) {
-	return e[0];
+	$s.push("Type::enumConstructor");
+	var $spos = $s.length;
+	{
+		var $tmp = e[0];
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Type.enumParameters = function(e) {
-	return e.slice(2);
+	$s.push("Type::enumParameters");
+	var $spos = $s.length;
+	{
+		var $tmp = e.slice(2);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Type.enumIndex = function(e) {
-	return e[1];
+	$s.push("Type::enumIndex");
+	var $spos = $s.length;
+	{
+		var $tmp = e[1];
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 Type.prototype.__class__ = Type;
 xpde.core = {}
 xpde.core.js = {}
 xpde.core.js.PApplet = function(curElement) { if( curElement === $_ ) return; {
+	$s.push("xpde.core.js.PApplet::new");
+	var $spos = $s.length;
 	
   if ( typeof curElement == "string" )
     curElement = document.getElementById(curElement);
@@ -4507,6 +5483,7 @@ xpde.core.js.PApplet = function(curElement) { if( curElement === $_ ) return; {
     }
 
   };;
+	$s.pop();
 }}
 xpde.core.js.PApplet.__name__ = ["xpde","core","js","PApplet"];
 xpde.core.js.PApplet.prototype.__class__ = xpde.core.js.PApplet;
@@ -4519,17 +5496,33 @@ js.Lib.isOpera = null;
 js.Lib.document = null;
 js.Lib.window = null;
 js.Lib.alert = function(v) {
+	$s.push("js.Lib::alert");
+	var $spos = $s.length;
 	alert(js.Boot.__string_rec(v,""));
+	$s.pop();
 }
 js.Lib.eval = function(code) {
-	return eval(code);
+	$s.push("js.Lib::eval");
+	var $spos = $s.length;
+	{
+		var $tmp = eval(code);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 js.Lib.setErrorHandler = function(f) {
+	$s.push("js.Lib::setErrorHandler");
+	var $spos = $s.length;
 	js.Lib.onerror = f;
+	$s.pop();
 }
 js.Lib.prototype.__class__ = js.Lib;
 xpde.parser.Token = function(p) { if( p === $_ ) return; {
+	$s.push("xpde.parser.Token::new");
+	var $spos = $s.length;
 	null;
+	$s.pop();
 }}
 xpde.parser.Token.__name__ = ["xpde","parser","Token"];
 xpde.parser.Token.prototype.col = null;
@@ -4540,156 +5533,137 @@ xpde.parser.Token.prototype.pos = null;
 xpde.parser.Token.prototype.val = null;
 xpde.parser.Token.prototype.__class__ = xpde.parser.Token;
 xpde.parser.Buffer = function(s) { if( s === $_ ) return; {
+	$s.push("xpde.parser.Buffer::new");
+	var $spos = $s.length;
 	this.pos = 0;
 	this.bufChar = 0;
 	this.stream = s;
 	this.Read();
+	$s.pop();
 }}
 xpde.parser.Buffer.__name__ = ["xpde","parser","Buffer"];
 xpde.parser.Buffer.prototype.Peek = function() {
-	return this.bufChar;
+	$s.push("xpde.parser.Buffer::Peek");
+	var $spos = $s.length;
+	{
+		var $tmp = this.bufChar;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.Buffer.prototype.Read = function() {
+	$s.push("xpde.parser.Buffer::Read");
+	var $spos = $s.length;
 	this.pos++;
 	var ret = this.bufChar;
 	try {
 		this.bufChar = this.stream.readByte();
 	}
-	catch( $e23 ) {
-		if( js.Boot.__instanceof($e23,haxe.io.Eof) ) {
-			var e = $e23;
+	catch( $e18 ) {
+		if( js.Boot.__instanceof($e18,haxe.io.Eof) ) {
+			var e = $e18;
 			{
+				$e = [];
+				while($s.length >= $spos) $e.unshift($s.pop());
+				$s.push($e[0]);
 				this.bufChar = xpde.parser.Buffer.EOF;
 			}
-		} else throw($e23);
+		} else throw($e18);
 	}
-	return ret;
+	{
+		$s.pop();
+		return ret;
+	}
+	$s.pop();
 }
 xpde.parser.Buffer.prototype.bufChar = null;
 xpde.parser.Buffer.prototype.getPos = function() {
-	return this.pos;
+	$s.push("xpde.parser.Buffer::getPos");
+	var $spos = $s.length;
+	{
+		var $tmp = this.pos;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.Buffer.prototype.pos = null;
 xpde.parser.Buffer.prototype.stream = null;
 xpde.parser.Buffer.prototype.__class__ = xpde.parser.Buffer;
 xpde.parser.StartStates = function(p) { if( p === $_ ) return; {
+	$s.push("xpde.parser.StartStates::new");
+	var $spos = $s.length;
 	this.tab = [];
+	$s.pop();
 }}
 xpde.parser.StartStates.__name__ = ["xpde","parser","StartStates"];
 xpde.parser.StartStates.prototype.set = function(key,val) {
+	$s.push("xpde.parser.StartStates::set");
+	var $spos = $s.length;
 	var e = new xpde.parser.Elem(key,val);
 	var k = key % 128;
 	e.next = this.tab[k];
 	this.tab[k] = e;
+	$s.pop();
 }
 xpde.parser.StartStates.prototype.state = function(key) {
+	$s.push("xpde.parser.StartStates::state");
+	var $spos = $s.length;
 	var e = this.tab[key % 128];
 	while(e != null && e.key != key) e = e.next;
-	return (e == null?0:e.val);
+	{
+		var $tmp = (e == null?0:e.val);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.StartStates.prototype.tab = null;
 xpde.parser.StartStates.prototype.__class__ = xpde.parser.StartStates;
 xpde.parser.Elem = function(key,val) { if( key === $_ ) return; {
+	$s.push("xpde.parser.Elem::new");
+	var $spos = $s.length;
 	this.key = key;
 	this.val = val;
+	$s.pop();
 }}
 xpde.parser.Elem.__name__ = ["xpde","parser","Elem"];
 xpde.parser.Elem.prototype.key = null;
 xpde.parser.Elem.prototype.next = null;
 xpde.parser.Elem.prototype.val = null;
 xpde.parser.Elem.prototype.__class__ = xpde.parser.Elem;
-Hash = function(p) { if( p === $_ ) return; {
-	this.h = {}
-	if(this.h.__proto__ != null) {
-		this.h.__proto__ = null;
-		delete(this.h.__proto__);
-	}
-	else null;
-}}
-Hash.__name__ = ["Hash"];
-Hash.prototype.exists = function(key) {
-	try {
-		key = "$" + key;
-		return this.hasOwnProperty.call(this.h,key);
-	}
-	catch( $e24 ) {
-		{
-			var e = $e24;
-			{
-				
-				for(var i in this.h)
-					if( i == key ) return true;
-			;
-				return false;
-			}
-		}
-	}
-}
-Hash.prototype.get = function(key) {
-	return this.h["$" + key];
-}
-Hash.prototype.h = null;
-Hash.prototype.iterator = function() {
-	return { ref : this.h, it : this.keys(), hasNext : function() {
-		return this.it.hasNext();
-	}, next : function() {
-		var i = this.it.next();
-		return this.ref["$" + i];
-	}}
-}
-Hash.prototype.keys = function() {
-	var a = new Array();
-	
-			for(var i in this.h)
-				a.push(i.substr(1));
-		;
-	return a.iterator();
-}
-Hash.prototype.remove = function(key) {
-	if(!this.exists(key)) return false;
-	delete(this.h["$" + key]);
-	return true;
-}
-Hash.prototype.set = function(key,value) {
-	this.h["$" + key] = value;
-}
-Hash.prototype.toString = function() {
-	var s = new StringBuf();
-	s.b += "{";
-	var it = this.keys();
-	{ var $it25 = it;
-	while( $it25.hasNext() ) { var i = $it25.next();
-	{
-		s.b += i;
-		s.b += " => ";
-		s.b += Std.string(this.get(i));
-		if(it.hasNext()) s.b += ", ";
-	}
-	}}
-	s.b += "}";
-	return s.b;
-}
-Hash.prototype.__class__ = Hash;
 xpde.parser.Scanner = function(s) { if( s === $_ ) return; {
+	$s.push("xpde.parser.Scanner::new");
+	var $spos = $s.length;
 	this.tval = new StringBuf();
 	this.buffer = new xpde.parser.Buffer(s);
 	this.Init();
+	$s.pop();
 }}
 xpde.parser.Scanner.__name__ = ["xpde","parser","Scanner"];
 xpde.parser.Scanner.prototype.AddCh = function() {
+	$s.push("xpde.parser.Scanner::AddCh");
+	var $spos = $s.length;
 	if(this.ch != xpde.parser.Buffer.EOF) {
-		this.tval.b += String.fromCharCode(this.ch);
+		this.tval.addChar(this.ch);
 		this.NextCh();
 	}
+	$s.pop();
 }
 xpde.parser.Scanner.prototype.CheckLiteral = function() {
+	$s.push("xpde.parser.Scanner::CheckLiteral");
+	var $spos = $s.length;
 	var val = this.t.val;
 	var kind = xpde.parser.Scanner.literals.get(val);
 	if(kind != null) {
 		this.t.kind = kind;
 	}
+	$s.pop();
 }
 xpde.parser.Scanner.prototype.Comment0 = function() {
+	$s.push("xpde.parser.Scanner::Comment0");
+	var $spos = $s.length;
 	var level = 1, pos0 = this.pos, line0 = this.line, col0 = this.col, nch = this.buffer.Peek();
 	if(nch == 47) {
 		this.NextCh();
@@ -4700,17 +5674,29 @@ xpde.parser.Scanner.prototype.Comment0 = function() {
 				if(level == 0) {
 					this.oldEols = this.line - line0;
 					this.NextCh();
-					return true;
+					{
+						$s.pop();
+						return true;
+					}
 				}
 				this.NextCh();
 			}
-			else if(this.ch == xpde.parser.Buffer.EOF) return false;
+			else if(this.ch == xpde.parser.Buffer.EOF) {
+				$s.pop();
+				return false;
+			}
 			else this.NextCh();
 		}
 	}
-	return false;
+	{
+		$s.pop();
+		return false;
+	}
+	$s.pop();
 }
 xpde.parser.Scanner.prototype.Comment1 = function() {
+	$s.push("xpde.parser.Scanner::Comment1");
+	var $spos = $s.length;
 	var level = 1, pos0 = this.pos, line0 = this.line, col0 = this.col, nch = this.buffer.Peek();
 	if(nch == 42) {
 		this.NextCh();
@@ -4723,26 +5709,41 @@ xpde.parser.Scanner.prototype.Comment1 = function() {
 					if(level == 0) {
 						this.oldEols = this.line - line0;
 						this.NextCh();
-						return true;
+						{
+							$s.pop();
+							return true;
+						}
 					}
 					this.NextCh();
 				}
 			}
-			else if(this.ch == xpde.parser.Buffer.EOF) return false;
+			else if(this.ch == xpde.parser.Buffer.EOF) {
+				$s.pop();
+				return false;
+			}
 			else this.NextCh();
 		}
 	}
-	return false;
+	{
+		$s.pop();
+		return false;
+	}
+	$s.pop();
 }
 xpde.parser.Scanner.prototype.Init = function() {
+	$s.push("xpde.parser.Scanner::Init");
+	var $spos = $s.length;
 	this.pos = -1;
 	this.line = 1;
 	this.col = 0;
 	this.oldEols = 0;
 	this.NextCh();
 	this.pt = this.tokens = new xpde.parser.Token();
+	$s.pop();
 }
 xpde.parser.Scanner.prototype.NextCh = function() {
+	$s.push("xpde.parser.Scanner::NextCh");
+	var $spos = $s.length;
 	if(this.oldEols > 0) {
 		this.ch = xpde.parser.Scanner.EOL;
 		this.oldEols--;
@@ -4757,10 +5758,17 @@ xpde.parser.Scanner.prototype.NextCh = function() {
 			this.col = 0;
 		}
 	}
+	$s.pop();
 }
 xpde.parser.Scanner.prototype.NextToken = function() {
+	$s.push("xpde.parser.Scanner::NextToken");
+	var $spos = $s.length;
 	while(this.ch == 32 || this.ch >= 9 && this.ch <= 10 || this.ch == 13) this.NextCh();
-	if(this.ch == 47 && this.Comment0() || this.ch == 47 && this.Comment1()) return this.NextToken();
+	if(this.ch == 47 && this.Comment0() || this.ch == 47 && this.Comment1()) {
+		var $tmp = this.NextToken();
+		$s.pop();
+		return $tmp;
+	}
 	this.t = new xpde.parser.Token();
 	this.t.pos = this.pos;
 	this.t.col = this.col;
@@ -4786,10 +5794,14 @@ xpde.parser.Scanner.prototype.NextToken = function() {
 				}
 				else {
 					this.t.kind = 1;
-					this.t.val = this.tval.b;
+					this.t.val = this.tval.b.join("");
 					this.tval = new StringBuf();
 					this.CheckLiteral();
-					return this.t;
+					{
+						var $tmp = this.t;
+						$s.pop();
+						return $tmp;
+					}
 				}
 			}break;
 			case 2:{
@@ -5027,7 +6039,7 @@ xpde.parser.Scanner.prototype.NextToken = function() {
 			case 20:{
 				if(this.ch >= 48 && this.ch <= 51) {
 					this.AddCh();
-					state = 49;
+					state = 52;
 				}
 				else if(this.ch >= 52 && this.ch <= 55) {
 					this.AddCh();
@@ -5131,7 +6143,7 @@ xpde.parser.Scanner.prototype.NextToken = function() {
 			case 28:{
 				if(this.ch >= 48 && this.ch <= 51) {
 					this.AddCh();
-					state = 51;
+					state = 54;
 				}
 				else if(this.ch >= 52 && this.ch <= 55) {
 					this.AddCh();
@@ -5262,32 +6274,38 @@ xpde.parser.Scanner.prototype.NextToken = function() {
 			}break;
 			case 42:{
 				{
-					this.t.kind = 37;
+					this.t.kind = 35;
 					throw "__break__";
 				}
 			}break;
 			case 43:{
 				{
-					this.t.kind = 38;
+					this.t.kind = 37;
 					throw "__break__";
 				}
 			}break;
 			case 44:{
 				{
-					this.t.kind = 39;
+					this.t.kind = 38;
 					throw "__break__";
 				}
 			}break;
 			case 45:{
 				{
-					this.t.kind = 40;
+					this.t.kind = 39;
 					throw "__break__";
 				}
 			}break;
 			case 46:{
+				{
+					this.t.kind = 40;
+					throw "__break__";
+				}
+			}break;
+			case 47:{
 				if(this.ch >= 48 && this.ch <= 55) {
 					this.AddCh();
-					state = 53;
+					state = 56;
 				}
 				else if(this.ch >= 56 && this.ch <= 57) {
 					this.AddCh();
@@ -5318,10 +6336,10 @@ xpde.parser.Scanner.prototype.NextToken = function() {
 					throw "__break__";
 				}
 			}break;
-			case 47:{
+			case 48:{
 				if(this.ch >= 48 && this.ch <= 57) {
 					this.AddCh();
-					state = 47;
+					state = 48;
 				}
 				else if(this.ch == 76 || this.ch == 108) {
 					this.AddCh();
@@ -5344,7 +6362,7 @@ xpde.parser.Scanner.prototype.NextToken = function() {
 					throw "__break__";
 				}
 			}break;
-			case 48:{
+			case 49:{
 				if(this.ch >= 48 && this.ch <= 57) {
 					this.AddCh();
 					state = 5;
@@ -5354,10 +6372,30 @@ xpde.parser.Scanner.prototype.NextToken = function() {
 					throw "__break__";
 				}
 			}break;
-			case 49:{
+			case 50:{
+				if(this.ch == 45) {
+					this.AddCh();
+					state = 37;
+				}
+				else {
+					this.t.kind = 34;
+					throw "__break__";
+				}
+			}break;
+			case 51:{
+				if(this.ch == 43) {
+					this.AddCh();
+					state = 38;
+				}
+				else {
+					this.t.kind = 36;
+					throw "__break__";
+				}
+			}break;
+			case 52:{
 				if(this.ch >= 48 && this.ch <= 55) {
 					this.AddCh();
-					state = 50;
+					state = 53;
 				}
 				else if(this.ch == 39) {
 					this.AddCh();
@@ -5368,7 +6406,7 @@ xpde.parser.Scanner.prototype.NextToken = function() {
 					throw "__break__";
 				}
 			}break;
-			case 50:{
+			case 53:{
 				if(this.ch >= 48 && this.ch <= 55) {
 					this.AddCh();
 					state = 19;
@@ -5382,14 +6420,14 @@ xpde.parser.Scanner.prototype.NextToken = function() {
 					throw "__break__";
 				}
 			}break;
-			case 51:{
+			case 54:{
 				if(this.ch <= 9 || this.ch >= 11 && this.ch <= 12 || this.ch >= 14 && this.ch <= 33 || this.ch >= 35 && this.ch <= 47 || this.ch >= 56 && this.ch <= 91 || this.ch >= 93 && this.ch <= 65535) {
 					this.AddCh();
 					state = 27;
 				}
 				else if(this.ch >= 48 && this.ch <= 55) {
 					this.AddCh();
-					state = 52;
+					state = 55;
 				}
 				else if(this.ch == 34) {
 					this.AddCh();
@@ -5404,7 +6442,7 @@ xpde.parser.Scanner.prototype.NextToken = function() {
 					throw "__break__";
 				}
 			}break;
-			case 52:{
+			case 55:{
 				if(this.ch <= 9 || this.ch >= 11 && this.ch <= 12 || this.ch >= 14 && this.ch <= 33 || this.ch >= 35 && this.ch <= 91 || this.ch >= 93 && this.ch <= 65535) {
 					this.AddCh();
 					state = 27;
@@ -5422,10 +6460,10 @@ xpde.parser.Scanner.prototype.NextToken = function() {
 					throw "__break__";
 				}
 			}break;
-			case 53:{
+			case 56:{
 				if(this.ch >= 48 && this.ch <= 55) {
 					this.AddCh();
-					state = 53;
+					state = 56;
 				}
 				else if(this.ch >= 56 && this.ch <= 57) {
 					this.AddCh();
@@ -5452,325 +6490,77 @@ xpde.parser.Scanner.prototype.NextToken = function() {
 					throw "__break__";
 				}
 			}break;
-			case 54:{
+			case 57:{
 				{
 					this.t.kind = 42;
 					throw "__break__";
 				}
 			}break;
-			case 55:{
-				{
-					this.t.kind = 72;
-					throw "__break__";
-				}
-			}break;
-			case 56:{
-				{
-					this.t.kind = 74;
-					throw "__break__";
-				}
-			}break;
-			case 57:{
-				{
-					this.t.kind = 75;
-					throw "__break__";
-				}
-			}break;
 			case 58:{
 				{
-					this.t.kind = 76;
+					this.t.kind = 43;
 					throw "__break__";
 				}
 			}break;
 			case 59:{
 				{
-					this.t.kind = 77;
-					throw "__break__";
-				}
-			}break;
-			case 60:{
-				{
-					this.t.kind = 78;
-					throw "__break__";
-				}
-			}break;
-			case 61:{
-				{
-					this.t.kind = 79;
-					throw "__break__";
-				}
-			}break;
-			case 62:{
-				{
-					this.t.kind = 80;
-					throw "__break__";
-				}
-			}break;
-			case 63:{
-				{
-					this.t.kind = 81;
-					throw "__break__";
-				}
-			}break;
-			case 64:{
-				{
-					this.t.kind = 82;
-					throw "__break__";
-				}
-			}break;
-			case 65:{
-				{
-					this.t.kind = 83;
-					throw "__break__";
-				}
-			}break;
-			case 66:{
-				{
-					this.t.kind = 84;
-					throw "__break__";
-				}
-			}break;
-			case 67:{
-				{
-					this.t.kind = 85;
-					throw "__break__";
-				}
-			}break;
-			case 68:{
-				{
-					this.t.kind = 86;
-					throw "__break__";
-				}
-			}break;
-			case 69:{
-				{
-					this.t.kind = 90;
-					throw "__break__";
-				}
-			}break;
-			case 70:{
-				{
-					this.t.kind = 91;
-					throw "__break__";
-				}
-			}break;
-			case 71:{
-				{
-					this.t.kind = 94;
-					throw "__break__";
-				}
-			}break;
-			case 72:{
-				{
-					this.t.kind = 95;
-					throw "__break__";
-				}
-			}break;
-			case 73:{
-				if(this.ch == 45) {
-					this.AddCh();
-					state = 37;
-				}
-				else if(this.ch == 61) {
-					this.AddCh();
-					state = 57;
-				}
-				else {
-					this.t.kind = 34;
-					throw "__break__";
-				}
-			}break;
-			case 74:{
-				if(this.ch == 43) {
-					this.AddCh();
-					state = 38;
-				}
-				else if(this.ch == 61) {
-					this.AddCh();
-					state = 56;
-				}
-				else {
-					this.t.kind = 36;
-					throw "__break__";
-				}
-			}break;
-			case 75:{
-				if(this.ch == 61) {
-					this.AddCh();
-					state = 70;
-				}
-				else {
-					this.t.kind = 35;
-					throw "__break__";
-				}
-			}break;
-			case 76:{
-				if(this.ch == 61) {
-					this.AddCh();
-					state = 58;
-				}
-				else {
-					this.t.kind = 43;
-					throw "__break__";
-				}
-			}break;
-			case 77:{
-				if(this.ch == 61) {
-					this.AddCh();
-					state = 69;
-				}
-				else {
 					this.t.kind = 52;
-					throw "__break__";
-				}
-			}break;
-			case 78:{
-				if(this.ch == 61) {
-					this.AddCh();
-					state = 59;
-				}
-				else {
-					this.t.kind = 99;
-					throw "__break__";
-				}
-			}break;
-			case 79:{
-				if(this.ch == 61) {
-					this.AddCh();
-					state = 60;
-				}
-				else if(this.ch == 38) {
-					this.AddCh();
-					state = 68;
-				}
-				else {
-					this.t.kind = 89;
-					throw "__break__";
-				}
-			}break;
-			case 80:{
-				if(this.ch == 61) {
-					this.AddCh();
-					state = 61;
-				}
-				else if(this.ch == 124) {
-					this.AddCh();
-					state = 67;
-				}
-				else {
-					this.t.kind = 87;
-					throw "__break__";
-				}
-			}break;
-			case 81:{
-				if(this.ch == 61) {
-					this.AddCh();
-					state = 62;
-				}
-				else {
-					this.t.kind = 88;
-					throw "__break__";
-				}
-			}break;
-			case 82:{
-				if(this.ch == 61) {
-					this.AddCh();
-					state = 63;
-				}
-				else {
-					this.t.kind = 100;
-					throw "__break__";
-				}
-			}break;
-			case 83:{
-				if(this.ch == 60) {
-					this.AddCh();
-					state = 85;
-				}
-				else if(this.ch == 61) {
-					this.AddCh();
-					state = 71;
-				}
-				else {
-					this.t.kind = 92;
-					throw "__break__";
-				}
-			}break;
-			case 84:{
-				if(this.ch == 62) {
-					this.AddCh();
-					state = 86;
-				}
-				else if(this.ch == 61) {
-					this.AddCh();
-					state = 72;
-				}
-				else {
-					this.t.kind = 93;
-					throw "__break__";
-				}
-			}break;
-			case 85:{
-				if(this.ch == 61) {
-					this.AddCh();
-					state = 64;
-				}
-				else {
-					this.t.kind = 96;
-					throw "__break__";
-				}
-			}break;
-			case 86:{
-				if(this.ch == 61) {
-					this.AddCh();
-					state = 65;
-				}
-				else if(this.ch == 62) {
-					this.AddCh();
-					state = 87;
-				}
-				else {
-					this.t.kind = 97;
-					throw "__break__";
-				}
-			}break;
-			case 87:{
-				if(this.ch == 61) {
-					this.AddCh();
-					state = 66;
-				}
-				else {
-					this.t.kind = 98;
 					throw "__break__";
 				}
 			}break;
 			}
 		}
 	} catch( e ) { if( e != "__break__" ) throw e; }
-	this.t.val = this.tval.b;
+	this.t.val = this.tval.b.join("");
 	this.tval = new StringBuf();
-	return this.t;
+	{
+		var $tmp = this.t;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.Scanner.prototype.Peek = function() {
+	$s.push("xpde.parser.Scanner::Peek");
+	var $spos = $s.length;
 	do {
 		if(this.pt.next == null) {
 			this.pt.next = this.NextToken();
 		}
 		this.pt = this.pt.next;
 	} while(this.pt.kind > xpde.parser.Scanner.maxT);
-	return this.pt;
+	{
+		var $tmp = this.pt;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.Scanner.prototype.ResetPeek = function() {
+	$s.push("xpde.parser.Scanner::ResetPeek");
+	var $spos = $s.length;
 	this.pt = this.tokens;
+	$s.pop();
 }
 xpde.parser.Scanner.prototype.Scan = function() {
+	$s.push("xpde.parser.Scanner::Scan");
+	var $spos = $s.length;
 	if(this.tokens.next == null) {
-		return this.NextToken();
+		{
+			var $tmp = this.NextToken();
+			$s.pop();
+			return $tmp;
+		}
 	}
 	else {
 		this.pt = this.tokens = this.tokens.next;
-		return this.tokens;
+		{
+			var $tmp = this.tokens;
+			$s.pop();
+			return $tmp;
+		}
 	}
+	$s.pop();
 }
 xpde.parser.Scanner.prototype.buffer = null;
 xpde.parser.Scanner.prototype.ch = null;
@@ -5785,50 +6575,100 @@ xpde.parser.Scanner.prototype.tokens = null;
 xpde.parser.Scanner.prototype.tval = null;
 xpde.parser.Scanner.prototype.__class__ = xpde.parser.Scanner;
 haxe.io.Eof = function(p) { if( p === $_ ) return; {
+	$s.push("haxe.io.Eof::new");
+	var $spos = $s.length;
 	null;
+	$s.pop();
 }}
 haxe.io.Eof.__name__ = ["haxe","io","Eof"];
 haxe.io.Eof.prototype.toString = function() {
-	return "Eof";
+	$s.push("haxe.io.Eof::toString");
+	var $spos = $s.length;
+	{
+		$s.pop();
+		return "Eof";
+	}
+	$s.pop();
 }
 haxe.io.Eof.prototype.__class__ = haxe.io.Eof;
 js.Boot = function() { }
 js.Boot.__name__ = ["js","Boot"];
 js.Boot.__unhtml = function(s) {
-	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
+	$s.push("js.Boot::__unhtml");
+	var $spos = $s.length;
+	{
+		var $tmp = s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 js.Boot.__trace = function(v,i) {
+	$s.push("js.Boot::__trace");
+	var $spos = $s.length;
 	var msg = (i != null?i.fileName + ":" + i.lineNumber + ": ":"");
 	msg += js.Boot.__unhtml(js.Boot.__string_rec(v,"")) + "<br/>";
 	var d = document.getElementById("haxe:trace");
 	if(d == null) alert("No haxe:trace element defined\n" + msg);
 	else d.innerHTML += msg;
+	$s.pop();
 }
 js.Boot.__clear_trace = function() {
+	$s.push("js.Boot::__clear_trace");
+	var $spos = $s.length;
 	var d = document.getElementById("haxe:trace");
 	if(d != null) d.innerHTML = "";
 	else null;
+	$s.pop();
 }
 js.Boot.__closure = function(o,f) {
+	$s.push("js.Boot::__closure");
+	var $spos = $s.length;
 	var m = o[f];
-	if(m == null) return null;
+	if(m == null) {
+		$s.pop();
+		return null;
+	}
 	var f1 = function() {
-		return m.apply(o,arguments);
+		$s.push("js.Boot::__closure@67");
+		var $spos = $s.length;
+		{
+			var $tmp = m.apply(o,arguments);
+			$s.pop();
+			return $tmp;
+		}
+		$s.pop();
 	}
 	f1.scope = o;
 	f1.method = m;
-	return f1;
+	{
+		$s.pop();
+		return f1;
+	}
+	$s.pop();
 }
 js.Boot.__string_rec = function(o,s) {
-	if(o == null) return "null";
-	if(s.length >= 5) return "<...>";
+	$s.push("js.Boot::__string_rec");
+	var $spos = $s.length;
+	if(o == null) {
+		$s.pop();
+		return "null";
+	}
+	if(s.length >= 5) {
+		$s.pop();
+		return "<...>";
+	}
 	var t = typeof(o);
 	if(t == "function" && (o.__name__ != null || o.__ename__ != null)) t = "object";
 	switch(t) {
 	case "object":{
 		if(o instanceof Array) {
 			if(o.__enum__ != null) {
-				if(o.length == 2) return o[0];
+				if(o.length == 2) {
+					var $tmp = o[0];
+					$s.pop();
+					return $tmp;
+				}
 				var str = o[0] + "(";
 				s += "\t";
 				{
@@ -5839,7 +6679,11 @@ js.Boot.__string_rec = function(o,s) {
 						else str += js.Boot.__string_rec(o[i],s);
 					}
 				}
-				return str + ")";
+				{
+					var $tmp = str + ")";
+					$s.pop();
+					return $tmp;
+				}
 			}
 			var l = o.length;
 			var i;
@@ -5853,23 +6697,35 @@ js.Boot.__string_rec = function(o,s) {
 				}
 			}
 			str += "]";
-			return str;
+			{
+				$s.pop();
+				return str;
+			}
 		}
 		var tostr;
 		try {
 			tostr = o.toString;
 		}
-		catch( $e26 ) {
+		catch( $e19 ) {
 			{
-				var e = $e26;
+				var e = $e19;
 				{
-					return "???";
+					$e = [];
+					while($s.length >= $spos) $e.unshift($s.pop());
+					$s.push($e[0]);
+					{
+						$s.pop();
+						return "???";
+					}
 				}
 			}
 		}
 		if(tostr != null && tostr != Object.toString) {
 			var s2 = o.toString();
-			if(s2 != "[object Object]") return s2;
+			if(s2 != "[object Object]") {
+				$s.pop();
+				return s2;
+			}
 		}
 		var k = null;
 		var str = "{\n";
@@ -5883,107 +6739,245 @@ js.Boot.__string_rec = function(o,s) {
 		}
 		s = s.substring(1);
 		str += "\n" + s + "}";
-		return str;
+		{
+			$s.pop();
+			return str;
+		}
 	}break;
 	case "function":{
-		return "<function>";
+		{
+			$s.pop();
+			return "<function>";
+		}
 	}break;
 	case "string":{
-		return o;
+		{
+			$s.pop();
+			return o;
+		}
 	}break;
 	default:{
-		return String(o);
+		{
+			var $tmp = String(o);
+			$s.pop();
+			return $tmp;
+		}
 	}break;
 	}
+	$s.pop();
 }
 js.Boot.__interfLoop = function(cc,cl) {
-	if(cc == null) return false;
-	if(cc == cl) return true;
+	$s.push("js.Boot::__interfLoop");
+	var $spos = $s.length;
+	if(cc == null) {
+		$s.pop();
+		return false;
+	}
+	if(cc == cl) {
+		$s.pop();
+		return true;
+	}
 	var intf = cc.__interfaces__;
 	if(intf != null) {
 		var _g1 = 0, _g = intf.length;
 		while(_g1 < _g) {
 			var i = _g1++;
 			var i1 = intf[i];
-			if(i1 == cl || js.Boot.__interfLoop(i1,cl)) return true;
+			if(i1 == cl || js.Boot.__interfLoop(i1,cl)) {
+				$s.pop();
+				return true;
+			}
 		}
 	}
-	return js.Boot.__interfLoop(cc.__super__,cl);
+	{
+		var $tmp = js.Boot.__interfLoop(cc.__super__,cl);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 js.Boot.__instanceof = function(o,cl) {
+	$s.push("js.Boot::__instanceof");
+	var $spos = $s.length;
 	try {
 		if(o instanceof cl) {
-			if(cl == Array) return (o.__enum__ == null);
+			if(cl == Array) {
+				var $tmp = (o.__enum__ == null);
+				$s.pop();
+				return $tmp;
+			}
+			{
+				$s.pop();
+				return true;
+			}
+		}
+		if(js.Boot.__interfLoop(o.__class__,cl)) {
+			$s.pop();
 			return true;
 		}
-		if(js.Boot.__interfLoop(o.__class__,cl)) return true;
 	}
-	catch( $e27 ) {
+	catch( $e20 ) {
 		{
-			var e = $e27;
+			var e = $e20;
 			{
-				if(cl == null) return false;
+				$e = [];
+				while($s.length >= $spos) $e.unshift($s.pop());
+				$s.push($e[0]);
+				if(cl == null) {
+					$s.pop();
+					return false;
+				}
 			}
 		}
 	}
 	switch(cl) {
 	case Int:{
-		return Math.ceil(o%2147483648.0) === o;
+		{
+			var $tmp = Math.ceil(o%2147483648.0) === o;
+			$s.pop();
+			return $tmp;
+		}
 	}break;
 	case Float:{
-		return typeof(o) == "number";
+		{
+			var $tmp = typeof(o) == "number";
+			$s.pop();
+			return $tmp;
+		}
 	}break;
 	case Bool:{
-		return o === true || o === false;
+		{
+			var $tmp = o === true || o === false;
+			$s.pop();
+			return $tmp;
+		}
 	}break;
 	case String:{
-		return typeof(o) == "string";
+		{
+			var $tmp = typeof(o) == "string";
+			$s.pop();
+			return $tmp;
+		}
 	}break;
 	case Dynamic:{
-		return true;
+		{
+			$s.pop();
+			return true;
+		}
 	}break;
 	default:{
-		if(o == null) return false;
-		return o.__enum__ == cl || (cl == Class && o.__name__ != null) || (cl == Enum && o.__ename__ != null);
+		if(o == null) {
+			$s.pop();
+			return false;
+		}
+		{
+			var $tmp = o.__enum__ == cl || (cl == Class && o.__name__ != null) || (cl == Enum && o.__ename__ != null);
+			$s.pop();
+			return $tmp;
+		}
 	}break;
 	}
+	$s.pop();
 }
 js.Boot.__init = function() {
+	$s.push("js.Boot::__init");
+	var $spos = $s.length;
 	js.Lib.isIE = (document.all != null && window.opera == null);
 	js.Lib.isOpera = (window.opera != null);
 	Array.prototype.copy = Array.prototype.slice;
 	Array.prototype.insert = function(i,x) {
+		$s.push("js.Boot::__init@199");
+		var $spos = $s.length;
 		this.splice(i,0,x);
+		$s.pop();
 	}
-	Array.prototype.remove = function(obj) {
+	Array.prototype.remove = (Array.prototype.indexOf?function(obj) {
+		$s.push("js.Boot::__init@202");
+		var $spos = $s.length;
+		var idx = this.indexOf(obj);
+		if(idx == -1) {
+			$s.pop();
+			return false;
+		}
+		this.splice(idx,1);
+		{
+			$s.pop();
+			return true;
+		}
+		$s.pop();
+	}:function(obj) {
+		$s.push("js.Boot::__init@207");
+		var $spos = $s.length;
 		var i = 0;
 		var l = this.length;
 		while(i < l) {
 			if(this[i] == obj) {
 				this.splice(i,1);
-				return true;
+				{
+					$s.pop();
+					return true;
+				}
 			}
 			i++;
 		}
-		return false;
-	}
+		{
+			$s.pop();
+			return false;
+		}
+		$s.pop();
+	});
 	Array.prototype.iterator = function() {
-		return { cur : 0, arr : this, hasNext : function() {
-			return this.cur < this.arr.length;
-		}, next : function() {
-			return this.arr[this.cur++];
-		}}
+		$s.push("js.Boot::__init@219");
+		var $spos = $s.length;
+		{
+			var $tmp = { cur : 0, arr : this, hasNext : function() {
+				$s.push("js.Boot::__init@219@223");
+				var $spos = $s.length;
+				{
+					var $tmp = this.cur < this.arr.length;
+					$s.pop();
+					return $tmp;
+				}
+				$s.pop();
+			}, next : function() {
+				$s.push("js.Boot::__init@219@226");
+				var $spos = $s.length;
+				{
+					var $tmp = this.arr[this.cur++];
+					$s.pop();
+					return $tmp;
+				}
+				$s.pop();
+			}}
+			$s.pop();
+			return $tmp;
+		}
+		$s.pop();
 	}
 	var cca = String.prototype.charCodeAt;
 	String.prototype.cca = cca;
 	String.prototype.charCodeAt = function(i) {
+		$s.push("js.Boot::__init@233");
+		var $spos = $s.length;
 		var x = cca.call(this,i);
-		if(isNaN(x)) return null;
-		return x;
+		if(isNaN(x)) {
+			$s.pop();
+			return null;
+		}
+		{
+			$s.pop();
+			return x;
+		}
+		$s.pop();
 	}
 	var oldsub = String.prototype.substr;
 	String.prototype.substr = function(pos,len) {
-		if(pos != null && pos != 0 && len != null && len < 0) return "";
+		$s.push("js.Boot::__init@240");
+		var $spos = $s.length;
+		if(pos != null && pos != 0 && len != null && len < 0) {
+			$s.pop();
+			return "";
+		}
 		if(len == null) len = this.length;
 		if(pos < 0) {
 			pos = this.length + pos;
@@ -5992,66 +6986,136 @@ js.Boot.__init = function() {
 		else if(len < 0) {
 			len = this.length + len - pos;
 		}
-		return oldsub.apply(this,[pos,len]);
+		{
+			var $tmp = oldsub.apply(this,[pos,len]);
+			$s.pop();
+			return $tmp;
+		}
+		$s.pop();
 	}
 	$closure = js.Boot.__closure;
+	$s.pop();
 }
 js.Boot.prototype.__class__ = js.Boot;
 IntHash = function(p) { if( p === $_ ) return; {
+	$s.push("IntHash::new");
+	var $spos = $s.length;
 	this.h = {}
 	if(this.h.__proto__ != null) {
 		this.h.__proto__ = null;
 		delete(this.h.__proto__);
 	}
 	else null;
+	$s.pop();
 }}
 IntHash.__name__ = ["IntHash"];
 IntHash.prototype.exists = function(key) {
-	return this.h[key] != null;
+	$s.push("IntHash::exists");
+	var $spos = $s.length;
+	{
+		var $tmp = this.h[key] != null;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 IntHash.prototype.get = function(key) {
-	return this.h[key];
+	$s.push("IntHash::get");
+	var $spos = $s.length;
+	{
+		var $tmp = this.h[key];
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 IntHash.prototype.h = null;
 IntHash.prototype.iterator = function() {
-	return { ref : this.h, it : this.keys(), hasNext : function() {
-		return this.it.hasNext();
-	}, next : function() {
-		var i = this.it.next();
-		return this.ref[i];
-	}}
+	$s.push("IntHash::iterator");
+	var $spos = $s.length;
+	{
+		var $tmp = { ref : this.h, it : this.keys(), hasNext : function() {
+			$s.push("IntHash::iterator@186");
+			var $spos = $s.length;
+			{
+				var $tmp = this.it.hasNext();
+				$s.pop();
+				return $tmp;
+			}
+			$s.pop();
+		}, next : function() {
+			$s.push("IntHash::iterator@187");
+			var $spos = $s.length;
+			var i = this.it.next();
+			{
+				var $tmp = this.ref[i];
+				$s.pop();
+				return $tmp;
+			}
+			$s.pop();
+		}}
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 IntHash.prototype.keys = function() {
+	$s.push("IntHash::keys");
+	var $spos = $s.length;
 	var a = new Array();
 	
 			for( x in this.h )
 				a.push(x);
 		;
-	return a.iterator();
+	{
+		var $tmp = a.iterator();
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 IntHash.prototype.remove = function(key) {
-	if(this.h[key] == null) return false;
+	$s.push("IntHash::remove");
+	var $spos = $s.length;
+	if(this.h[key] == null) {
+		$s.pop();
+		return false;
+	}
 	delete(this.h[key]);
-	return true;
+	{
+		$s.pop();
+		return true;
+	}
+	$s.pop();
 }
 IntHash.prototype.set = function(key,value) {
+	$s.push("IntHash::set");
+	var $spos = $s.length;
 	this.h[key] = value;
+	$s.pop();
 }
 IntHash.prototype.toString = function() {
+	$s.push("IntHash::toString");
+	var $spos = $s.length;
 	var s = new StringBuf();
-	s.b += "{";
+	s.b[s.b.length] = "{";
 	var it = this.keys();
-	{ var $it28 = it;
-	while( $it28.hasNext() ) { var i = $it28.next();
+	{ var $it21 = it;
+	while( $it21.hasNext() ) { var i = $it21.next();
 	{
-		s.b += i;
-		s.b += " => ";
-		s.b += Std.string(this.get(i));
-		if(it.hasNext()) s.b += ", ";
+		s.b[s.b.length] = i;
+		s.b[s.b.length] = " => ";
+		s.b[s.b.length] = Std.string(this.get(i));
+		if(it.hasNext()) s.b[s.b.length] = ", ";
 	}
 	}}
-	s.b += "}";
-	return s.b;
+	s.b[s.b.length] = "}";
+	{
+		var $tmp = s.b.join("");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 IntHash.prototype.__class__ = IntHash;
 xpde.parser.PrefixOperator = { __ename__ : ["xpde","parser","PrefixOperator"], __constructs__ : ["OpNot","OpBitwiseNot","OpUnaryPlus","OpUnaryMinus"] }
@@ -6184,11 +7248,16 @@ xpde.parser.Statement.SReturn = function(value) { var $x = ["SReturn",7,value]; 
 xpde.parser.Statement.SThrow = function(expression) { var $x = ["SThrow",8,expression]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
 xpde.parser.Statement.STry = function(body,catches,finallyBody) { var $x = ["STry",9,body,catches,finallyBody]; $x.__enum__ = xpde.parser.Statement; $x.toString = $estr; return $x; }
 xpde.JavaPackage = function(identifier) { if( identifier === $_ ) return; {
+	$s.push("xpde.JavaPackage::new");
+	var $spos = $s.length;
 	this.identifier = identifier;
 	this.contents = new Hash();
+	$s.pop();
 }}
 xpde.JavaPackage.__name__ = ["xpde","JavaPackage"];
 xpde.JavaPackage.prototype.addCompilationUnit = function(pack,unit) {
+	$s.push("xpde.JavaPackage::addCompilationUnit");
+	var $spos = $s.length;
 	if(pack.length == 0) if(this.contents.exists(unit.identifier)) throw "redefinition of " + unit.identifier;
 	else this.contents.set(unit.identifier,unit);
 	else {
@@ -6205,72 +7274,105 @@ xpde.JavaPackage.prototype.addCompilationUnit = function(pack,unit) {
 			return $r;
 		}(this)).addCompilationUnit(pack.slice(1),unit);
 	}
+	$s.pop();
 }
 xpde.JavaPackage.prototype.contents = null;
 xpde.JavaPackage.prototype.getByQualident = function(qualident) {
+	$s.push("xpde.JavaPackage::getByQualident");
+	var $spos = $s.length;
 	try {
 		if(!this.contents.exists(qualident[0])) throw false;
-		if(qualident.length == 1) return this.contents.get(qualident[0]);
-		else return function($this) {
-			var $r;
-			var tmp = $this.contents.get(qualident[0]);
-			$r = (Std["is"](tmp,xpde.JavaPackage)?tmp:function($this) {
+		if(qualident.length == 1) {
+			var $tmp = this.contents.get(qualident[0]);
+			$s.pop();
+			return $tmp;
+		}
+		else {
+			var $tmp = function($this) {
 				var $r;
-				throw "Class cast error";
+				var tmp = $this.contents.get(qualident[0]);
+				$r = (Std["is"](tmp,xpde.JavaPackage)?tmp:function($this) {
+					var $r;
+					throw "Class cast error";
+					return $r;
+				}($this));
 				return $r;
-			}($this));
-			return $r;
-		}(this).getByQualident(qualident.slice(1));
+			}(this).getByQualident(qualident.slice(1));
+			$s.pop();
+			return $tmp;
+		}
 	}
-	catch( $e29 ) {
+	catch( $e22 ) {
 		{
-			var e = $e29;
+			var e = $e22;
 			{
+				$e = [];
+				while($s.length >= $spos) $e.unshift($s.pop());
+				$s.push($e[0]);
 				throw "invalid qualified reference " + qualident.join(".");
 			}
 		}
 	}
+	$s.pop();
 }
 xpde.JavaPackage.prototype.getClass = function(qualident) {
+	$s.push("xpde.JavaPackage::getClass");
+	var $spos = $s.length;
 	var type = this.getCompilationUnit(qualident).types.get(qualident[qualident.length - 1]);
 	var $e = (type);
 	switch( $e[1] ) {
 	case 0:
 	var definition = $e[2];
 	{
-		return definition;
+		{
+			$s.pop();
+			return definition;
+		}
 	}break;
 	default:{
 		throw "invalid class name " + qualident.join(".");
 	}break;
 	}
+	$s.pop();
 }
 xpde.JavaPackage.prototype.getCompilationUnit = function(qualident) {
+	$s.push("xpde.JavaPackage::getCompilationUnit");
+	var $spos = $s.length;
 	try {
-		return function($this) {
-			var $r;
-			var tmp = $this.getByQualident(qualident);
-			$r = (Std["is"](tmp,xpde.CompilationUnit)?tmp:function($this) {
-				var $r;
-				throw "Class cast error";
-				return $r;
-			}($this));
-			return $r;
-		}(this);
-	}
-	catch( $e30 ) {
 		{
-			var e = $e30;
+			var $tmp = function($this) {
+				var $r;
+				var tmp = $this.getByQualident(qualident);
+				$r = (Std["is"](tmp,xpde.CompilationUnit)?tmp:function($this) {
+					var $r;
+					throw "Class cast error";
+					return $r;
+				}($this));
+				return $r;
+			}(this);
+			$s.pop();
+			return $tmp;
+		}
+	}
+	catch( $e23 ) {
+		{
+			var e = $e23;
 			{
+				$e = [];
+				while($s.length >= $spos) $e.unshift($s.pop());
+				$s.push($e[0]);
 				throw "invalid compilation unit " + qualident.join(".");
 			}
 		}
 	}
+	$s.pop();
 }
 xpde.JavaPackage.prototype.identifier = null;
 xpde.JavaPackage.prototype.__class__ = xpde.JavaPackage;
 xpde.JavaPackage.__interfaces__ = [xpde.JavaPackageItem];
 xpde.parser.BitSet = function(nbits) { if( nbits === $_ ) return; {
+	$s.push("xpde.parser.BitSet::new");
+	var $spos = $s.length;
 	this.bitset = [];
 	{
 		var _g = 0;
@@ -6279,33 +7381,51 @@ xpde.parser.BitSet = function(nbits) { if( nbits === $_ ) return; {
 			this.bitset.push(false);
 		}
 	}
+	$s.pop();
 }}
 xpde.parser.BitSet.__name__ = ["xpde","parser","BitSet"];
 xpde.parser.BitSet.prototype.bitset = null;
 xpde.parser.BitSet.prototype.get = function(bitIndex) {
-	return this.bitset[bitIndex];
+	$s.push("xpde.parser.BitSet::get");
+	var $spos = $s.length;
+	{
+		var $tmp = this.bitset[bitIndex];
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.BitSet.prototype.or = function(bitset2) {
+	$s.push("xpde.parser.BitSet::or");
+	var $spos = $s.length;
 	var _g1 = 0, _g = this.bitset.length;
 	while(_g1 < _g) {
 		var i = _g1++;
 		this.bitset[i] = this.bitset[i] || bitset2.bitset[i];
 	}
+	$s.pop();
 }
 xpde.parser.BitSet.prototype.set = function(bitIndex) {
+	$s.push("xpde.parser.BitSet::set");
+	var $spos = $s.length;
 	this.bitset[bitIndex] = true;
+	$s.pop();
 }
 xpde.parser.BitSet.prototype.__class__ = xpde.parser.BitSet;
 xpde.parser.Parser = function(scanner,context) { if( scanner === $_ ) return; {
+	$s.push("xpde.parser.Parser::new");
+	var $spos = $s.length;
 	this.errDist = xpde.parser.Parser.minErrDist;
 	this.scanner = scanner;
 	this.context = context;
 	this.errors = new xpde.parser.Errors();
 	this.classContexts = [];
-	this.blockContexts = [];
+	$s.pop();
 }}
 xpde.parser.Parser.__name__ = ["xpde","parser","Parser"];
 xpde.parser.Parser.newSet = function(values) {
+	$s.push("xpde.parser.Parser::newSet");
+	var $spos = $s.length;
 	var s = new xpde.parser.BitSet(xpde.parser.Parser.maxTerminals);
 	{
 		var _g1 = 0, _g = values.length;
@@ -6314,138 +7434,25 @@ xpde.parser.Parser.newSet = function(values) {
 			s.bitset[values[i]] = true;
 		}
 	}
-	return s;
+	{
+		$s.pop();
+		return s;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.or = function(s1,s2) {
+	$s.push("xpde.parser.Parser::or");
+	var $spos = $s.length;
 	s1.or(s2);
-	return s1;
-}
-xpde.parser.Parser.prototype.Arguments = function() {
-	var arguments = null;
-	arguments = [];
-	this.Expect(33);
-	if(this.StartOf(10)) {
-		var expression = this.Expression0();
-		arguments.push(expression);
-		while(this.la.kind == 27) {
-			this.Get();
-			var expression1 = this.Expression0();
-			arguments.push(expression1);
-		}
+	{
+		$s.pop();
+		return s1;
 	}
-	this.Expect(39);
-	return arguments;
-}
-xpde.parser.Parser.prototype.ArgumentsOpt = function(identifier,base) {
-	var expression = null;
-	expression = xpde.parser.Expression.EReference(identifier,base);
-	if(this.la.kind == 33) {
-		var arguments = this.Arguments();
-		expression = xpde.parser.Expression.ECall(identifier,base,arguments);
-	}
-	return expression;
-}
-xpde.parser.Parser.prototype.ArrayCreatorRest = function(type) {
-	var expression = null;
-	this.Expect(32);
-	if(this.la.kind == 38) {
-		this.Get();
-		var bCount = this.BracketsOpt();
-		var expression1 = this.ArrayInitializer();
-	}
-	else if(this.StartOf(10)) {
-		var dummy = this.Expression0();
-		this.Expect(38);
-		while(this.nonEmptyBracket()) {
-			this.Expect(32);
-			var dummy1 = this.Expression0();
-			this.Expect(38);
-		}
-		while(this.emptyBracket()) {
-			this.Expect(32);
-			this.Expect(38);
-		}
-	}
-	else this.SynErr(141);
-	return expression;
-}
-xpde.parser.Parser.prototype.ArrayInitializer = function() {
-	var expression = null;
-	var values = [];
-	this.Expect(31);
-	if(this.StartOf(11)) {
-		var arg = this.VariableInitializer();
-		values.push(arg);
-		while(this.commaAndNoRBrace()) {
-			this.Expect(27);
-			var arg1 = this.VariableInitializer();
-			values.push(arg1);
-		}
-	}
-	if(this.la.kind == 27) {
-		this.Get();
-	}
-	this.Expect(37);
-	return expression;
-}
-xpde.parser.Parser.prototype.AssignmentOperator = function() {
-	var operator = null;
-	switch(this.la.kind) {
-	case 52:{
-		this.Get();
-		operator = null;
-	}break;
-	case 74:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpAdd;
-	}break;
-	case 75:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpSubtract;
-	}break;
-	case 76:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpMultiply;
-	}break;
-	case 77:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpDivide;
-	}break;
-	case 78:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpBitwiseAnd;
-	}break;
-	case 79:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpBitwiseOr;
-	}break;
-	case 80:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpBitwiseXor;
-	}break;
-	case 81:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpModulus;
-	}break;
-	case 82:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpLeftShift;
-	}break;
-	case 83:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpRightShift;
-	}break;
-	case 84:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpZeroRightShift;
-	}break;
-	default:{
-		this.SynErr(126);
-	}break;
-	}
-	return operator;
+	$s.pop();
 }
 xpde.parser.Parser.prototype.BasicType = function() {
+	$s.push("xpde.parser.Parser::BasicType");
+	var $spos = $s.length;
 	var type = null;
 	switch(this.la.kind) {
 	case 7:{
@@ -6481,37 +7488,18 @@ xpde.parser.Parser.prototype.BasicType = function() {
 		type = xpde.PrimitiveType.PTBoolean;
 	}break;
 	default:{
-		this.SynErr(112);
+		this.SynErr(69);
 	}break;
 	}
-	return type;
-}
-xpde.parser.Parser.prototype.Block = function(parent) {
-	var statement = null;
-	this.blockContexts.unshift(new xpde.parser.BlockContext(parent));
-	this.Expect(31);
-	while(this.StartOf(13)) {
-		this.BlockStatement();
+	{
+		$s.pop();
+		return type;
 	}
-	this.Expect(37);
-	statement = this.blockContexts.shift().getBlockStatement();
-	return statement;
-}
-xpde.parser.Parser.prototype.BlockStatement = function() {
-	if(this.isLocalVarDecl(false)) {
-		this.LocalVariableDeclaration();
-		this.Expect(42);
-	}
-	else if(this.StartOf(3)) {
-		var typeContext = this.ClassOrInterfaceDeclaration();
-	}
-	else if(this.StartOf(20)) {
-		var statement = this.Statement0();
-		this.blockContexts[0].pushStatement(statement);
-	}
-	else this.SynErr(124);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.BracketsOpt = function() {
+	$s.push("xpde.parser.Parser::BracketsOpt");
+	var $spos = $s.length;
 	var bCount = null;
 	bCount = 0;
 	while(this.la.kind == 32) {
@@ -6519,37 +7507,25 @@ xpde.parser.Parser.prototype.BracketsOpt = function() {
 		this.Expect(38);
 		bCount++;
 	}
-	return bCount;
-}
-xpde.parser.Parser.prototype.CatchClause = function() {
-	var _catch = null;
-	this.Expect(69);
-	this.Expect(33);
-	var parameter = this.FormalParameter0();
-	this.Expect(39);
-	var block = this.Block(this.blockContexts[0]);
-	_catch = { parameter : parameter, body : block}
-	return _catch;
-}
-xpde.parser.Parser.prototype.Catches = function() {
-	var catches = null;
-	catches = [];
-	var catchBlock = this.CatchClause();
-	catches.push(catchBlock);
-	while(this.la.kind == 69) {
-		var catchBlock1 = this.CatchClause();
-		catches.push(catchBlock1);
+	{
+		$s.pop();
+		return bCount;
 	}
-	return catches;
+	$s.pop();
 }
 xpde.parser.Parser.prototype.ClassBody = function() {
+	$s.push("xpde.parser.Parser::ClassBody");
+	var $spos = $s.length;
 	this.Expect(31);
 	while(this.StartOf(2)) {
 		this.ClassBodyDeclaration();
 	}
 	this.Expect(37);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.ClassBodyDeclaration = function() {
+	$s.push("xpde.parser.Parser::ClassBodyDeclaration");
+	var $spos = $s.length;
 	if(this.la.kind == 42) {
 		this.Get();
 	}
@@ -6559,33 +7535,26 @@ xpde.parser.Parser.prototype.ClassBodyDeclaration = function() {
 			this.Get();
 			this.addModifier(modifiers,xpde.Modifier.MStatic);
 		}
-		if(this.la.kind == 31) {
-			var block = this.Block(null);
-			this.classContexts[0].staticConstructor.pushStatement(block);
+		if(this.StartOf(5)) {
+			this.UnparsedSegment(new StringBuf());
 		}
-		else if(this.StartOf(5)) {
-			if(this.StartOf(6)) {
+		else if(this.StartOf(6)) {
+			if(this.StartOf(7)) {
 				this.Modifier1(modifiers);
-				while(this.StartOf(7)) {
+				while(this.StartOf(8)) {
 					this.Modifier0(modifiers);
 				}
 			}
 			this.MemberDecl(modifiers);
 		}
-		else this.SynErr(104);
+		else this.SynErr(60);
 	}
-	else this.SynErr(105);
-}
-xpde.parser.Parser.prototype.ClassCreatorRest = function(qualifier) {
-	var expression = null;
-	var arguments = this.Arguments();
-	expression = xpde.parser.Expression.EObjectInstantiation(qualifier,arguments);
-	if(this.la.kind == 31) {
-		this.ClassBody();
-	}
-	return expression;
+	else this.SynErr(61);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.ClassDeclaration = function(modifiers) {
+	$s.push("xpde.parser.Parser::ClassDeclaration");
+	var $spos = $s.length;
 	var typeContext = null;
 	this.checkModifierPermission(modifiers,xpde.parser.ModifierSet.classes);
 	this.Expect(9);
@@ -6603,9 +7572,15 @@ xpde.parser.Parser.prototype.ClassDeclaration = function(modifiers) {
 	}
 	this.ClassBody();
 	typeContext = this.classContexts.shift();
-	return typeContext;
+	{
+		$s.pop();
+		return typeContext;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.ClassModifier = function(modifiers) {
+	$s.push("xpde.parser.Parser::ClassModifier");
+	var $spos = $s.length;
 	switch(this.la.kind) {
 	case 19:{
 		this.Get();
@@ -6636,14 +7611,17 @@ xpde.parser.Parser.prototype.ClassModifier = function(modifiers) {
 		this.addModifier(modifiers,xpde.Modifier.MStrictfp);
 	}break;
 	default:{
-		this.SynErr(108);
+		this.SynErr(65);
 	}break;
 	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.ClassOrInterfaceDeclaration = function() {
+	$s.push("xpde.parser.Parser::ClassOrInterfaceDeclaration");
+	var $spos = $s.length;
 	var typeContext = null;
 	var modifiers = new xpde.parser.EnumSet();
-	while(this.StartOf(8)) {
+	while(this.StartOf(13)) {
 		this.ClassModifier(modifiers);
 	}
 	if(this.la.kind == 9) {
@@ -6654,10 +7632,16 @@ xpde.parser.Parser.prototype.ClassOrInterfaceDeclaration = function() {
 		var arg = this.InterfaceDeclaration(modifiers);
 		typeContext = arg;
 	}
-	else this.SynErr(107);
-	return typeContext;
+	else this.SynErr(64);
+	{
+		$s.pop();
+		return typeContext;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.CompilationUnit = function() {
+	$s.push("xpde.parser.Parser::CompilationUnit");
+	var $spos = $s.length;
 	if(this.la.kind == 41) {
 		this.Get();
 		var qualident = this.Qualident();
@@ -6672,33 +7656,36 @@ xpde.parser.Parser.prototype.CompilationUnit = function() {
 		this.TypeDeclaration();
 	}
 	if(this.la.kind != xpde.parser.Parser._EOF) this.error("'class' or 'interface' expected");
-}
-xpde.parser.Parser.prototype.ConditionalExpr = function(conditional) {
-	var expression = null;
-	this.Expect(72);
-	var thenExpression = this.Expression0();
-	this.Expect(26);
-	var elseExpression = this.Expression1();
-	expression = xpde.parser.Expression.EConditional(conditional,thenExpression,elseExpression);
-	return expression;
+	$s.pop();
 }
 xpde.parser.Parser.prototype.ConstantDeclarator = function() {
+	$s.push("xpde.parser.Parser::ConstantDeclarator");
+	var $spos = $s.length;
 	this.Expect(1);
 	this.ConstantDeclaratorRest();
+	$s.pop();
 }
 xpde.parser.Parser.prototype.ConstantDeclaratorRest = function() {
+	$s.push("xpde.parser.Parser::ConstantDeclaratorRest");
+	var $spos = $s.length;
 	var bCount = this.BracketsOpt();
 	this.Expect(52);
-	var expression = this.VariableInitializer();
+	this.UnparsedExpression(new StringBuf());
+	$s.pop();
 }
 xpde.parser.Parser.prototype.ConstantDeclaratorsRest = function() {
+	$s.push("xpde.parser.Parser::ConstantDeclaratorsRest");
+	var $spos = $s.length;
 	this.ConstantDeclaratorRest();
 	while(this.la.kind == 27) {
 		this.Get();
 		this.ConstantDeclarator();
 	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.ConstructorDeclaratorRest = function(methodContext) {
+	$s.push("xpde.parser.Parser::ConstructorDeclaratorRest");
+	var $spos = $s.length;
 	this.checkModifierPermission(methodContext.modifiers,xpde.parser.ModifierSet.constructors);
 	var arg = this.FormalParameters();
 	methodContext.parameters = arg;
@@ -6707,197 +7694,32 @@ xpde.parser.Parser.prototype.ConstructorDeclaratorRest = function(methodContext)
 		var arg1 = this.QualidentList();
 		methodContext.throwsList = arg1;
 	}
-	var body = this.Block(methodContext);
-	this.classContexts[0].defineMethod(methodContext);
-}
-xpde.parser.Parser.prototype.Creator = function() {
-	var expression = null;
-	if(this.StartOf(9)) {
-		var type = this.BasicType();
-		var arg = this.ArrayCreatorRest(xpde.DataType.DTPrimitive(type));
-		expression = arg;
-	}
-	else if(this.la.kind == 1) {
-		var qualifier = this.Qualident();
-		if(this.la.kind == 32) {
-			var arg = this.ArrayCreatorRest(xpde.DataType.DTReference(qualifier));
-			expression = arg;
-		}
-		else if(this.la.kind == 33) {
-			var arg = this.ClassCreatorRest(qualifier);
-			expression = arg;
-		}
-		else this.SynErr(137);
-	}
-	else this.SynErr(138);
-	return expression;
+	this.UnparsedBlock(new StringBuf());
+	this.classContexts[0].methods.push(methodContext);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.Expect = function(n) {
+	$s.push("xpde.parser.Parser::Expect");
+	var $spos = $s.length;
 	if(this.la.kind == n) this.Get();
 	else {
 		this.SynErr(n);
 	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.ExpectWeak = function(n,follow) {
+	$s.push("xpde.parser.Parser::ExpectWeak");
+	var $spos = $s.length;
 	if(this.la.kind == n) this.Get();
 	else {
 		this.SynErr(n);
 		while(!this.StartOf(follow)) this.Get();
 	}
-}
-xpde.parser.Parser.prototype.Expression0 = function() {
-	var expression = null;
-	var expression1 = this.Expression1();
-	while(this.StartOf(12)) {
-		var operator = this.AssignmentOperator();
-		var value = this.Expression1();
-		if(operator != null) value = xpde.parser.Expression.EInfixOperation(operator,expression1,value);
-		var $e = (expression1);
-		switch( $e[1] ) {
-		case 4:
-		var identifier = $e[2];
-		{
-			expression1 = xpde.parser.Expression.ELocalAssignment(identifier,value);
-		}break;
-		case 5:
-		var base = $e[3], identifier = $e[2];
-		{
-			expression1 = xpde.parser.Expression.EAssignment(identifier,base,value);
-		}break;
-		case 3:
-		var base = $e[3], index = $e[2];
-		{
-			expression1 = xpde.parser.Expression.EArrayAssignment(index,base,value);
-		}break;
-		case 28:
-		var lexpression = $e[2];
-		{
-			var $e = (lexpression);
-			switch( $e[1] ) {
-			case 0:
-			var identifier = $e[2];
-			{
-				expression1 = xpde.parser.Expression.ELexExpression(xpde.parser.LexicalExpression.LAssignment(identifier,value));
-			}break;
-			default:{
-				this.error("invalid assignment left-hand side");
-			}break;
-			}
-		}break;
-		default:{
-			this.error("invalid assignment left-hand side");
-		}break;
-		}
-	}
-	return expression1;
-}
-xpde.parser.Parser.prototype.Expression1 = function() {
-	var expression = null;
-	var expression1 = this.Expression2();
-	if(this.la.kind == 72) {
-		var rest = this.ConditionalExpr(expression1);
-		expression1 = rest;
-	}
-	return expression1;
-}
-xpde.parser.Parser.prototype.Expression2 = function() {
-	var expression = null;
-	var expression1 = this.Expression3();
-	if(this.StartOf(21)) {
-		var rest = this.Expression2Rest(expression1);
-		expression1 = rest;
-	}
-	return expression1;
-}
-xpde.parser.Parser.prototype.Expression2Rest = function(operand) {
-	var expression = null;
-	if(this.StartOf(24)) {
-		var builder = new xpde.parser.OperationBuilder();
-		builder.operand(operand);
-		var operator = this.Infixop();
-		builder.operator(operator);
-		var operand1 = this.Expression3();
-		builder.operand(operand1);
-		while(this.StartOf(24)) {
-			var operator1 = this.Infixop();
-			builder.operator(operator1);
-			var operand2 = this.Expression3();
-			builder.operand(operand2);
-		}
-		expression = builder.reduce();
-	}
-	else if(this.la.kind == 73) {
-		this.Get();
-		var type = this.Type();
-		expression = xpde.parser.Expression.EInstanceOf(expression,type);
-	}
-	else this.SynErr(128);
-	return expression;
-}
-xpde.parser.Parser.prototype.Expression3 = function() {
-	var expression = null;
-	if(this.StartOf(22)) {
-		if(this.la.kind == 28 || this.la.kind == 30) {
-			var type = this.Increment();
-			var rest = this.Expression3();
-			expression = xpde.parser.Expression.EPrefix(type,rest);
-		}
-		else {
-			var operator = this.PrefixOp();
-			var rest = this.Expression3();
-			expression = xpde.parser.Expression.EPrefixOperation(operator,rest);
-		}
-	}
-	else if(this.isTypeCast()) {
-		this.Expect(33);
-		var type = this.Type();
-		this.Expect(39);
-		var rest = this.Expression3();
-		expression = xpde.parser.Expression.ECast(type,rest);
-	}
-	else if(this.StartOf(23)) {
-		var rest = this.Primary();
-		expression = rest;
-		while(this.la.kind == 29 || this.la.kind == 32) {
-			var rest1 = this.Selector(expression);
-			expression = rest1;
-		}
-		while(this.la.kind == 28 || this.la.kind == 30) {
-			var type = this.Increment();
-			expression = xpde.parser.Expression.EPostfix(type,expression);
-		}
-	}
-	else this.SynErr(127);
-	return expression;
-}
-xpde.parser.Parser.prototype.ForInit = function() {
-	if(this.isLocalVarDecl(true)) {
-		this.LocalVariableDeclaration();
-	}
-	else if(this.StartOf(10)) {
-		var statement = this.StatementExpression();
-		this.blockContexts[0].pushStatement(statement);
-		var statements = this.MoreStatementExpressions();
-		{
-			var _g = 0;
-			while(_g < statements.length) {
-				var statement1 = statements[_g];
-				++_g;
-				this.blockContexts[0].pushStatement(statement1);
-			}
-		}
-	}
-	else this.SynErr(123);
-}
-xpde.parser.Parser.prototype.ForUpdate = function() {
-	var statements = null;
-	var statement = this.StatementExpression();
-	statements = [statement];
-	var arg = this.MoreStatementExpressions();
-	statements = statements.concat(arg);
-	return statements;
+	$s.pop();
 }
 xpde.parser.Parser.prototype.FormalParameter0 = function() {
+	$s.push("xpde.parser.Parser::FormalParameter0");
+	var $spos = $s.length;
 	var parameter = null;
 	var modifiers = new xpde.parser.EnumSet();
 	if(this.la.kind == 12) {
@@ -6908,15 +7730,21 @@ xpde.parser.Parser.prototype.FormalParameter0 = function() {
 	this.Expect(1);
 	var identifier = this.t.val;
 	var bCount = this.BracketsOpt();
-	type = this.compoundBrackets(type,bCount);
-	parameter = { identifier : identifier, type : type, modifiers : modifiers}
-	return parameter;
+	if(bCount > 0) type = xpde.parser.ParserDataType.PArray(type,bCount);
+	parameter = new xpde.parser.FormalParameterContext(modifiers,type,identifier);
+	{
+		$s.pop();
+		return parameter;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.FormalParameters = function() {
+	$s.push("xpde.parser.Parser::FormalParameters");
+	var $spos = $s.length;
 	var parameters = null;
 	parameters = [];
 	this.Expect(33);
-	if(this.StartOf(16)) {
+	if(this.StartOf(17)) {
 		var parameter = this.FormalParameter0();
 		parameters.push(parameter);
 		while(this.la.kind == 27) {
@@ -6926,9 +7754,15 @@ xpde.parser.Parser.prototype.FormalParameters = function() {
 		}
 	}
 	this.Expect(39);
-	return parameters;
+	{
+		$s.pop();
+		return parameters;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.Get = function() {
+	$s.push("xpde.parser.Parser::Get");
+	var $spos = $s.length;
 	while(true) {
 		this.t = this.la;
 		this.la = this.scanner.Scan();
@@ -6938,40 +7772,11 @@ xpde.parser.Parser.prototype.Get = function() {
 		}
 		this.la = this.t;
 	}
-}
-xpde.parser.Parser.prototype.IdentifierSuffix = function(identifier,base) {
-	var expression = null;
-	if(this.la.kind == 32) {
-		this.Get();
-		this.Expect(38);
-		var bCount = this.BracketsOpt();
-		this.Expect(29);
-		this.Expect(9);
-	}
-	else if(this.la.kind == 33) {
-		var arguments = this.Arguments();
-		expression = (base == null?xpde.parser.Expression.ELexExpression(xpde.parser.LexicalExpression.LCall(identifier,arguments)):xpde.parser.Expression.ECall(identifier,base,arguments));
-	}
-	else if(this.la.kind == 29) {
-		this.Get();
-		if(this.la.kind == 9) {
-			this.Get();
-		}
-		else if(this.la.kind == 23) {
-			this.Get();
-		}
-		else if(this.la.kind == 22) {
-			this.Get();
-			this.Expect(29);
-			this.Expect(1);
-			var dummy = this.ArgumentsOpt(null,null);
-		}
-		else this.SynErr(139);
-	}
-	else this.SynErr(140);
-	return expression;
+	$s.pop();
 }
 xpde.parser.Parser.prototype.ImportDeclaration = function() {
+	$s.push("xpde.parser.Parser::ImportDeclaration");
+	var $spos = $s.length;
 	var importIdent = null;
 	this.Expect(14);
 	this.Expect(1);
@@ -6979,132 +7784,41 @@ xpde.parser.Parser.prototype.ImportDeclaration = function() {
 	var arg = this.QualifiedImport();
 	this.Expect(42);
 	importIdent = importIdent.concat(arg);
-	return importIdent;
-}
-xpde.parser.Parser.prototype.Increment = function() {
-	var type = null;
-	if(this.la.kind == 30) {
-		this.Get();
-		type = xpde.parser.IncrementType.IIncrement;
+	{
+		$s.pop();
+		return importIdent;
 	}
-	else if(this.la.kind == 28) {
-		this.Get();
-		type = xpde.parser.IncrementType.IDecrement;
-	}
-	else this.SynErr(130);
-	return type;
-}
-xpde.parser.Parser.prototype.Infixop = function() {
-	var operator = null;
-	switch(this.la.kind) {
-	case 85:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpOr;
-	}break;
-	case 86:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpAnd;
-	}break;
-	case 87:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpBitwiseOr;
-	}break;
-	case 88:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpBitwiseXor;
-	}break;
-	case 89:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpBitwiseAnd;
-	}break;
-	case 90:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpEqual;
-	}break;
-	case 91:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpUnequal;
-	}break;
-	case 92:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpLessThan;
-	}break;
-	case 93:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpGreaterThan;
-	}break;
-	case 94:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpLessThanOrEqual;
-	}break;
-	case 95:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpGreaterThanOrEqual;
-	}break;
-	case 96:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpLeftShift;
-	}break;
-	case 97:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpRightShift;
-	}break;
-	case 98:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpZeroRightShift;
-	}break;
-	case 36:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpAdd;
-	}break;
-	case 34:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpSubtract;
-	}break;
-	case 43:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpMultiply;
-	}break;
-	case 99:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpDivide;
-	}break;
-	case 100:{
-		this.Get();
-		operator = xpde.parser.InfixOperator.OpModulus;
-	}break;
-	default:{
-		this.SynErr(129);
-	}break;
-	}
-	return operator;
-}
-xpde.parser.Parser.prototype.InnerCreator = function() {
-	var qualifier = [];
-	this.Expect(1);
-	var expression = this.ClassCreatorRest(qualifier);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.InterfaceBody = function() {
+	$s.push("xpde.parser.Parser::InterfaceBody");
+	var $spos = $s.length;
 	this.Expect(31);
-	while(this.StartOf(17)) {
+	while(this.StartOf(18)) {
 		this.InterfaceBodyDeclaration();
 	}
 	this.Expect(37);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.InterfaceBodyDeclaration = function() {
+	$s.push("xpde.parser.Parser::InterfaceBodyDeclaration");
+	var $spos = $s.length;
 	var modifiers = new xpde.parser.EnumSet();
 	if(this.la.kind == 42) {
 		this.Get();
 	}
-	else if(this.StartOf(18)) {
-		while(this.StartOf(7)) {
+	else if(this.StartOf(19)) {
+		while(this.StartOf(8)) {
 			this.Modifier0(modifiers);
 		}
 		this.InterfaceMemberDecl(modifiers);
 	}
-	else this.SynErr(118);
+	else this.SynErr(74);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.InterfaceDeclaration = function(modifiers) {
+	$s.push("xpde.parser.Parser::InterfaceDeclaration");
+	var $spos = $s.length;
 	var typeContext = null;
 	this.checkModifierPermission(modifiers,xpde.parser.ModifierSet.interfaces);
 	this.Expect(56);
@@ -7114,10 +7828,16 @@ xpde.parser.Parser.prototype.InterfaceDeclaration = function(modifiers) {
 		var extend = this.QualidentList();
 	}
 	this.InterfaceBody();
-	return typeContext;
+	{
+		$s.pop();
+		return typeContext;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.InterfaceMemberDecl = function(modifiers) {
-	if(this.StartOf(14)) {
+	$s.push("xpde.parser.Parser::InterfaceMemberDecl");
+	var $spos = $s.length;
+	if(this.StartOf(15)) {
 		this.InterfaceMethodOrFieldDecl(modifiers);
 	}
 	else if(this.la.kind == 25) {
@@ -7132,9 +7852,12 @@ xpde.parser.Parser.prototype.InterfaceMemberDecl = function(modifiers) {
 	else if(this.la.kind == 56) {
 		var typeContext = this.InterfaceDeclaration(modifiers);
 	}
-	else this.SynErr(119);
+	else this.SynErr(75);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.InterfaceMethodDeclaratorRest = function() {
+	$s.push("xpde.parser.Parser::InterfaceMethodDeclaratorRest");
+	var $spos = $s.length;
 	var parameters = this.FormalParameters();
 	var bCount = this.BracketsOpt();
 	if(this.la.kind == 55) {
@@ -7142,13 +7865,19 @@ xpde.parser.Parser.prototype.InterfaceMethodDeclaratorRest = function() {
 		var arg = this.QualidentList();
 	}
 	this.Expect(42);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.InterfaceMethodOrFieldDecl = function(modifiers) {
+	$s.push("xpde.parser.Parser::InterfaceMethodOrFieldDecl");
+	var $spos = $s.length;
 	var type = this.Type();
 	this.Expect(1);
 	this.InterfaceMethodOrFieldRest(modifiers);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.InterfaceMethodOrFieldRest = function(modifiers) {
+	$s.push("xpde.parser.Parser::InterfaceMethodOrFieldRest");
+	var $spos = $s.length;
 	if(this.la.kind == 32 || this.la.kind == 52) {
 		this.checkModifierPermission(modifiers,xpde.parser.ModifierSet.constants);
 		this.ConstantDeclaratorsRest();
@@ -7158,70 +7887,19 @@ xpde.parser.Parser.prototype.InterfaceMethodOrFieldRest = function(modifiers) {
 		this.checkModifierPermission(modifiers,xpde.parser.ModifierSet.interfaces);
 		this.InterfaceMethodDeclaratorRest();
 	}
-	else this.SynErr(120);
-}
-xpde.parser.Parser.prototype.Literal = function() {
-	var expression = null;
-	switch(this.la.kind) {
-	case 2:{
-		this.Get();
-		expression = xpde.parser.Expression.EIntegerLiteral(Std.parseInt(this.t.val));
-	}break;
-	case 3:{
-		this.Get();
-		expression = xpde.parser.Expression.EFloatLiteral(Std.parseFloat(this.t.val));
-	}break;
-	case 4:{
-		this.Get();
-		expression = xpde.parser.Expression.ECharLiteral(this.t.val.charCodeAt(0));
-	}break;
-	case 5:{
-		this.Get();
-		expression = xpde.parser.Expression.EStringLiteral(this.t.val);
-	}break;
-	case 24:{
-		this.Get();
-		expression = xpde.parser.Expression.EBooleanLiteral(true);
-	}break;
-	case 11:{
-		this.Get();
-		expression = xpde.parser.Expression.EBooleanLiteral(false);
-	}break;
-	case 18:{
-		this.Get();
-		expression = xpde.parser.Expression.ENull;
-	}break;
-	default:{
-		this.SynErr(136);
-	}break;
-	}
-	return expression;
-}
-xpde.parser.Parser.prototype.LocalVariableDeclaration = function() {
-	var modifiers = new xpde.parser.EnumSet();
-	if(this.la.kind == 12) {
-		this.Get();
-		modifiers.add(xpde.Modifier.MFinal);
-	}
-	var type = this.Type();
-	var fields = this.VariableDeclarators(modifiers,type);
-	{
-		var _g = 0;
-		while(_g < fields.length) {
-			var field = fields[_g];
-			++_g;
-			this.blockContexts[0].defineVariable(field);
-		}
-	}
+	else this.SynErr(76);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.MemberDecl = function(modifiers) {
+	$s.push("xpde.parser.Parser::MemberDecl");
+	var $spos = $s.length;
 	if(this.identAndLPar()) {
 		this.Expect(1);
 		var identifier = this.t.val;
 		if(identifier != this.classContexts[0].identifier) this.error("invalid function declaration");
 		this.ConstructorDeclaratorRest(new xpde.parser.MethodContext(modifiers,null,identifier));
 	}
-	else if(this.StartOf(14)) {
+	else if(this.StartOf(15)) {
 		this.MethodOrFieldDecl(modifiers);
 	}
 	else if(this.la.kind == 25) {
@@ -7233,15 +7911,18 @@ xpde.parser.Parser.prototype.MemberDecl = function(modifiers) {
 	}
 	else if(this.la.kind == 9) {
 		var typeContext = this.ClassDeclaration(modifiers);
-		this.classContexts[0].defineMemberType(typeContext);
+		this.classContexts[0].types.push(typeContext);
 	}
 	else if(this.la.kind == 56) {
 		var typeContext = this.InterfaceDeclaration(modifiers);
-		this.classContexts[0].defineMemberType(typeContext);
+		this.classContexts[0].types.push(typeContext);
 	}
-	else this.SynErr(114);
+	else this.SynErr(70);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.MethodDeclaratorRest = function(methodContext) {
+	$s.push("xpde.parser.Parser::MethodDeclaratorRest");
+	var $spos = $s.length;
 	var arg = this.FormalParameters();
 	methodContext.parameters = arg;
 	var bCount = this.BracketsOpt();
@@ -7251,23 +7932,30 @@ xpde.parser.Parser.prototype.MethodDeclaratorRest = function(methodContext) {
 		methodContext.throwsList = arg1;
 	}
 	if(this.la.kind == 31) {
-		var block = this.Block(methodContext);
-		methodContext.body = block;
+		var buffer = new StringBuf();
+		this.UnparsedBlock(buffer);
+		haxe.Log.trace(buffer,{ fileName : "Parser.hx", lineNumber : 924, className : "xpde.parser.Parser", methodName : "MethodDeclaratorRest"});
 	}
 	else if(this.la.kind == 42) {
 		this.Get();
 	}
-	else this.SynErr(117);
-	this.classContexts[0].defineMethod(methodContext);
+	else this.SynErr(73);
+	this.classContexts[0].methods.push(methodContext);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.MethodOrFieldDecl = function(modifiers) {
+	$s.push("xpde.parser.Parser::MethodOrFieldDecl");
+	var $spos = $s.length;
 	var type = this.Type();
 	this.Expect(1);
 	var identifier = this.t.val;
 	this.MethodOrFieldRest(modifiers,identifier,type);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.MethodOrFieldRest = function(modifiers,identifier,type) {
-	if(this.StartOf(15)) {
+	$s.push("xpde.parser.Parser::MethodOrFieldRest");
+	var $spos = $s.length;
+	if(this.StartOf(16)) {
 		this.checkModifierPermission(modifiers,xpde.parser.ModifierSet.fields);
 		this.VariableDeclaratorsRest(modifiers,type,identifier);
 		this.Expect(42);
@@ -7276,19 +7964,25 @@ xpde.parser.Parser.prototype.MethodOrFieldRest = function(modifiers,identifier,t
 		this.checkModifierPermission(modifiers,xpde.parser.ModifierSet.methods);
 		this.MethodDeclaratorRest(new xpde.parser.MethodContext(modifiers,type,identifier));
 	}
-	else this.SynErr(116);
+	else this.SynErr(72);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.Modifier0 = function(modifiers) {
+	$s.push("xpde.parser.Parser::Modifier0");
+	var $spos = $s.length;
 	if(this.la.kind == 21) {
 		this.Get();
 		this.addModifier(modifiers,xpde.Modifier.MStatic);
 	}
-	else if(this.StartOf(6)) {
+	else if(this.StartOf(7)) {
 		this.Modifier1(modifiers);
 	}
-	else this.SynErr(109);
+	else this.SynErr(66);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.Modifier1 = function(modifiers) {
+	$s.push("xpde.parser.Parser::Modifier1");
+	var $spos = $s.length;
 	switch(this.la.kind) {
 	case 19:{
 		this.Get();
@@ -7331,35 +8025,24 @@ xpde.parser.Parser.prototype.Modifier1 = function(modifiers) {
 		this.addModifier(modifiers,xpde.Modifier.MStrictfp);
 	}break;
 	default:{
-		this.SynErr(110);
+		this.SynErr(67);
 	}break;
 	}
-}
-xpde.parser.Parser.prototype.MoreStatementExpressions = function() {
-	var statements = null;
-	statements = [];
-	while(this.la.kind == 27) {
-		this.Get();
-		var statement = this.StatementExpression();
-		statements.push(statement);
-	}
-	return statements;
-}
-xpde.parser.Parser.prototype.ParExpression = function() {
-	var expression = null;
-	this.Expect(33);
-	var expression1 = this.Expression0();
-	this.Expect(39);
-	return expression1;
+	$s.pop();
 }
 xpde.parser.Parser.prototype.Parse = function() {
+	$s.push("xpde.parser.Parser::Parse");
+	var $spos = $s.length;
 	this.la = new xpde.parser.Token();
 	this.la.val = "";
 	this.Get();
 	this.PdeProgram();
 	this.Expect(0);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.PdeProgram = function() {
+	$s.push("xpde.parser.Parser::PdeProgram");
+	var $spos = $s.length;
 	while(this.la.kind == 14) {
 		var importIdent = this.ImportDeclaration();
 		this.context.imports.push(importIdent);
@@ -7382,93 +8065,12 @@ xpde.parser.Parser.prototype.PdeProgram = function() {
 		this.context.types.push(this.classContexts.shift());
 		if(this.la.kind != xpde.parser.Parser._EOF) this.error("unexpected script termination");
 	}
-	else this.SynErr(102);
-}
-xpde.parser.Parser.prototype.PrefixOp = function() {
-	var operator = null;
-	if(this.la.kind == 35) {
-		this.Get();
-		operator = xpde.parser.PrefixOperator.OpNot;
-	}
-	else if(this.la.kind == 40) {
-		this.Get();
-		operator = xpde.parser.PrefixOperator.OpBitwiseNot;
-	}
-	else if(this.la.kind == 36) {
-		this.Get();
-		operator = xpde.parser.PrefixOperator.OpUnaryPlus;
-	}
-	else if(this.la.kind == 34) {
-		this.Get();
-		operator = xpde.parser.PrefixOperator.OpUnaryMinus;
-	}
-	else this.SynErr(131);
-	return operator;
-}
-xpde.parser.Parser.prototype.Primary = function() {
-	var expression = null;
-	switch(this.la.kind) {
-	case 33:{
-		this.Get();
-		var arg = this.Expression0();
-		this.Expect(39);
-		expression = arg;
-	}break;
-	case 23:{
-		this.Get();
-		expression = xpde.parser.Expression.EThisReference;
-		if(this.la.kind == 33) {
-			var arguments = this.Arguments();
-			expression = xpde.parser.Expression.EThisCall(arguments);
-		}
-	}break;
-	case 22:{
-		this.Get();
-		var arg = this.SuperSuffix();
-		expression = arg;
-	}break;
-	case 2:case 3:case 4:case 5:case 11:case 18:case 24:{
-		var arg = this.Literal();
-		expression = arg;
-	}break;
-	case 17:{
-		this.Get();
-		var arg = this.Creator();
-		expression = arg;
-	}break;
-	case 1:{
-		this.Get();
-		var identifier = this.t.val, base = null;
-		while(this.dotAndIdent()) {
-			this.Expect(29);
-			this.Expect(1);
-			base = (base != null?xpde.parser.Expression.EReference(identifier,base):(this.blockContexts[0].isVariableDefined(identifier)?xpde.parser.Expression.ELocalReference(identifier):xpde.parser.Expression.ELexExpression(xpde.parser.LexicalExpression.LReference(identifier))));
-			identifier = this.t.val;
-		}
-		expression = (base != null?xpde.parser.Expression.EReference(identifier,base):(this.blockContexts[0].isVariableDefined(identifier)?xpde.parser.Expression.ELocalReference(identifier):xpde.parser.Expression.ELexExpression(xpde.parser.LexicalExpression.LReference(identifier))));
-		if(this.isIdentSuffix()) {
-			var arg = this.IdentifierSuffix(identifier,base);
-			expression = arg;
-		}
-	}break;
-	case 6:case 7:case 8:case 10:case 13:case 15:case 16:case 20:{
-		var type = this.BasicType();
-		var bCount = this.BracketsOpt();
-		this.Expect(29);
-		this.Expect(9);
-	}break;
-	case 25:{
-		this.Get();
-		this.Expect(29);
-		this.Expect(9);
-	}break;
-	default:{
-		this.SynErr(132);
-	}break;
-	}
-	return expression;
+	else this.SynErr(58);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.Qualident = function() {
+	$s.push("xpde.parser.Parser::Qualident");
+	var $spos = $s.length;
 	var qualident = null;
 	qualident = [];
 	this.Expect(1);
@@ -7478,9 +8080,15 @@ xpde.parser.Parser.prototype.Qualident = function() {
 		this.Expect(1);
 		qualident.push(this.t.val);
 	}
-	return qualident;
+	{
+		$s.pop();
+		return qualident;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.QualidentList = function() {
+	$s.push("xpde.parser.Parser::QualidentList");
+	var $spos = $s.length;
 	var list = null;
 	list = [];
 	var qualident = this.Qualident();
@@ -7490,9 +8098,15 @@ xpde.parser.Parser.prototype.QualidentList = function() {
 		var qualident1 = this.Qualident();
 		list.push(qualident1);
 	}
-	return list;
+	{
+		$s.pop();
+		return list;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.QualifiedImport = function() {
+	$s.push("xpde.parser.Parser::QualifiedImport");
+	var $spos = $s.length;
 	var importIdent = null;
 	this.Expect(29);
 	if(this.la.kind == 1) {
@@ -7507,255 +8121,61 @@ xpde.parser.Parser.prototype.QualifiedImport = function() {
 		this.Get();
 		importIdent = ["*"];
 	}
-	else this.SynErr(106);
-	return importIdent;
-}
-xpde.parser.Parser.prototype.Selector = function(base) {
-	var expression = null;
-	if(this.la.kind == 29) {
-		this.Get();
-		if(this.la.kind == 1) {
-			this.Get();
-			var identifier = this.t.val;
-			var arg = this.ArgumentsOpt(identifier,base);
-			expression = arg;
-		}
-		else if(this.la.kind == 22) {
-			this.Get();
-			var arguments = this.Arguments();
-		}
-		else if(this.la.kind == 17) {
-			this.Get();
-			this.InnerCreator();
-		}
-		else this.SynErr(133);
+	else this.SynErr(63);
+	{
+		$s.pop();
+		return importIdent;
 	}
-	else if(this.la.kind == 32) {
-		this.Get();
-		var index = this.Expression0();
-		this.Expect(38);
-		expression = xpde.parser.Expression.EArrayAccess(index,base);
-	}
-	else this.SynErr(134);
-	return expression;
+	$s.pop();
 }
 xpde.parser.Parser.prototype.SemErr = function(msg) {
+	$s.push("xpde.parser.Parser::SemErr");
+	var $spos = $s.length;
 	if(this.errDist >= xpde.parser.Parser.minErrDist) this.errors.SemErr(this.t.line,this.t.col,msg);
 	this.errDist = 0;
+	$s.pop();
 }
 xpde.parser.Parser.prototype.StartOf = function(s) {
-	return xpde.parser.Parser.set[s][this.la.kind];
-}
-xpde.parser.Parser.prototype.Statement0 = function() {
-	var statement = null;
-	if(this.la.kind == 31) {
-		var block = this.Block(this.blockContexts[0]);
-		statement = block;
+	$s.push("xpde.parser.Parser::StartOf");
+	var $spos = $s.length;
+	{
+		var $tmp = xpde.parser.Parser.set[s][this.la.kind];
+		$s.pop();
+		return $tmp;
 	}
-	else if(this.la.kind == 57) {
-		this.Get();
-		var condition = this.ParExpression();
-		var thenStatement = this.Statement0();
-		var elseStatement = null;
-		if(this.la.kind == 58) {
-			this.Get();
-			var body = this.Statement0();
-			elseStatement = body;
-		}
-		statement = xpde.parser.Statement.SConditional(condition,thenStatement,elseStatement);
-	}
-	else if(this.la.kind == 59) {
-		this.Get();
-		this.Expect(33);
-		this.blockContexts.unshift(new xpde.parser.BlockContext(this.blockContexts[0]));
-		if(this.StartOf(19)) {
-			this.ForInit();
-		}
-		this.Expect(42);
-		var conditional = xpde.parser.Expression.EBooleanLiteral(true);
-		if(this.StartOf(10)) {
-			var expression = this.Expression0();
-			conditional = expression;
-		}
-		this.Expect(42);
-		var body = [];
-		if(this.StartOf(10)) {
-			var updates = this.ForUpdate();
-			body = updates;
-		}
-		this.Expect(39);
-		var arg = this.Statement0();
-		body = [arg].concat(body);
-		this.blockContexts[0].pushStatement(xpde.parser.Statement.SLoop(conditional,xpde.parser.Statement.SBlock(new Hash(),body),false));
-		statement = this.blockContexts.shift().getBlockStatement();
-	}
-	else if(this.la.kind == 60) {
-		this.Get();
-		var condition = this.ParExpression();
-		var body = this.Statement0();
-		statement = xpde.parser.Statement.SLoop(condition,body,false);
-	}
-	else if(this.la.kind == 61) {
-		this.Get();
-		var body = this.Statement0();
-		this.Expect(60);
-		var condition = this.ParExpression();
-		this.Expect(42);
-		statement = xpde.parser.Statement.SLoop(condition,body,true);
-	}
-	else if(this.la.kind == 62) {
-		this.Get();
-		var body = this.Block(this.blockContexts[0]);
-		var catches = [], finallyBody = null;
-		if(this.la.kind == 69) {
-			var _catches = this.Catches();
-			catches = _catches;
-			if(this.la.kind == 63) {
-				this.Get();
-				var block = this.Block(this.blockContexts[0]);
-				finallyBody = block;
-			}
-		}
-		else if(this.la.kind == 63) {
-			this.Get();
-			var block = this.Block(this.blockContexts[0]);
-			finallyBody = block;
-		}
-		else this.SynErr(121);
-		statement = xpde.parser.Statement.STry(body,catches,finallyBody);
-	}
-	else if(this.la.kind == 64) {
-		this.Get();
-		var expression = this.ParExpression();
-		this.Expect(31);
-		this.SwitchBlockStatementGroups();
-		this.Expect(37);
-	}
-	else if(this.la.kind == 49) {
-		this.Get();
-		var expression = this.ParExpression();
-		var block = this.Block(this.blockContexts[0]);
-	}
-	else if(this.la.kind == 65) {
-		this.Get();
-		var value = null;
-		if(this.StartOf(10)) {
-			var expression = this.Expression0();
-			value = expression;
-		}
-		this.Expect(42);
-		statement = xpde.parser.Statement.SReturn(value);
-	}
-	else if(this.la.kind == 66) {
-		this.Get();
-		var expression = this.Expression0();
-		this.Expect(42);
-		statement = xpde.parser.Statement.SThrow(expression);
-	}
-	else if(this.la.kind == 67) {
-		this.Get();
-		var label = null;
-		if(this.la.kind == 1) {
-			this.Get();
-			label = this.t.val;
-		}
-		this.Expect(42);
-		statement = xpde.parser.Statement.SBreak(label);
-	}
-	else if(this.la.kind == 68) {
-		this.Get();
-		var label = null;
-		if(this.la.kind == 1) {
-			this.Get();
-			label = this.t.val;
-		}
-		this.Expect(42);
-		statement = xpde.parser.Statement.SContinue(label);
-	}
-	else if(this.la.kind == 42) {
-		this.Get();
-	}
-	else if(this.isLabel()) {
-		this.Expect(1);
-		var label = this.t.val;
-		this.Expect(26);
-		var body = this.Statement0();
-		statement = xpde.parser.Statement.SLabel(label,body);
-	}
-	else if(this.StartOf(10)) {
-		var arg = this.StatementExpression();
-		this.Expect(42);
-		statement = arg;
-	}
-	else this.SynErr(122);
-	return statement;
-}
-xpde.parser.Parser.prototype.StatementExpression = function() {
-	var statement = null;
-	var expression = this.Expression0();
-	this.checkExprStat(expression);
-	statement = xpde.parser.Statement.SExpression(expression);
-	return statement;
-}
-xpde.parser.Parser.prototype.SuperSuffix = function() {
-	var expression = null;
-	if(this.la.kind == 33) {
-		var arguments = this.Arguments();
-		expression = xpde.parser.Expression.ESuperCall(arguments);
-	}
-	else if(this.la.kind == 29) {
-		this.Get();
-		this.Expect(1);
-		var identifier = this.t.val;
-		var arg = this.ArgumentsOpt(identifier,xpde.parser.Expression.ESuperReference);
-		expression = arg;
-	}
-	else this.SynErr(135);
-	return expression;
-}
-xpde.parser.Parser.prototype.SwitchBlockStatementGroup = function() {
-	this.SwitchLabel();
-	while(this.StartOf(13)) {
-		this.BlockStatement();
-	}
-}
-xpde.parser.Parser.prototype.SwitchBlockStatementGroups = function() {
-	while(this.la.kind == 70 || this.la.kind == 71) {
-		this.SwitchBlockStatementGroup();
-	}
-}
-xpde.parser.Parser.prototype.SwitchLabel = function() {
-	if(this.la.kind == 70) {
-		this.Get();
-		var expression = this.Expression0();
-		this.Expect(26);
-	}
-	else if(this.la.kind == 71) {
-		this.Get();
-		this.Expect(26);
-	}
-	else this.SynErr(125);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.SynErr = function(n) {
+	$s.push("xpde.parser.Parser::SynErr");
+	var $spos = $s.length;
 	if(this.errDist >= xpde.parser.Parser.minErrDist) this.errors.SynErr(this.la.line,this.la.col,n);
 	this.errDist = 0;
+	$s.pop();
 }
 xpde.parser.Parser.prototype.Type = function() {
+	$s.push("xpde.parser.Parser::Type");
+	var $spos = $s.length;
 	var type = null;
 	if(this.la.kind == 1) {
 		var qualident = this.Qualident();
-		type = xpde.DataType.DTReference(qualident);
+		type = xpde.parser.ParserDataType.PReference(qualident);
 	}
-	else if(this.StartOf(9)) {
+	else if(this.StartOf(14)) {
 		var primitive = this.BasicType();
-		type = xpde.DataType.DTPrimitive(primitive);
+		type = xpde.parser.ParserDataType.PPrimitive(primitive);
 	}
-	else this.SynErr(111);
+	else this.SynErr(68);
 	var bCount = this.BracketsOpt();
-	type = this.compoundBrackets(type,bCount);
-	return type;
+	if(bCount > 0) type = xpde.parser.ParserDataType.PArray(type,bCount);
+	{
+		$s.pop();
+		return type;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.TypeDeclaration = function() {
+	$s.push("xpde.parser.Parser::TypeDeclaration");
+	var $spos = $s.length;
 	if(this.StartOf(3)) {
 		var typeContext = this.ClassOrInterfaceDeclaration();
 		this.context.types.push(typeContext);
@@ -7763,67 +8183,136 @@ xpde.parser.Parser.prototype.TypeDeclaration = function() {
 	else if(this.la.kind == 42) {
 		this.Get();
 	}
-	else this.SynErr(103);
+	else this.SynErr(59);
+	$s.pop();
+}
+xpde.parser.Parser.prototype.UnparsedBlock = function(buffer) {
+	$s.push("xpde.parser.Parser::UnparsedBlock");
+	var $spos = $s.length;
+	this.Expect(31);
+	buffer.b[buffer.b.length] = "{";
+	while(this.StartOf(11)) {
+		if(this.StartOf(5)) {
+			this.UnparsedSegment(buffer);
+		}
+		else {
+			this.Get();
+			buffer.b[buffer.b.length] = this.t.val;
+		}
+	}
+	this.Expect(37);
+	buffer.b[buffer.b.length] = "}";
+	$s.pop();
+}
+xpde.parser.Parser.prototype.UnparsedExpression = function(buffer) {
+	$s.push("xpde.parser.Parser::UnparsedExpression");
+	var $spos = $s.length;
+	while(this.StartOf(12)) {
+		if(this.StartOf(5)) {
+			this.UnparsedSegment(buffer);
+		}
+		else {
+			this.Get();
+			buffer.b[buffer.b.length] = this.t.val;
+		}
+	}
+	this.Expect(42);
+	$s.pop();
+}
+xpde.parser.Parser.prototype.UnparsedSegment = function(buffer) {
+	$s.push("xpde.parser.Parser::UnparsedSegment");
+	var $spos = $s.length;
+	if(this.la.kind == 33) {
+		this.Get();
+		buffer.b[buffer.b.length] = "(";
+		while(this.StartOf(9)) {
+			if(this.StartOf(5)) {
+				this.UnparsedSegment(buffer);
+			}
+			else {
+				this.Get();
+				buffer.b[buffer.b.length] = this.t.val;
+			}
+		}
+		this.Expect(39);
+		buffer.b[buffer.b.length] = ")";
+	}
+	else if(this.la.kind == 32) {
+		this.Get();
+		buffer.b[buffer.b.length] = "[";
+		while(this.StartOf(10)) {
+			if(this.StartOf(5)) {
+				this.UnparsedSegment(buffer);
+			}
+			else {
+				this.Get();
+				buffer.b[buffer.b.length] = this.t.val;
+			}
+		}
+		this.Expect(38);
+		buffer.b[buffer.b.length] = "]";
+	}
+	else if(this.la.kind == 31) {
+		this.UnparsedBlock(buffer);
+	}
+	else if(this.la.kind == 5) {
+		this.Get();
+		buffer.b[buffer.b.length] = this.t.val;
+	}
+	else this.SynErr(62);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.VariableDeclarator = function(modifiers,type) {
+	$s.push("xpde.parser.Parser::VariableDeclarator");
+	var $spos = $s.length;
 	var context = null;
 	this.Expect(1);
 	context = new xpde.parser.FieldContext(modifiers,type,this.t.val);
 	this.VariableDeclaratorRest(context);
-	return context;
+	{
+		$s.pop();
+		return context;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.VariableDeclaratorRest = function(context) {
+	$s.push("xpde.parser.Parser::VariableDeclaratorRest");
+	var $spos = $s.length;
 	var bCount = this.BracketsOpt();
-	context.type = this.compoundBrackets(context.type,bCount);
+	if(bCount > 0) context.type = xpde.parser.ParserDataType.PArray(context.type,bCount);
 	if(this.la.kind == 52) {
 		this.Get();
-		var expression = this.VariableInitializer();
-		context.initialization = expression;
+		this.UnparsedExpression(new StringBuf());
 	}
-}
-xpde.parser.Parser.prototype.VariableDeclarators = function(modifiers,type) {
-	var fields = null;
-	var field = this.VariableDeclarator(modifiers,type);
-	fields = [field];
-	while(this.la.kind == 27) {
-		this.Get();
-		var field1 = this.VariableDeclarator(modifiers,type);
-		fields.push(field1);
-	}
-	return fields;
+	$s.pop();
 }
 xpde.parser.Parser.prototype.VariableDeclaratorsRest = function(modifiers,type,identifier) {
+	$s.push("xpde.parser.Parser::VariableDeclaratorsRest");
+	var $spos = $s.length;
 	var context = new xpde.parser.FieldContext(modifiers,type,identifier);
 	this.VariableDeclaratorRest(context);
-	this.classContexts[0].defineField(context);
+	this.classContexts[0].fields.push(context);
 	while(this.la.kind == 27) {
 		this.Get();
 		var context1 = this.VariableDeclarator(modifiers,type);
-		this.classContexts[0].defineField(context1);
+		this.classContexts[0].fields.push(context1);
 	}
-}
-xpde.parser.Parser.prototype.VariableInitializer = function() {
-	var expression = null;
-	if(this.la.kind == 31) {
-		var arg = this.ArrayInitializer();
-		expression = arg;
-	}
-	else if(this.StartOf(10)) {
-		var arg = this.Expression0();
-		expression = arg;
-	}
-	else this.SynErr(113);
-	return expression;
+	$s.pop();
 }
 xpde.parser.Parser.prototype.VoidInterfaceMethodDeclaratorRest = function() {
+	$s.push("xpde.parser.Parser::VoidInterfaceMethodDeclaratorRest");
+	var $spos = $s.length;
 	var parameters = this.FormalParameters();
 	if(this.la.kind == 55) {
 		this.Get();
 		var arg = this.QualidentList();
 	}
 	this.Expect(42);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.VoidMethodDeclaratorRest = function(methodContext) {
+	$s.push("xpde.parser.Parser::VoidMethodDeclaratorRest");
+	var $spos = $s.length;
 	var arg = this.FormalParameters();
 	methodContext.parameters = arg;
 	if(this.la.kind == 55) {
@@ -7832,37 +8321,56 @@ xpde.parser.Parser.prototype.VoidMethodDeclaratorRest = function(methodContext) 
 		methodContext.throwsList = arg1;
 	}
 	if(this.la.kind == 31) {
-		var block = this.Block(methodContext);
-		methodContext.body = block;
+		var buffer = new StringBuf();
+		this.UnparsedBlock(buffer);
+		haxe.Log.trace(buffer,{ fileName : "Parser.hx", lineNumber : 883, className : "xpde.parser.Parser", methodName : "VoidMethodDeclaratorRest"});
 	}
 	else if(this.la.kind == 42) {
 		this.Get();
 	}
-	else this.SynErr(115);
-	this.classContexts[0].defineMethod(methodContext);
+	else this.SynErr(71);
+	this.classContexts[0].methods.push(methodContext);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.WeakSeparator = function(n,syFol,repFol) {
+	$s.push("xpde.parser.Parser::WeakSeparator");
+	var $spos = $s.length;
 	var kind = this.la.kind;
 	if(kind == n) {
 		this.Get();
-		return true;
+		{
+			$s.pop();
+			return true;
+		}
 	}
-	else if(this.StartOf(repFol)) return false;
+	else if(this.StartOf(repFol)) {
+		$s.pop();
+		return false;
+	}
 	else {
 		this.SynErr(n);
 		while(!(xpde.parser.Parser.set[syFol][kind] || xpde.parser.Parser.set[repFol][kind] || xpde.parser.Parser.set[0][kind])) {
 			this.Get();
 			kind = this.la.kind;
 		}
-		return this.StartOf(syFol);
+		{
+			var $tmp = this.StartOf(syFol);
+			$s.pop();
+			return $tmp;
+		}
 	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.addModifier = function(set,modifier) {
+	$s.push("xpde.parser.Parser::addModifier");
+	var $spos = $s.length;
 	if(set.contains(modifier)) this.error("repeated modifier " + modifier);
 	else set.add(modifier);
+	$s.pop();
 }
-xpde.parser.Parser.prototype.blockContexts = null;
 xpde.parser.Parser.prototype.checkExprStat = function(expression) {
+	$s.push("xpde.parser.Parser::checkExprStat");
+	var $spos = $s.length;
 	var $e = (expression);
 	switch( $e[1] ) {
 	case 1:
@@ -7923,65 +8431,90 @@ xpde.parser.Parser.prototype.checkExprStat = function(expression) {
 		this.error("not a statement" + " (" + expression + ")");
 	}break;
 	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.checkModifierAccess = function(set) {
+	$s.push("xpde.parser.Parser::checkModifierAccess");
+	var $spos = $s.length;
 	var access = 0;
 	if(set.contains(xpde.Modifier.MPublic)) access++;
 	if(set.contains(xpde.Modifier.MPrivate)) access++;
 	if(set.contains(xpde.Modifier.MProtected)) access++;
 	if(access > 1) this.error("illegal combination of modifiers: " + set);
+	$s.pop();
 }
 xpde.parser.Parser.prototype.checkModifierPermission = function(set,permission) {
-	{ var $it31 = set.iterator();
-	while( $it31.hasNext() ) { var modifier = $it31.next();
+	$s.push("xpde.parser.Parser::checkModifierPermission");
+	var $spos = $s.length;
+	{ var $it24 = set.iterator();
+	while( $it24.hasNext() ) { var modifier = $it24.next();
 	if(!permission.contains(modifier)) this.error("modifier(s) " + set + "not allowed here");
 	else this.checkModifierAccess(set);
 	}}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.classContexts = null;
 xpde.parser.Parser.prototype.commaAndNoRBrace = function() {
-	return (this.la.kind == xpde.parser.Parser._comma && this.peek(1).kind != xpde.parser.Parser._rbrace);
-}
-xpde.parser.Parser.prototype.compoundBrackets = function(type,bCount) {
-	if(bCount == 0) return type;
-	var $e = (type);
-	switch( $e[1] ) {
-	case 0:
-	var type1 = $e[2];
+	$s.push("xpde.parser.Parser::commaAndNoRBrace");
+	var $spos = $s.length;
 	{
-		return xpde.DataType.DTPrimitiveArray(type1,bCount);
-	}break;
-	case 2:
-	var dimensions = $e[3], type1 = $e[2];
-	{
-		return xpde.DataType.DTPrimitiveArray(type1,dimensions + bCount);
-	}break;
-	case 1:
-	var qualident = $e[2];
-	{
-		return xpde.DataType.DTReferenceArray(qualident,bCount);
-	}break;
-	case 3:
-	var dimensions = $e[3], qualident = $e[2];
-	{
-		return xpde.DataType.DTReferenceArray(qualident,dimensions + bCount);
-	}break;
+		var $tmp = (this.la.kind == xpde.parser.Parser._comma && this.peek(1).kind != xpde.parser.Parser._rbrace);
+		$s.pop();
+		return $tmp;
 	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.context = null;
 xpde.parser.Parser.prototype.dotAndIdent = function() {
-	return this.la.kind == xpde.parser.Parser._dot && this.peek(1).kind == xpde.parser.Parser._ident;
+	$s.push("xpde.parser.Parser::dotAndIdent");
+	var $spos = $s.length;
+	{
+		var $tmp = this.la.kind == xpde.parser.Parser._dot && this.peek(1).kind == xpde.parser.Parser._ident;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.emptyBracket = function() {
-	return (this.la.kind == xpde.parser.Parser._lbrack && this.peek(1).kind == xpde.parser.Parser._rbrack);
+	$s.push("xpde.parser.Parser::emptyBracket");
+	var $spos = $s.length;
+	{
+		var $tmp = (this.la.kind == xpde.parser.Parser._lbrack && this.peek(1).kind == xpde.parser.Parser._rbrack);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.errDist = null;
 xpde.parser.Parser.prototype.error = function(s) {
+	$s.push("xpde.parser.Parser::error");
+	var $spos = $s.length;
 	if(this.errDist >= xpde.parser.Parser.minErrDist) this.errors.SemErr(this.la.line,this.la.col,s);
 	this.errDist = 0;
+	$s.pop();
 }
 xpde.parser.Parser.prototype.errors = null;
+xpde.parser.Parser.prototype.getClassPrefix = function() {
+	$s.push("xpde.parser.Parser::getClassPrefix");
+	var $spos = $s.length;
+	var prefix = "";
+	{
+		var _g = 0, _g1 = this.classContexts;
+		while(_g < _g1.length) {
+			var context = _g1[_g];
+			++_g;
+			prefix = context.identifier + "$" + prefix;
+		}
+	}
+	{
+		$s.pop();
+		return prefix;
+	}
+	$s.pop();
+}
 xpde.parser.Parser.prototype.guessTypeCast = function() {
+	$s.push("xpde.parser.Parser::guessTypeCast");
+	var $spos = $s.length;
 	this.scanner.ResetPeek();
 	var pt = this.scanner.Peek();
 	pt = this.rdQualident(pt);
@@ -7989,115 +8522,247 @@ xpde.parser.Parser.prototype.guessTypeCast = function() {
 		pt = this.skipDims(pt);
 		if(pt != null) {
 			var pt1 = this.scanner.Peek();
-			return pt.kind == xpde.parser.Parser._rpar && xpde.parser.Parser.castFollower.bitset[pt1.kind];
+			{
+				var $tmp = pt.kind == xpde.parser.Parser._rpar && xpde.parser.Parser.castFollower.bitset[pt1.kind];
+				$s.pop();
+				return $tmp;
+			}
 		}
 	}
-	return false;
+	{
+		$s.pop();
+		return false;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.identAndLPar = function() {
-	return this.la.kind == xpde.parser.Parser._ident && this.peek(1).kind == xpde.parser.Parser._lpar;
+	$s.push("xpde.parser.Parser::identAndLPar");
+	var $spos = $s.length;
+	{
+		var $tmp = this.la.kind == xpde.parser.Parser._ident && this.peek(1).kind == xpde.parser.Parser._lpar;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.isActiveProgram = function() {
-	return (this.la.kind == xpde.parser.Parser._void && this.peek(1).kind == xpde.parser.Parser._ident && this.peek(2).kind == xpde.parser.Parser._lpar);
+	$s.push("xpde.parser.Parser::isActiveProgram");
+	var $spos = $s.length;
+	{
+		var $tmp = (this.la.kind == xpde.parser.Parser._void && this.peek(1).kind == xpde.parser.Parser._ident && this.peek(2).kind == xpde.parser.Parser._lpar);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.isIdentSuffix = function() {
+	$s.push("xpde.parser.Parser::isIdentSuffix");
+	var $spos = $s.length;
 	if(this.la.kind == xpde.parser.Parser._dot) {
 		this.scanner.ResetPeek();
 		var pt = this.scanner.Peek();
-		if(pt.kind == xpde.parser.Parser._super) return this.scanner.Peek().kind == xpde.parser.Parser._dot;
-		return (pt.kind == xpde.parser.Parser._class || pt.kind == xpde.parser.Parser._this);
+		if(pt.kind == xpde.parser.Parser._super) {
+			var $tmp = this.scanner.Peek().kind == xpde.parser.Parser._dot;
+			$s.pop();
+			return $tmp;
+		}
+		{
+			var $tmp = (pt.kind == xpde.parser.Parser._class || pt.kind == xpde.parser.Parser._this);
+			$s.pop();
+			return $tmp;
+		}
 	}
-	return (this.la.kind == xpde.parser.Parser._lpar || this.emptyBracket());
+	{
+		var $tmp = (this.la.kind == xpde.parser.Parser._lpar || this.emptyBracket());
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.isJavaProgram = function() {
-	return (this.la.kind == xpde.parser.Parser._public && this.peek(1).kind == xpde.parser.Parser._class);
+	$s.push("xpde.parser.Parser::isJavaProgram");
+	var $spos = $s.length;
+	{
+		var $tmp = (this.la.kind == xpde.parser.Parser._public && this.peek(1).kind == xpde.parser.Parser._class);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.isLabel = function() {
-	return this.la.kind == xpde.parser.Parser._ident && this.peek(1).kind == xpde.parser.Parser._colon;
+	$s.push("xpde.parser.Parser::isLabel");
+	var $spos = $s.length;
+	{
+		var $tmp = this.la.kind == xpde.parser.Parser._ident && this.peek(1).kind == xpde.parser.Parser._colon;
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.isLocalVarDecl = function(finalIsSuccess) {
+	$s.push("xpde.parser.Parser::isLocalVarDecl");
+	var $spos = $s.length;
 	var pt = this.la;
 	this.scanner.ResetPeek();
-	if(this.la.kind == xpde.parser.Parser._final) if(finalIsSuccess) return true;
+	if(this.la.kind == xpde.parser.Parser._final) if(finalIsSuccess) {
+		$s.pop();
+		return true;
+	}
 	else pt = this.scanner.Peek();
 	if(xpde.parser.Parser.typeKW.bitset[pt.kind]) pt = this.scanner.Peek();
 	else pt = this.rdQualident(pt);
 	if(pt != null) {
 		pt = this.skipDims(pt);
 		if(pt != null) {
-			return pt.kind == xpde.parser.Parser._ident;
+			{
+				var $tmp = pt.kind == xpde.parser.Parser._ident;
+				$s.pop();
+				return $tmp;
+			}
 		}
 	}
-	return false;
+	{
+		$s.pop();
+		return false;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.isSimpleTypeCast = function() {
+	$s.push("xpde.parser.Parser::isSimpleTypeCast");
+	var $spos = $s.length;
 	this.scanner.ResetPeek();
 	var pt1 = this.scanner.Peek();
 	if(xpde.parser.Parser.typeKW.bitset[pt1.kind]) {
 		var pt = this.scanner.Peek();
 		pt = this.skipDims(pt);
 		if(pt != null) {
-			return pt.kind == xpde.parser.Parser._rpar;
+			{
+				var $tmp = pt.kind == xpde.parser.Parser._rpar;
+				$s.pop();
+				return $tmp;
+			}
 		}
 	}
-	return false;
+	{
+		$s.pop();
+		return false;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.isTypeCast = function() {
-	if(this.la.kind != xpde.parser.Parser._lpar) return false;
-	if(this.isSimpleTypeCast()) return true;
-	return this.guessTypeCast();
+	$s.push("xpde.parser.Parser::isTypeCast");
+	var $spos = $s.length;
+	if(this.la.kind != xpde.parser.Parser._lpar) {
+		$s.pop();
+		return false;
+	}
+	if(this.isSimpleTypeCast()) {
+		$s.pop();
+		return true;
+	}
+	{
+		var $tmp = this.guessTypeCast();
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.la = null;
 xpde.parser.Parser.prototype.nonEmptyBracket = function() {
-	return (this.la.kind == xpde.parser.Parser._lbrack && this.peek(1).kind != xpde.parser.Parser._rbrack);
+	$s.push("xpde.parser.Parser::nonEmptyBracket");
+	var $spos = $s.length;
+	{
+		var $tmp = (this.la.kind == xpde.parser.Parser._lbrack && this.peek(1).kind != xpde.parser.Parser._rbrack);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.peek = function(n) {
+	$s.push("xpde.parser.Parser::peek");
+	var $spos = $s.length;
 	this.scanner.ResetPeek();
 	var x = this.la;
 	while(n > 0) {
 		x = this.scanner.Peek();
 		n--;
 	}
-	return x;
+	{
+		$s.pop();
+		return x;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.rdQualident = function(pt) {
+	$s.push("xpde.parser.Parser::rdQualident");
+	var $spos = $s.length;
 	var qualident = "";
 	if(pt.kind == xpde.parser.Parser._ident) {
 		qualident = pt.val;
 		pt = this.scanner.Peek();
 		while(pt.kind == xpde.parser.Parser._dot) {
 			pt = this.scanner.Peek();
-			if(pt.kind != xpde.parser.Parser._ident) return null;
+			if(pt.kind != xpde.parser.Parser._ident) {
+				$s.pop();
+				return null;
+			}
 			qualident += "." + pt.val;
 			pt = this.scanner.Peek();
 		}
-		return pt;
+		{
+			$s.pop();
+			return pt;
+		}
 	}
-	else return null;
+	else {
+		$s.pop();
+		return null;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.scanner = null;
 xpde.parser.Parser.prototype.skipDims = function(pt) {
-	if(pt.kind != xpde.parser.Parser._lbrack) return pt;
+	$s.push("xpde.parser.Parser::skipDims");
+	var $spos = $s.length;
+	if(pt.kind != xpde.parser.Parser._lbrack) {
+		$s.pop();
+		return pt;
+	}
 	do {
 		pt = this.scanner.Peek();
-		if(pt.kind != xpde.parser.Parser._rbrack) return null;
+		if(pt.kind != xpde.parser.Parser._rbrack) {
+			$s.pop();
+			return null;
+		}
 		pt = this.scanner.Peek();
 	} while(pt.kind == xpde.parser.Parser._lbrack);
-	return pt;
+	{
+		$s.pop();
+		return pt;
+	}
+	$s.pop();
 }
 xpde.parser.Parser.prototype.t = null;
 xpde.parser.Parser.prototype.__class__ = xpde.parser.Parser;
 xpde.parser.Errors = function(p) { if( p === $_ ) return; {
+	$s.push("xpde.parser.Errors::new");
+	var $spos = $s.length;
 	this.count = 0;
+	$s.pop();
 }}
 xpde.parser.Errors.__name__ = ["xpde","parser","Errors"];
 xpde.parser.Errors.prototype.SemErr = function(line,col,s) {
+	$s.push("xpde.parser.Errors::SemErr");
+	var $spos = $s.length;
 	if(line == null) this.printMsg(line,col,s);
-	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 1978, className : "xpde.parser.Errors", methodName : "SemErr"});
+	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 1182, className : "xpde.parser.Errors", methodName : "SemErr"});
 	this.count++;
 	throw new xpde.parser.FatalError(s);
+	$s.pop();
 }
 xpde.parser.Errors.prototype.SynErr = function(line,col,n) {
+	$s.push("xpde.parser.Errors::SynErr");
+	var $spos = $s.length;
 	var s;
 	switch(n) {
 	case 0:{
@@ -8272,259 +8937,64 @@ xpde.parser.Errors.prototype.SynErr = function(line,col,n) {
 		s = "\"interface\" expected";
 	}break;
 	case 57:{
-		s = "\"if\" expected";
-	}break;
-	case 58:{
-		s = "\"else\" expected";
-	}break;
-	case 59:{
-		s = "\"for\" expected";
-	}break;
-	case 60:{
-		s = "\"while\" expected";
-	}break;
-	case 61:{
-		s = "\"do\" expected";
-	}break;
-	case 62:{
-		s = "\"try\" expected";
-	}break;
-	case 63:{
-		s = "\"finally\" expected";
-	}break;
-	case 64:{
-		s = "\"switch\" expected";
-	}break;
-	case 65:{
-		s = "\"return\" expected";
-	}break;
-	case 66:{
-		s = "\"throw\" expected";
-	}break;
-	case 67:{
-		s = "\"break\" expected";
-	}break;
-	case 68:{
-		s = "\"continue\" expected";
-	}break;
-	case 69:{
-		s = "\"catch\" expected";
-	}break;
-	case 70:{
-		s = "\"case\" expected";
-	}break;
-	case 71:{
-		s = "\"default\" expected";
-	}break;
-	case 72:{
-		s = "\"?\" expected";
-	}break;
-	case 73:{
-		s = "\"instanceof\" expected";
-	}break;
-	case 74:{
-		s = "\"+=\" expected";
-	}break;
-	case 75:{
-		s = "\"-=\" expected";
-	}break;
-	case 76:{
-		s = "\"*=\" expected";
-	}break;
-	case 77:{
-		s = "\"/=\" expected";
-	}break;
-	case 78:{
-		s = "\"&=\" expected";
-	}break;
-	case 79:{
-		s = "\"|=\" expected";
-	}break;
-	case 80:{
-		s = "\"^=\" expected";
-	}break;
-	case 81:{
-		s = "\"%=\" expected";
-	}break;
-	case 82:{
-		s = "\"<<=\" expected";
-	}break;
-	case 83:{
-		s = "\">>=\" expected";
-	}break;
-	case 84:{
-		s = "\">>>=\" expected";
-	}break;
-	case 85:{
-		s = "\"||\" expected";
-	}break;
-	case 86:{
-		s = "\"&&\" expected";
-	}break;
-	case 87:{
-		s = "\"|\" expected";
-	}break;
-	case 88:{
-		s = "\"^\" expected";
-	}break;
-	case 89:{
-		s = "\"&\" expected";
-	}break;
-	case 90:{
-		s = "\"==\" expected";
-	}break;
-	case 91:{
-		s = "\"!=\" expected";
-	}break;
-	case 92:{
-		s = "\"<\" expected";
-	}break;
-	case 93:{
-		s = "\">\" expected";
-	}break;
-	case 94:{
-		s = "\"<=\" expected";
-	}break;
-	case 95:{
-		s = "\">=\" expected";
-	}break;
-	case 96:{
-		s = "\"<<\" expected";
-	}break;
-	case 97:{
-		s = "\">>\" expected";
-	}break;
-	case 98:{
-		s = "\">>>\" expected";
-	}break;
-	case 99:{
-		s = "\"/\" expected";
-	}break;
-	case 100:{
-		s = "\"%\" expected";
-	}break;
-	case 101:{
 		s = "??? expected";
 	}break;
-	case 102:{
+	case 58:{
 		s = "invalid PdeProgram";
 	}break;
-	case 103:{
+	case 59:{
 		s = "invalid TypeDeclaration";
 	}break;
-	case 104:{
+	case 60:{
 		s = "invalid ClassBodyDeclaration";
 	}break;
-	case 105:{
+	case 61:{
 		s = "invalid ClassBodyDeclaration";
 	}break;
-	case 106:{
+	case 62:{
+		s = "invalid UnparsedSegment";
+	}break;
+	case 63:{
 		s = "invalid QualifiedImport";
 	}break;
-	case 107:{
+	case 64:{
 		s = "invalid ClassOrInterfaceDeclaration";
 	}break;
-	case 108:{
+	case 65:{
 		s = "invalid ClassModifier";
 	}break;
-	case 109:{
+	case 66:{
 		s = "invalid Modifier0";
 	}break;
-	case 110:{
+	case 67:{
 		s = "invalid Modifier1";
 	}break;
-	case 111:{
+	case 68:{
 		s = "invalid Type";
 	}break;
-	case 112:{
+	case 69:{
 		s = "invalid BasicType";
 	}break;
-	case 113:{
-		s = "invalid VariableInitializer";
-	}break;
-	case 114:{
+	case 70:{
 		s = "invalid MemberDecl";
 	}break;
-	case 115:{
+	case 71:{
 		s = "invalid VoidMethodDeclaratorRest";
 	}break;
-	case 116:{
+	case 72:{
 		s = "invalid MethodOrFieldRest";
 	}break;
-	case 117:{
+	case 73:{
 		s = "invalid MethodDeclaratorRest";
 	}break;
-	case 118:{
+	case 74:{
 		s = "invalid InterfaceBodyDeclaration";
 	}break;
-	case 119:{
+	case 75:{
 		s = "invalid InterfaceMemberDecl";
 	}break;
-	case 120:{
+	case 76:{
 		s = "invalid InterfaceMethodOrFieldRest";
-	}break;
-	case 121:{
-		s = "invalid Statement0";
-	}break;
-	case 122:{
-		s = "invalid Statement0";
-	}break;
-	case 123:{
-		s = "invalid ForInit";
-	}break;
-	case 124:{
-		s = "invalid BlockStatement";
-	}break;
-	case 125:{
-		s = "invalid SwitchLabel";
-	}break;
-	case 126:{
-		s = "invalid AssignmentOperator";
-	}break;
-	case 127:{
-		s = "invalid Expression3";
-	}break;
-	case 128:{
-		s = "invalid Expression2Rest";
-	}break;
-	case 129:{
-		s = "invalid Infixop";
-	}break;
-	case 130:{
-		s = "invalid Increment";
-	}break;
-	case 131:{
-		s = "invalid PrefixOp";
-	}break;
-	case 132:{
-		s = "invalid Primary";
-	}break;
-	case 133:{
-		s = "invalid Selector";
-	}break;
-	case 134:{
-		s = "invalid Selector";
-	}break;
-	case 135:{
-		s = "invalid SuperSuffix";
-	}break;
-	case 136:{
-		s = "invalid Literal";
-	}break;
-	case 137:{
-		s = "invalid Creator";
-	}break;
-	case 138:{
-		s = "invalid Creator";
-	}break;
-	case 139:{
-		s = "invalid IdentifierSuffix";
-	}break;
-	case 140:{
-		s = "invalid IdentifierSuffix";
-	}break;
-	case 141:{
-		s = "invalid ArrayCreatorRest";
 	}break;
 	default:{
 		s = "error " + n;
@@ -8533,22 +9003,32 @@ xpde.parser.Errors.prototype.SynErr = function(line,col,n) {
 	this.printMsg(line,col,s);
 	this.count++;
 	throw new xpde.parser.FatalError(s);
+	$s.pop();
 }
 xpde.parser.Errors.prototype.Warning = function(line,col,s) {
+	$s.push("xpde.parser.Errors::Warning");
+	var $spos = $s.length;
 	if(line == null) this.printMsg(line,col,s);
-	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 1984, className : "xpde.parser.Errors", methodName : "Warning"});
+	else haxe.Log.trace(s,{ fileName : "Parser.hx", lineNumber : 1188, className : "xpde.parser.Errors", methodName : "Warning"});
+	$s.pop();
 }
 xpde.parser.Errors.prototype.count = null;
 xpde.parser.Errors.prototype.printMsg = function(line,column,msg) {
+	$s.push("xpde.parser.Errors::printMsg");
+	var $spos = $s.length;
 	var b = xpde.parser.Errors.errMsgFormat;
 	b = StringTools.replace(b,"{0}",Std.string(line));
 	b = StringTools.replace(b,"{1}",Std.string(column));
 	b = StringTools.replace(b,"{2}",msg);
-	haxe.Log.trace(b,{ fileName : "Parser.hx", lineNumber : 1822, className : "xpde.parser.Errors", methodName : "printMsg"});
+	haxe.Log.trace(b,{ fileName : "Parser.hx", lineNumber : 1091, className : "xpde.parser.Errors", methodName : "printMsg"});
+	$s.pop();
 }
 xpde.parser.Errors.prototype.__class__ = xpde.parser.Errors;
 xpde.parser.FatalError = function(s) { if( s === $_ ) return; {
+	$s.push("xpde.parser.FatalError::new");
+	var $spos = $s.length;
 	this.message = s;
+	$s.pop();
 }}
 xpde.parser.FatalError.__name__ = ["xpde","parser","FatalError"];
 xpde.parser.FatalError.prototype.message = null;
@@ -8591,17 +9071,34 @@ $Main.__name__ = ["@Main"];
 $Main.prototype.__class__ = $Main;
 $_ = {}
 js.Boot.__res = {}
+$s = [];
+$e = [];
 js.Boot.__init();
 {
 	Date.now = function() {
-		return new Date();
+		$s.push("@Main::new@119");
+		var $spos = $s.length;
+		{
+			var $tmp = new Date();
+			$s.pop();
+			return $tmp;
+		}
+		$s.pop();
 	}
 	Date.fromTime = function(t) {
+		$s.push("@Main::new@122");
+		var $spos = $s.length;
 		var d = new Date();
 		d["setTime"](t);
-		return d;
+		{
+			$s.pop();
+			return d;
+		}
+		$s.pop();
 	}
 	Date.fromString = function(s) {
+		$s.push("@Main::new@131");
+		var $spos = $s.length;
 		switch(s.length) {
 		case 8:{
 			var k = s.split(":");
@@ -8610,31 +9107,50 @@ js.Boot.__init();
 			d["setUTCHours"](k[0]);
 			d["setUTCMinutes"](k[1]);
 			d["setUTCSeconds"](k[2]);
-			return d;
+			{
+				$s.pop();
+				return d;
+			}
 		}break;
 		case 10:{
 			var k = s.split("-");
-			return new Date(k[0],k[1] - 1,k[2],0,0,0);
+			{
+				var $tmp = new Date(k[0],k[1] - 1,k[2],0,0,0);
+				$s.pop();
+				return $tmp;
+			}
 		}break;
 		case 19:{
 			var k = s.split(" ");
 			var y = k[0].split("-");
 			var t = k[1].split(":");
-			return new Date(y[0],y[1] - 1,y[2],t[0],t[1],t[2]);
+			{
+				var $tmp = new Date(y[0],y[1] - 1,y[2],t[0],t[1],t[2]);
+				$s.pop();
+				return $tmp;
+			}
 		}break;
 		default:{
 			throw "Invalid date format : " + s;
 		}break;
 		}
+		$s.pop();
 	}
 	Date.prototype["toString"] = function() {
+		$s.push("@Main::new@160");
+		var $spos = $s.length;
 		var date = this;
 		var m = date.getMonth() + 1;
 		var d = date.getDate();
 		var h = date.getHours();
 		var mi = date.getMinutes();
 		var s = date.getSeconds();
-		return date.getFullYear() + "-" + ((m < 10?"0" + m:"" + m)) + "-" + ((d < 10?"0" + d:"" + d)) + " " + ((h < 10?"0" + h:"" + h)) + ":" + ((mi < 10?"0" + mi:"" + mi)) + ":" + ((s < 10?"0" + s:"" + s));
+		{
+			var $tmp = date.getFullYear() + "-" + ((m < 10?"0" + m:"" + m)) + "-" + ((d < 10?"0" + d:"" + d)) + " " + ((h < 10?"0" + h:"" + h)) + ":" + ((mi < 10?"0" + mi:"" + mi)) + ":" + ((s < 10?"0" + s:"" + s));
+			$s.pop();
+			return $tmp;
+		}
+		$s.pop();
 	}
 	Date.prototype.__class__ = Date;
 	Date.__name__ = ["Date"];
@@ -8658,10 +9174,24 @@ js.Boot.__init();
 	Math.NEGATIVE_INFINITY = Number["NEGATIVE_INFINITY"];
 	Math.POSITIVE_INFINITY = Number["POSITIVE_INFINITY"];
 	Math.isFinite = function(i) {
-		return isFinite(i);
+		$s.push("@Main::new@73");
+		var $spos = $s.length;
+		{
+			var $tmp = isFinite(i);
+			$s.pop();
+			return $tmp;
+		}
+		$s.pop();
 	}
 	Math.isNaN = function(i) {
-		return isNaN(i);
+		$s.push("@Main::new@85");
+		var $spos = $s.length;
+		{
+			var $tmp = isNaN(i);
+			$s.pop();
+			return $tmp;
+		}
+		$s.pop();
 	}
 	Math.__name__ = ["Math"];
 }
@@ -8669,10 +9199,18 @@ js.Boot.__init();
 	js.Lib.document = document;
 	js.Lib.window = window;
 	onerror = function(msg,url,line) {
+		var stack = $s.copy();
 		var f = js.Lib.onerror;
-		if( f == null )
+		$s.splice(0,$s.length);
+		if( f == null ) {
+			var i = stack.length;
+			var s = "";
+			while( --i >= 0 )
+				s += "Called from "+stack[i]+"\n";
+			alert(msg+"\n\n"+s);
 			return false;
-		return f(msg,[url+":"+line]);
+		}
+		return f(msg,stack);
 	}
 }
 xpde.parser.ModifierSet.none = new xpde.parser.EnumSet([]);
@@ -8687,14 +9225,14 @@ xpde.parser.ModifierSet.all = new xpde.parser.EnumSet([xpde.Modifier.MPublic,xpd
 haxe.Serializer.USE_CACHE = false;
 haxe.Serializer.USE_ENUM_INDEX = false;
 haxe.Serializer.BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%:";
-xpde.core.js.PApplet.__rtti = "<class path=\"xpde.core.js.PApplet\" params=\"\" file=\"C:\\Documents and Settings\\1st-user\\Desktop\\Tim\\xpde\\current\\src/xpde/core/js/PApplet.hx\">\n\t<implements path=\"haxe.rtti.Infos\"/>\n\t<__javartti__ public=\"1\" line=\"10\" static=\"1\"><c path=\"String\"/></__javartti__>\n\t<new public=\"1\" line=\"20\"><f a=\"?curElement\">\n\t<c path=\"String\"/>\n\t<e path=\"Void\"/>\n</f></new>\n\t<haxe_dynamic><d/></haxe_dynamic>\n</class>";
+xpde.core.js.PApplet.__rtti = "<class path=\"xpde.core.js.PApplet\" params=\"\" file=\"C:\\Documents and Settings\\Ryan Family\\Desktop\\tim\\xpde\\src/xpde/core/js/PApplet.hx\">\n\t<implements path=\"haxe.rtti.Infos\"/>\n\t<__javartti__ public=\"1\" line=\"10\" static=\"1\"><c path=\"String\"/></__javartti__>\n\t<new public=\"1\" line=\"20\"><f a=\"?curElement\">\n\t<c path=\"String\"/>\n\t<e path=\"Void\"/>\n</f></new>\n\t<haxe_dynamic><d/></haxe_dynamic>\n</class>";
 xpde.core.js.PApplet.__javartti__ = "\r\npublic class PApplet {\r\n\tnative void size(int width, int height);\r\n\tnative void noStroke();\r\n\tnative void smooth();\r\n\tnative void noLoop();\r\n\tnative void fill(float value);\r\n\tnative void ellipse(int x, int y, int width, int height);\r\n}";
 js.Lib.onerror = null;
 xpde.parser.Buffer.EOF = 65535;
 xpde.parser.Scanner.EOL = 10;
 xpde.parser.Scanner.eofSym = 0;
-xpde.parser.Scanner.maxT = 101;
-xpde.parser.Scanner.noSym = 101;
+xpde.parser.Scanner.maxT = 57;
+xpde.parser.Scanner.noSym = 57;
 xpde.parser.Scanner.start = new xpde.parser.StartStates();
 xpde.parser.Scanner.literals = function($this) {
 	var $r;
@@ -8715,40 +9253,32 @@ xpde.parser.Scanner.literals = function($this) {
 			xpde.parser.Scanner.start.set(i,1);
 		}
 	}
-	xpde.parser.Scanner.start.set(48,46);
+	xpde.parser.Scanner.start.set(48,47);
 	{
 		var _g = 49;
 		while(_g < 58) {
 			var i = _g++;
-			xpde.parser.Scanner.start.set(i,47);
+			xpde.parser.Scanner.start.set(i,48);
 		}
 	}
-	xpde.parser.Scanner.start.set(46,48);
+	xpde.parser.Scanner.start.set(46,49);
 	xpde.parser.Scanner.start.set(39,18);
 	xpde.parser.Scanner.start.set(34,27);
 	xpde.parser.Scanner.start.set(58,35);
 	xpde.parser.Scanner.start.set(44,36);
-	xpde.parser.Scanner.start.set(45,73);
-	xpde.parser.Scanner.start.set(43,74);
+	xpde.parser.Scanner.start.set(45,50);
+	xpde.parser.Scanner.start.set(43,51);
 	xpde.parser.Scanner.start.set(123,39);
 	xpde.parser.Scanner.start.set(91,40);
 	xpde.parser.Scanner.start.set(40,41);
-	xpde.parser.Scanner.start.set(33,75);
-	xpde.parser.Scanner.start.set(125,42);
-	xpde.parser.Scanner.start.set(93,43);
-	xpde.parser.Scanner.start.set(41,44);
-	xpde.parser.Scanner.start.set(126,45);
-	xpde.parser.Scanner.start.set(59,54);
-	xpde.parser.Scanner.start.set(42,76);
-	xpde.parser.Scanner.start.set(61,77);
-	xpde.parser.Scanner.start.set(63,55);
-	xpde.parser.Scanner.start.set(47,78);
-	xpde.parser.Scanner.start.set(38,79);
-	xpde.parser.Scanner.start.set(124,80);
-	xpde.parser.Scanner.start.set(94,81);
-	xpde.parser.Scanner.start.set(37,82);
-	xpde.parser.Scanner.start.set(60,83);
-	xpde.parser.Scanner.start.set(62,84);
+	xpde.parser.Scanner.start.set(33,42);
+	xpde.parser.Scanner.start.set(125,43);
+	xpde.parser.Scanner.start.set(93,44);
+	xpde.parser.Scanner.start.set(41,45);
+	xpde.parser.Scanner.start.set(126,46);
+	xpde.parser.Scanner.start.set(59,57);
+	xpde.parser.Scanner.start.set(42,58);
+	xpde.parser.Scanner.start.set(61,59);
 	xpde.parser.Scanner.start.set(xpde.parser.Buffer.EOF,-1);
 	literals.set("boolean",6);
 	literals.set("byte",7);
@@ -8783,22 +9313,6 @@ xpde.parser.Scanner.literals = function($this) {
 	literals.set("implements",54);
 	literals.set("throws",55);
 	literals.set("interface",56);
-	literals.set("if",57);
-	literals.set("else",58);
-	literals.set("for",59);
-	literals.set("while",60);
-	literals.set("do",61);
-	literals.set("try",62);
-	literals.set("finally",63);
-	literals.set("switch",64);
-	literals.set("return",65);
-	literals.set("throw",66);
-	literals.set("break",67);
-	literals.set("continue",68);
-	literals.set("catch",69);
-	literals.set("case",70);
-	literals.set("default",71);
-	literals.set("instanceof",73);
 	$r = literals;
 	return $r;
 }(this);
@@ -8843,7 +9357,7 @@ xpde.parser.Parser._rbrace = 37;
 xpde.parser.Parser._rbrack = 38;
 xpde.parser.Parser._rpar = 39;
 xpde.parser.Parser._tilde = 40;
-xpde.parser.Parser.maxT = 101;
+xpde.parser.Parser.maxT = 57;
 xpde.parser.Parser.minErrDist = 2;
 xpde.parser.Parser.maxTerminals = 160;
 xpde.parser.Parser.typeKWarr = [xpde.parser.Parser._byte,xpde.parser.Parser._short,xpde.parser.Parser._char,xpde.parser.Parser._int,xpde.parser.Parser._long,xpde.parser.Parser._float,xpde.parser.Parser._double,xpde.parser.Parser._boolean];
@@ -8854,7 +9368,7 @@ xpde.parser.Parser.castFollower = xpde.parser.Parser.or(xpde.parser.Parser.newSe
 xpde.parser.Parser.prefix = xpde.parser.Parser.newSet(xpde.parser.Parser.prefixArr);
 xpde.parser.Parser.T = true;
 xpde.parser.Parser.x = false;
-xpde.parser.Parser.set = [[true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,true,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,true,true,true,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,true,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,true,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,true,true,true,false,true,false,false,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,false,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,false,true,false,true,true,true,true,false,true,false,false,false,false,false,false,true,true,false,true,true,true,true,false,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,false,true,false,false,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,false,true,false,true,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,true,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,false,false,true,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,true,false,true,true,true,true,false,false,false,true,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false,true,true,true,true,false,true,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,false,true,true,false,true,false,true,true,true,true,false,true,false,true,true,true,true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false]];
+xpde.parser.Parser.set = [[true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,true,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,true,true,true,false,false,false,false,false,false,false,false,true,false,false],[false,true,false,false,false,true,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,true,true,true,false,false,false,false,false,false,false,false,true,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false],[false,false,false,false,false,false,false,false,false,true,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,false,false,false,false,false,false,false,false,true,false,false],[false,true,false,false,false,true,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,true,true,true,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false],[false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false],[false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false],[false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false],[false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false],[false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,true,true,true,false,true,false,false,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,false,true,false,false,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,false,true,false,true,true,false,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false],[false,true,false,false,false,false,true,true,true,true,true,false,true,true,false,true,true,false,false,true,true,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,false,false,false,false,true,false,false]];
 xpde.parser.Errors.errMsgFormat = "-- line {0} col {1}: {2}";
 xpde.parser.FatalError.serialVersionUID = 1.0;
 $Main.init = JSMain.main();

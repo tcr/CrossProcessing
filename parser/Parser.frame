@@ -51,7 +51,7 @@ class Parser
 		
 		// parsing contexts
 		classContexts = [];
-		blockContexts = [];
+//		blockContexts = [];
 	}
 
 	function SynErr (n:Int):Void {

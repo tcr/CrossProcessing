@@ -97,8 +97,8 @@ class Elem {
 class Scanner {
 	static var EOL:Int = 10; // \n
 	static var eofSym:Int = 0;
-	static var maxT:Int = 101;
-	static var noSym:Int = 101;
+	static var maxT:Int = 57;
+	static var noSym:Int = 57;
 
 
 	public var buffer:Buffer; // scanner buffer
@@ -123,34 +123,26 @@ class Scanner {
 		for (i in 65...91) start.set(i, 1);
 		start.set(95, 1);
 		for (i in 97...123) start.set(i, 1);
-		start.set(48, 46);
-		for (i in 49...58) start.set(i, 47);
-		start.set(46, 48); 
+		start.set(48, 47);
+		for (i in 49...58) start.set(i, 48);
+		start.set(46, 49); 
 		start.set(39, 18); 
 		start.set(34, 27); 
 		start.set(58, 35); 
 		start.set(44, 36); 
-		start.set(45, 73); 
-		start.set(43, 74); 
+		start.set(45, 50); 
+		start.set(43, 51); 
 		start.set(123, 39); 
 		start.set(91, 40); 
 		start.set(40, 41); 
-		start.set(33, 75); 
-		start.set(125, 42); 
-		start.set(93, 43); 
-		start.set(41, 44); 
-		start.set(126, 45); 
-		start.set(59, 54); 
-		start.set(42, 76); 
-		start.set(61, 77); 
-		start.set(63, 55); 
-		start.set(47, 78); 
-		start.set(38, 79); 
-		start.set(124, 80); 
-		start.set(94, 81); 
-		start.set(37, 82); 
-		start.set(60, 83); 
-		start.set(62, 84); 
+		start.set(33, 42); 
+		start.set(125, 43); 
+		start.set(93, 44); 
+		start.set(41, 45); 
+		start.set(126, 46); 
+		start.set(59, 57); 
+		start.set(42, 58); 
+		start.set(61, 59); 
 		start.set(Buffer.EOF, -1);
 		literals.set("boolean", 6);
 		literals.set("byte", 7);
@@ -185,22 +177,6 @@ class Scanner {
 		literals.set("implements", 54);
 		literals.set("throws", 55);
 		literals.set("interface", 56);
-		literals.set("if", 57);
-		literals.set("else", 58);
-		literals.set("for", 59);
-		literals.set("while", 60);
-		literals.set("do", 61);
-		literals.set("try", 62);
-		literals.set("finally", 63);
-		literals.set("switch", 64);
-		literals.set("return", 65);
-		literals.set("throw", 66);
-		literals.set("break", 67);
-		literals.set("continue", 68);
-		literals.set("catch", 69);
-		literals.set("case", 70);
-		literals.set("default", 71);
-		literals.set("instanceof", 73);
 
 		literals;
 	};
@@ -380,7 +356,7 @@ class Scanner {
 					if (ch == 39) {AddCh(); state = 26;}
 					else {t.kind = noSym; break;}
 				case 20:
-					if (ch >= 48 && ch <= 51) {AddCh(); state = 49;}
+					if (ch >= 48 && ch <= 51) {AddCh(); state = 52;}
 					else if (ch >= 52 && ch <= 55) {AddCh(); state = 25;}
 					else if (ch == 34 || ch == 39 || ch == 92 || ch == 98 || ch == 102 || ch == 110 || ch == 114 || ch == 116) {AddCh(); state = 19;}
 					else if (ch == 117) {AddCh(); state = 21;}
@@ -410,7 +386,7 @@ class Scanner {
 					else if (ch == 92) {AddCh(); state = 28;}
 					else {t.kind = noSym; break;}
 				case 28:
-					if (ch >= 48 && ch <= 51) {AddCh(); state = 51;}
+					if (ch >= 48 && ch <= 51) {AddCh(); state = 54;}
 					else if (ch >= 52 && ch <= 55) {AddCh(); state = 33;}
 					else if (ch == 34 || ch == 39 || ch == 92 || ch == 98 || ch == 102 || ch == 110 || ch == 114 || ch == 116) {AddCh(); state = 27;}
 					else if (ch == 117) {AddCh(); state = 29;}
@@ -450,15 +426,17 @@ class Scanner {
 				case 41:
 					{t.kind = 33; break;}
 				case 42:
-					{t.kind = 37; break;}
+					{t.kind = 35; break;}
 				case 43:
-					{t.kind = 38; break;}
+					{t.kind = 37; break;}
 				case 44:
-					{t.kind = 39; break;}
+					{t.kind = 38; break;}
 				case 45:
-					{t.kind = 40; break;}
+					{t.kind = 39; break;}
 				case 46:
-					if (ch >= 48 && ch <= 55) {AddCh(); state = 53;}
+					{t.kind = 40; break;}
+				case 47:
+					if (ch >= 48 && ch <= 55) {AddCh(); state = 56;}
 					else if (ch >= 56 && ch <= 57) {AddCh(); state = 9;}
 					else if (ch == 76 || ch == 108) {AddCh(); state = 4;}
 					else if (ch == 88 || ch == 120) {AddCh(); state = 2;}
@@ -466,133 +444,55 @@ class Scanner {
 					else if (ch == 69 || ch == 101) {AddCh(); state = 14;}
 					else if (ch == 68 || ch == 70 || ch == 100 || ch == 102) {AddCh(); state = 17;}
 					else {t.kind = 2; break;}
-				case 47:
-					if (ch >= 48 && ch <= 57) {AddCh(); state = 47;}
+				case 48:
+					if (ch >= 48 && ch <= 57) {AddCh(); state = 48;}
 					else if (ch == 76 || ch == 108) {AddCh(); state = 4;}
 					else if (ch == 46) {AddCh(); state = 10;}
 					else if (ch == 69 || ch == 101) {AddCh(); state = 14;}
 					else if (ch == 68 || ch == 70 || ch == 100 || ch == 102) {AddCh(); state = 17;}
 					else {t.kind = 2; break;}
-				case 48:
+				case 49:
 					if (ch >= 48 && ch <= 57) {AddCh(); state = 5;}
 					else {t.kind = 29; break;}
-				case 49:
-					if (ch >= 48 && ch <= 55) {AddCh(); state = 50;}
+				case 50:
+					if (ch == 45) {AddCh(); state = 37;}
+					else {t.kind = 34; break;}
+				case 51:
+					if (ch == 43) {AddCh(); state = 38;}
+					else {t.kind = 36; break;}
+				case 52:
+					if (ch >= 48 && ch <= 55) {AddCh(); state = 53;}
 					else if (ch == 39) {AddCh(); state = 26;}
 					else {t.kind = noSym; break;}
-				case 50:
+				case 53:
 					if (ch >= 48 && ch <= 55) {AddCh(); state = 19;}
 					else if (ch == 39) {AddCh(); state = 26;}
 					else {t.kind = noSym; break;}
-				case 51:
+				case 54:
 					if (ch <= 9 || ch >= 11 && ch <= 12 || ch >= 14 && ch <= 33 || ch >= 35 && ch <= 47 || ch >= 56 && ch <= 91 || ch >= 93 && ch <= 65535) {AddCh(); state = 27;}
-					else if (ch >= 48 && ch <= 55) {AddCh(); state = 52;}
+					else if (ch >= 48 && ch <= 55) {AddCh(); state = 55;}
 					else if (ch == 34) {AddCh(); state = 34;}
 					else if (ch == 92) {AddCh(); state = 28;}
 					else {t.kind = noSym; break;}
-				case 52:
+				case 55:
 					if (ch <= 9 || ch >= 11 && ch <= 12 || ch >= 14 && ch <= 33 || ch >= 35 && ch <= 91 || ch >= 93 && ch <= 65535) {AddCh(); state = 27;}
 					else if (ch == 34) {AddCh(); state = 34;}
 					else if (ch == 92) {AddCh(); state = 28;}
 					else {t.kind = noSym; break;}
-				case 53:
-					if (ch >= 48 && ch <= 55) {AddCh(); state = 53;}
+				case 56:
+					if (ch >= 48 && ch <= 55) {AddCh(); state = 56;}
 					else if (ch >= 56 && ch <= 57) {AddCh(); state = 9;}
 					else if (ch == 76 || ch == 108) {AddCh(); state = 4;}
 					else if (ch == 46) {AddCh(); state = 10;}
 					else if (ch == 69 || ch == 101) {AddCh(); state = 14;}
 					else if (ch == 68 || ch == 70 || ch == 100 || ch == 102) {AddCh(); state = 17;}
 					else {t.kind = 2; break;}
-				case 54:
-					{t.kind = 42; break;}
-				case 55:
-					{t.kind = 72; break;}
-				case 56:
-					{t.kind = 74; break;}
 				case 57:
-					{t.kind = 75; break;}
+					{t.kind = 42; break;}
 				case 58:
-					{t.kind = 76; break;}
+					{t.kind = 43; break;}
 				case 59:
-					{t.kind = 77; break;}
-				case 60:
-					{t.kind = 78; break;}
-				case 61:
-					{t.kind = 79; break;}
-				case 62:
-					{t.kind = 80; break;}
-				case 63:
-					{t.kind = 81; break;}
-				case 64:
-					{t.kind = 82; break;}
-				case 65:
-					{t.kind = 83; break;}
-				case 66:
-					{t.kind = 84; break;}
-				case 67:
-					{t.kind = 85; break;}
-				case 68:
-					{t.kind = 86; break;}
-				case 69:
-					{t.kind = 90; break;}
-				case 70:
-					{t.kind = 91; break;}
-				case 71:
-					{t.kind = 94; break;}
-				case 72:
-					{t.kind = 95; break;}
-				case 73:
-					if (ch == 45) {AddCh(); state = 37;}
-					else if (ch == 61) {AddCh(); state = 57;}
-					else {t.kind = 34; break;}
-				case 74:
-					if (ch == 43) {AddCh(); state = 38;}
-					else if (ch == 61) {AddCh(); state = 56;}
-					else {t.kind = 36; break;}
-				case 75:
-					if (ch == 61) {AddCh(); state = 70;}
-					else {t.kind = 35; break;}
-				case 76:
-					if (ch == 61) {AddCh(); state = 58;}
-					else {t.kind = 43; break;}
-				case 77:
-					if (ch == 61) {AddCh(); state = 69;}
-					else {t.kind = 52; break;}
-				case 78:
-					if (ch == 61) {AddCh(); state = 59;}
-					else {t.kind = 99; break;}
-				case 79:
-					if (ch == 61) {AddCh(); state = 60;}
-					else if (ch == 38) {AddCh(); state = 68;}
-					else {t.kind = 89; break;}
-				case 80:
-					if (ch == 61) {AddCh(); state = 61;}
-					else if (ch == 124) {AddCh(); state = 67;}
-					else {t.kind = 87; break;}
-				case 81:
-					if (ch == 61) {AddCh(); state = 62;}
-					else {t.kind = 88; break;}
-				case 82:
-					if (ch == 61) {AddCh(); state = 63;}
-					else {t.kind = 100; break;}
-				case 83:
-					if (ch == 60) {AddCh(); state = 85;}
-					else if (ch == 61) {AddCh(); state = 71;}
-					else {t.kind = 92; break;}
-				case 84:
-					if (ch == 62) {AddCh(); state = 86;}
-					else if (ch == 61) {AddCh(); state = 72;}
-					else {t.kind = 93; break;}
-				case 85:
-					if (ch == 61) {AddCh(); state = 64;}
-					else {t.kind = 96; break;}
-				case 86:
-					if (ch == 61) {AddCh(); state = 65;}
-					else if (ch == 62) {AddCh(); state = 87;}
-					else {t.kind = 97; break;}
-				case 87:
-					if (ch == 61) {AddCh(); state = 66;}
-					else {t.kind = 98; break;}
+					{t.kind = 52; break;}
 
 			}
 		}

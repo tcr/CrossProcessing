@@ -49,7 +49,7 @@ class Parser
 	public static var _rbrack:Int = 38;
 	public static var _rpar:Int = 39;
 	public static var _tilde:Int = 40;
-	public static var maxT:Int = 101;
+	public static var maxT:Int = 57;
 
 	static var minErrDist:Int = 2;
 
@@ -194,8 +194,8 @@ function checkExprStat(expression:Expression):Void {
 }
 
 /*---------------------------- type ----------------------------*/
-
-function compoundBrackets(type:DataType, bCount:Int):DataType {
+/*
+function compoundBrackets(type:ParserDataType, bCount:Int):ParserDataType {
 	if (bCount == 0)
 		return type;
 	switch (type) {
@@ -205,7 +205,7 @@ function compoundBrackets(type:DataType, bCount:Int):DataType {
 	    case DTReferenceArray(qualident, dimensions): return DTReferenceArray(qualident, dimensions + bCount);
 	}
 }
-
+*/
 /*---------------------------- modifiers ----------------------------*/
 
 function addModifier(set:EnumSet<Modifier>, modifier:Modifier):Void {
@@ -238,7 +238,15 @@ function checkModifierAccess(set:EnumSet<Modifier>):Void {
 /*---------------------------- contexts ----------------------------*/
 
 var classContexts:Array<ClassContext>;
-var blockContexts:Array<BlockContext>;
+//var blockContexts:Array<BlockContext>;
+
+function getClassPrefix():String
+{
+	var prefix = '';
+	for (context in classContexts)
+		prefix = context.identifier + '$' + prefix;
+	return prefix;
+}
 
 /*-----------------------------------------------------------------*
  * Resolver routines to resolve LL(1) conflicts:                   *
@@ -347,7 +355,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		
 		// parsing contexts
 		classContexts = [];
-		blockContexts = [];
+//		blockContexts = [];
 	}
 
 	function SynErr (n:Int):Void {
@@ -429,7 +437,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			if (la.kind != _EOF)
 				error("unexpected script termination");
 			
-		} else SynErr(102);
+		} else SynErr(58);
 	}
 
 	function ImportDeclaration():Array<String> {
@@ -449,7 +457,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			context.types.push(typeContext); 
 		} else if (la.kind == 42) {
 			Get();
-		} else SynErr(103);
+		} else SynErr(59);
 	}
 
 	function ClassBodyDeclaration():Void {
@@ -461,19 +469,18 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 				Get();
 				addModifier(modifiers, MStatic); 
 			}
-			if (la.kind == 31) {
-				var block:Statement = Block(null);
-				classContexts[0].staticConstructor.pushStatement(block); 
-			} else if (StartOf(5)) {
-				if (StartOf(6)) {
+			if (StartOf(5)) {
+				UnparsedSegment(new StringBuf());
+			} else if (StartOf(6)) {
+				if (StartOf(7)) {
 					Modifier1(modifiers);
-					while (StartOf(7)) {
+					while (StartOf(8)) {
 						Modifier0(modifiers);
 					}
 				}
 				MemberDecl(modifiers);
-			} else SynErr(104);
-		} else SynErr(105);
+			} else SynErr(60);
+		} else SynErr(61);
 	}
 
 	function CompilationUnit():Void {
@@ -506,6 +513,68 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		return qualident;
 	}
 
+	function UnparsedSegment(buffer:StringBuf):Void {
+		if (la.kind == 33) {
+			Get();
+			buffer.add('('); 
+			while (StartOf(9)) {
+				if (StartOf(5)) {
+					UnparsedSegment(buffer);
+				} else {
+					Get();
+					buffer.add(t.val); 
+				}
+			}
+			Expect(39);
+			buffer.add(')'); 
+		} else if (la.kind == 32) {
+			Get();
+			buffer.add('['); 
+			while (StartOf(10)) {
+				if (StartOf(5)) {
+					UnparsedSegment(buffer);
+				} else {
+					Get();
+					buffer.add(t.val); 
+				}
+			}
+			Expect(38);
+			buffer.add(']'); 
+		} else if (la.kind == 31) {
+			UnparsedBlock(buffer);
+		} else if (la.kind == 5) {
+			Get();
+			buffer.add(t.val); 
+		} else SynErr(62);
+	}
+
+	function UnparsedBlock(buffer:StringBuf):Void {
+		Expect(31);
+		buffer.add('{'); 
+		while (StartOf(11)) {
+			if (StartOf(5)) {
+				UnparsedSegment(buffer);
+			} else {
+				Get();
+				buffer.add(t.val); 
+			}
+		}
+		Expect(37);
+		buffer.add('}'); 
+	}
+
+	function UnparsedExpression(buffer:StringBuf):Void {
+		while (StartOf(12)) {
+			if (StartOf(5)) {
+				UnparsedSegment(buffer);
+			} else {
+				Get();
+				buffer.add(t.val); 
+			}
+		}
+		Expect(42);
+	}
+
 	function QualifiedImport():Array<String> {
 		var importIdent:Array<String> = null;
 		Expect(29);
@@ -519,14 +588,14 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		} else if (la.kind == 43) {
 			Get();
 			importIdent = ['*']; 
-		} else SynErr(106);
+		} else SynErr(63);
 		return importIdent;
 	}
 
 	function ClassOrInterfaceDeclaration():TypeContext {
 		var typeContext:TypeContext = null;
 		var modifiers = new EnumSet<Modifier>(); 
-		while (StartOf(8)) {
+		while (StartOf(13)) {
 			ClassModifier(modifiers);
 		}
 		if (la.kind == 9) {
@@ -535,7 +604,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		} else if (la.kind == 56) {
 			var arg:TypeContext = InterfaceDeclaration(modifiers);
 			typeContext = arg; 
-		} else SynErr(107);
+		} else SynErr(64);
 		return typeContext;
 	}
 
@@ -562,7 +631,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		case 47: 
 			Get();
 			addModifier(modifiers, MStrictfp); 
-		default: SynErr(108);
+		default: SynErr(65);
 		}
 	}
 
@@ -604,9 +673,9 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		if (la.kind == 21) {
 			Get();
 			addModifier(modifiers, MStatic); 
-		} else if (StartOf(6)) {
+		} else if (StartOf(7)) {
 			Modifier1(modifiers);
-		} else SynErr(109);
+		} else SynErr(66);
 	}
 
 	function Modifier1(modifiers:EnumSet<Modifier>):Void {
@@ -641,21 +710,21 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		case 47: 
 			Get();
 			addModifier(modifiers, MStrictfp); 
-		default: SynErr(110);
+		default: SynErr(67);
 		}
 	}
 
-	function Type():DataType {
-		var type:DataType = null;
+	function Type():ParserDataType {
+		var type:ParserDataType = null;
 		if (la.kind == 1) {
 			var qualident:Array<String> = Qualident();
-			type = DTReference(qualident); 
-		} else if (StartOf(9)) {
+			type = PReference(qualident); 
+		} else if (StartOf(14)) {
 			var primitive:PrimitiveType = BasicType();
-			type = DTPrimitive(primitive); 
-		} else SynErr(111);
+			type = PPrimitive(primitive); 
+		} else SynErr(68);
 		var bCount:Int = BracketsOpt();
-		type = compoundBrackets(type, bCount); 
+		if (bCount > 0) type = PArray(type, bCount); 
 		return type;
 	}
 
@@ -686,7 +755,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		case 6: 
 			Get();
 			type = PTBoolean; 
-		default: SynErr(112);
+		default: SynErr(69);
 		}
 		return type;
 	}
@@ -702,19 +771,19 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		return bCount;
 	}
 
-	function FormalParameter0():FormalParameter {
-		var parameter:FormalParameter = null;
+	function FormalParameter0():FormalParameterContext {
+		var parameter:FormalParameterContext = null;
 		var modifiers = new EnumSet<Modifier>(); 
 		if (la.kind == 12) {
 			Get();
 			modifiers.add(MFinal); 
 		}
-		var type:DataType = Type();
+		var type:ParserDataType = Type();
 		Expect(1);
 		var identifier:String = t.val; 
 		var bCount:Int = BracketsOpt();
-		type = compoundBrackets(type, bCount); 
-		parameter = {identifier: identifier, type: type, modifiers: modifiers}; 
+		if (bCount > 0) type = PArray(type, bCount); 
+		parameter = new FormalParameterContext(modifiers, type, identifier); 
 		return parameter;
 	}
 
@@ -731,7 +800,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		return list;
 	}
 
-	function VariableDeclarator(modifiers:EnumSet<Modifier>, type:DataType):FieldContext {
+	function VariableDeclarator(modifiers:EnumSet<Modifier>, type:ParserDataType):FieldContext {
 		var context:FieldContext = null;
 		Expect(1);
 		context = new FieldContext(modifiers, type, t.val); 
@@ -741,69 +810,11 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 
 	function VariableDeclaratorRest(context:FieldContext):Void {
 		var bCount:Int = BracketsOpt();
-		context.type = compoundBrackets(context.type, bCount); 
+		if (bCount > 0) context.type = PArray(context.type, bCount); 
 		if (la.kind == 52) {
 			Get();
-			var expression:Expression = VariableInitializer();
-			context.initialization = expression; 
+			UnparsedExpression(new StringBuf());
 		}
-	}
-
-	function VariableInitializer():Expression {
-		var expression:Expression = null;
-		if (la.kind == 31) {
-			var arg:Expression = ArrayInitializer();
-			expression = arg; 
-		} else if (StartOf(10)) {
-			var arg:Expression = Expression0();
-			expression = arg; 
-		} else SynErr(113);
-		return expression;
-	}
-
-	function ArrayInitializer():Expression {
-		var expression:Expression = null;
-		var values:Array<Expression> = []; 
-		Expect(31);
-		if (StartOf(11)) {
-			var arg:Expression = VariableInitializer();
-			values.push(arg); 
-			while (commaAndNoRBrace()) {
-				Expect(27);
-				var arg:Expression = VariableInitializer();
-				values.push(arg); 
-			}
-		}
-		if (la.kind == 27) {
-			Get();
-		}
-		Expect(37);
-		return expression;
-	}
-
-	function Expression0():Expression {
-		var expression:Expression = null;
-		var expression:Expression = Expression1();
-		while (StartOf(12)) {
-			var operator:InfixOperator = AssignmentOperator();
-			var value:Expression = Expression1();
-			if (operator != null)
-			value = EInfixOperation(operator, expression, value);
-			// extract reference type
-			switch (expression) {
-			    case ELocalReference(identifier): expression = ELocalAssignment(identifier, value);
-			    case EReference(identifier, base): expression = EAssignment(identifier, base, value);
-			    case EArrayAccess(index, base): expression = EArrayAssignment(index, base, value);
-			    case ELexExpression(lexpression):
-				switch (lexpression) {
-				    case LReference(identifier): expression = ELexExpression(LAssignment(identifier, value));
-				    default: error('invalid assignment left-hand side');
-				}
-			    default: error('invalid assignment left-hand side');
-			}
-			
-		}
-		return expression;
 	}
 
 	function ClassBody():Void {
@@ -814,18 +825,6 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		Expect(37);
 	}
 
-	function Block(parent:DefinesLocalVariables):Statement {
-		var statement:Statement = null;
-		blockContexts.unshift(new BlockContext(parent)); 
-		Expect(31);
-		while (StartOf(13)) {
-			BlockStatement();
-		}
-		Expect(37);
-		statement = blockContexts.shift().getBlockStatement(); 
-		return statement;
-	}
-
 	function MemberDecl(modifiers:EnumSet<Modifier>):Void {
 		if (identAndLPar()) {
 			Expect(1);
@@ -833,7 +832,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			// validate constructor name
 			if (identifier != classContexts[0].identifier) error('invalid function declaration'); 
 			ConstructorDeclaratorRest(new MethodContext(modifiers, null, identifier));
-		} else if (StartOf(14)) {
+		} else if (StartOf(15)) {
 			MethodOrFieldDecl(modifiers);
 		} else if (la.kind == 25) {
 			checkModifierPermission(modifiers, ModifierSet.methods); 
@@ -843,35 +842,35 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			VoidMethodDeclaratorRest(new MethodContext(modifiers, null, identifier));
 		} else if (la.kind == 9) {
 			var typeContext:TypeContext = ClassDeclaration(modifiers);
-			classContexts[0].defineMemberType(typeContext); 
+			classContexts[0].types.push(typeContext); 
 		} else if (la.kind == 56) {
 			var typeContext:TypeContext = InterfaceDeclaration(modifiers);
-			classContexts[0].defineMemberType(typeContext); 
-		} else SynErr(114);
+			classContexts[0].types.push(typeContext); 
+		} else SynErr(70);
 	}
 
 	function ConstructorDeclaratorRest(methodContext:MethodContext):Void {
 		checkModifierPermission(methodContext.modifiers, ModifierSet.constructors); 
-		var arg:Array<FormalParameter> = FormalParameters();
+		var arg:Array<FormalParameterContext> = FormalParameters();
 		methodContext.parameters = arg; 
 		if (la.kind == 55) {
 			Get();
 			var arg:Array<Array<String>> = QualidentList();
 			methodContext.throwsList = arg; 
 		}
-		var body:Statement = Block(methodContext);
-		classContexts[0].defineMethod(methodContext); 
+		UnparsedBlock(new StringBuf());
+		classContexts[0].methods.push(methodContext); 
 	}
 
 	function MethodOrFieldDecl(modifiers:EnumSet<Modifier>):Void {
-		var type:DataType = Type();
+		var type:ParserDataType = Type();
 		Expect(1);
 		var identifier:String = t.val; 
 		MethodOrFieldRest(modifiers, identifier, type);
 	}
 
 	function VoidMethodDeclaratorRest(methodContext:MethodContext):Void {
-		var arg:Array<FormalParameter> = FormalParameters();
+		var arg:Array<FormalParameterContext> = FormalParameters();
 		methodContext.parameters = arg; 
 		if (la.kind == 55) {
 			Get();
@@ -879,38 +878,39 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			methodContext.throwsList = arg; 
 		}
 		if (la.kind == 31) {
-			var block:Statement = Block(methodContext);
-			methodContext.body = block; 
+			var buffer:StringBuf = new StringBuf(); 
+			UnparsedBlock(buffer);
+			trace(buffer); 
 		} else if (la.kind == 42) {
 			Get();
-		} else SynErr(115);
-		classContexts[0].defineMethod(methodContext); 
+		} else SynErr(71);
+		classContexts[0].methods.push(methodContext); 
 	}
 
-	function MethodOrFieldRest(modifiers:EnumSet<Modifier>, identifier:String, type:DataType):Void {
-		if (StartOf(15)) {
+	function MethodOrFieldRest(modifiers:EnumSet<Modifier>, identifier:String, type:ParserDataType):Void {
+		if (StartOf(16)) {
 			checkModifierPermission(modifiers, ModifierSet.fields);  
 			VariableDeclaratorsRest(modifiers, type, identifier);
 			Expect(42);
 		} else if (la.kind == 33) {
 			checkModifierPermission(modifiers, ModifierSet.methods); 
 			MethodDeclaratorRest(new MethodContext(modifiers, type, identifier));
-		} else SynErr(116);
+		} else SynErr(72);
 	}
 
-	function VariableDeclaratorsRest(modifiers:EnumSet<Modifier>, type:DataType, identifier:String):Void {
+	function VariableDeclaratorsRest(modifiers:EnumSet<Modifier>, type:ParserDataType, identifier:String):Void {
 		var context = new FieldContext(modifiers, type, identifier); 
 		VariableDeclaratorRest(context);
-		classContexts[0].defineField(context); 
+		classContexts[0].fields.push(context); 
 		while (la.kind == 27) {
 			Get();
 			var context:FieldContext = VariableDeclarator(modifiers, type);
-			classContexts[0].defineField(context); 
+			classContexts[0].fields.push(context); 
 		}
 	}
 
 	function MethodDeclaratorRest(methodContext:MethodContext):Void {
-		var arg:Array<FormalParameter> = FormalParameters();
+		var arg:Array<FormalParameterContext> = FormalParameters();
 		methodContext.parameters = arg; 
 		var bCount:Int = BracketsOpt();
 		if (la.kind == 55) {
@@ -919,24 +919,25 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			methodContext.throwsList = arg; 
 		}
 		if (la.kind == 31) {
-			var block:Statement = Block(methodContext);
-			methodContext.body = block; 
+			var buffer:StringBuf = new StringBuf(); 
+			UnparsedBlock(buffer);
+			trace(buffer); 
 		} else if (la.kind == 42) {
 			Get();
-		} else SynErr(117);
-		classContexts[0].defineMethod(methodContext); 
+		} else SynErr(73);
+		classContexts[0].methods.push(methodContext); 
 	}
 
-	function FormalParameters():Array<FormalParameter> {
-		var parameters:Array<FormalParameter> = null;
+	function FormalParameters():Array<FormalParameterContext> {
+		var parameters:Array<FormalParameterContext> = null;
 		parameters = []; 
 		Expect(33);
-		if (StartOf(16)) {
-			var parameter:FormalParameter = FormalParameter0();
+		if (StartOf(17)) {
+			var parameter:FormalParameterContext = FormalParameter0();
 			parameters.push(parameter); 
 			while (la.kind == 27) {
 				Get();
-				var parameter:FormalParameter = FormalParameter0();
+				var parameter:FormalParameterContext = FormalParameter0();
 				parameters.push(parameter); 
 			}
 		}
@@ -946,7 +947,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 
 	function InterfaceBody():Void {
 		Expect(31);
-		while (StartOf(17)) {
+		while (StartOf(18)) {
 			InterfaceBodyDeclaration();
 		}
 		Expect(37);
@@ -956,16 +957,16 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		var modifiers = new EnumSet<Modifier>(); 
 		if (la.kind == 42) {
 			Get();
-		} else if (StartOf(18)) {
-			while (StartOf(7)) {
+		} else if (StartOf(19)) {
+			while (StartOf(8)) {
 				Modifier0(modifiers);
 			}
 			InterfaceMemberDecl(modifiers);
-		} else SynErr(118);
+		} else SynErr(74);
 	}
 
 	function InterfaceMemberDecl(modifiers:EnumSet<Modifier>):Void {
-		if (StartOf(14)) {
+		if (StartOf(15)) {
 			InterfaceMethodOrFieldDecl(modifiers);
 		} else if (la.kind == 25) {
 			checkModifierPermission(modifiers, ModifierSet.interfaces); 
@@ -976,17 +977,17 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			var typeContext:TypeContext = ClassDeclaration(modifiers);
 		} else if (la.kind == 56) {
 			var typeContext:TypeContext = InterfaceDeclaration(modifiers);
-		} else SynErr(119);
+		} else SynErr(75);
 	}
 
 	function InterfaceMethodOrFieldDecl(modifiers:EnumSet<Modifier>):Void {
-		var type:DataType = Type();
+		var type:ParserDataType = Type();
 		Expect(1);
 		InterfaceMethodOrFieldRest(modifiers);
 	}
 
 	function VoidInterfaceMethodDeclaratorRest():Void {
-		var parameters:Array<FormalParameter> = FormalParameters();
+		var parameters:Array<FormalParameterContext> = FormalParameters();
 		if (la.kind == 55) {
 			Get();
 			var arg:Array<Array<String>> = QualidentList();
@@ -1002,7 +1003,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		} else if (la.kind == 33) {
 			checkModifierPermission(modifiers, ModifierSet.interfaces); 
 			InterfaceMethodDeclaratorRest();
-		} else SynErr(120);
+		} else SynErr(76);
 	}
 
 	function ConstantDeclaratorsRest():Void {
@@ -1014,7 +1015,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 	}
 
 	function InterfaceMethodDeclaratorRest():Void {
-		var parameters:Array<FormalParameter> = FormalParameters();
+		var parameters:Array<FormalParameterContext> = FormalParameters();
 		var bCount:Int = BracketsOpt();
 		if (la.kind == 55) {
 			Get();
@@ -1026,739 +1027,12 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 	function ConstantDeclaratorRest():Void {
 		var bCount:Int = BracketsOpt();
 		Expect(52);
-		var expression:Expression = VariableInitializer();
+		UnparsedExpression(new StringBuf());
 	}
 
 	function ConstantDeclarator():Void {
 		Expect(1);
 		ConstantDeclaratorRest();
-	}
-
-	function Statement0():Statement {
-		var statement:Statement = null;
-		if (la.kind == 31) {
-			var block:Statement = Block(blockContexts[0]);
-			statement = block; 
-		} else if (la.kind == 57) {
-			Get();
-			var condition:Expression = ParExpression();
-			var thenStatement:Statement = Statement0();
-			var elseStatement:Statement = null; 
-			if (la.kind == 58) {
-				Get();
-				var body:Statement = Statement0();
-				elseStatement = body; 
-			}
-			statement = SConditional(condition, thenStatement, elseStatement); 
-		} else if (la.kind == 59) {
-			Get();
-			Expect(33);
-			blockContexts.unshift(new BlockContext(blockContexts[0])); 
-			if (StartOf(19)) {
-				ForInit();
-			}
-			Expect(42);
-			var conditional:Expression = EBooleanLiteral(true); 
-			if (StartOf(10)) {
-				var expression:Expression = Expression0();
-				conditional = expression; 
-			}
-			Expect(42);
-			var body:Array<Statement> = []; 
-			if (StartOf(10)) {
-				var updates:Array<Statement> = ForUpdate();
-				body = updates; 
-			}
-			Expect(39);
-			var arg:Statement = Statement0();
-			body = [arg].concat(body);
-			blockContexts[0].pushStatement(SLoop(conditional, SBlock(new Hash<FieldDefinition>(), body), false));
-			statement = blockContexts.shift().getBlockStatement(); 
-		} else if (la.kind == 60) {
-			Get();
-			var condition:Expression = ParExpression();
-			var body:Statement = Statement0();
-			statement = SLoop(condition, body, false); 
-		} else if (la.kind == 61) {
-			Get();
-			var body:Statement = Statement0();
-			Expect(60);
-			var condition:Expression = ParExpression();
-			Expect(42);
-			statement = SLoop(condition, body, true); 
-		} else if (la.kind == 62) {
-			Get();
-			var body:Statement = Block(blockContexts[0]);
-			var catches:Array<Catch> = [], finallyBody:Statement = null; 
-			if (la.kind == 69) {
-				var _catches:Array<Catch> = Catches();
-				catches = _catches; 
-				if (la.kind == 63) {
-					Get();
-					var block:Statement = Block(blockContexts[0]);
-					finallyBody = block; 
-				}
-			} else if (la.kind == 63) {
-				Get();
-				var block:Statement = Block(blockContexts[0]);
-				finallyBody = block; 
-			} else SynErr(121);
-			statement = STry(body, catches, finallyBody); 
-		} else if (la.kind == 64) {
-			Get();
-			var expression:Expression = ParExpression();
-			Expect(31);
-			SwitchBlockStatementGroups();
-			Expect(37);
-		} else if (la.kind == 49) {
-			Get();
-			var expression:Expression = ParExpression();
-			var block:Statement = Block(blockContexts[0]);
-		} else if (la.kind == 65) {
-			Get();
-			var value:Expression = null; 
-			if (StartOf(10)) {
-				var expression:Expression = Expression0();
-				value = expression; 
-			}
-			Expect(42);
-			statement = SReturn(value); 
-		} else if (la.kind == 66) {
-			Get();
-			var expression:Expression = Expression0();
-			Expect(42);
-			statement = SThrow(expression); 
-		} else if (la.kind == 67) {
-			Get();
-			var label:String = null; 
-			if (la.kind == 1) {
-				Get();
-				label = t.val; 
-			}
-			Expect(42);
-			statement = SBreak(label); 
-		} else if (la.kind == 68) {
-			Get();
-			var label:String = null; 
-			if (la.kind == 1) {
-				Get();
-				label = t.val; 
-			}
-			Expect(42);
-			statement = SContinue(label); 
-		} else if (la.kind == 42) {
-			Get();
-		} else if (isLabel()) {
-			Expect(1);
-			var label:String = t.val; 
-			Expect(26);
-			var body:Statement = Statement0();
-			statement = SLabel(label, body); 
-		} else if (StartOf(10)) {
-			var arg:Statement = StatementExpression();
-			Expect(42);
-			statement = arg; 
-		} else SynErr(122);
-		return statement;
-	}
-
-	function ParExpression():Expression {
-		var expression:Expression = null;
-		Expect(33);
-		var expression:Expression = Expression0();
-		Expect(39);
-		return expression;
-	}
-
-	function ForInit():Void {
-		if (isLocalVarDecl(true)) {
-			LocalVariableDeclaration();
-		} else if (StartOf(10)) {
-			var statement:Statement = StatementExpression();
-			blockContexts[0].pushStatement(statement); 
-			var statements:Array<Statement> = MoreStatementExpressions();
-			for (statement in statements)
-			blockContexts[0].pushStatement(statement);
-			
-		} else SynErr(123);
-	}
-
-	function ForUpdate():Array<Statement> {
-		var statements:Array<Statement> = null;
-		var statement:Statement = StatementExpression();
-		statements = [statement]; 
-		var arg:Array<Statement> = MoreStatementExpressions();
-		statements = statements.concat(arg); 
-		return statements;
-	}
-
-	function Catches():Array<Catch> {
-		var catches:Array<Catch> = null;
-		catches = []; 
-		var catchBlock:Catch = CatchClause();
-		catches.push(catchBlock); 
-		while (la.kind == 69) {
-			var catchBlock:Catch = CatchClause();
-			catches.push(catchBlock); 
-		}
-		return catches;
-	}
-
-	function SwitchBlockStatementGroups():Void {
-		while (la.kind == 70 || la.kind == 71) {
-			SwitchBlockStatementGroup();
-		}
-	}
-
-	function StatementExpression():Statement {
-		var statement:Statement = null;
-		var expression:Expression = Expression0();
-		checkExprStat(expression);
-		statement = SExpression(expression); 
-		return statement;
-	}
-
-	function BlockStatement():Void {
-		if (isLocalVarDecl(false)) {
-			LocalVariableDeclaration();
-			Expect(42);
-		} else if (StartOf(3)) {
-			var typeContext:TypeContext = ClassOrInterfaceDeclaration();
-		} else if (StartOf(20)) {
-			var statement:Statement = Statement0();
-			blockContexts[0].pushStatement(statement); 
-		} else SynErr(124);
-	}
-
-	function LocalVariableDeclaration():Void {
-		var modifiers = new EnumSet<Modifier>(); 
-		if (la.kind == 12) {
-			Get();
-			modifiers.add(MFinal); 
-		}
-		var type:DataType = Type();
-		var fields:Array<FieldContext> = VariableDeclarators(modifiers, type);
-		for (field in fields)
-		blockContexts[0].defineVariable(field);
-		
-	}
-
-	function VariableDeclarators(modifiers:EnumSet<Modifier>, type:DataType):Array<FieldContext> {
-		var fields:Array<FieldContext> = null;
-		var field:FieldContext = VariableDeclarator(modifiers, type);
-		fields = [field]; 
-		while (la.kind == 27) {
-			Get();
-			var field:FieldContext = VariableDeclarator(modifiers, type);
-			fields.push(field); 
-		}
-		return fields;
-	}
-
-	function MoreStatementExpressions():Array<Statement> {
-		var statements:Array<Statement> = null;
-		statements = []; 
-		while (la.kind == 27) {
-			Get();
-			var statement:Statement = StatementExpression();
-			statements.push(statement); 
-		}
-		return statements;
-	}
-
-	function CatchClause():Catch {
-		var _catch:Catch = null;
-		Expect(69);
-		Expect(33);
-		var parameter:FormalParameter = FormalParameter0();
-		Expect(39);
-		var block:Statement = Block(blockContexts[0]);
-		_catch = {parameter: parameter, body: block}; 
-		return _catch;
-	}
-
-	function SwitchBlockStatementGroup():Void {
-		SwitchLabel();
-		while (StartOf(13)) {
-			BlockStatement();
-		}
-	}
-
-	function SwitchLabel():Void {
-		if (la.kind == 70) {
-			Get();
-			var expression:Expression = Expression0();
-			Expect(26);
-		} else if (la.kind == 71) {
-			Get();
-			Expect(26);
-		} else SynErr(125);
-	}
-
-	function Expression1():Expression {
-		var expression:Expression = null;
-		var expression:Expression = Expression2();
-		if (la.kind == 72) {
-			var rest:Expression = ConditionalExpr(expression);
-			expression = rest; 
-		}
-		return expression;
-	}
-
-	function AssignmentOperator():InfixOperator {
-		var operator:InfixOperator = null;
-		switch (la.kind) {
-		case 52: 
-			Get();
-			operator = null; 
-		case 74: 
-			Get();
-			operator = OpAdd; 
-		case 75: 
-			Get();
-			operator = OpSubtract; 
-		case 76: 
-			Get();
-			operator = OpMultiply; 
-		case 77: 
-			Get();
-			operator = OpDivide; 
-		case 78: 
-			Get();
-			operator = OpBitwiseAnd; 
-		case 79: 
-			Get();
-			operator = OpBitwiseOr; 
-		case 80: 
-			Get();
-			operator = OpBitwiseXor; 
-		case 81: 
-			Get();
-			operator = OpModulus; 
-		case 82: 
-			Get();
-			operator = OpLeftShift; 
-		case 83: 
-			Get();
-			operator = OpRightShift; 
-		case 84: 
-			Get();
-			operator = OpZeroRightShift; 
-		default: SynErr(126);
-		}
-		return operator;
-	}
-
-	function Expression2():Expression {
-		var expression:Expression = null;
-		var expression:Expression = Expression3();
-		if (StartOf(21)) {
-			var rest:Expression = Expression2Rest(expression);
-			expression = rest; 
-		}
-		return expression;
-	}
-
-	function ConditionalExpr(conditional:Expression):Expression {
-		var expression:Expression = null;
-		Expect(72);
-		var thenExpression:Expression = Expression0();
-		Expect(26);
-		var elseExpression:Expression = Expression1();
-		expression = EConditional(conditional, thenExpression, elseExpression); 
-		return expression;
-	}
-
-	function Expression3():Expression {
-		var expression:Expression = null;
-		if (StartOf(22)) {
-			if (la.kind == 28 || la.kind == 30) {
-				var type:IncrementType = Increment();
-				var rest:Expression = Expression3();
-				expression = EPrefix(type, rest); 
-			} else {
-				var operator:PrefixOperator = PrefixOp();
-				var rest:Expression = Expression3();
-				expression = EPrefixOperation(operator, rest); 
-			}
-		} else if (isTypeCast()) {
-			Expect(33);
-			var type:DataType = Type();
-			Expect(39);
-			var rest:Expression = Expression3();
-			expression = ECast(type, rest); 
-		} else if (StartOf(23)) {
-			var rest:Expression = Primary();
-			expression = rest; 
-			while (la.kind == 29 || la.kind == 32) {
-				var rest:Expression = Selector(expression);
-				expression = rest; 
-			}
-			while (la.kind == 28 || la.kind == 30) {
-				var type:IncrementType = Increment();
-				expression = EPostfix(type, expression); 
-			}
-		} else SynErr(127);
-		return expression;
-	}
-
-	function Expression2Rest(operand:Expression):Expression {
-		var expression:Expression = null;
-		if (StartOf(24)) {
-			var builder = new OperationBuilder(); builder.operand(operand); 
-			var operator:InfixOperator = Infixop();
-			builder.operator(operator); 
-			var operand:Expression = Expression3();
-			builder.operand(operand); 
-			while (StartOf(24)) {
-				var operator:InfixOperator = Infixop();
-				builder.operator(operator); 
-				var operand:Expression = Expression3();
-				builder.operand(operand); 
-			}
-			expression = builder.reduce(); 
-		} else if (la.kind == 73) {
-			Get();
-			var type:DataType = Type();
-			expression = EInstanceOf(expression, type); 
-		} else SynErr(128);
-		return expression;
-	}
-
-	function Infixop():InfixOperator {
-		var operator:InfixOperator = null;
-		switch (la.kind) {
-		case 85: 
-			Get();
-			operator = OpOr; 
-		case 86: 
-			Get();
-			operator = OpAnd; 
-		case 87: 
-			Get();
-			operator = OpBitwiseOr; 
-		case 88: 
-			Get();
-			operator = OpBitwiseXor; 
-		case 89: 
-			Get();
-			operator = OpBitwiseAnd; 
-		case 90: 
-			Get();
-			operator = OpEqual; 
-		case 91: 
-			Get();
-			operator = OpUnequal; 
-		case 92: 
-			Get();
-			operator = OpLessThan; 
-		case 93: 
-			Get();
-			operator = OpGreaterThan; 
-		case 94: 
-			Get();
-			operator = OpLessThanOrEqual; 
-		case 95: 
-			Get();
-			operator = OpGreaterThanOrEqual; 
-		case 96: 
-			Get();
-			operator = OpLeftShift; 
-		case 97: 
-			Get();
-			operator = OpRightShift; 
-		case 98: 
-			Get();
-			operator = OpZeroRightShift; 
-		case 36: 
-			Get();
-			operator = OpAdd; 
-		case 34: 
-			Get();
-			operator = OpSubtract; 
-		case 43: 
-			Get();
-			operator = OpMultiply; 
-		case 99: 
-			Get();
-			operator = OpDivide; 
-		case 100: 
-			Get();
-			operator = OpModulus; 
-		default: SynErr(129);
-		}
-		return operator;
-	}
-
-	function Increment():IncrementType {
-		var type:IncrementType = null;
-		if (la.kind == 30) {
-			Get();
-			type = IIncrement; 
-		} else if (la.kind == 28) {
-			Get();
-			type = IDecrement; 
-		} else SynErr(130);
-		return type;
-	}
-
-	function PrefixOp():PrefixOperator {
-		var operator:PrefixOperator = null;
-		if (la.kind == 35) {
-			Get();
-			operator = OpNot; 
-		} else if (la.kind == 40) {
-			Get();
-			operator = OpBitwiseNot; 
-		} else if (la.kind == 36) {
-			Get();
-			operator = OpUnaryPlus; 
-		} else if (la.kind == 34) {
-			Get();
-			operator = OpUnaryMinus; 
-		} else SynErr(131);
-		return operator;
-	}
-
-	function Primary():Expression {
-		var expression:Expression = null;
-		switch (la.kind) {
-		case 33: 
-			Get();
-			var arg:Expression = Expression0();
-			Expect(39);
-			expression = arg; 
-		case 23: 
-			Get();
-			expression = EThisReference; 
-			if (la.kind == 33) {
-				var arguments:Array<Expression> = Arguments();
-				expression = EThisCall(arguments); 
-			}
-		case 22: 
-			Get();
-			var arg:Expression = SuperSuffix();
-			expression = arg; 
-		case 2, 3, 4, 5, 11, 18, 24: 
-			var arg:Expression = Literal();
-			expression = arg; 
-		case 17: 
-			Get();
-			var arg:Expression = Creator();
-			expression = arg; 
-		case 1: 
-			Get();
-			var identifier:String = t.val, base:Expression = null; 
-			while (dotAndIdent()) {
-				Expect(29);
-				Expect(1);
-				base = base != null ? EReference(identifier, base) :
-				blockContexts[0].isVariableDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier));
-				  identifier = t.val; 
-			}
-			expression = base != null ? EReference(identifier, base) :
-			blockContexts[0].isVariableDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier)); 
-			if (isIdentSuffix()) {
-				var arg:Expression = IdentifierSuffix(identifier, base);
-				expression = arg; 
-			}
-		case 6, 7, 8, 10, 13, 15, 16, 20: 
-			var type:PrimitiveType = BasicType();
-			var bCount:Int = BracketsOpt();
-			Expect(29);
-			Expect(9);
-		case 25: 
-			Get();
-			Expect(29);
-			Expect(9);
-		default: SynErr(132);
-		}
-		return expression;
-	}
-
-	function Selector(base:Expression):Expression {
-		var expression:Expression = null;
-		if (la.kind == 29) {
-			Get();
-			if (la.kind == 1) {
-				Get();
-				var identifier:String = t.val; 
-				var arg:Expression = ArgumentsOpt(identifier, base);
-				expression = arg; 
-			} else if (la.kind == 22) {
-				Get();
-				var arguments:Array<Expression> = Arguments();
-				
-			} else if (la.kind == 17) {
-				Get();
-				InnerCreator();
-			} else SynErr(133);
-		} else if (la.kind == 32) {
-			Get();
-			var index:Expression = Expression0();
-			Expect(38);
-			expression = EArrayAccess(index, base); 
-		} else SynErr(134);
-		return expression;
-	}
-
-	function Arguments():Array<Expression> {
-		var arguments:Array<Expression> = null;
-		arguments = []; 
-		Expect(33);
-		if (StartOf(10)) {
-			var expression:Expression = Expression0();
-			arguments.push(expression); 
-			while (la.kind == 27) {
-				Get();
-				var expression:Expression = Expression0();
-				arguments.push(expression); 
-			}
-		}
-		Expect(39);
-		return arguments;
-	}
-
-	function SuperSuffix():Expression {
-		var expression:Expression = null;
-		if (la.kind == 33) {
-			var arguments:Array<Expression> = Arguments();
-			expression = ESuperCall(arguments); 
-		} else if (la.kind == 29) {
-			Get();
-			Expect(1);
-			var identifier:String = t.val; 
-			var arg:Expression = ArgumentsOpt(identifier, ESuperReference);
-			expression = arg; 
-		} else SynErr(135);
-		return expression;
-	}
-
-	function Literal():Expression {
-		var expression:Expression = null;
-		switch (la.kind) {
-		case 2: 
-			Get();
-			expression = EIntegerLiteral(Std.parseInt(t.val)); 
-		case 3: 
-			Get();
-			expression = EFloatLiteral(Std.parseFloat(t.val)); 
-		case 4: 
-			Get();
-			expression = ECharLiteral(t.val.charCodeAt(0)); 
-		case 5: 
-			Get();
-			expression = EStringLiteral(t.val); 
-		case 24: 
-			Get();
-			expression = EBooleanLiteral(true); 
-		case 11: 
-			Get();
-			expression = EBooleanLiteral(false); 
-		case 18: 
-			Get();
-			expression = ENull; 
-		default: SynErr(136);
-		}
-		return expression;
-	}
-
-	function Creator():Expression {
-		var expression:Expression = null;
-		if (StartOf(9)) {
-			var type:PrimitiveType = BasicType();
-			var arg:Expression = ArrayCreatorRest(DTPrimitive(type));
-			expression = arg; 
-		} else if (la.kind == 1) {
-			var qualifier:Array<String> = Qualident();
-			if (la.kind == 32) {
-				var arg:Expression = ArrayCreatorRest(DTReference(qualifier));
-				expression = arg; 
-			} else if (la.kind == 33) {
-				var arg:Expression = ClassCreatorRest(qualifier);
-				expression = arg; 
-			} else SynErr(137);
-		} else SynErr(138);
-		return expression;
-	}
-
-	function IdentifierSuffix(identifier:String, base:Expression):Expression {
-		var expression:Expression = null;
-		if (la.kind == 32) {
-			Get();
-			Expect(38);
-			var bCount:Int = BracketsOpt();
-			Expect(29);
-			Expect(9);
-			
-		} else if (la.kind == 33) {
-			var arguments:Array<Expression> = Arguments();
-			expression = base == null ? ELexExpression(LCall(identifier, arguments)) : ECall(identifier, base, arguments); 
-		} else if (la.kind == 29) {
-			Get();
-			if (la.kind == 9) {
-				Get();
-			} else if (la.kind == 23) {
-				Get();
-			} else if (la.kind == 22) {
-				Get();
-				Expect(29);
-				Expect(1);
-				var dummy:Expression = ArgumentsOpt(null, null);
-			} else SynErr(139);
-			
-		} else SynErr(140);
-		return expression;
-	}
-
-	function ArgumentsOpt(identifier:String, base:Expression):Expression {
-		var expression:Expression = null;
-		expression = EReference(identifier, base); 
-		if (la.kind == 33) {
-			var arguments:Array<Expression> = Arguments();
-			expression = ECall(identifier, base, arguments); 
-		}
-		return expression;
-	}
-
-	function ArrayCreatorRest(type:DataType):Expression {
-		var expression:Expression = null;
-		Expect(32);
-		if (la.kind == 38) {
-			Get();
-			var bCount:Int = BracketsOpt();
-			var expression:Expression = ArrayInitializer();
-		} else if (StartOf(10)) {
-			var dummy:Expression = Expression0();
-			Expect(38);
-			while (nonEmptyBracket()) {
-				Expect(32);
-				var dummy:Expression = Expression0();
-				Expect(38);
-			}
-			while (emptyBracket()) {
-				Expect(32);
-				Expect(38);
-			}
-		} else SynErr(141);
-		return expression;
-	}
-
-	function ClassCreatorRest(qualifier:Array<String>):Expression {
-		var expression:Expression = null;
-		var arguments:Array<Expression> = Arguments();
-		expression = EObjectInstantiation(qualifier, arguments); 
-		if (la.kind == 31) {
-			ClassBody();
-		}
-		
-		return expression;
-	}
-
-	function InnerCreator():Void {
-		var qualifier:Array<String> = []; 
-		Expect(1);
-		var expression:Expression = ClassCreatorRest(qualifier);
 	}
 
 
@@ -1776,31 +1050,26 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 	inline static var T:Bool = true;
 	inline static var x:Bool = false;
 	private static var set:Array<Array<Bool>> = [
-		[T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,x,x,x, x,x,x,x, x,T,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,x, T,T,T,T, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,T,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,x,x,x, x,x,x,x, x,T,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,x,x,x, x,x,T,T, T,x,T,x, x,T,x,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,T,T, T,T,T,T, T,x,T,T, x,T,x,T, T,T,T,x, T,x,T,T, T,T,x,x, T,x,T,x, x,T,T,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,T,T, T,T,T,T, T,x,T,T, x,T,x,T, T,T,T,x, T,x,T,T, T,T,x,x, T,x,T,T, x,T,T,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,T, T,T,T,T, T,T,T,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,T,T, T,T,T,T, T,T,T,T, T,T,x,T, T,T,T,T, T,T,T,T, T,T,x,x, T,x,T,T, x,T,T,T, T,x,x,x, T,x,T,x, T,T,T,T, x,T,x,x, x,x,x,x, T,T,x,T, T,T,T,x, T,T,T,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,x,x, x,x,T,T, T,x,T,x, x,T,x,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,T,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,x,x, x,x,T,T, T,x,T,x, T,T,x,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,T,T, T,T,T,T, T,x,T,T, T,T,x,T, T,T,T,x, T,x,T,T, T,T,x,x, T,x,T,x, x,T,T,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,T,T, T,T,T,T, T,x,T,T, x,T,x,T, T,T,T,x, T,x,T,T, T,T,x,x, T,x,T,T, x,T,T,T, T,x,x,x, T,x,T,x, x,x,x,x, x,T,x,x, x,x,x,x, x,T,x,T, T,T,T,x, T,T,T,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,x, T,x,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,x,x],
-		[x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,x,T,x, x,x,T,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,T,T, T,T,T,T, T,x,T,T, x,T,x,T, T,T,T,x, T,x,T,T, T,T,x,x, x,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,x, T,x,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,x,x]
+		[T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
+		[x,x,x,x, x,x,x,x, x,T,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,x, T,T,T,T, x,x,x,x, x,x,x,x, T,x,x],
+		[x,T,x,x, x,T,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,T, T,T,x,x, x,x,x,x, x,x,T,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x],
+		[x,x,x,x, x,x,x,x, x,T,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, x,x,x,x, x,x,x,x, T,x,x],
+		[x,T,x,x, x,T,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,T, T,T,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x],
+		[x,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,T, T,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
+		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x],
+		[x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, x,x,x],
+		[x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, x,x,x],
+		[x,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,x, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,x],
+		[x,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,x,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,x],
+		[x,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,x,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,x],
+		[x,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,x,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,x],
+		[x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, x,x,x,x, x,x,x,x, x,x,x],
+		[x,x,x,x, x,x,T,T, T,x,T,x, x,T,x,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
+		[x,T,x,x, x,x,T,T, T,x,T,x, x,T,x,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
+		[x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,T,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x],
+		[x,T,x,x, x,x,T,T, T,x,T,x, T,T,x,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
+		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x],
+		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x]
 
 	];
 }
@@ -1882,91 +1151,26 @@ class Errors
 			case 54: s = "\"implements\" expected";
 			case 55: s = "\"throws\" expected";
 			case 56: s = "\"interface\" expected";
-			case 57: s = "\"if\" expected";
-			case 58: s = "\"else\" expected";
-			case 59: s = "\"for\" expected";
-			case 60: s = "\"while\" expected";
-			case 61: s = "\"do\" expected";
-			case 62: s = "\"try\" expected";
-			case 63: s = "\"finally\" expected";
-			case 64: s = "\"switch\" expected";
-			case 65: s = "\"return\" expected";
-			case 66: s = "\"throw\" expected";
-			case 67: s = "\"break\" expected";
-			case 68: s = "\"continue\" expected";
-			case 69: s = "\"catch\" expected";
-			case 70: s = "\"case\" expected";
-			case 71: s = "\"default\" expected";
-			case 72: s = "\"?\" expected";
-			case 73: s = "\"instanceof\" expected";
-			case 74: s = "\"+=\" expected";
-			case 75: s = "\"-=\" expected";
-			case 76: s = "\"*=\" expected";
-			case 77: s = "\"/=\" expected";
-			case 78: s = "\"&=\" expected";
-			case 79: s = "\"|=\" expected";
-			case 80: s = "\"^=\" expected";
-			case 81: s = "\"%=\" expected";
-			case 82: s = "\"<<=\" expected";
-			case 83: s = "\">>=\" expected";
-			case 84: s = "\">>>=\" expected";
-			case 85: s = "\"||\" expected";
-			case 86: s = "\"&&\" expected";
-			case 87: s = "\"|\" expected";
-			case 88: s = "\"^\" expected";
-			case 89: s = "\"&\" expected";
-			case 90: s = "\"==\" expected";
-			case 91: s = "\"!=\" expected";
-			case 92: s = "\"<\" expected";
-			case 93: s = "\">\" expected";
-			case 94: s = "\"<=\" expected";
-			case 95: s = "\">=\" expected";
-			case 96: s = "\"<<\" expected";
-			case 97: s = "\">>\" expected";
-			case 98: s = "\">>>\" expected";
-			case 99: s = "\"/\" expected";
-			case 100: s = "\"%\" expected";
-			case 101: s = "??? expected";
-			case 102: s = "invalid PdeProgram";
-			case 103: s = "invalid TypeDeclaration";
-			case 104: s = "invalid ClassBodyDeclaration";
-			case 105: s = "invalid ClassBodyDeclaration";
-			case 106: s = "invalid QualifiedImport";
-			case 107: s = "invalid ClassOrInterfaceDeclaration";
-			case 108: s = "invalid ClassModifier";
-			case 109: s = "invalid Modifier0";
-			case 110: s = "invalid Modifier1";
-			case 111: s = "invalid Type";
-			case 112: s = "invalid BasicType";
-			case 113: s = "invalid VariableInitializer";
-			case 114: s = "invalid MemberDecl";
-			case 115: s = "invalid VoidMethodDeclaratorRest";
-			case 116: s = "invalid MethodOrFieldRest";
-			case 117: s = "invalid MethodDeclaratorRest";
-			case 118: s = "invalid InterfaceBodyDeclaration";
-			case 119: s = "invalid InterfaceMemberDecl";
-			case 120: s = "invalid InterfaceMethodOrFieldRest";
-			case 121: s = "invalid Statement0";
-			case 122: s = "invalid Statement0";
-			case 123: s = "invalid ForInit";
-			case 124: s = "invalid BlockStatement";
-			case 125: s = "invalid SwitchLabel";
-			case 126: s = "invalid AssignmentOperator";
-			case 127: s = "invalid Expression3";
-			case 128: s = "invalid Expression2Rest";
-			case 129: s = "invalid Infixop";
-			case 130: s = "invalid Increment";
-			case 131: s = "invalid PrefixOp";
-			case 132: s = "invalid Primary";
-			case 133: s = "invalid Selector";
-			case 134: s = "invalid Selector";
-			case 135: s = "invalid SuperSuffix";
-			case 136: s = "invalid Literal";
-			case 137: s = "invalid Creator";
-			case 138: s = "invalid Creator";
-			case 139: s = "invalid IdentifierSuffix";
-			case 140: s = "invalid IdentifierSuffix";
-			case 141: s = "invalid ArrayCreatorRest";
+			case 57: s = "??? expected";
+			case 58: s = "invalid PdeProgram";
+			case 59: s = "invalid TypeDeclaration";
+			case 60: s = "invalid ClassBodyDeclaration";
+			case 61: s = "invalid ClassBodyDeclaration";
+			case 62: s = "invalid UnparsedSegment";
+			case 63: s = "invalid QualifiedImport";
+			case 64: s = "invalid ClassOrInterfaceDeclaration";
+			case 65: s = "invalid ClassModifier";
+			case 66: s = "invalid Modifier0";
+			case 67: s = "invalid Modifier1";
+			case 68: s = "invalid Type";
+			case 69: s = "invalid BasicType";
+			case 70: s = "invalid MemberDecl";
+			case 71: s = "invalid VoidMethodDeclaratorRest";
+			case 72: s = "invalid MethodOrFieldRest";
+			case 73: s = "invalid MethodDeclaratorRest";
+			case 74: s = "invalid InterfaceBodyDeclaration";
+			case 75: s = "invalid InterfaceMemberDecl";
+			case 76: s = "invalid InterfaceMethodOrFieldRest";
 			default: s = "error " + n;
 		}
 		printMsg(line, col, s);

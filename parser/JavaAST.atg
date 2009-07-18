@@ -1,0 +1,446 @@
+/*---------------------------------------------------------------------------*/
+
+ArrayInitializer<out expression:Expression>		(. var values:Array<Expression> = []; .)
+= "{" [ VariableInitializer<out arg:Expression>		(. values.push(arg); .)
+        { IF (commaAndNoRBrace()) ","
+	  VariableInitializer<out arg:Expression>	(. values.push(arg); .)
+	  }       
+      ] [ "," ] 
+  "}"
+.
+
+/*---------------------------------------------------------------------------*/
+
+VariableInitializer<out expression:Expression>
+= ArrayInitializer<out arg:Expression>			(. expression = arg; .)
+| Expression0<out arg:Expression>			(. expression = arg; .)
+
+/*---------------------------------------------------------------------------*
+ *---------------------------- Statements -----------------------------------*
+ *---------------------------------------------------------------------------*/
+
+/*---------------------------------------------------------------------------*/
+
+Statement0<out statement:Statement>
+= Block<out block:Statement, blockContexts[0]>		(. statement = block; .)
+| "if" ParExpression<out condition:Expression>
+   Statement0<out thenStatement:Statement>		(. var elseStatement:Statement = null; .)
+   [ "else" Statement0<out body:Statement>		(. elseStatement = body; .)
+     ]							(. statement = SConditional(condition, thenStatement, elseStatement); .)
+| "for" "("						(. blockContexts.unshift(new BlockContext(blockContexts[0])); .)
+  [ ForInit ] ";"					(. var conditional:Expression = EBooleanLiteral(true); .)
+  [ Expression0<out expression:Expression>		(. conditional = expression; .)
+    ] ";"						(. var body:Array<Statement> = []; .)
+  [ ForUpdate<.out updates:Array<Statement>.>		(. body = updates; .)
+    ] ")"
+  Statement0<out arg:Statement>				(. body = [arg].concat(body);
+							   blockContexts[0].pushStatement(SLoop(conditional, SBlock(new Hash<FieldDefinition>(), body), false));
+							   statement = blockContexts.shift().getBlockStatement(); .)
+| "while" ParExpression<out condition:Expression>
+  Statement0<out body:Statement>			(. statement = SLoop(condition, body, false); .)
+| "do" Statement0<out body:Statement>
+  "while" ParExpression<out condition:Expression> ";"	(. statement = SLoop(condition, body, true); .)
+| "try" Block<out body:Statement, blockContexts[0]>	(. var catches:Array<Catch> = [], finallyBody:Statement = null; .)
+  ( Catches<.out _catches:Array<Catch>.>		(. catches = _catches; .)
+    [ "finally" Block<out block:Statement, blockContexts[0]>	(. finallyBody = block; .)
+      ]
+    | "finally" Block<out block:Statement, blockContexts[0]>	(. finallyBody = block; .)
+      )							(. statement = STry(body, catches, finallyBody); .)
+| "switch" ParExpression<out expression:Expression> '{' SwitchBlockStatementGroups '}' /* TODO */
+| "synchronized" ParExpression<out expression:Expression>
+  Block<out block:Statement, blockContexts[0]>		/* TODO */
+| "return"						(. var value:Expression = null; .)
+  [ Expression0<out expression:Expression>		(. value = expression; .)
+    ] ";"						(. statement = SReturn(value); .)
+| "throw" Expression0<out expression:Expression> ";"	(. statement = SThrow(expression); .)
+| "break"						(. var label:String = null; .)
+  [ ident						(. label = t.val; .)
+    ] ';'						(. statement = SBreak(label); .)
+| "continue"						(. var label:String = null; .)
+  [ ident						(. label = t.val; .)
+    ] ';'						(. statement = SContinue(label); .)
+| ";"
+| IF (isLabel()) ident					(. var label:String = t.val; .)
+  ":" Statement0<out body:Statement>			(. statement = SLabel(label, body); .)
+| StatementExpression<out arg:Statement> ';'		(. statement = arg; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Block<out statement:Statement, parent:DefinesLocalVariables>	(. blockContexts.unshift(new BlockContext(parent)); .)
+= "{" { BlockStatement } "}"					(. statement = blockContexts.shift().getBlockStatement(); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+BlockStatement
+= IF(isLocalVarDecl(false)) LocalVariableDeclaration ";"
+| ClassOrInterfaceDeclaration<out typeContext:TypeContext>	/*[TODO] support local classes... */
+| Statement0<out statement:Statement>				(. blockContexts[0].pushStatement(statement); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+LocalVariableDeclaration					(. var modifiers = new EnumSet<Modifier>(); .)
+= [ "final"							(. modifiers.add(MFinal); .)
+    ] Type<out type:DataType> VariableDeclarators<.out fields:Array<FieldContext>, modifiers, type.>
+								(.
+								for (field in fields)
+									blockContexts[0].defineVariable(field);
+								.)
+.
+
+/*---------------------------------------------------------------------------*/
+
+VariableDeclarators<.out fields:Array<FieldContext>, modifiers:EnumSet<Modifier>, type:DataType.>
+= VariableDeclarator<out field:FieldContext, modifiers, type>		(. fields = [field]; .)
+  { "," VariableDeclarator<out field:FieldContext, modifiers, type>	(. fields.push(field); .)
+    }
+.
+
+/*---------------------------------------------------------------------------*/
+
+ForInit
+= IF (isLocalVarDecl(true)) LocalVariableDeclaration
+| StatementExpression<out statement:Statement>			(. blockContexts[0].pushStatement(statement); .)
+  MoreStatementExpressions<.out statements:Array<Statement>.>	(.
+								for (statement in statements)
+									blockContexts[0].pushStatement(statement);
+								.)
+.
+
+/*---------------------------------------------------------------------------*/
+
+ForUpdate<.out statements:Array<Statement>.>
+= StatementExpression<out statement:Statement>			(. statements = [statement]; .)
+  MoreStatementExpressions<.out arg:Array<Statement>.>		(. statements = statements.concat(arg); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+StatementExpression<out statement:Statement>
+= Expression0<out expression:Expression>		(. checkExprStat(expression);
+							   statement = SExpression(expression); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+MoreStatementExpressions<.out statements:Array<Statement>.>
+=							(. statements = []; .)
+  { "," StatementExpression<out statement:Statement>	(. statements.push(statement); .)
+    }
+.
+
+/*---------------------------------------------------------------------------*/
+
+Catches<.out catches:Array<Catch>.>			(. catches = []; .)
+= CatchClause<out catchBlock:Catch>			(. catches.push(catchBlock); .)
+  { CatchClause<out catchBlock:Catch>			(. catches.push(catchBlock); .)
+    }
+.
+
+/*---------------------------------------------------------------------------*/
+
+CatchClause<out _catch:Catch>
+= "catch" "(" FormalParameter0<out parameter:FormalParameter> ")"
+  Block<out block:Statement, blockContexts[0]>		(. _catch = {parameter: parameter, body: block}; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+SwitchBlockStatementGroups
+= { SwitchBlockStatementGroup }
+.
+
+/*---------------------------------------------------------------------------*/
+
+SwitchBlockStatementGroup
+= SwitchLabel { BlockStatement }
+.
+
+/*---------------------------------------------------------------------------*/
+
+SwitchLabel
+= "case" Expression0<out expression:Expression> ':'
+| "default" ':'
+.
+
+/*---------------------------------------------------------------------------*
+ *---------------------------- Expressions ----------------------------------*
+ *---------------------------------------------------------------------------*/
+
+Expression0<out expression:Expression>
+= Expression1<out expression:Expression>
+  {
+    AssignmentOperator<out operator:InfixOperator>
+    Expression1<out value:Expression>			(.
+							// rewrite assignment operators as expressions
+							if (operator != null)
+								value = EInfixOperation(operator, expression, value);
+							// extract reference type
+							switch (expression) {
+							    case ELocalReference(identifier): expression = ELocalAssignment(identifier, value);
+							    case EReference(identifier, base): expression = EAssignment(identifier, base, value);
+							    case EArrayAccess(index, base): expression = EArrayAssignment(index, base, value);
+							    case ELexExpression(lexpression):
+								switch (lexpression) {
+								    case LReference(identifier): expression = ELexExpression(LAssignment(identifier, value));
+								    default: error('invalid assignment left-hand side');
+								}
+							    default: error('invalid assignment left-hand side');
+							}
+							.)
+  }
+.
+
+/*---------------------------------------------------------------------------*/
+
+Expression1<out expression:Expression>
+= Expression2<out expression:Expression>
+  [ ConditionalExpr<out rest:Expression, expression>	(. expression = rest; .)
+    ]
+.
+
+/*---------------------------------------------------------------------------*/
+
+ConditionalExpr<out expression:Expression, conditional:Expression>
+= "?" Expression0<out thenExpression:Expression>
+  ":" Expression1<out elseExpression:Expression>	(. expression = EConditional(conditional, thenExpression, elseExpression); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Expression2<out expression:Expression>
+= Expression3<out expression:Expression>
+  [ Expression2Rest<out rest:Expression, expression>	(. expression = rest; .)
+    ]
+.
+
+/*---------------------------------------------------------------------------*/
+
+Expression2Rest<out expression:Expression, operand:Expression>
+=							(. var builder = new OperationBuilder(); builder.operand(operand); .)
+  Infixop<out operator:InfixOperator>			(. builder.operator(operator); .)
+  Expression3<out operand:Expression>			(. builder.operand(operand); .)
+  { Infixop<out operator:InfixOperator>			(. builder.operator(operator); .)
+    Expression3<out operand:Expression>			(. builder.operand(operand); .)
+    }							(. expression = builder.reduce(); .)
+| "instanceof" Type<out type:DataType>			(. expression = EInstanceOf(expression, type); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+/*
+Expression3<out expression:Expression>               (. var pre:Int = ExprKind.NONE;        .)
+= { IF(prefix.get(la.kind) || isTypeCast())
+    ( PrefixOp<info>      (. if(pre == ExprKind.NONE) pre = info.getKind(); .)
+    | "(" Type ")"                       (. info.setKind(ExprKind.TYPECAST);.)
+    )
+  }
+  Primary<info> { Selector<info> } { PostfixOp<info> }
+                            (. if (pre != ExprKind.NONE) info.setKind(pre); .)
+.*/
+
+Expression3<out expression:Expression>
+= ( Increment<out type:IncrementType>
+    Expression3<out rest:Expression>			(. expression = EPrefix(type, rest); .)
+    | PrefixOp<out operator:PrefixOperator>
+      Expression3<out rest:Expression>			(. expression = EPrefixOperation(operator, rest); .)
+  )
+| IF(isTypeCast()) "(" Type<out type:DataType> ")"
+  Expression3<out rest:Expression>			(. expression = ECast(type, rest); .)
+| Primary<out rest:Expression>				(. expression = rest; .)
+  { Selector<out rest:Expression, expression>		(. expression = rest; .)
+    }
+  { Increment<out type:IncrementType>			(. expression = EPostfix(type, expression); .)
+    }
+.
+
+/*---------------------------------------------------------------------------*/
+
+Primary<out expression:Expression>
+= "(" Expression0<out arg:Expression> ")" 		(. expression = arg; .)
+| "this" 						(. expression = EThisReference; .)
+  [ Arguments<.out arguments:Array<Expression>.>	(. expression = EThisCall(arguments); .)
+    ]
+| "super" SuperSuffix<out arg:Expression> 		(. expression = arg; .)
+| Literal<out arg:Expression> 				(. expression = arg; .)
+| "new"	Creator<out arg:Expression> 			(. expression = arg; .)
+| ident							(. var identifier:String = t.val, base:Expression = null; .)
+  { IF(dotAndIdent()) '.' ident				(. base = base != null ? EReference(identifier, base) :
+								blockContexts[0].isVariableDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier));
+							   identifier = t.val; .)
+    }							(. expression = base != null ? EReference(identifier, base) :
+								blockContexts[0].isVariableDefined(identifier) ? ELocalReference(identifier) : ELexExpression(LReference(identifier)); .)
+  [ IF(isIdentSuffix()) IdentifierSuffix<out arg:Expression, identifier, base> 	(. expression = arg; .)
+    ]
+| BasicType<out type:PrimitiveType>
+  BracketsOpt<out bCount:Int> '.' "class"		/* (. info.setKind(ExprKind.SELECT);  .) */
+| "void" '.' "class"					/* (. info.setKind(ExprKind.SELECT);  .) */
+.
+
+/*---------------------------------------------------------------------------*/
+
+Arguments<out arguments:Array<Expression>>		(. arguments = []; .) 
+= "(" [ Expression0<out expression:Expression>		(. arguments.push(expression); .)
+        { "," Expression0<out expression:Expression> 	(. arguments.push(expression); .)
+	  } ] ")"
+.
+
+/*---------------------------------------------------------------------------*/
+
+ArgumentsOpt<out expression:Expression, identifier:String, base:Expression>
+=							(. expression = EReference(identifier, base); .)
+  [ Arguments<.out arguments:Array<Expression>.>	(. expression = ECall(identifier, base, arguments); .)
+    ]
+.
+
+/*---------------------------------------------------------------------------*/
+
+SuperSuffix<out expression:Expression>
+= Arguments<.out arguments:Array<Expression>.>		(. expression = ESuperCall(arguments); .)
+| '.' ident						(. var identifier:String = t.val; .)
+  ArgumentsOpt<out arg:Expression, identifier, ESuperReference>	(. expression = arg; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Literal<out expression:Expression>
+= intLit						(. expression = EIntegerLiteral(Std.parseInt(t.val)); .)
+| floatLit						(. expression = EFloatLiteral(Std.parseFloat(t.val)); .)
+| charLit						(. expression = ECharLiteral(t.val.charCodeAt(0)); .)
+| stringLit						(. expression = EStringLiteral(t.val); .)
+| "true"						(. expression = EBooleanLiteral(true); .)
+| "false"						(. expression = EBooleanLiteral(false); .)
+| "null"						(. expression = ENull; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Creator<out expression:Expression>
+= BasicType<out type:PrimitiveType>
+  ArrayCreatorRest<out arg:Expression, DTPrimitive(type)>		(. expression = arg; .)
+| Qualident<.out qualifier:Array<String>.> 				/*[TODO] is DTReference ambig? */
+  ( ArrayCreatorRest<out arg:Expression, DTReference(qualifier)>	(. expression = arg; .)
+  | ClassCreatorRest<out arg:Expression, qualifier>			(. expression = arg; .)
+  )
+.
+
+/*---------------------------------------------------------------------------*/
+
+ArrayCreatorRest<out expression:Expression, type:DataType>
+= "["
+  ( "]" BracketsOpt<out bCount:Int> ArrayInitializer<out expression:Expression>
+    | Expression0<out dummy:Expression> "]" 
+      { IF (nonEmptyBracket()) "[" Expression0<out dummy:Expression> "]" } 
+      { IF (emptyBracket()) "[" "]" }
+  )
+.
+
+/*---------------------------------------------------------------------------*/
+
+ClassCreatorRest<.out expression:Expression, qualifier:Array<String>.>
+= Arguments<.out arguments:Array<Expression>.>		(. expression = EObjectInstantiation(qualifier, arguments); .)
+  [ ClassBody ]						(. /* TODO */ .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+IdentifierSuffix<out expression:Expression, identifier:String, base:Expression>
+= '[' ']' BracketsOpt<out bCount:Int> "." "class"	(. /* info.setKind(ExprKind.SELECT); */ .)
+|  Arguments<.out arguments:Array<Expression>.>		(. expression = base == null ? ELexExpression(LCall(identifier, arguments)) : ECall(identifier, base, arguments); .)
+|  "." ( "class" | "this" |
+         "super" '.' ident
+	 ArgumentsOpt<out dummy:Expression, null, null>)	(. /* TODO */ .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Selector<out expression:Expression, base:Expression>
+= "." ( ident							(. var identifier:String = t.val; .)
+	ArgumentsOpt<out arg:Expression, identifier, base>	(. expression = arg; .)
+      | "super" Arguments<.out arguments:Array<Expression>.>	(. /* TODO */ .)
+      | "new" InnerCreator
+      )
+| '[' Expression0<out index:Expression> ']'			(. expression = EArrayAccess(index, base); .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+InnerCreator						(. var qualifier:Array<String> = []; .)
+= ident ClassCreatorRest<out expression:Expression, qualifier>
+.
+
+/*---------------------------------------------------------------------------*/
+
+ParExpression<out expression:Expression>
+= "(" Expression0<out expression:Expression> ")"
+.
+
+/*---------------------------------------------------------------------------*/
+
+AssignmentOperator<out operator:InfixOperator>			
+= "="						(. operator = null; .)
+| "+="						(. operator = OpAdd; .)
+| "-="						(. operator = OpSubtract; .)
+| "*="						(. operator = OpMultiply; .)
+| "/="						(. operator = OpDivide; .)
+| "&="						(. operator = OpBitwiseAnd; .)
+| "|="						(. operator = OpBitwiseOr; .)
+| "^="						(. operator = OpBitwiseXor; .)
+| "%="						(. operator = OpModulus; .)
+| "<<="						(. operator = OpLeftShift; .)
+| ">>="						(. operator = OpRightShift; .)
+| ">>>="					(. operator = OpZeroRightShift; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Infixop<out operator:InfixOperator>
+= "||"						(. operator = OpOr; .)
+| "&&"						(. operator = OpAnd; .)
+| "|"						(. operator = OpBitwiseOr; .)
+| "^"						(. operator = OpBitwiseXor; .)
+| "&"						(. operator = OpBitwiseAnd; .)
+| "=="						(. operator = OpEqual; .)
+| "!="						(. operator = OpUnequal; .)
+| "<"						(. operator = OpLessThan; .)
+| ">"						(. operator = OpGreaterThan; .)
+| "<="						(. operator = OpLessThanOrEqual; .)
+| ">="						(. operator = OpGreaterThanOrEqual; .)
+| "<<"						(. operator = OpLeftShift; .)
+| ">>"						(. operator = OpRightShift; .)
+| ">>>"						(. operator = OpZeroRightShift; .)
+| "+"						(. operator = OpAdd; .)
+| "-"						(. operator = OpSubtract; .)
+| "*"						(. operator = OpMultiply; .)
+| "/"						(. operator = OpDivide; .)
+| "%"						(. operator = OpModulus; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+PrefixOp<out operator:PrefixOperator>
+/*= "++"
+| "--"*/
+= "!"						(. operator = OpNot; .)
+| "~"						(. operator = OpBitwiseNot; .)
+| "+"						(. operator = OpUnaryPlus; .)
+| "-"						(. operator = OpUnaryMinus; .)
+.
+
+/*---------------------------------------------------------------------------*/
+
+Increment<out type:IncrementType>
+= "++"						(. type = IIncrement; .)
+| "--"						(. type = IDecrement; .)
+.
+
+/*---------------------------------------------------------------------------*/
+/*
+PostfixOp<builder:ExpressionBuilder>
+= "++"						(. builder.pushOperator(PPostfix(IIncrement)); .)
+| "--"						(. builder.pushOperator(PPostfix(IDecrement)); .)  
+.*/
+
+/*---------------------------------------------------------------------------*/
