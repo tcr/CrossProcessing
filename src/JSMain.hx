@@ -1,6 +1,6 @@
 ﻿package ;
 
-import haxe.io.StringInput;
+import xpde.parser.io.SeekableStringInput;
 import haxe.Serializer;
 import js.Lib;
 import xpde.core.PApplet;
@@ -44,11 +44,11 @@ class JSMain
 	{
 		// initialize root packages
 		var rootPackage = new JavaPackage();
-		var papplet = new ParsedCompilationUnit('PApplet', new StringInput(PApplet.__javartti__));
+		var papplet = new ParsedCompilationUnit('PApplet', new SeekableStringInput(PApplet.__javartti__));
 		rootPackage.addCompilationUnit(['xpde', 'core'], papplet);
 		
 		// initialize main sketch
-		var sketch = new ParsedCompilationUnit('Sketch', new StringInput(getSource()));
+		var sketch = new ParsedCompilationUnit('Sketch', new SeekableStringInput(getSource()));
 		rootPackage.addCompilationUnit([], sketch);
 		sketch.initialize(rootPackage);
 		

@@ -1609,9 +1609,9 @@ JSMain.interpret = function() {
 	$s.push("JSMain::interpret");
 	var $spos = $s.length;
 	var rootPackage = new xpde.JavaPackage();
-	var papplet = new xpde.parser.ParsedCompilationUnit("PApplet",new haxe.io.StringInput(xpde.core.js.PApplet.__javartti__));
+	var papplet = new xpde.parser.ParsedCompilationUnit("PApplet",new xpde.parser.io.SeekableStringInput(xpde.core.js.PApplet.__javartti__));
 	rootPackage.addCompilationUnit(["xpde","core"],papplet);
-	var sketch = new xpde.parser.ParsedCompilationUnit("Sketch",new haxe.io.StringInput(JSMain.getSource()));
+	var sketch = new xpde.parser.ParsedCompilationUnit("Sketch",new xpde.parser.io.SeekableStringInput(JSMain.getSource()));
 	rootPackage.addCompilationUnit([],sketch);
 	sketch.initialize(rootPackage);
 	var compiler = new xpde.compiler.JSCompiler();
@@ -1852,6 +1852,97 @@ haxe.Int32.compare = function(a,b) {
 	$s.pop();
 }
 haxe.Int32.prototype.__class__ = haxe.Int32;
+haxe.io.BytesInput = function(b,pos,len) { if( b === $_ ) return; {
+	$s.push("haxe.io.BytesInput::new");
+	var $spos = $s.length;
+	if(pos == null) pos = 0;
+	if(len == null) len = b.length - pos;
+	if(pos < 0 || len < 0 || pos + len > b.length) throw haxe.io.Error.OutsideBounds;
+	this.b = b.b;
+	this.pos = pos;
+	this.len = len;
+	$s.pop();
+}}
+haxe.io.BytesInput.__name__ = ["haxe","io","BytesInput"];
+haxe.io.BytesInput.__super__ = haxe.io.Input;
+for(var k in haxe.io.Input.prototype ) haxe.io.BytesInput.prototype[k] = haxe.io.Input.prototype[k];
+haxe.io.BytesInput.prototype.b = null;
+haxe.io.BytesInput.prototype.len = null;
+haxe.io.BytesInput.prototype.pos = null;
+haxe.io.BytesInput.prototype.readByte = function() {
+	$s.push("haxe.io.BytesInput::readByte");
+	var $spos = $s.length;
+	if(this.len == 0) throw new haxe.io.Eof();
+	this.len--;
+	{
+		var $tmp = this.b[this.pos++];
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+haxe.io.BytesInput.prototype.readBytes = function(buf,pos,len) {
+	$s.push("haxe.io.BytesInput::readBytes");
+	var $spos = $s.length;
+	if(pos < 0 || len < 0 || pos + len > buf.length) throw haxe.io.Error.OutsideBounds;
+	if(this.len == 0 && len > 0) throw new haxe.io.Eof();
+	if(this.len < len) len = this.len;
+	var b1 = this.b;
+	var b2 = buf.b;
+	{
+		var _g = 0;
+		while(_g < len) {
+			var i = _g++;
+			b2[pos + i] = b1[this.pos + i];
+		}
+	}
+	this.pos += len;
+	this.len -= len;
+	{
+		$s.pop();
+		return len;
+	}
+	$s.pop();
+}
+haxe.io.BytesInput.prototype.__class__ = haxe.io.BytesInput;
+haxe.io.StringInput = function(s) { if( s === $_ ) return; {
+	$s.push("haxe.io.StringInput::new");
+	var $spos = $s.length;
+	haxe.io.BytesInput.apply(this,[haxe.io.Bytes.ofString(s)]);
+	$s.pop();
+}}
+haxe.io.StringInput.__name__ = ["haxe","io","StringInput"];
+haxe.io.StringInput.__super__ = haxe.io.BytesInput;
+for(var k in haxe.io.BytesInput.prototype ) haxe.io.StringInput.prototype[k] = haxe.io.BytesInput.prototype[k];
+haxe.io.StringInput.prototype.__class__ = haxe.io.StringInput;
+haxe.io.+Input = function() { }
+haxe.io.+Input.__name__ = ["haxe","io","+Input"];
+haxe.io.+Input.__super__ = haxe.io.Input;
+for(var k in haxe.io.Input.prototype ) haxe.io.+Input.prototype[k] = haxe.io.Input.prototype[k];
+haxe.io.+Input.prototype.seek = null;
+haxe.io.+Input.prototype.__class__ = haxe.io.+Input;
+xpde.parser.io = {}
+xpde.parser.io.Seekable = function() { }
+xpde.parser.io.Seekable.__name__ = ["xpde","parser","io","Seekable"];
+xpde.parser.io.Seekable.prototype.seek = null;
+xpde.parser.io.Seekable.prototype.__class__ = xpde.parser.io.Seekable;
+xpde.parser.io.SeekableStringInput = function(s) { if( s === $_ ) return; {
+	$s.push("xpde.parser.io.SeekableStringInput::new");
+	var $spos = $s.length;
+	haxe.io.StringInput.apply(this,[s]);
+	$s.pop();
+}}
+xpde.parser.io.SeekableStringInput.__name__ = ["xpde","parser","io","SeekableStringInput"];
+xpde.parser.io.SeekableStringInput.__super__ = haxe.io.StringInput;
+for(var k in haxe.io.StringInput.prototype ) xpde.parser.io.SeekableStringInput.prototype[k] = haxe.io.StringInput.prototype[k];
+xpde.parser.io.SeekableStringInput.prototype.seek = function(pos) {
+	$s.push("xpde.parser.io.SeekableStringInput::seek");
+	var $spos = $s.length;
+	this.pos = pos;
+	$s.pop();
+}
+xpde.parser.io.SeekableStringInput.prototype.__class__ = xpde.parser.io.SeekableStringInput;
+xpde.parser.io.SeekableStringInput.__interfaces__ = [haxe.io.+Input,xpde.parser.io.Seekable];
 haxe.rtti = {}
 haxe.rtti.Infos = function() { }
 haxe.rtti.Infos.__name__ = ["haxe","rtti","Infos"];
@@ -2487,69 +2578,6 @@ xpde.compiler.JSCompiler.prototype.packageIdentString = null;
 xpde.compiler.JSCompiler.prototype.qualident = null;
 xpde.compiler.JSCompiler.prototype.__class__ = xpde.compiler.JSCompiler;
 xpde.compiler.JSCompiler.__interfaces__ = [xpde.compiler.ICompiler];
-haxe.io.BytesInput = function(b,pos,len) { if( b === $_ ) return; {
-	$s.push("haxe.io.BytesInput::new");
-	var $spos = $s.length;
-	if(pos == null) pos = 0;
-	if(len == null) len = b.length - pos;
-	if(pos < 0 || len < 0 || pos + len > b.length) throw haxe.io.Error.OutsideBounds;
-	this.b = b.b;
-	this.pos = pos;
-	this.len = len;
-	$s.pop();
-}}
-haxe.io.BytesInput.__name__ = ["haxe","io","BytesInput"];
-haxe.io.BytesInput.__super__ = haxe.io.Input;
-for(var k in haxe.io.Input.prototype ) haxe.io.BytesInput.prototype[k] = haxe.io.Input.prototype[k];
-haxe.io.BytesInput.prototype.b = null;
-haxe.io.BytesInput.prototype.len = null;
-haxe.io.BytesInput.prototype.pos = null;
-haxe.io.BytesInput.prototype.readByte = function() {
-	$s.push("haxe.io.BytesInput::readByte");
-	var $spos = $s.length;
-	if(this.len == 0) throw new haxe.io.Eof();
-	this.len--;
-	{
-		var $tmp = this.b[this.pos++];
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-haxe.io.BytesInput.prototype.readBytes = function(buf,pos,len) {
-	$s.push("haxe.io.BytesInput::readBytes");
-	var $spos = $s.length;
-	if(pos < 0 || len < 0 || pos + len > buf.length) throw haxe.io.Error.OutsideBounds;
-	if(this.len == 0 && len > 0) throw new haxe.io.Eof();
-	if(this.len < len) len = this.len;
-	var b1 = this.b;
-	var b2 = buf.b;
-	{
-		var _g = 0;
-		while(_g < len) {
-			var i = _g++;
-			b2[pos + i] = b1[this.pos + i];
-		}
-	}
-	this.pos += len;
-	this.len -= len;
-	{
-		$s.pop();
-		return len;
-	}
-	$s.pop();
-}
-haxe.io.BytesInput.prototype.__class__ = haxe.io.BytesInput;
-haxe.io.StringInput = function(s) { if( s === $_ ) return; {
-	$s.push("haxe.io.StringInput::new");
-	var $spos = $s.length;
-	haxe.io.BytesInput.apply(this,[haxe.io.Bytes.ofString(s)]);
-	$s.pop();
-}}
-haxe.io.StringInput.__name__ = ["haxe","io","StringInput"];
-haxe.io.StringInput.__super__ = haxe.io.BytesInput;
-for(var k in haxe.io.BytesInput.prototype ) haxe.io.StringInput.prototype[k] = haxe.io.BytesInput.prototype[k];
-haxe.io.StringInput.prototype.__class__ = haxe.io.StringInput;
 haxe.io.Bytes = function(length,b) { if( length === $_ ) return; {
 	$s.push("haxe.io.Bytes::new");
 	var $spos = $s.length;
@@ -5518,6 +5546,412 @@ js.Lib.setErrorHandler = function(f) {
 	$s.pop();
 }
 js.Lib.prototype.__class__ = js.Lib;
+js.Boot = function() { }
+js.Boot.__name__ = ["js","Boot"];
+js.Boot.__unhtml = function(s) {
+	$s.push("js.Boot::__unhtml");
+	var $spos = $s.length;
+	{
+		var $tmp = s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+js.Boot.__trace = function(v,i) {
+	$s.push("js.Boot::__trace");
+	var $spos = $s.length;
+	var msg = (i != null?i.fileName + ":" + i.lineNumber + ": ":"");
+	msg += js.Boot.__unhtml(js.Boot.__string_rec(v,"")) + "<br/>";
+	var d = document.getElementById("haxe:trace");
+	if(d == null) alert("No haxe:trace element defined\n" + msg);
+	else d.innerHTML += msg;
+	$s.pop();
+}
+js.Boot.__clear_trace = function() {
+	$s.push("js.Boot::__clear_trace");
+	var $spos = $s.length;
+	var d = document.getElementById("haxe:trace");
+	if(d != null) d.innerHTML = "";
+	else null;
+	$s.pop();
+}
+js.Boot.__closure = function(o,f) {
+	$s.push("js.Boot::__closure");
+	var $spos = $s.length;
+	var m = o[f];
+	if(m == null) {
+		$s.pop();
+		return null;
+	}
+	var f1 = function() {
+		$s.push("js.Boot::__closure@67");
+		var $spos = $s.length;
+		{
+			var $tmp = m.apply(o,arguments);
+			$s.pop();
+			return $tmp;
+		}
+		$s.pop();
+	}
+	f1.scope = o;
+	f1.method = m;
+	{
+		$s.pop();
+		return f1;
+	}
+	$s.pop();
+}
+js.Boot.__string_rec = function(o,s) {
+	$s.push("js.Boot::__string_rec");
+	var $spos = $s.length;
+	if(o == null) {
+		$s.pop();
+		return "null";
+	}
+	if(s.length >= 5) {
+		$s.pop();
+		return "<...>";
+	}
+	var t = typeof(o);
+	if(t == "function" && (o.__name__ != null || o.__ename__ != null)) t = "object";
+	switch(t) {
+	case "object":{
+		if(o instanceof Array) {
+			if(o.__enum__ != null) {
+				if(o.length == 2) {
+					var $tmp = o[0];
+					$s.pop();
+					return $tmp;
+				}
+				var str = o[0] + "(";
+				s += "\t";
+				{
+					var _g1 = 2, _g = o.length;
+					while(_g1 < _g) {
+						var i = _g1++;
+						if(i != 2) str += "," + js.Boot.__string_rec(o[i],s);
+						else str += js.Boot.__string_rec(o[i],s);
+					}
+				}
+				{
+					var $tmp = str + ")";
+					$s.pop();
+					return $tmp;
+				}
+			}
+			var l = o.length;
+			var i;
+			var str = "[";
+			s += "\t";
+			{
+				var _g = 0;
+				while(_g < l) {
+					var i1 = _g++;
+					str += ((i1 > 0?",":"")) + js.Boot.__string_rec(o[i1],s);
+				}
+			}
+			str += "]";
+			{
+				$s.pop();
+				return str;
+			}
+		}
+		var tostr;
+		try {
+			tostr = o.toString;
+		}
+		catch( $e18 ) {
+			{
+				var e = $e18;
+				{
+					$e = [];
+					while($s.length >= $spos) $e.unshift($s.pop());
+					$s.push($e[0]);
+					{
+						$s.pop();
+						return "???";
+					}
+				}
+			}
+		}
+		if(tostr != null && tostr != Object.toString) {
+			var s2 = o.toString();
+			if(s2 != "[object Object]") {
+				$s.pop();
+				return s2;
+			}
+		}
+		var k = null;
+		var str = "{\n";
+		s += "\t";
+		var hasp = (o.hasOwnProperty != null);
+		for( var k in o ) { ;
+		if(hasp && !o.hasOwnProperty(k)) continue;
+		if(k == "prototype" || k == "__class__" || k == "__super__" || k == "__interfaces__") continue;
+		if(str.length != 2) str += ", \n";
+		str += s + k + " : " + js.Boot.__string_rec(o[k],s);
+		}
+		s = s.substring(1);
+		str += "\n" + s + "}";
+		{
+			$s.pop();
+			return str;
+		}
+	}break;
+	case "function":{
+		{
+			$s.pop();
+			return "<function>";
+		}
+	}break;
+	case "string":{
+		{
+			$s.pop();
+			return o;
+		}
+	}break;
+	default:{
+		{
+			var $tmp = String(o);
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	}
+	$s.pop();
+}
+js.Boot.__interfLoop = function(cc,cl) {
+	$s.push("js.Boot::__interfLoop");
+	var $spos = $s.length;
+	if(cc == null) {
+		$s.pop();
+		return false;
+	}
+	if(cc == cl) {
+		$s.pop();
+		return true;
+	}
+	var intf = cc.__interfaces__;
+	if(intf != null) {
+		var _g1 = 0, _g = intf.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var i1 = intf[i];
+			if(i1 == cl || js.Boot.__interfLoop(i1,cl)) {
+				$s.pop();
+				return true;
+			}
+		}
+	}
+	{
+		var $tmp = js.Boot.__interfLoop(cc.__super__,cl);
+		$s.pop();
+		return $tmp;
+	}
+	$s.pop();
+}
+js.Boot.__instanceof = function(o,cl) {
+	$s.push("js.Boot::__instanceof");
+	var $spos = $s.length;
+	try {
+		if(o instanceof cl) {
+			if(cl == Array) {
+				var $tmp = (o.__enum__ == null);
+				$s.pop();
+				return $tmp;
+			}
+			{
+				$s.pop();
+				return true;
+			}
+		}
+		if(js.Boot.__interfLoop(o.__class__,cl)) {
+			$s.pop();
+			return true;
+		}
+	}
+	catch( $e19 ) {
+		{
+			var e = $e19;
+			{
+				$e = [];
+				while($s.length >= $spos) $e.unshift($s.pop());
+				$s.push($e[0]);
+				if(cl == null) {
+					$s.pop();
+					return false;
+				}
+			}
+		}
+	}
+	switch(cl) {
+	case Int:{
+		{
+			var $tmp = Math.ceil(o%2147483648.0) === o;
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	case Float:{
+		{
+			var $tmp = typeof(o) == "number";
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	case Bool:{
+		{
+			var $tmp = o === true || o === false;
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	case String:{
+		{
+			var $tmp = typeof(o) == "string";
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	case Dynamic:{
+		{
+			$s.pop();
+			return true;
+		}
+	}break;
+	default:{
+		if(o == null) {
+			$s.pop();
+			return false;
+		}
+		{
+			var $tmp = o.__enum__ == cl || (cl == Class && o.__name__ != null) || (cl == Enum && o.__ename__ != null);
+			$s.pop();
+			return $tmp;
+		}
+	}break;
+	}
+	$s.pop();
+}
+js.Boot.__init = function() {
+	$s.push("js.Boot::__init");
+	var $spos = $s.length;
+	js.Lib.isIE = (document.all != null && window.opera == null);
+	js.Lib.isOpera = (window.opera != null);
+	Array.prototype.copy = Array.prototype.slice;
+	Array.prototype.insert = function(i,x) {
+		$s.push("js.Boot::__init@199");
+		var $spos = $s.length;
+		this.splice(i,0,x);
+		$s.pop();
+	}
+	Array.prototype.remove = (Array.prototype.indexOf?function(obj) {
+		$s.push("js.Boot::__init@202");
+		var $spos = $s.length;
+		var idx = this.indexOf(obj);
+		if(idx == -1) {
+			$s.pop();
+			return false;
+		}
+		this.splice(idx,1);
+		{
+			$s.pop();
+			return true;
+		}
+		$s.pop();
+	}:function(obj) {
+		$s.push("js.Boot::__init@207");
+		var $spos = $s.length;
+		var i = 0;
+		var l = this.length;
+		while(i < l) {
+			if(this[i] == obj) {
+				this.splice(i,1);
+				{
+					$s.pop();
+					return true;
+				}
+			}
+			i++;
+		}
+		{
+			$s.pop();
+			return false;
+		}
+		$s.pop();
+	});
+	Array.prototype.iterator = function() {
+		$s.push("js.Boot::__init@219");
+		var $spos = $s.length;
+		{
+			var $tmp = { cur : 0, arr : this, hasNext : function() {
+				$s.push("js.Boot::__init@219@223");
+				var $spos = $s.length;
+				{
+					var $tmp = this.cur < this.arr.length;
+					$s.pop();
+					return $tmp;
+				}
+				$s.pop();
+			}, next : function() {
+				$s.push("js.Boot::__init@219@226");
+				var $spos = $s.length;
+				{
+					var $tmp = this.arr[this.cur++];
+					$s.pop();
+					return $tmp;
+				}
+				$s.pop();
+			}}
+			$s.pop();
+			return $tmp;
+		}
+		$s.pop();
+	}
+	var cca = String.prototype.charCodeAt;
+	String.prototype.cca = cca;
+	String.prototype.charCodeAt = function(i) {
+		$s.push("js.Boot::__init@233");
+		var $spos = $s.length;
+		var x = cca.call(this,i);
+		if(isNaN(x)) {
+			$s.pop();
+			return null;
+		}
+		{
+			$s.pop();
+			return x;
+		}
+		$s.pop();
+	}
+	var oldsub = String.prototype.substr;
+	String.prototype.substr = function(pos,len) {
+		$s.push("js.Boot::__init@240");
+		var $spos = $s.length;
+		if(pos != null && pos != 0 && len != null && len < 0) {
+			$s.pop();
+			return "";
+		}
+		if(len == null) len = this.length;
+		if(pos < 0) {
+			pos = this.length + pos;
+			if(pos < 0) pos = 0;
+		}
+		else if(len < 0) {
+			len = this.length + len - pos;
+		}
+		{
+			var $tmp = oldsub.apply(this,[pos,len]);
+			$s.pop();
+			return $tmp;
+		}
+		$s.pop();
+	}
+	$closure = js.Boot.__closure;
+	$s.pop();
+}
+js.Boot.prototype.__class__ = js.Boot;
 xpde.parser.Token = function(p) { if( p === $_ ) return; {
 	$s.push("xpde.parser.Token::new");
 	var $spos = $s.length;
@@ -5552,6 +5986,7 @@ xpde.parser.Buffer.prototype.Peek = function() {
 	}
 	$s.pop();
 }
+xpde.parser.Buffer.prototype.Pos = null;
 xpde.parser.Buffer.prototype.Read = function() {
 	$s.push("xpde.parser.Buffer::Read");
 	var $spos = $s.length;
@@ -5560,16 +5995,16 @@ xpde.parser.Buffer.prototype.Read = function() {
 	try {
 		this.bufChar = this.stream.readByte();
 	}
-	catch( $e18 ) {
-		if( js.Boot.__instanceof($e18,haxe.io.Eof) ) {
-			var e = $e18;
+	catch( $e20 ) {
+		if( js.Boot.__instanceof($e20,haxe.io.Eof) ) {
+			var e = $e20;
 			{
 				$e = [];
 				while($s.length >= $spos) $e.unshift($s.pop());
 				$s.push($e[0]);
 				this.bufChar = xpde.parser.Buffer.EOF;
 			}
-		} else throw($e18);
+		} else throw($e20);
 	}
 	{
 		$s.pop();
@@ -5589,6 +6024,17 @@ xpde.parser.Buffer.prototype.getPos = function() {
 	$s.pop();
 }
 xpde.parser.Buffer.prototype.pos = null;
+xpde.parser.Buffer.prototype.setPos = function(pos) {
+	$s.push("xpde.parser.Buffer::setPos");
+	var $spos = $s.length;
+	this.pos = pos;
+	this.stream.seek(pos);
+	{
+		$s.pop();
+		return pos;
+	}
+	$s.pop();
+}
 xpde.parser.Buffer.prototype.stream = null;
 xpde.parser.Buffer.prototype.__class__ = xpde.parser.Buffer;
 xpde.parser.StartStates = function(p) { if( p === $_ ) return; {
@@ -6591,412 +7037,6 @@ haxe.io.Eof.prototype.toString = function() {
 	$s.pop();
 }
 haxe.io.Eof.prototype.__class__ = haxe.io.Eof;
-js.Boot = function() { }
-js.Boot.__name__ = ["js","Boot"];
-js.Boot.__unhtml = function(s) {
-	$s.push("js.Boot::__unhtml");
-	var $spos = $s.length;
-	{
-		var $tmp = s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-js.Boot.__trace = function(v,i) {
-	$s.push("js.Boot::__trace");
-	var $spos = $s.length;
-	var msg = (i != null?i.fileName + ":" + i.lineNumber + ": ":"");
-	msg += js.Boot.__unhtml(js.Boot.__string_rec(v,"")) + "<br/>";
-	var d = document.getElementById("haxe:trace");
-	if(d == null) alert("No haxe:trace element defined\n" + msg);
-	else d.innerHTML += msg;
-	$s.pop();
-}
-js.Boot.__clear_trace = function() {
-	$s.push("js.Boot::__clear_trace");
-	var $spos = $s.length;
-	var d = document.getElementById("haxe:trace");
-	if(d != null) d.innerHTML = "";
-	else null;
-	$s.pop();
-}
-js.Boot.__closure = function(o,f) {
-	$s.push("js.Boot::__closure");
-	var $spos = $s.length;
-	var m = o[f];
-	if(m == null) {
-		$s.pop();
-		return null;
-	}
-	var f1 = function() {
-		$s.push("js.Boot::__closure@67");
-		var $spos = $s.length;
-		{
-			var $tmp = m.apply(o,arguments);
-			$s.pop();
-			return $tmp;
-		}
-		$s.pop();
-	}
-	f1.scope = o;
-	f1.method = m;
-	{
-		$s.pop();
-		return f1;
-	}
-	$s.pop();
-}
-js.Boot.__string_rec = function(o,s) {
-	$s.push("js.Boot::__string_rec");
-	var $spos = $s.length;
-	if(o == null) {
-		$s.pop();
-		return "null";
-	}
-	if(s.length >= 5) {
-		$s.pop();
-		return "<...>";
-	}
-	var t = typeof(o);
-	if(t == "function" && (o.__name__ != null || o.__ename__ != null)) t = "object";
-	switch(t) {
-	case "object":{
-		if(o instanceof Array) {
-			if(o.__enum__ != null) {
-				if(o.length == 2) {
-					var $tmp = o[0];
-					$s.pop();
-					return $tmp;
-				}
-				var str = o[0] + "(";
-				s += "\t";
-				{
-					var _g1 = 2, _g = o.length;
-					while(_g1 < _g) {
-						var i = _g1++;
-						if(i != 2) str += "," + js.Boot.__string_rec(o[i],s);
-						else str += js.Boot.__string_rec(o[i],s);
-					}
-				}
-				{
-					var $tmp = str + ")";
-					$s.pop();
-					return $tmp;
-				}
-			}
-			var l = o.length;
-			var i;
-			var str = "[";
-			s += "\t";
-			{
-				var _g = 0;
-				while(_g < l) {
-					var i1 = _g++;
-					str += ((i1 > 0?",":"")) + js.Boot.__string_rec(o[i1],s);
-				}
-			}
-			str += "]";
-			{
-				$s.pop();
-				return str;
-			}
-		}
-		var tostr;
-		try {
-			tostr = o.toString;
-		}
-		catch( $e19 ) {
-			{
-				var e = $e19;
-				{
-					$e = [];
-					while($s.length >= $spos) $e.unshift($s.pop());
-					$s.push($e[0]);
-					{
-						$s.pop();
-						return "???";
-					}
-				}
-			}
-		}
-		if(tostr != null && tostr != Object.toString) {
-			var s2 = o.toString();
-			if(s2 != "[object Object]") {
-				$s.pop();
-				return s2;
-			}
-		}
-		var k = null;
-		var str = "{\n";
-		s += "\t";
-		var hasp = (o.hasOwnProperty != null);
-		for( var k in o ) { ;
-		if(hasp && !o.hasOwnProperty(k)) continue;
-		if(k == "prototype" || k == "__class__" || k == "__super__" || k == "__interfaces__") continue;
-		if(str.length != 2) str += ", \n";
-		str += s + k + " : " + js.Boot.__string_rec(o[k],s);
-		}
-		s = s.substring(1);
-		str += "\n" + s + "}";
-		{
-			$s.pop();
-			return str;
-		}
-	}break;
-	case "function":{
-		{
-			$s.pop();
-			return "<function>";
-		}
-	}break;
-	case "string":{
-		{
-			$s.pop();
-			return o;
-		}
-	}break;
-	default:{
-		{
-			var $tmp = String(o);
-			$s.pop();
-			return $tmp;
-		}
-	}break;
-	}
-	$s.pop();
-}
-js.Boot.__interfLoop = function(cc,cl) {
-	$s.push("js.Boot::__interfLoop");
-	var $spos = $s.length;
-	if(cc == null) {
-		$s.pop();
-		return false;
-	}
-	if(cc == cl) {
-		$s.pop();
-		return true;
-	}
-	var intf = cc.__interfaces__;
-	if(intf != null) {
-		var _g1 = 0, _g = intf.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			var i1 = intf[i];
-			if(i1 == cl || js.Boot.__interfLoop(i1,cl)) {
-				$s.pop();
-				return true;
-			}
-		}
-	}
-	{
-		var $tmp = js.Boot.__interfLoop(cc.__super__,cl);
-		$s.pop();
-		return $tmp;
-	}
-	$s.pop();
-}
-js.Boot.__instanceof = function(o,cl) {
-	$s.push("js.Boot::__instanceof");
-	var $spos = $s.length;
-	try {
-		if(o instanceof cl) {
-			if(cl == Array) {
-				var $tmp = (o.__enum__ == null);
-				$s.pop();
-				return $tmp;
-			}
-			{
-				$s.pop();
-				return true;
-			}
-		}
-		if(js.Boot.__interfLoop(o.__class__,cl)) {
-			$s.pop();
-			return true;
-		}
-	}
-	catch( $e20 ) {
-		{
-			var e = $e20;
-			{
-				$e = [];
-				while($s.length >= $spos) $e.unshift($s.pop());
-				$s.push($e[0]);
-				if(cl == null) {
-					$s.pop();
-					return false;
-				}
-			}
-		}
-	}
-	switch(cl) {
-	case Int:{
-		{
-			var $tmp = Math.ceil(o%2147483648.0) === o;
-			$s.pop();
-			return $tmp;
-		}
-	}break;
-	case Float:{
-		{
-			var $tmp = typeof(o) == "number";
-			$s.pop();
-			return $tmp;
-		}
-	}break;
-	case Bool:{
-		{
-			var $tmp = o === true || o === false;
-			$s.pop();
-			return $tmp;
-		}
-	}break;
-	case String:{
-		{
-			var $tmp = typeof(o) == "string";
-			$s.pop();
-			return $tmp;
-		}
-	}break;
-	case Dynamic:{
-		{
-			$s.pop();
-			return true;
-		}
-	}break;
-	default:{
-		if(o == null) {
-			$s.pop();
-			return false;
-		}
-		{
-			var $tmp = o.__enum__ == cl || (cl == Class && o.__name__ != null) || (cl == Enum && o.__ename__ != null);
-			$s.pop();
-			return $tmp;
-		}
-	}break;
-	}
-	$s.pop();
-}
-js.Boot.__init = function() {
-	$s.push("js.Boot::__init");
-	var $spos = $s.length;
-	js.Lib.isIE = (document.all != null && window.opera == null);
-	js.Lib.isOpera = (window.opera != null);
-	Array.prototype.copy = Array.prototype.slice;
-	Array.prototype.insert = function(i,x) {
-		$s.push("js.Boot::__init@199");
-		var $spos = $s.length;
-		this.splice(i,0,x);
-		$s.pop();
-	}
-	Array.prototype.remove = (Array.prototype.indexOf?function(obj) {
-		$s.push("js.Boot::__init@202");
-		var $spos = $s.length;
-		var idx = this.indexOf(obj);
-		if(idx == -1) {
-			$s.pop();
-			return false;
-		}
-		this.splice(idx,1);
-		{
-			$s.pop();
-			return true;
-		}
-		$s.pop();
-	}:function(obj) {
-		$s.push("js.Boot::__init@207");
-		var $spos = $s.length;
-		var i = 0;
-		var l = this.length;
-		while(i < l) {
-			if(this[i] == obj) {
-				this.splice(i,1);
-				{
-					$s.pop();
-					return true;
-				}
-			}
-			i++;
-		}
-		{
-			$s.pop();
-			return false;
-		}
-		$s.pop();
-	});
-	Array.prototype.iterator = function() {
-		$s.push("js.Boot::__init@219");
-		var $spos = $s.length;
-		{
-			var $tmp = { cur : 0, arr : this, hasNext : function() {
-				$s.push("js.Boot::__init@219@223");
-				var $spos = $s.length;
-				{
-					var $tmp = this.cur < this.arr.length;
-					$s.pop();
-					return $tmp;
-				}
-				$s.pop();
-			}, next : function() {
-				$s.push("js.Boot::__init@219@226");
-				var $spos = $s.length;
-				{
-					var $tmp = this.arr[this.cur++];
-					$s.pop();
-					return $tmp;
-				}
-				$s.pop();
-			}}
-			$s.pop();
-			return $tmp;
-		}
-		$s.pop();
-	}
-	var cca = String.prototype.charCodeAt;
-	String.prototype.cca = cca;
-	String.prototype.charCodeAt = function(i) {
-		$s.push("js.Boot::__init@233");
-		var $spos = $s.length;
-		var x = cca.call(this,i);
-		if(isNaN(x)) {
-			$s.pop();
-			return null;
-		}
-		{
-			$s.pop();
-			return x;
-		}
-		$s.pop();
-	}
-	var oldsub = String.prototype.substr;
-	String.prototype.substr = function(pos,len) {
-		$s.push("js.Boot::__init@240");
-		var $spos = $s.length;
-		if(pos != null && pos != 0 && len != null && len < 0) {
-			$s.pop();
-			return "";
-		}
-		if(len == null) len = this.length;
-		if(pos < 0) {
-			pos = this.length + pos;
-			if(pos < 0) pos = 0;
-		}
-		else if(len < 0) {
-			len = this.length + len - pos;
-		}
-		{
-			var $tmp = oldsub.apply(this,[pos,len]);
-			$s.pop();
-			return $tmp;
-		}
-		$s.pop();
-	}
-	$closure = js.Boot.__closure;
-	$s.pop();
-}
-js.Boot.prototype.__class__ = js.Boot;
 IntHash = function(p) { if( p === $_ ) return; {
 	$s.push("IntHash::new");
 	var $spos = $s.length;

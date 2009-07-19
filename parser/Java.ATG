@@ -663,7 +663,7 @@ ClassBodyDeclaration
 = ";"
 |							(. var modifiers = new EnumSet<Modifier>(); .)
   ["static"						(. addModifier(modifiers, MStatic); .)
-  ] ( UnparsedSegment<new StringBuf()>			(. context.code.set(context.somethingsdfgsadf)
+  ] ( UnparsedSegment<new StringBuf()>
       /*Block<out block:Statement, null>			(. classContexts[0].staticConstructor.pushStatement(block); .)*/
       | [ Modifier1<modifiers> { Modifier0<modifiers> } ] MemberDecl<modifiers>
       )

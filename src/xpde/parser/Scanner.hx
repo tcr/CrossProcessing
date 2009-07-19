@@ -2,6 +2,7 @@ package xpde.parser;
 
 import haxe.io.Input;
 import haxe.io.Eof;
+import xpde.parser.io.SeekableInput;
 
 class Token
 {
@@ -22,9 +23,9 @@ class Buffer
 {
 	public static var EOF:Int = 0xFFFF;
 
-	private var stream:Input;
+	private var stream:SeekableInput;
 	
-	public function new(s:Input)
+	public function new(s:SeekableInput)
 	{
 		pos = 0;
 		bufChar = 0;
@@ -34,8 +35,17 @@ class Buffer
 	
 	private var pos:Int;
 	
-	public function getPos():Int
+	public var Pos(getPos, setPos):Int;
+	
+	private function getPos():Int
 	{
+		return pos;
+	}
+	
+	private function setPos(pos:Int):Int
+	{
+		this.pos = pos;
+		this.stream.seek(pos);
 		return pos;
 	}
 	
@@ -181,7 +191,7 @@ class Scanner {
 		literals;
 	};
 	
-	public function new (s:Input) {
+	public function new (s:SeekableInput) {
 		tval = new StringBuf();
 		buffer = new Buffer(s);
 		Init();
@@ -206,7 +216,7 @@ class Scanner {
 	function NextCh():Void {
 		if (oldEols > 0) { ch = EOL; oldEols--; }
 		else {
-			pos = buffer.getPos();
+			pos = buffer.Pos;
 			ch = buffer.Read(); col++;
 			// replace isolated '\r' by '\n' in order to make
 			// eol handling uniform across Windows, Unix and Mac

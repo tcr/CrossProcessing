@@ -6,6 +6,7 @@
 package xpde.parser;
 
 import xpde.JavaPackage;
+import xpde.parser.io.SeekableInput;
 import xpde.Rtti;
 import xpde.parser.Parser;
 import xpde.parser.AST;
@@ -99,9 +100,9 @@ class ParsedCompilationUnit implements CompilationUnit
 	public var dependencies:Array<Qualident>;
 	public var types:Hash<TypeDefinition>;
 	
-	private var source:Input;
+	private var source:SeekableInput;
 	
-	public function new(identifier:String, source:Input)
+	public function new(identifier:String, source:SeekableInput)
 	{
 		// public
 		this.identifier = identifier;
