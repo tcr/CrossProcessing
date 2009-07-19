@@ -375,6 +375,7 @@ TOKENS
   /*----- operators and special characters needed in LL(1) resolvers --------------*/
 
   colon   = ":".
+  scolon  = ";".
   comma   = ",".
   dec     = "--".
   dot     = ".".
@@ -458,26 +459,20 @@ CompilationUnit
 
 /*---------------------------------------------------------------------------*/
 
-UnparsedSegment<buffer:StringBuf>
-= '('								(. buffer.add('('); .)
-  { UnparsedSegment<buffer> | ANY				(. buffer.add(t.val); .)
-    } ')'							(. buffer.add(')'); .)
-| '['								(. buffer.add('['); .)
-  { UnparsedSegment<buffer> | ANY				(. buffer.add(t.val); .)
-    } ']'							(. buffer.add(']'); .)
-| UnparsedBlock<buffer>
-| stringLit							(. buffer.add(t.val); .)
+UnparsedSegment
+= '(' { UnparsedSegment | ANY } ')'
+| '[' { UnparsedSegment | ANY } ']'
+| UnparsedBlock
+| stringLit
 .
 
-UnparsedBlock<buffer:StringBuf>
-= '{'								(. buffer.add('{'); .)
-  { UnparsedSegment<buffer> | ANY				(. buffer.add(t.val); .)
-    } '}'							(. buffer.add('}'); .)
+UnparsedBlock
+= '{' { UnparsedSegment | ANY } '}'
 .
 
-UnparsedExpression<buffer:StringBuf>
-= { UnparsedSegment<buffer> | ANY				(. buffer.add(t.val); .)
-    } ';'
+UnparsedExpression
+= { UnparsedSegment |					(. if (la.kind == _comma || la.kind == _scolon) return; .)
+    ANY }
 .
 
 /*---------------------------------------------------------------------------*/
@@ -631,7 +626,7 @@ VariableDeclaratorId
 VariableDeclaratorRest<context:FieldContext>
 = BracketsOpt<out bCount:Int>				(. if (bCount > 0) context.type = PArray(context.type, bCount); .)
   [ "="
-    UnparsedExpression<new StringBuf()>
+    UnparsedExpression
     /* VariableInitializer<out expression:Expression>	(. context.initialization = expression; .) */
     ]
 .
@@ -663,7 +658,7 @@ ClassBodyDeclaration
 = ";"
 |							(. var modifiers = new EnumSet<Modifier>(); .)
   ["static"						(. addModifier(modifiers, MStatic); .)
-  ] ( UnparsedSegment<new StringBuf()>
+  ] ( UnparsedBlock
       /*Block<out block:Statement, null>			(. classContexts[0].staticConstructor.pushStatement(block); .)*/
       | [ Modifier1<modifiers> { Modifier0<modifiers> } ] MemberDecl<modifiers>
       )
@@ -716,8 +711,8 @@ MethodDeclaratorRest<.methodContext:MethodContext.>
   BracketsOpt<out bCount:Int>					/*[TODO] lolwhut */
   [ "throws" QualidentList<.out arg:Array<Array<String>>.>	(. methodContext.throwsList = arg; .)
     ]
-  (								(. var buffer:StringBuf = new StringBuf(); .)
-    UnparsedBlock<buffer>					(. trace(buffer); .)
+  (								(. var start:ScannerState = scanner.getState(); .)
+    UnparsedBlock						(. methodContext.body = {start: start, end: scanner.getState()}; trace(methodContext.body); .)
   /*Block<out block:Statement, methodContext>			(. methodContext.body = block; .)*/
   | ";"
   )								(. classContexts[0].methods.push(methodContext); .)
@@ -729,8 +724,8 @@ VoidMethodDeclaratorRest<.methodContext:MethodContext.>
 = FormalParameters<.out arg:Array<FormalParameterContext>.>	(. methodContext.parameters = arg; .) 
   [ "throws" QualidentList<.out arg:Array<Array<String>>.>	(. methodContext.throwsList = arg; .)
     ]
-  (								(. var buffer:StringBuf = new StringBuf(); .)
-    UnparsedBlock<buffer>					(. trace(buffer); .)
+  (								(. var start:ScannerState = scanner.getState(); .)
+    UnparsedBlock						(. methodContext.body = {start: start, end: scanner.getState()}; trace(methodContext.body); .)
     /*Block<out block:Statement, methodContext>			(. methodContext.body = block; .)*/
     | ';')							(. classContexts[0].methods.push(methodContext); .)
 .
@@ -742,7 +737,8 @@ ConstructorDeclaratorRest<.methodContext:MethodContext.>
   FormalParameters<.out arg:Array<FormalParameterContext>.>	(. methodContext.parameters = arg; .)
   [ "throws" QualidentList<.out arg:Array<Array<String>>.>	(. methodContext.throwsList = arg; .)
     ]
-  UnparsedBlock<new StringBuf()>
+								(. var start:ScannerState = scanner.getState(); .)
+  UnparsedBlock							(. methodContext.body = {start: start, end: scanner.getState()}; trace(methodContext.body); .)
   /*Block<out body:Statement, methodContext>*/			(. classContexts[0].methods.push(methodContext); .)
 .
 
@@ -810,7 +806,7 @@ ConstantDeclaratorsRest
 /*---------------------------------------------------------------------------*/
 
 ConstantDeclaratorRest
-= BracketsOpt<out bCount:Int> "=" UnparsedExpression<new StringBuf()>
+= BracketsOpt<out bCount:Int> "=" UnparsedExpression
   /* VariableInitializer<out expression:Expression> */
 .
 

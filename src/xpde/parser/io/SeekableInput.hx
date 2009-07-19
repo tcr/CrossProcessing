@@ -5,6 +5,9 @@
 
 package xpde.parser.io;
 
-typedef SeekableInput = { > haxe.io.Input,
+import haxe.io.Input;
+
+typedef SeekableInput = {
+	function readByte():Int;
 	function seek(pos:Int):Void;
 };

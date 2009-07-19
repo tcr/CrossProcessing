@@ -6,7 +6,7 @@
 package xpde.parser.io;
 import haxe.io.StringInput;
 
-class SeekableStringInput extends StringInput, implements Seekable, implements SeekableInput
+class SeekableStringInput extends StringInput, implements Seekable
 {
 	public function seek(pos:Int):Void
 	{

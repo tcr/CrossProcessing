@@ -257,7 +257,39 @@ class Scanner {
 
 	// make sure that peeking starts at current scan position
 	public function ResetPeek ():Void { pt = tokens; }
+	
+	// state
+	public function getState():ScannerState
+	{
+		return {
+			t: t,
+			ch: ch,
+			pos: pos,
+			col: col,
+			line: line,
+			oldEols: oldEols
+		};
+	}
+	
+	public function restoreState(state:ScannerState)
+	{
+		t = state.t;
+		ch = state.ch;
+		buffer.Pos = pos = state.pos;
+		col = state.col;
+		line = state.line;
+		oldEols = state.oldEols;
+	}
 
 } // end Scanner
+
+typedef ScannerState = {
+	var t:Token;           // current token
+	var ch:Int;            // current input character
+	var pos:Int;           // byte position of current character
+	var col:Int;           // column number of current character
+	var line:Int;          // line number of current character
+	var oldEols:Int;       // EOLs that appeared in a comment;
+};
 
 $$$

@@ -8,6 +8,7 @@ package xpde.parser;
 import xpde.JavaPackage;
 import xpde.parser.io.SeekableInput;
 import xpde.Rtti;
+import xpde.parser.Scanner;
 import xpde.parser.Parser;
 import xpde.parser.AST;
 import haxe.io.Input;
@@ -296,6 +297,11 @@ class ClassContext implements TypeContext
 	}*/
 }
 
+typedef ParserRange = {
+	var start:ScannerState;
+	var end:ScannerState;
+};
+
 class MethodContext
 {
 	// typedef: MethodDefinition
@@ -306,7 +312,7 @@ class MethodContext
 	public var parameters:Array<FormalParameterContext>;
 	
 	// method body
-	public var body:Statement;
+	public var body:ParserRange;
 	
 	public function new(modifiers:EnumSet<Modifier>, type:Null<ParserDataType>, identifier:String)
 	{
@@ -407,59 +413,7 @@ class FieldContext
 	}
 }
 
-/*-------------------- AST parsing ----------------------------------*
-
-interface DefinesLocalVariables
-{
-	function isVariableDefined(identifier:String):Bool;
-}
-
-class BlockContext implements DefinesLocalVariables
-{
-	public var statements(default, null):Array<Statement>;
-	public var variables:Hash<FieldDefinition>;
-//	public var types:Hash<Qualident>;
-	
-	public function pushStatement(statement:Statement)
-	{
-		statements.push(statement);
-	}
-	
-	private var parent:DefinesLocalVariables;
-	
-	public function new(?parent:DefinesLocalVariables)
-	{
-		this.parent = parent;
-		statements = [];
-		variables = new Hash<FieldDefinition>();
-//		types = new Hash<Qualident>();
-	}
-	
-	public function getBlockStatement():Statement
-	{
-		return SBlock(variables, statements);
-	}
-	
-	public function isVariableDefined(identifier:String):Bool
-	{
-		return variables.exists(identifier) || (parent != null ? parent.isVariableDefined(identifier) : false);
-	}
-	
-	public function defineVariable(variable:FieldContext)
-	{
-		// prevent redefinition
-		if (isVariableDefined(variable.identifier))
-			throw "redeclaration of variable " + variable.identifier + " in block scope";
-		
-		// add definition
-		variables.set(variable.identifier, variable.getDefinition());
-		// add definition
-		if (variable.initialization != null)
-			pushStatement(SExpression(ELocalAssignment(variable.identifier, variable.initialization)));
-	}
-}*/
-
-/*-------------------- lexical resolution (second pass) ----------------------------------*/
+/*-------------------- type lexical resolution ----------------------------------*/
 
 class TypeQualifier extends Hash<Qualident>
 {	
@@ -554,6 +508,152 @@ class TypeQualifier extends Hash<Qualident>
 	public function copy():TypeQualifier
 	{
 		return new TypeQualifier(context, rootPackage);		
+	}
+}
+
+/*-------------------- AST parsing ----------------------------------*
+
+class BlockContext
+{
+	public var statements(default, null):Array<Statement>;
+	public var variables:Hash<FieldDefinition>;
+//	public var types:Hash<Qualident>;
+	
+	public function pushStatement(statement:Statement)
+	{
+		statements.push(statement);
+	}
+	
+	private var parent:DefinesLocalVariables;
+	
+	public function new(?parent:DefinesLocalVariables)
+	{
+		this.parent = parent;
+		statements = [];
+		variables = new Hash<FieldDefinition>();
+//		types = new Hash<Qualident>();
+	}
+	
+	public function getBlockStatement():Statement
+	{
+		return SBlock(variables, statements);
+	}
+	
+	public function isVariableDefined(identifier:String):Bool
+	{
+		return variables.exists(identifier) || (parent != null ? parent.isVariableDefined(identifier) : false);
+	}
+	
+	public function defineVariable(variable:FieldContext)
+	{
+		// prevent redefinition
+		if (isVariableDefined(variable.identifier))
+			throw "redeclaration of variable " + variable.identifier + " in block scope";
+		
+		// add definition
+		variables.set(variable.identifier, variable.getDefinition());
+		// add definition
+		if (variable.initialization != null)
+			pushStatement(SExpression(ELocalAssignment(variable.identifier, variable.initialization)));
+	}
+}*/
+
+class LexicalResolver
+{
+	private var context:CompilationUnitContext;
+	private var rootPackage:JavaPackage;
+	
+	public function new(context:CompilationUnitContext, rootPackage:JavaPackage)
+	{
+		// private variables
+		this.context = context;
+		this.rootPackage = rootPackage;
+	}
+	
+	var methods:Hash<MethodDefinition>;
+	var fields:Hash<FieldDefinition>;
+	var memberTypes:Hash<String>;
+	
+	function initializeResolvers(definition:ClassDefinition)
+	{
+		// initialize resolvers
+		methods = new Hash<MethodDefinition>();
+		fields = new Hash<FieldDefinition>();
+		memberTypes = new Hash<String>();
+		
+		// walk inheritance tree
+		if (definition.extend != null)
+			initializeResolvers(rootPackage.getClass(definition.extend));
+		for (method in definition.methods)
+			methods.set(method.identifier, method);
+		for (field in definition.fields)
+			fields.set(field.identifier, field);
+		for (type in definition.types.keys())
+//[TODO] this should be recursive descent, compounding all member types of parents &c.
+			memberTypes.set(type, definition.types.get(type));
+	}
+	
+	/* lexical resolution */
+	
+//TODO:
+// resolve class fields to this.variable accessors
+// resolve inner class variables to accessors
+// resolve types to qualified references, add dependencies
+	
+	public function resolveLexicalReference(identifier:String):Expression
+	{
+		// class fields
+		if (fields.exists(identifier))
+			return EReference(identifier, EThisReference);
+
+		// no variable found
+		throw 'reference to nonexistant variable "' + identifier + '"';
+	}
+	
+	public function resolveLexicalAssignment(identifier:String, value:Expression):Expression
+	{
+		// class fields
+		if (fields.exists(identifier))
+			return EAssignment(identifier, EThisReference, value);
+			
+		// no variable found
+		throw 'assignment to nonexistant variable "' + identifier + '"';
+	}
+	
+	public function resolveLexicalCall(identifier:String, args:Array<Expression>):Expression
+	{
+		// class methods
+		if (methods.exists(identifier))
+			return ECall(identifier, EThisReference, args);
+			
+		// no method found
+		throw 'call to nonexistant method "' + identifier + '"';
+	}
+	
+	function resolveLexicalDataType(?type:DataType):DataType
+	{
+		if (type == null)
+			return null;
+		return switch (type) {
+		    case DTPrimitive(_):
+			type;
+		    case DTPrimitiveArray(_, _):
+			type;
+		    case DTReference(qualident):
+			DTReference(resolveQualifiedReference(qualident));
+		    case DTReferenceArray(qualident, dimensions):
+			DTReferenceArray(resolveQualifiedReference(qualident), dimensions);
+		}
+	}
+	
+	function resolveQualifiedReference(?qualident:Qualident):Qualident
+	{
+		if (qualident == null)
+			return null;
+		if (qualident.length == 0 && memberTypes.exists(qualident[0]))
+//[TODO] return unit.getQualifiedReference(qualident[0])
+			return [memberTypes.get(qualident[0])];
+		return qualifyReference(qualident);
 	}
 }
 

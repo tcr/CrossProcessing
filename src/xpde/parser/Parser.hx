@@ -35,20 +35,21 @@ class Parser
 	public static var _true:Int = 24;
 	public static var _void:Int = 25;
 	public static var _colon:Int = 26;
-	public static var _comma:Int = 27;
-	public static var _dec:Int = 28;
-	public static var _dot:Int = 29;
-	public static var _inc:Int = 30;
-	public static var _lbrace:Int = 31;
-	public static var _lbrack:Int = 32;
-	public static var _lpar:Int = 33;
-	public static var _minus:Int = 34;
-	public static var _not:Int = 35;
-	public static var _plus:Int = 36;
-	public static var _rbrace:Int = 37;
-	public static var _rbrack:Int = 38;
-	public static var _rpar:Int = 39;
-	public static var _tilde:Int = 40;
+	public static var _scolon:Int = 27;
+	public static var _comma:Int = 28;
+	public static var _dec:Int = 29;
+	public static var _dot:Int = 30;
+	public static var _inc:Int = 31;
+	public static var _lbrace:Int = 32;
+	public static var _lbrack:Int = 33;
+	public static var _lpar:Int = 34;
+	public static var _minus:Int = 35;
+	public static var _not:Int = 36;
+	public static var _plus:Int = 37;
+	public static var _rbrace:Int = 38;
+	public static var _rbrack:Int = 39;
+	public static var _rpar:Int = 40;
+	public static var _tilde:Int = 41;
 	public static var maxT:Int = 57;
 
 	static var minErrDist:Int = 2;
@@ -446,7 +447,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		Expect(1);
 		importIdent = [t.val]; 
 		var arg:Array<String> = QualifiedImport();
-		Expect(42);
+		Expect(27);
 		importIdent = importIdent.concat(arg); 
 		return importIdent;
 	}
@@ -455,13 +456,13 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		if (StartOf(3)) {
 			var typeContext:TypeContext = ClassOrInterfaceDeclaration();
 			context.types.push(typeContext); 
-		} else if (la.kind == 42) {
+		} else if (la.kind == 27) {
 			Get();
 		} else SynErr(59);
 	}
 
 	function ClassBodyDeclaration():Void {
-		if (la.kind == 42) {
+		if (la.kind == 27) {
 			Get();
 		} else if (StartOf(4)) {
 			var modifiers = new EnumSet<Modifier>(); 
@@ -469,12 +470,12 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 				Get();
 				addModifier(modifiers, MStatic); 
 			}
-			if (StartOf(5)) {
-				UnparsedSegment(new StringBuf());
-			} else if (StartOf(6)) {
-				if (StartOf(7)) {
+			if (la.kind == 32) {
+				UnparsedBlock();
+			} else if (StartOf(5)) {
+				if (StartOf(6)) {
 					Modifier1(modifiers);
-					while (StartOf(8)) {
+					while (StartOf(7)) {
 						Modifier0(modifiers);
 					}
 				}
@@ -484,11 +485,11 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 	}
 
 	function CompilationUnit():Void {
-		if (la.kind == 41) {
+		if (la.kind == 42) {
 			Get();
 			var qualident:Array<String> = Qualident();
 			context.packageDeclaration = qualident; 
-			Expect(42);
+			Expect(27);
 		}
 		while (la.kind == 14) {
 			var importIdent:Array<String> = ImportDeclaration();
@@ -505,7 +506,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		qualident = []; 
 		Expect(1);
 		qualident.push(t.val); 
-		while (la.kind == 29) {
+		while (la.kind == 30) {
 			Get();
 			Expect(1);
 			qualident.push(t.val); 
@@ -513,75 +514,64 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		return qualident;
 	}
 
-	function UnparsedSegment(buffer:StringBuf):Void {
-		if (la.kind == 33) {
+	function UnparsedSegment():Void {
+		if (la.kind == 34) {
 			Get();
-			buffer.add('('); 
-			while (StartOf(9)) {
-				if (StartOf(5)) {
-					UnparsedSegment(buffer);
+			while (StartOf(8)) {
+				if (StartOf(9)) {
+					UnparsedSegment();
 				} else {
 					Get();
-					buffer.add(t.val); 
+				}
+			}
+			Expect(40);
+		} else if (la.kind == 33) {
+			Get();
+			while (StartOf(10)) {
+				if (StartOf(9)) {
+					UnparsedSegment();
+				} else {
+					Get();
 				}
 			}
 			Expect(39);
-			buffer.add(')'); 
 		} else if (la.kind == 32) {
-			Get();
-			buffer.add('['); 
-			while (StartOf(10)) {
-				if (StartOf(5)) {
-					UnparsedSegment(buffer);
-				} else {
-					Get();
-					buffer.add(t.val); 
-				}
-			}
-			Expect(38);
-			buffer.add(']'); 
-		} else if (la.kind == 31) {
-			UnparsedBlock(buffer);
+			UnparsedBlock();
 		} else if (la.kind == 5) {
 			Get();
-			buffer.add(t.val); 
 		} else SynErr(62);
 	}
 
-	function UnparsedBlock(buffer:StringBuf):Void {
-		Expect(31);
-		buffer.add('{'); 
+	function UnparsedBlock():Void {
+		Expect(32);
 		while (StartOf(11)) {
-			if (StartOf(5)) {
-				UnparsedSegment(buffer);
+			if (StartOf(9)) {
+				UnparsedSegment();
 			} else {
 				Get();
-				buffer.add(t.val); 
 			}
 		}
-		Expect(37);
-		buffer.add('}'); 
+		Expect(38);
 	}
 
-	function UnparsedExpression(buffer:StringBuf):Void {
+	function UnparsedExpression():Void {
 		while (StartOf(12)) {
-			if (StartOf(5)) {
-				UnparsedSegment(buffer);
+			if (StartOf(9)) {
+				UnparsedSegment();
 			} else {
+				if (la.kind == _comma || la.kind == _scolon) return; 
 				Get();
-				buffer.add(t.val); 
 			}
 		}
-		Expect(42);
 	}
 
 	function QualifiedImport():Array<String> {
 		var importIdent:Array<String> = null;
-		Expect(29);
+		Expect(30);
 		if (la.kind == 1) {
 			Get();
 			importIdent = [t.val]; 
-			if (la.kind == 29) {
+			if (la.kind == 30) {
 				var arg:Array<String> = QualifiedImport();
 				importIdent = importIdent.concat(arg); 
 			}
@@ -673,7 +663,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		if (la.kind == 21) {
 			Get();
 			addModifier(modifiers, MStatic); 
-		} else if (StartOf(7)) {
+		} else if (StartOf(6)) {
 			Modifier1(modifiers);
 		} else SynErr(66);
 	}
@@ -763,9 +753,9 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 	function BracketsOpt():Int {
 		var bCount:Int = null;
 		bCount = 0; 
-		while (la.kind == 32) {
+		while (la.kind == 33) {
 			Get();
-			Expect(38);
+			Expect(39);
 			bCount++; 
 		}
 		return bCount;
@@ -792,7 +782,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		list = []; 
 		var qualident:Array<String> = Qualident();
 		list.push(qualident); 
-		while (la.kind == 27) {
+		while (la.kind == 28) {
 			Get();
 			var qualident:Array<String> = Qualident();
 			list.push(qualident); 
@@ -813,16 +803,16 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		if (bCount > 0) context.type = PArray(context.type, bCount); 
 		if (la.kind == 52) {
 			Get();
-			UnparsedExpression(new StringBuf());
+			UnparsedExpression();
 		}
 	}
 
 	function ClassBody():Void {
-		Expect(31);
+		Expect(32);
 		while (StartOf(2)) {
 			ClassBodyDeclaration();
 		}
-		Expect(37);
+		Expect(38);
 	}
 
 	function MemberDecl(modifiers:EnumSet<Modifier>):Void {
@@ -858,7 +848,9 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			var arg:Array<Array<String>> = QualidentList();
 			methodContext.throwsList = arg; 
 		}
-		UnparsedBlock(new StringBuf());
+		var start:ScannerState = scanner.getState(); 
+		UnparsedBlock();
+		methodContext.body = {start: start, end: scanner.getState()}; trace(methodContext.body); 
 		classContexts[0].methods.push(methodContext); 
 	}
 
@@ -877,11 +869,11 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			var arg:Array<Array<String>> = QualidentList();
 			methodContext.throwsList = arg; 
 		}
-		if (la.kind == 31) {
-			var buffer:StringBuf = new StringBuf(); 
-			UnparsedBlock(buffer);
-			trace(buffer); 
-		} else if (la.kind == 42) {
+		if (la.kind == 32) {
+			var start:ScannerState = scanner.getState(); 
+			UnparsedBlock();
+			methodContext.body = {start: start, end: scanner.getState()}; trace(methodContext.body); 
+		} else if (la.kind == 27) {
 			Get();
 		} else SynErr(71);
 		classContexts[0].methods.push(methodContext); 
@@ -891,8 +883,8 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		if (StartOf(16)) {
 			checkModifierPermission(modifiers, ModifierSet.fields);  
 			VariableDeclaratorsRest(modifiers, type, identifier);
-			Expect(42);
-		} else if (la.kind == 33) {
+			Expect(27);
+		} else if (la.kind == 34) {
 			checkModifierPermission(modifiers, ModifierSet.methods); 
 			MethodDeclaratorRest(new MethodContext(modifiers, type, identifier));
 		} else SynErr(72);
@@ -902,7 +894,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 		var context = new FieldContext(modifiers, type, identifier); 
 		VariableDeclaratorRest(context);
 		classContexts[0].fields.push(context); 
-		while (la.kind == 27) {
+		while (la.kind == 28) {
 			Get();
 			var context:FieldContext = VariableDeclarator(modifiers, type);
 			classContexts[0].fields.push(context); 
@@ -918,11 +910,11 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			var arg:Array<Array<String>> = QualidentList();
 			methodContext.throwsList = arg; 
 		}
-		if (la.kind == 31) {
-			var buffer:StringBuf = new StringBuf(); 
-			UnparsedBlock(buffer);
-			trace(buffer); 
-		} else if (la.kind == 42) {
+		if (la.kind == 32) {
+			var start:ScannerState = scanner.getState(); 
+			UnparsedBlock();
+			methodContext.body = {start: start, end: scanner.getState()}; trace(methodContext.body); 
+		} else if (la.kind == 27) {
 			Get();
 		} else SynErr(73);
 		classContexts[0].methods.push(methodContext); 
@@ -931,34 +923,34 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 	function FormalParameters():Array<FormalParameterContext> {
 		var parameters:Array<FormalParameterContext> = null;
 		parameters = []; 
-		Expect(33);
+		Expect(34);
 		if (StartOf(17)) {
 			var parameter:FormalParameterContext = FormalParameter0();
 			parameters.push(parameter); 
-			while (la.kind == 27) {
+			while (la.kind == 28) {
 				Get();
 				var parameter:FormalParameterContext = FormalParameter0();
 				parameters.push(parameter); 
 			}
 		}
-		Expect(39);
+		Expect(40);
 		return parameters;
 	}
 
 	function InterfaceBody():Void {
-		Expect(31);
+		Expect(32);
 		while (StartOf(18)) {
 			InterfaceBodyDeclaration();
 		}
-		Expect(37);
+		Expect(38);
 	}
 
 	function InterfaceBodyDeclaration():Void {
 		var modifiers = new EnumSet<Modifier>(); 
-		if (la.kind == 42) {
+		if (la.kind == 27) {
 			Get();
 		} else if (StartOf(19)) {
-			while (StartOf(8)) {
+			while (StartOf(7)) {
 				Modifier0(modifiers);
 			}
 			InterfaceMemberDecl(modifiers);
@@ -992,15 +984,15 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			Get();
 			var arg:Array<Array<String>> = QualidentList();
 		}
-		Expect(42);
+		Expect(27);
 	}
 
 	function InterfaceMethodOrFieldRest(modifiers:EnumSet<Modifier>):Void {
-		if (la.kind == 32 || la.kind == 52) {
+		if (la.kind == 33 || la.kind == 52) {
 			checkModifierPermission(modifiers, ModifierSet.constants);  
 			ConstantDeclaratorsRest();
-			Expect(42);
-		} else if (la.kind == 33) {
+			Expect(27);
+		} else if (la.kind == 34) {
 			checkModifierPermission(modifiers, ModifierSet.interfaces); 
 			InterfaceMethodDeclaratorRest();
 		} else SynErr(76);
@@ -1008,7 +1000,7 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 
 	function ConstantDeclaratorsRest():Void {
 		ConstantDeclaratorRest();
-		while (la.kind == 27) {
+		while (la.kind == 28) {
 			Get();
 			ConstantDeclarator();
 		}
@@ -1021,13 +1013,13 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 			Get();
 			var arg:Array<Array<String>> = QualidentList();
 		}
-		Expect(42);
+		Expect(27);
 	}
 
 	function ConstantDeclaratorRest():Void {
 		var bCount:Int = BracketsOpt();
 		Expect(52);
-		UnparsedExpression(new StringBuf());
+		UnparsedExpression();
 	}
 
 	function ConstantDeclarator():Void {
@@ -1051,24 +1043,24 @@ http://dev.processing.org/source/index.cgi/trunk/processing/app/src/processing/a
 	inline static var x:Bool = false;
 	private static var set:Array<Array<Bool>> = [
 		[T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,x,x,x, x,x,x,x, x,T,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,x, T,T,T,T, x,x,x,x, x,x,x,x, T,x,x],
-		[x,T,x,x, x,T,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,T, T,T,x,x, x,x,x,x, x,x,T,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x],
+		[x,x,x,x, x,x,x,x, x,T,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, x,x,x,x, x,x,x,x, T,x,x],
+		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x],
 		[x,x,x,x, x,x,x,x, x,T,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, x,x,x,x, x,x,x,x, T,x,x],
-		[x,T,x,x, x,T,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,T, T,T,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x],
-		[x,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,T, T,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
+		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x],
 		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x],
 		[x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, x,x,x],
 		[x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, x,x,x],
+		[x,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, x,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,x],
+		[x,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,x, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,x],
 		[x,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,x,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,x],
-		[x,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,x,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,x],
-		[x,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,x,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,x],
+		[x,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,T,T, T,T,x],
 		[x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x,T, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, x,x,x,x, x,x,x,x, x,x,x],
 		[x,x,x,x, x,x,T,T, T,x,T,x, x,T,x,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
 		[x,T,x,x, x,x,T,T, T,x,T,x, x,T,x,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,T, x,x,x,x, T,x,x,x, x,x,x,x, x,x,T,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x],
+		[x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,T, T,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,x,x,x, x,x,x],
 		[x,T,x,x, x,x,T,T, T,x,T,x, T,T,x,T, T,x,x,x, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x],
-		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x],
+		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,T, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x],
 		[x,T,x,x, x,x,T,T, T,T,T,x, T,T,x,T, T,x,x,T, T,T,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,T,T, T,T,T,T, x,x,x,x, T,x,x]
 
 	];
@@ -1121,22 +1113,22 @@ class Errors
 			case 24: s = "true expected";
 			case 25: s = "void expected";
 			case 26: s = "colon expected";
-			case 27: s = "comma expected";
-			case 28: s = "dec expected";
-			case 29: s = "dot expected";
-			case 30: s = "inc expected";
-			case 31: s = "lbrace expected";
-			case 32: s = "lbrack expected";
-			case 33: s = "lpar expected";
-			case 34: s = "minus expected";
-			case 35: s = "not expected";
-			case 36: s = "plus expected";
-			case 37: s = "rbrace expected";
-			case 38: s = "rbrack expected";
-			case 39: s = "rpar expected";
-			case 40: s = "tilde expected";
-			case 41: s = "\"package\" expected";
-			case 42: s = "\";\" expected";
+			case 27: s = "scolon expected";
+			case 28: s = "comma expected";
+			case 29: s = "dec expected";
+			case 30: s = "dot expected";
+			case 31: s = "inc expected";
+			case 32: s = "lbrace expected";
+			case 33: s = "lbrack expected";
+			case 34: s = "lpar expected";
+			case 35: s = "minus expected";
+			case 36: s = "not expected";
+			case 37: s = "plus expected";
+			case 38: s = "rbrace expected";
+			case 39: s = "rbrack expected";
+			case 40: s = "rpar expected";
+			case 41: s = "tilde expected";
+			case 42: s = "\"package\" expected";
 			case 43: s = "\"*\" expected";
 			case 44: s = "\"protected\" expected";
 			case 45: s = "\"private\" expected";
